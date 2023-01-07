@@ -50,8 +50,6 @@ public class PuertsConfig
 #endif
                 typeof(IEnumerator),
                 typeof(Coroutine),
-                typeof(Profiler),
-                typeof(Caching),
                 typeof(UnityEventBase),
                 typeof(UnityEvent),
                 typeof(UnityEvent<int>),
@@ -62,9 +60,8 @@ public class PuertsConfig
                 typeof(UnityAction<int,int>),
                 typeof(UnityAction<int,int,int>),
                 //C# System
-                typeof(Hashtable),
                 typeof(Array),
-                typeof(Convert),
+                typeof(Hashtable),
                 typeof(Delegate),
                 typeof(DateTime),
                 typeof(System.Object),
@@ -88,8 +85,6 @@ public class PuertsConfig
                 typeof(string),
                 //C# System.Text
                 typeof(System.Text.Encoding),
-                //Sqlite3
-                typeof(System.ComponentModel.Component),
                 //Puerts
                 typeof(JsEnv),
                 typeof(ILoader),
@@ -109,6 +104,7 @@ public class PuertsConfig
             };
         }
     }
+
     [Binding]
     static IEnumerable<Type> DynamicBindings
     {
@@ -120,48 +116,9 @@ public class PuertsConfig
                 //Unity Api
                 "UnityEngine",
                 "UnityEngine.UI",
-                "UnityEngine.Rendering",
-                "UnityEngine.Events",
-                "UnityEngine.EventSystems",
-                "UnityEngine.SceneManagement",
-                "UnityEngine.TextEditor",
-                "UnityEngine.Networking",
-                "UnityEngine.Profiling",
-                "UnityEngine.Tilemaps",
-                "UnityEngine.AddressableAssets",
-                "UnityEngine.AddressableAssets.ResourceLocators",
-                "UnityEngine.ResourceManagement",
-                "UnityEngine.ResourceManagement.AsyncOperations",
-                "UnityEngine.Experimental.Rendering.Universal",
-                //TextMesh Pro
-                "TMPro",
-                //YooAsset
-                "YooAsset",
-                //Pathfinding
-                "Pathfinding",
-                //Sqlite
-                "SQLite",
-                //DotNetty
-                "DotNetty.Buffers",
-                "DotNetty.Codecs",
-                "DotNetty.Common",
-                "DotNetty.Handlers",
-                "DotNetty.Transport",
-                "DotNetty.Unity",
-                //Network
-                "Network",
-                "Network.UDP",
-                "Network.TCP",
-                //"System.Net",
-                //"System.Net.Sockets",
-                //Custom Namespaces
-                "System",       //System
-                "System.IO",
-                "DG.Tweening",  //DoTween
-                "DG.Tweening.Plugins",
-                "DG.Tweening.Plugins.Options",
+
                 "Puerts",
-                "Yo",
+                "XOR",
             };
             var unityTypes = (from assembly in AppDomain.CurrentDomain.GetAssemblies()
                               where !(assembly.ManifestModule is System.Reflection.Emit.ModuleBuilder)
@@ -171,7 +128,6 @@ public class PuertsConfig
 
             string[] customAssemblys = new string[] {
                 "Assembly-CSharp",
-                "AstarPathfindingProject",
             };
             var customTypes = (from assembly in customAssemblys.Select(s => Assembly.Load(s))
                                where !(assembly.ManifestModule is System.Reflection.Emit.ModuleBuilder)
@@ -215,7 +171,7 @@ public class PuertsConfig
         "UnityEditor.dll",
         "Assembly-CSharp-Editor.dll",
         "com.tencent.puerts.core.Editor.dll",
-        "AstarPathfindingProjectEditor.dll",
+        "puerts.unity.kit.xor.Editor.dll",
     };
     static List<string> baseTypes = new List<string>
     {
@@ -297,29 +253,5 @@ public class PuertsConfig
         "UnityEngine.GUITexture",
         "UnityEngine.ClusterInput",
         "UnityEngine.ClusterNetwork",
-        //System Reflection
-        "System.Reflection.IntrospectionExtensions",
-        //"System.MarshalByRefObject",
-        "System.RuntimeArgumentHandle",
-        //"System.IO.Stream",
-        "System.IO.IODescriptionAttribute",
-        "System.Net.HttpListenerTimeoutManager",
-        "System.Net.Sockets.SocketAsyncEventArgs",
-        "System.ApplicationIdentity",
-        "System.ActivationContext",
-        "System.AppDomainManager",
-        "System.IAppDomainSetup",
-        "System.AppDomainSetup",
-        "System.AppDomain",
-        "System._AppDomain",
-        "System.Activator",
-        "System.ExecutionEngineException",
-        "System.TimeZone",
-        "System.Data.Common.DbProviderFactoriesConfigurationHandler",
-        "System.Data.Common.DbProviderConfigurationHandler",
-        "System.Data.Common.DBDataPermissionAttribute",
-        "System.Data.Common.DBDataPermission",
-        "System.Data.Common.DbProviderFactories",
-        "System.Data.Common.DbProviderFactory",
     };
 }

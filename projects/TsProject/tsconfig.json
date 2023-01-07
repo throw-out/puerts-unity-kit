@@ -1,0 +1,80 @@
+{
+    //引用的文件
+    "files": [
+        "../Assets/Gen/Typing/csharp/index.d.ts",
+        "../Assets/Puerts/Typing/puerts/index.d.ts"
+    ],
+    //编译目录,支持文件夹丶后缀名识别
+    "include": [
+        "./src/*",
+        "./src/**/*.ts",
+        "./typeing/*.d.ts",
+        "./typeing/*/*.d.ts",
+    ],
+    //黑名单目录,支持文件夹丶后缀名识别
+    "exclude": [],
+    //引用的其他项目
+    "references": [
+        //{"path": "path"}
+    ],
+    //引入库类型定义文件(.d.ts)
+    "typeAcquisition": {
+        //自动引用库
+        "enable": false,
+        "exclude": [],
+        "include": []
+    },
+    //配置
+    "compilerOptions": {
+        // 目标语言的版本
+        "target": "ES2020",
+        "module": "commonjs",
+        "lib": [
+            "DOM",
+            "ES2020",
+            "ScriptHost",
+            "DOM.Iterable",
+        ],
+        "types": [
+            "node",
+        ],
+        "preserveSymlinks": true,
+        "allowJs": true,
+        "checkJs": false,
+        "outDir": "./output",
+        //增量编译
+        "incremental": true,
+        // 生成目标文件的sourceMap文件
+        "sourceMap": true,
+        //生成的map信息直接在代码中
+        //"inlineSourceMap": true,
+        // 删除注释 
+        "removeComments": true,
+        // 发送错误时不输出任何文件
+        "noEmitOnError": false,
+        // 开启所有严格的类型检查
+        "strict": false,
+        // 在代码中注入'use strict'
+        "alwaysStrict": true,
+        //模块输出中不包含 "use strict"指令。
+        //"noImplicitUseStrict": false,
+        // 不允许隐式的any类型
+        "noImplicitAny": false,
+        // 检查只声明、未使用的局部变量(只提示不报错)
+        "noUnusedLocals": false,
+        // 检查未使用的函数参数(只提示不报错)
+        "noUnusedParameters": false,
+        //启用装饰器
+        "experimentalDecorators": true,
+        //给源码里的装饰器声明加上设计类型元数据。查看 issue #2577了解更多信息。
+        "emitDecoratorMetadata": true,
+        //当 this表达式的值为 any类型的时候，生成一个错误。
+        //"noImplicitThis": true,
+        //es模块支持
+        "esModuleInterop": true,
+        //禁用在函数类型里对泛型签名进行严格检查
+        "noStrictGenericChecks": true,
+        //不对具有 /** @internal */ JSDoc注解的代码生成代码。
+        "stripInternal": false,
+    }
+}

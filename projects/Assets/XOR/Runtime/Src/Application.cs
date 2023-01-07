@@ -12,7 +12,7 @@ namespace XOR
     public class Application : SingletonMonoBehaviour<Application>
     {
         public JsEnv JsEnv { get; private set; } = null;
-        public PackageLoader Loader { get; private set; }
+        public MergeLoader Loader { get; private set; }
         public ushort DebugPort = 0;
 
         #region  Editor Debugger
@@ -43,7 +43,7 @@ namespace XOR
             }
             __instance = this;
 
-            Loader = new PackageLoader();
+            Loader = new MergeLoader();
             Loader.AddLoader(new DefaultLoader(), int.MaxValue);
             JsEnv = new JsEnv(Loader, DebugPort);
 #if UNITY_EDITOR

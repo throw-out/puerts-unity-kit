@@ -5,43 +5,38 @@ using Puerts;
 
 namespace XOR
 {
-    public class PackageLoader : ILoader, IDisposable
+    public class MergeLoader : ILoader, IDisposable
     {
-        private List<Package> packages;
-        public PackageLoader()
+        private readonly List<PLoader> loaders;
+        public MergeLoader()
         {
-            this.packages = new List<Package>();
+            this.loaders = new List<PLoader>();
         }
+
         public void Dispose()
         {
-            foreach (var package in packages)
+            foreach (var ploader in loaders)
             {
-                package.Dispose();
+                ploader.Dispose();
             }
-            packages.Clear();
+            loaders.Clear();
         }
+
         public bool FileExists(string filepath)
         {
-            //Debug.Log("require: " + filepath);
-#if !UNITY_EDITOR
-        filepath = filepath?.ToLower();
-#endif
-            foreach (var package in packages)
+            foreach (var ploader in loaders)
             {
-                if (package.loader.FileExists(filepath))
+                if (ploader.loader.FileExists(filepath))
                     return true;
             }
             return false;
         }
+
         public string ReadFile(string filepath, out string debugpath)
         {
-#if !UNITY_EDITOR
-        filepath = filepath?.ToLower();
-#endif
-            foreach (var package in packages)
+            foreach (var ploader in loaders)
             {
-                string script =
-                    package.loader.ReadFile(filepath, out debugpath);
+                string script = ploader.loader.ReadFile(filepath, out debugpath);
                 if (!string.IsNullOrEmpty(script))
                     return script; ;
             }
@@ -51,23 +46,16 @@ namespace XOR
 
         public void AddLoader(ILoader loader, int index = 0)
         {
-            packages.Add(new Package()
-            {
-                loader = loader,
-                index = index
-            });
-            packages.Sort((v1, v2) =>
-            {
-                return v1.index > v2.index ? 1 : v1.index < v2.index ? -1 : 0;
-            });
+            loaders.Add(new PLoader(loader, index));
+            loaders.Sort((v1, v2) => v1.index > v2.index ? 1 : v1.index < v2.index ? -1 : 0);
         }
         public bool RemoveLoader(ILoader loader)
         {
-            for (int i = packages.Count - 1; i >= 0; i--)
+            for (int i = loaders.Count - 1; i >= 0; i--)
             {
-                if (packages[i].loader == loader)
+                if (loaders[i].loader == loader)
                 {
-                    packages.RemoveAt(i);
+                    loaders.RemoveAt(i);
                     return true;
                 }
             }
@@ -81,7 +69,7 @@ namespace XOR
         public ILoader[] GetLoaders(Type type)
         {
             var result = new List<ILoader>();
-            foreach (var package in this.packages)
+            foreach (var package in this.loaders)
             {
                 if (type.IsAssignableFrom(package.loader.GetType()))
                 {
@@ -90,10 +78,15 @@ namespace XOR
             }
             return result.ToArray();
         }
-        internal class Package
+        internal class PLoader
         {
-            public ILoader loader;
-            public int index;
+            public readonly ILoader loader;
+            public readonly int index;
+            public PLoader(ILoader loader, int index)
+            {
+                this.loader = loader;
+                this.index = index;
+            }
             public void Dispose()
             {
                 if (typeof(IDisposable).IsAssignableFrom(loader.GetType()))
@@ -113,23 +106,21 @@ namespace XOR
         }
         public bool FileExists(string filepath)
         {
-            //Debug.Log("require: " + filepath);
-            return File.Exists(Combine(filepath));
+            return File.Exists(GetFilePath(filepath));
         }
 
         public string ReadFile(string filepath, out string debugpath)
         {
-            var path = Combine(filepath);
+            var path = GetFilePath(filepath);
             if (File.Exists(path))
             {
                 debugpath = path;
-                //Debug.Log("file: " + path);
                 return File.ReadAllText(path);
             }
             debugpath = filepath;
             return null;
         }
-        string Combine(string filepath)
+        string GetFilePath(string filepath)
         {
 #if UNITY_EDITOR
             var path = filepath;
@@ -154,12 +145,13 @@ namespace XOR
         }
     }
 
-    public class BufferLoader : ILoader, IDisposable
+    public class StreamLoader : ILoader, IDisposable
     {
         public string rootPath { get; set; }
         //缓存池
         private Dictionary<string, string> scripts;
-        public BufferLoader()
+
+        public StreamLoader()
         {
             this.scripts = new Dictionary<string, string>();
         }
@@ -170,7 +162,7 @@ namespace XOR
 
         public bool FileExists(string filepath)
         {
-            filepath = Combine(filepath)?.ToLower();
+            filepath = CombinePath(filepath)?.ToLower();
 
             string script = null;
             scripts.TryGetValue(filepath, out script);
@@ -178,7 +170,7 @@ namespace XOR
         }
         public string ReadFile(string filepath, out string debugpath)
         {
-            debugpath = Combine(filepath);
+            debugpath = CombinePath(filepath);
             filepath = debugpath?.ToLower();
 
             string script = null;
@@ -190,7 +182,7 @@ namespace XOR
         }
         public void AddScript(string filepath, string script)
         {
-            filepath = Combine(filepath)?.ToLower();
+            filepath = CombinePath(filepath)?.ToLower();
 
             if (scripts.ContainsKey(filepath))
             {
@@ -200,11 +192,11 @@ namespace XOR
         }
         public bool RemoveScript(string filepath)
         {
-            filepath = Combine(filepath)?.ToLower();
+            filepath = CombinePath(filepath)?.ToLower();
 
             return scripts.Remove(filepath);
         }
-        string Combine(string filepath)
+        string CombinePath(string filepath)
         {
             if (!string.IsNullOrEmpty(rootPath))
             {

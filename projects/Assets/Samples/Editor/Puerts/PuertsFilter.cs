@@ -89,54 +89,10 @@ public class PuertsFilter : Editor
                 new List<string>(){"System.IO.File", "GetAccessControl", "System.String"},
                 new List<string>(){"System.IO.File", "GetAccessControl", "System.String", "System.Security.AccessControl.AccessControlSections"},
                 new List<string>(){"System.IO.File", "Create", "System.String", "System.Int32", "System.IO.FileOptions", "System.Security.AccessControl.FileSecurity"},
-                //System.Stream
-                new List<string>(){"System.IO.FileStream", ".ctor", "System.String", "System.IO.FileMode", "System.Security.AccessControl.FileSystemRights", "System.IO.FileShare", "System.Int32", "System.IO.FileOptions"},
-                new List<string>(){"System.IO.FileStream", ".ctor", "System.String", "System.IO.FileMode", "System.Security.AccessControl.FileSystemRights", "System.IO.FileShare", "System.Int32", "System.IO.FileOptions", "System.Security.AccessControl.FileSecurity"},
-                new List<string>(){"System.IO.FileStream", "GetAccessControl"},
-                new List<string>(){"System.IO.FileStream", "SetAccessControl", "System.Security.AccessControl.FileSecurity"},
-                new List<string>(){"System.IO.Stream", "Read", "System.Span<System.Byte>"},
-                new List<string>(){"System.IO.Stream", "Write", "System.ReadOnlySpan<System.Byte>"},
-                new List<string>(){"System.IO.Stream", "ReadAsync", "System.Memory<System.Byte>"},
-                new List<string>(){"System.IO.Stream", "ReadAsync", "System.Memory<System.Byte>", "System.Threading.CancellationToken"},
-                new List<string>(){"System.IO.Stream", "WriteAsync", "System.ReadOnlyMemory<System.Byte>"},
-                new List<string>(){"System.IO.Stream", "WriteAsync", "System.ReadOnlyMemory<System.Byte>", "System.Threading.CancellationToken"},
-                //System
-                new List<string>(){"System.Net.WebProxy", "CreateDefaultProxy" },
-                new List<string>(){"System.Threading.Thread", "CurrentContext"},
-                new List<string>(){"System.MarshalByRefObject", "CreateObjRef", "System.Type"},
-                new List<string>(){"System.Reflection.FieldInfo", "GetValueDirect", "System.TypedReference"},
-                new List<string>(){"System.Reflection.FieldInfo", "SetValueDirect", "System.TypedReference", "System.Object"},
-                new List<string>(){"System.Reflection.IntrospectionExtensions", "GetTypeInfo", "System.Type"},
-                new List<string>(){"NUnit.Compatibility.AdditionalTypeExtensions", "IsCastableFrom", "System.Type", "System.Type"},
-                //Custom
-                new List<string>(){"JsManager", "debugEnable"},
-                new List<string>(){"JsProxy", "m_ClassName"},
-                new List<string>(){"JsProxy", "m_ModuleName"},
-                new List<string>(){"JsProxy", "m_ModulePath"},
-                new List<string>(){"JsProxy", "m_Line"},
-                new List<string>(){"JsProxy", "m_Column"},
-                new List<string>(){"JsProxy", "m_ModuleStack"},
-                //DragonBones
-                new List<string>(){"DragonBones.EllipseBoundingBoxData", "IntersectsSegment",
-                    "System.Single", "System.Single", "System.Single", "System.Single" },
-                new List<string>(){"DragonBones.EllipseBoundingBoxData", "IntersectsSegment",
-                    "System.Single", "System.Single", "System.Single", "System.Single", "DragonBones.Point" },
-                new List<string>(){"DragonBones.EllipseBoundingBoxData", "IntersectsSegment",
-                    "System.Single", "System.Single", "System.Single", "System.Single", "DragonBones.Point", "DragonBones.Point" },
-                //Addressables
-                new List<string>(){"UnityEngine.AddressableAssets.AssetReference", "editorAsset"},
-                new List<string>(){"UnityEngine.AddressableAssets.AssetReference", "SetEditorAsset", "UnityEngine.Object"},
-                new List<string>(){"UnityEngine.AddressableAssets.AssetReference", "SetEditorSubObject", "UnityEngine.Object"},
-                new List<string>(){"UnityEngine.AddressableAssets.AssetReferenceSprite", "editorAsset"},
-                new List<string>(){"UnityEngine.AddressableAssets.AssetReferenceAtlasedSprite", "editorAsset"},
-                //TMP
-                new List<string>(){"TMPro.TMPro_ExtensionMethods", "FindInstanceID", "*"},
                 //Puerts
                 new List<string>(){"Puerts.JsEnv", "debugPort"},
                 new List<string>(){"Puerts.JsEnv", "OnJsEnvCreate"},
                 new List<string>(){"Puerts.JsEnv", "OnJsEnvDispose"},
-
-                new List<string>(){"UnityEngine.Rendering.ProfilingSampler", "Get", "*"},
             };
         }
     }
