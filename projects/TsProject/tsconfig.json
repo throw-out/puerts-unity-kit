@@ -8,8 +8,8 @@
     "include": [
         "./src/*",
         "./src/**/*.ts",
-        "./typeing/*.d.ts",
-        "./typeing/*/*.d.ts",
+        "./type/*.d.ts",
+        "./type/*/*.d.ts",
     ],
     //黑名单目录,支持文件夹丶后缀名识别
     "exclude": [],

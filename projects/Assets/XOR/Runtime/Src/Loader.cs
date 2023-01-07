@@ -145,24 +145,28 @@ namespace XOR
         }
     }
 
-    public class StreamLoader : ILoader, IDisposable
+    public class CacheLoader : ILoader, IDisposable
     {
         public string rootPath { get; set; }
+        public bool ignoreCase { get; set; } = true;
         //缓存池
-        private Dictionary<string, string> scripts;
+        private readonly Dictionary<string, string> scripts = new Dictionary<string, string>();
 
-        public StreamLoader()
-        {
-            this.scripts = new Dictionary<string, string>();
-        }
         public void Dispose()
         {
-            this.scripts?.Clear();
+            this.scripts.Clear();
         }
 
         public bool FileExists(string filepath)
         {
-            filepath = CombinePath(filepath)?.ToLower();
+            if (string.IsNullOrEmpty(filepath))
+                return false;
+
+            filepath = CombinePath(filepath);
+            if (ignoreCase)
+            {
+                filepath = filepath.ToLower();
+            }
 
             string script = null;
             scripts.TryGetValue(filepath, out script);
@@ -170,8 +174,17 @@ namespace XOR
         }
         public string ReadFile(string filepath, out string debugpath)
         {
-            debugpath = CombinePath(filepath);
-            filepath = debugpath?.ToLower();
+            if (string.IsNullOrEmpty(filepath))
+            {
+                debugpath = null;
+                return null;
+            }
+
+            filepath = debugpath = CombinePath(filepath);
+            if (ignoreCase)
+            {
+                filepath = filepath.ToLower();
+            }
 
             string script = null;
             scripts.TryGetValue(filepath, out script);

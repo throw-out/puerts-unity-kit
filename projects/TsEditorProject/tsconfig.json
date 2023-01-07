@@ -1,0 +1,44 @@
+{
+    //引用的文件
+    "files": [
+        "../Assets/Gen/Typing/csharp/index.d.ts",
+        "../Assets/Puerts/Typing/puerts/index.d.ts"
+    ],
+    //编译目录,支持文件夹丶后缀名识别
+    "include": [
+        "./src/*",
+        "./src/**/*.ts",
+    ],
+    //黑名单目录,支持文件夹丶后缀名识别
+    "exclude": [],
+    //引用的其他项目
+    "references": [
+        //{"path": "path"}
+    ],
+    //引入库类型定义文件(.d.ts)
+    "typeAcquisition": {
+        //自动引用库
+        "enable": false,
+        "exclude": [],
+        "include": []
+    },
+    //配置
+    "compilerOptions": {
+        // 目标语言的版本
+        "target": "ES2020",
+        "module": "commonjs",
+        "lib": [
+            "DOM",
+            "ES2020",
+            "ScriptHost",
+            "DOM.Iterable",
+        ],
+        "preserveSymlinks": true,
+        "allowJs": true,
+        "checkJs": false,
+        "outDir": "./output",
+        "incremental": true,
+        "sourceMap": true,
+        "removeComments": true,
+    }
+}
