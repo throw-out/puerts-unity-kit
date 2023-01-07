@@ -1,0 +1,16 @@
+{
+    "name": "puerts.unity.kit.xor",
+    "references": [
+        "GUID:9b79b96f12870c2449e05764a16cea5f",
+        "GUID:a8d427c0690ff7941b52bcf1dd7d9c07"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

@@ -1,0 +1,9 @@
+projects/obj
+projects/Logs
+projects/Temp
+projects/Debug
+projects/Library
+projects/ProjectSettings/*.asset
+projects/*.sln
+projects/*.csproj
+projects/.vscode/settings.json
