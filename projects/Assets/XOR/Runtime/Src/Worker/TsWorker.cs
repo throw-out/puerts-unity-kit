@@ -7,17 +7,17 @@ using UnityEngine;
 
 namespace XOR
 {
-    public class JsWorker : MonoBehaviour, IDisposable
+    public class TsWorker : MonoBehaviour, IDisposable
     {
-        public static JsWorker Create(ILoader loader)
+        public static TsWorker Create(ILoader loader)
         {
             return Create(loader, null);
         }
-        public static JsWorker Create(ILoader loader, string filepath)
+        public static TsWorker Create(ILoader loader, string filepath)
         {
             var obj = new GameObject("JsWorker");
             DontDestroyOnLoad(obj);
-            var ins = obj.AddComponent<JsWorker>();
+            var ins = obj.AddComponent<TsWorker>();
             ins._loader = new LoaderProxy(ins, loader);
             if (!string.IsNullOrEmpty(filepath))
             {
@@ -74,7 +74,7 @@ namespace XOR
         private Queue<Event> _messageOfChild;
         private Queue<(string, string)> _messageOfEval;
 
-        private JsWorker()
+        private TsWorker()
         {
             _sync = new Sync(this);
             _locker = new ReaderWriterLock();
@@ -127,7 +127,7 @@ namespace XOR
                     jsEnv.UsingFunc<string, EventData, EventData>();
                     AutoUsing(jsEnv);
                     jsEnv.Eval(JS_WORKER_SCRIPT);
-                    jsEnv.Eval<Action<JsWorker>>(@"(function (_w){ (this ?? globalThis)['globalWorker'] = new JsWorker(_w); })")(this);
+                    jsEnv.Eval<Action<TsWorker>>(@"(function (_w){ (this ?? globalThis)['globalWorker'] = new JsWorker(_w); })")(this);
                     jsEnv.Eval(string.Format("require(\"{0}\")", filepath));
                     while (_running && jsEnv == JsEnv && this != null)
                     {
@@ -367,7 +367,7 @@ namespace XOR
         /// </summary>
         public class Sync
         {
-            private JsWorker _worker = null;
+            private TsWorker _worker = null;
             private ReaderWriterLock _locker;
             //同步数据
             private string _mainEvent = null;
@@ -375,7 +375,7 @@ namespace XOR
             private string _childEvent = null;
             private EventData _childEventData = null;
 
-            public Sync(JsWorker worker)
+            public Sync(TsWorker worker)
             {
                 this._worker = worker;
                 this._locker = new ReaderWriterLock();
@@ -507,7 +507,7 @@ namespace XOR
         class LoaderProxy : ILoader
         {
             private ILoader _source;
-            private JsWorker _worker = null;
+            private TsWorker _worker = null;
             //脚本缓存
             private Dictionary<string, bool> _cacheFileExists;
             private Dictionary<string, string> _cacheFileContents;
@@ -522,7 +522,7 @@ namespace XOR
             private string _readContent = null;
             private string _readDebugpath = null;
 
-            public LoaderProxy(JsWorker worker, ILoader loader)
+            public LoaderProxy(TsWorker worker, ILoader loader)
             {
                 this._worker = worker;
                 this._source = loader;

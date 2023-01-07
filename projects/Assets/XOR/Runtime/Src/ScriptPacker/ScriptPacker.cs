@@ -96,13 +96,14 @@ namespace XOR
             }
             HashSet<string> extensions = new HashSet<string>(fileSuffixs);
 
+            Dictionary<string, string> scripts = new Dictionary<string, string>();
+
             string[] files = GetFiles(outputPath, extensions);
             if (files != null)
             {
                 outputPath = outputPath.Replace("\"", "/");
                 if (!outputPath.EndsWith("/")) outputPath += "/";
 
-                Dictionary<string, string> scripts = new Dictionary<string, string>();
                 foreach (string filePath in files)
                 {
                     string localName = filePath.Replace("\"", "/").Replace(outputPath, "");
@@ -110,7 +111,7 @@ namespace XOR
                     scripts.Add(localName, content);
                 }
             }
-            return null;
+            return scripts;
         }
         /// <summary>
         /// 扫描指定项目路径下的node_modules

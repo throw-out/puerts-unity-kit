@@ -1,15 +1,18 @@
 using Puerts;
 
-public static class JsEnvExtends
+namespace XOR
 {
-    internal static void GlobalListenerQuit(this JsEnv jsEnv)
+    public static class JsEnvExtends
     {
-        jsEnv.Eval(
-@"(function(){
+        internal static void GlobalListenerQuit(this JsEnv jsEnv)
+        {
+            jsEnv.Eval(
+    @"(function(){
     let listener = (globalThis ?? global ?? this)['globalListener'];
     if(listener && listener.quit){
         listener.quit.invoke();
     }
 })();");
+        }
     }
 }
