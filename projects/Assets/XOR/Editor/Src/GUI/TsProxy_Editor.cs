@@ -4,7 +4,7 @@ using System.Reflection;
 using UnityEditor;
 using UnityEngine;
 
-namespace XOR.Editor
+namespace XOR
 {
     [CustomEditor(typeof(TsProxy))]
     //[CanEditMultipleObjects]
