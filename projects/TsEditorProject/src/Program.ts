@@ -1,10 +1,10 @@
 import * as csharp from "csharp";
 import * as json5 from "json5";
-import ts from "typescript";
+import * as ts from "typescript";
 
 const { File, Directory, Path } = csharp.System.IO;
 
-namespace XOR {
+export namespace XOR {
     type Tsconfig = {
         readonly files?: string[];
         readonly include?: string[];
@@ -46,7 +46,7 @@ namespace XOR {
             cfg.files.forEach(p => results.add(normal(p)));
         }
         if (cfg.include) {
-            let files = scanFiles(normal("./typeing"), [".ts"]);
+            let files = scanFiles(normal("./type"), [".ts"]);
             files?.forEach(p => results.add(p));
 
             files = scanFiles(normal("./src"), [".ts"]);
@@ -57,16 +57,103 @@ namespace XOR {
         }
         return [...results];
     }
+    /**访问修饰符: public/private/protected */
+    type AccessModifier = ts.SyntaxKind.PublicKeyword | ts.SyntaxKind.PrivateKeyword | ts.SyntaxKind.ProtectedKeyword;
+
+    const util = new class {
+        public getAccessModifier(modifiers: ReadonlyArray<ts.ModifierLike>): AccessModifier {
+            if (modifiers) {
+                let m = modifiers.find(_m =>
+                    _m.kind === ts.SyntaxKind.PublicKeyword ||
+                    _m.kind === ts.SyntaxKind.PrivateKeyword ||
+                    _m.kind === ts.SyntaxKind.ProtectedKeyword
+                );
+                if (m) return m.kind as AccessModifier;
+            }
+            return ts.SyntaxKind.PublicKeyword;
+        }
+    }
 
     class ClassDeclaration {
+        constructor(
+            public readonly name: string,
+            public readonly type: TypeDeclaration,
+            public readonly properties: PropertyDeclaration[],
+        ) { }
 
+        public static from(node: ts.ClassDeclaration, checker: ts.TypeChecker) {
+            let properties: PropertyDeclaration[] = [];
+
+
+        }
+    }
+    class PropertyDeclaration {
+        constructor(
+            public readonly name: string,
+            public readonly type: TypeDeclaration,
+            public readonly accessModifier: AccessModifier,
+        ) { }
+
+        public static from(node: ts.PropertyDeclaration, checker: ts.TypeChecker) {
+            let name = node.name.getText();
+            let type = TypeDeclaration.from(node.type, checker);
+            let am = util.getAccessModifier(node.modifiers);
+
+            return new PropertyDeclaration(
+                name,
+                type,
+                am
+            );
+        }
     }
     class TypeDeclaration {
-        public readonly name: string;
-        public readonly fullName: string;
-        public readonly module: ModuleDeclaration;
+        constructor(
+            public readonly name: string,
+            public readonly fullName: string,
+            public readonly module: ModuleDeclaration,
+        ) { }
+
+        public static from(node: ts.TypeNode, checker: ts.TypeChecker) {
+            let name: string, fullName: string, module: ModuleDeclaration = ModuleDeclaration.NONE;
+
+            const type = checker.getTypeAtLocation(node);
+            const symbol = type.getSymbol();
+            if (symbol) {
+                name = checker.symbolToString(
+                    symbol,
+                    node,
+                );
+                fullName = checker.symbolToString(
+                    symbol,
+                    node,
+                    ts.SymbolFlags.PropertyOrAccessor | ts.SymbolFlags.ClassMember,
+                    ts.SymbolFormatFlags.WriteTypeParametersOrArguments |
+                    ts.SymbolFormatFlags.UseOnlyExternalAliasing |
+                    ts.SymbolFormatFlags.AllowAnyNodeKind |
+                    ts.SymbolFormatFlags.UseAliasDefinedOutsideCurrentScope
+                );
+                let declarations = symbol.getDeclarations();
+                if (declarations && declarations.length > 0) {
+                    module = ModuleDeclaration.from(
+                        declarations.find(o => o.kind === ts.SyntaxKind.ClassDeclaration) ??
+                        declarations.find(o => o.kind === ts.SyntaxKind.InterfaceDeclaration)
+                    )
+                }
+            }
+            else {
+                name = checker.typeToString(
+                    type,
+                    node,
+                    ts.TypeFormatFlags.NodeBuilderFlagsMask
+                );
+                fullName = name;
+            }
+            return new TypeDeclaration(name, fullName, module);
+        }
     }
     class ModuleDeclaration {
+        public static readonly NONE = new ModuleDeclaration(null);
+
         /**is declare in global */
         public readonly global: boolean;
         public readonly name: string;
@@ -81,8 +168,20 @@ namespace XOR {
                 this.fullName = modulePath.join(".");
             }
         }
-    }
 
+        public static from(node: ts.Declaration) {
+            let _node: ts.Node = node,
+                modulePath = new Array<string>();
+
+            while (_node) {
+                if (_node.kind === ts.SyntaxKind.ModuleDeclaration) {
+                    modulePath.unshift((<ts.ModuleDeclaration>_node).name.getText());
+                }
+                _node = _node.parent;
+            }
+            return new ModuleDeclaration(modulePath);
+        }
+    }
 
     export class Program {
         private readonly program: ts.Program;
@@ -177,8 +276,8 @@ namespace XOR {
 
             let declarations = symbol.getDeclarations();
             if (declarations && declarations.length > 0) {
-                let typeDeclaration = (declarations.find(o => o.kind === ts.SyntaxKind.ClassDeclaration) ??
-                    declarations.find(o => o.kind === ts.SyntaxKind.InterfaceDeclaration)) as ts.ClassDeclaration | ts.InterfaceDeclaration;
+                let typeDeclaration = declarations.find(o => o.kind === ts.SyntaxKind.ClassDeclaration) ??
+                    declarations.find(o => o.kind === ts.SyntaxKind.InterfaceDeclaration);
 
                 let moduleName = this.getModuleByTypeDeclaration(typeDeclaration);
                 if (moduleName) {
@@ -202,7 +301,6 @@ namespace XOR {
         }
     }
 
-
     class Timer {
         private _start: number;
         constructor() {
@@ -216,15 +314,3 @@ namespace XOR {
         }
     }
 }
-setTimeout(() => {
-    let tsconfigPath = Path.GetFullPath(Path.Combine(
-        Path.GetDirectoryName(csharp.UnityEngine.Application.dataPath),
-        "TsProject/tsconfig.json"
-    ));
-    let program = new XOR.Program(tsconfigPath);
-    //program.print();
-    program.print(statement =>
-        statement.kind === ts.SyntaxKind.ClassDeclaration &&
-        (<ts.ClassDeclaration>statement).name.getText().includes("AnalyzeTest")
-    );
-}, 2000);

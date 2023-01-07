@@ -32,11 +32,25 @@ namespace XOR
                 __instance = null;
             }
         }
+        
+        private bool __is_null_ = false;
         public virtual void Release()
         {
+            this.__is_null_ = true;
         }
         public virtual void Init()
         {
         }
+
+        public override bool Equals(object obj)
+        {
+            if (obj is null)
+            {
+                return this.__is_null_;
+            }
+            return base.Equals(obj);
+        }
+        public override int GetHashCode() => base.GetHashCode();
+        public override string ToString() => base.ToString();
     }
 }

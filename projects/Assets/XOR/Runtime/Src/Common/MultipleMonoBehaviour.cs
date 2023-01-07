@@ -37,8 +37,11 @@ namespace XOR
             }
             return list;
         }
+
+        private bool __is_null_ = false;
         public virtual void Release()
         {
+            this.__is_null_ = true;
             if (referenceSelf != null)
             {
                 referenceInstances.Remove(referenceSelf);
@@ -53,6 +56,15 @@ namespace XOR
                 referenceInstances.Add(referenceSelf);
             }
         }
-
+        public override bool Equals(object obj)
+        {
+            if (obj is null)
+            {
+                return this.__is_null_;
+            }
+            return base.Equals(obj);
+        }
+        public override int GetHashCode() => base.GetHashCode();
+        public override string ToString() => base.ToString();
     }
 }

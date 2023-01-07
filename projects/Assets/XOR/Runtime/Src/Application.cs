@@ -11,9 +11,9 @@ namespace XOR
 {
     public class Application : SingletonMonoBehaviour<Application>
     {
-        public JsEnv JsEnv { get; private set; } = null;
+        public JsEnv Env { get; private set; } = null;
         public MergeLoader Loader { get; private set; }
-        public ushort DebugPort = 0;
+        public ushort DebugPort = 9090;
 
         #region  Editor Debugger
 #if UNITY_EDITOR
@@ -23,13 +23,13 @@ namespace XOR
             set { EditorPrefs.SetBool("Editor.DebugEnable", value); }
         }
         [MenuItem("PuerTS/Enable WaitDebugger")]
-        private static void EnableWait() { IsWaitDebugger = true; }
+        private static void Enable() { IsWaitDebugger = true; }
         [MenuItem("PuerTS/Enable WaitDebugger", true)]
-        private static bool EnableWaitCheck() { return !IsWaitDebugger; }
+        private static bool EnableValidate() { return !IsWaitDebugger; }
         [MenuItem("PuerTS/Disable WaitDebugger")]
-        private static void DisableWait() { IsWaitDebugger = false; }
+        private static void Disable() { IsWaitDebugger = false; }
         [MenuItem("PuerTS/Disable WaitDebugger", true)]
-        private static bool DisableWaitCheck() { return IsWaitDebugger; }
+        private static bool DisableValidate() { return IsWaitDebugger; }
 #endif
         #endregion
 
@@ -45,22 +45,22 @@ namespace XOR
 
             Loader = new MergeLoader();
             Loader.AddLoader(new DefaultLoader(), int.MaxValue);
-            JsEnv = new JsEnv(Loader, DebugPort);
+            Env = new JsEnv(Loader, DebugPort);
 #if UNITY_EDITOR
             string projectRoot = Path.Combine(Path.GetDirectoryName(UnityEngine.Application.dataPath), "TsProject");
-            string outputRoot = Path.Combine(projectRoot, "dist");
+            string outputRoot = Path.Combine(projectRoot, "output");
             Loader.AddLoader(new FileLoader(outputRoot, projectRoot));
             if (IsWaitDebugger && DebugPort > 0)
             {
-                JsEnv.WaitDebugger();
+                Env.WaitDebugger();
             }
 #endif
-            AutoUsing(JsEnv);
-            SupportCommonJS(JsEnv);
+            AutoUsing(Env);
+            SupportCommonJS(Env);
         }
         void Update()
         {
-            JsEnv?.Tick();
+            Env?.Tick();
         }
         void OnDestroy()
         {
@@ -73,16 +73,16 @@ namespace XOR
         }
         void Dispose()
         {
-            if (JsEnv != null)
+            if (Env != null)
             {
-                JsEnv.GlobalListenerQuit();
-                JsEnv.Tick();
+                Env.GlobalListenerQuit();
+                Env.Tick();
                 //GC
                 System.GC.Collect();
                 System.GC.WaitForPendingFinalizers();
                 //Dispose
-                JsEnv.Dispose();
-                JsEnv = null;
+                Env.Dispose();
+                Env = null;
             }
             if (Loader != null)
             {

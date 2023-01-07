@@ -7,3 +7,9 @@ projects/ProjectSettings/*.asset
 projects/*.sln
 projects/*.csproj
 projects/.vscode/settings.json
+projects/TsProject/output
+projects/TsProject/node_modules
+projects/TsEditorProject/output
+projects/TsEditorProject/node_modules
+projects/TsEditorProject/yarn.lock
+projects/TsProject/yarn.lock
