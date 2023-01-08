@@ -23,12 +23,10 @@ class Listener {
 }
 
 (function () {
-    let global = this ?? globalThis;
-    if (!global["globalListener"]) {
-        global["globalListener"] = {
-            quit: new Listener()
-        };
-    }
+    let _g = (global ?? globalThis ?? this);
+    _g["globalListener"] = _g["globalListener"] ?? {
+        quit: new Listener()
+    };
 })();
 
 export { }

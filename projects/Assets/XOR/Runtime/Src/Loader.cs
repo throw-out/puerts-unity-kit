@@ -8,9 +8,14 @@ namespace XOR
     public class MergeLoader : ILoader, IDisposable
     {
         private readonly List<PLoader> loaders;
-        public MergeLoader()
+        public MergeLoader() : this(null) { }
+        public MergeLoader(MergeLoader other)
         {
             this.loaders = new List<PLoader>();
+            if (other != null)
+            {
+                this.loaders.AddRange(other.loaders);
+            }
         }
 
         public void Dispose()
@@ -46,8 +51,26 @@ namespace XOR
 
         public void AddLoader(ILoader loader, int index = 0)
         {
+            if (typeof(MergeLoader).IsAssignableFrom(loader.GetType()))
+            {
+                throw new ArgumentException("Nested instance is not allowed");
+            }
             loaders.Add(new PLoader(loader, index));
             loaders.Sort((v1, v2) => v1.index > v2.index ? 1 : v1.index < v2.index ? -1 : 0);
+        }
+
+        public bool RemoveLoader<T>() where T : ILoader
+        {
+            return RemoveLoader(typeof(T));
+        }
+        public bool RemoveLoader(Type type)
+        {
+            var loaders = GetLoaders(type);
+            for (int i = 0; i < loaders.Length; i++)
+            {
+                RemoveLoader(loaders[i]);
+            }
+            return loaders.Length > 0;
         }
         public bool RemoveLoader(ILoader loader)
         {
@@ -68,15 +91,15 @@ namespace XOR
         }
         public ILoader[] GetLoaders(Type type)
         {
-            var result = new List<ILoader>();
+            var results = new List<ILoader>();
             foreach (var package in this.loaders)
             {
                 if (type.IsAssignableFrom(package.loader.GetType()))
                 {
-                    result.Add(package.loader);
+                    results.Add(package.loader);
                 }
             }
-            return result.ToArray();
+            return results.ToArray();
         }
         internal class PLoader
         {

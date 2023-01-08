@@ -9,10 +9,10 @@ using UnityEditor;
 namespace XOR
 {
     [DisallowMultipleComponent]
-    public class TsProxy : MonoBehaviour, IDisposable
+    public class TsBehaviour : MonoBehaviour, IDisposable
     {
-        private static HashSet<WeakReference<TsProxy>> referenceInstances;
-        private WeakReference<TsProxy> referenceSelf;
+        private static HashSet<WeakReference<TsBehaviour>> referenceInstances;
+        private WeakReference<TsBehaviour> referenceSelf;
         #region Editor 
 #if UNITY_EDITOR
         [ReadOnly]
@@ -42,15 +42,15 @@ namespace XOR
         public bool IsDestroyed { get; private set; } = false;      //是否已执行OnDestroy回调
         public bool IsEnable { get; private set; } = false;
 
-        public TsProxy()
+        public TsBehaviour()
         {
             if (referenceInstances == null)
-                referenceInstances = new HashSet<WeakReference<TsProxy>>();
+                referenceInstances = new HashSet<WeakReference<TsBehaviour>>();
 
-            referenceSelf = new WeakReference<TsProxy>(this);
+            referenceSelf = new WeakReference<TsBehaviour>(this);
             referenceInstances.Add(referenceSelf);
         }
-        ~TsProxy()
+        ~TsBehaviour()
         {
             if (referenceInstances != null)
             {
@@ -393,7 +393,7 @@ namespace XOR
             if (referenceInstances == null)
                 return;
 
-            TsProxy instance;
+            TsBehaviour instance;
             foreach (var weak in referenceInstances)
             {
                 if (weak.TryGetTarget(out instance))
@@ -407,11 +407,11 @@ namespace XOR
     }
 
 #if UNITY_EDITOR
-    public class ReadOnlyAttribute : PropertyAttribute
+    internal class ReadOnlyAttribute : PropertyAttribute
     {
     }
     [CustomPropertyDrawer(typeof(ReadOnlyAttribute))]
-    public class ReadOnlyDrawer : PropertyDrawer
+    internal class ReadOnlyDrawer : PropertyDrawer
     {
         public override float GetPropertyHeight(SerializedProperty property, GUIContent label)
         {

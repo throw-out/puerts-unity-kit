@@ -271,7 +271,7 @@ abstract class IOnMouse {
 export class TsBehaviour {
     private __transform__: Transform;
     private __gameObject__: GameObject;
-    private __component__: CS.XOR.TsProxy;
+    private __component__: CS.XOR.TsBehaviour;
     private __listeners__: Map<string, Function[]>;
     private __listenerProxy__: CS.XOR.TsMessages;
 
@@ -630,7 +630,10 @@ export class TsBehaviour {
     }
     protected get component() {
         if (!this.__component__ || this.__component__.Equals(null)) {
-            this.__component__ = this.__gameObject__.AddComponent($typeof(CS.XOR.TsProxy)) as CS.XOR.TsProxy;
+            this.__component__ = this.__gameObject__.GetComponent($typeof(CS.XOR.TsBehaviour)) as CS.XOR.TsBehaviour;
+            if (!this.__component__ || this.__component__.Equals(null)) {
+                this.__component__ = this.__gameObject__.AddComponent($typeof(CS.XOR.TsBehaviour)) as CS.XOR.TsBehaviour;
+            }
         }
         return this.__component__;
     };

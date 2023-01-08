@@ -55,7 +55,7 @@ namespace XOR
                 Env.WaitDebugger();
             }
 #endif
-            AutoUsing(Env);
+            Env.TryAutoUsing();
             SupportCommonJS(Env);
         }
         void Update()
@@ -114,18 +114,6 @@ _g.nodeRequire = _g.nodeRequire || _g.require;
             catch (Exception e)
             {
                 Debug.LogWarning(e);
-            }
-        }
-        static void AutoUsing(JsEnv env)
-        {
-            const string typeName = "PuertsStaticWrap.AutoStaticCodeUsing";
-            var type = (from _assembly in AppDomain.CurrentDomain.GetAssemblies()
-                        let _type = _assembly.GetType(typeName, false)
-                        where _type != null
-                        select _type).FirstOrDefault();
-            if (type != null)
-            {
-                type.GetMethod("AutoUsing").Invoke(null, new object[] { env });
             }
         }
     }

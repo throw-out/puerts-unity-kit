@@ -2,7 +2,10 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class I18nServiceProcess
+namespace XOR
 {
+    public static class GUIUtil
+    {
 
+    }
 }

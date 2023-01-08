@@ -13,9 +13,9 @@ namespace XOR
         {
             EditorApplication.update += Update;
 
-            if (IsEnableTsService && EnableValidate())
+            if (Prefs.Enable && !Util.IsRunning())
             {
-                Enable();
+                Enable(); 
             }
         }
 
@@ -24,45 +24,20 @@ namespace XOR
             TsServiceProcess.Instance?.Tick();
         }
 
-        static bool IsEnableTsService
-        {
-            get { return EditorPrefs.GetBool("Editor.EnableTsService", true); }
-            set { EditorPrefs.SetBool("Editor.EnableTsService", value); }
-        }
+
         [MenuItem("Tools/XOR/Reload")]
         static void Reload()
         {
             TsServiceProcess.ReleaseInstance();
-            Enable();
+            Util.Enable();
         }
         [MenuItem("Tools/XOR/Enable")]
-        static void Enable()
-        {
-            IsEnableTsService = true;
-            try
-            {
-                TsServiceProcess process = TsServiceProcess.GetInstance();
-                process.Env.Eval("require('./main')");
-
-                Debug.Log($"XOR {nameof(TsServiceProcess)} Enable");
-            }
-            catch (Exception e)
-            {
-                TsServiceProcess.ReleaseInstance();
-                throw e;
-            }
-        }
+        static void Enable() => Util.Enable();
         [MenuItem("Tools/XOR/Enable", true)]
-        static bool EnableValidate() => TsServiceProcess.Instance == null || !IsEnableTsService;
+        static bool EnableValidate() => !Util.IsRunning();
         [MenuItem("Tools/XOR/Disable")]
-        static void Disable()
-        {
-            IsEnableTsService = false;
-            TsServiceProcess.ReleaseInstance();
-
-            Debug.Log($"XOR {nameof(TsServiceProcess)} Disable");
-        }
+        static void Disable() => Util.Disable();
         [MenuItem("Tools/XOR/Disable", true)]
-        static bool DisableValidate() => !EnableValidate();
+        static bool DisableValidate() => Util.IsRunning();
     }
 }

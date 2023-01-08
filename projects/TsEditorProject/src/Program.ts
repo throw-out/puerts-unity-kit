@@ -239,65 +239,11 @@ export namespace XOR {
             let memberProps = classDeclaration.members
                 .filter(m => m.kind === ts.SyntaxKind.PropertyDeclaration)
                 .map(m => <ts.PropertyDeclaration>m)
-                .map(p => `${p.name.getText()}: ${this.typeNodeToString(p.type)}`)
+                .map(p => {
+                    let { name, type } = PropertyDeclaration.from(p, this.checker);
+                    return `${name}: ${type.fullName}(${type.module.fullName})`;
+                })
             console.log(memberProps.join("\n"));
-        }
-
-        private typeNodeToString(node: ts.Node) {
-            const type = this.checker.getTypeAtLocation(node);
-            if (type.getSymbol()) {
-                return this.symbolToString(node, type.getSymbol());
-            } else {
-                return this.typeToString(node, type);
-            }
-        }
-        private typeToString(node: ts.Node, type: ts.Type) {
-            let stringBuilder = new Array<string>();
-            stringBuilder.push(this.checker.typeToString(
-                type,
-                node,
-                ts.TypeFormatFlags.NodeBuilderFlagsMask
-            ));
-            stringBuilder.push(`type`);
-            return stringBuilder.join(" | ")
-        }
-        private symbolToString(node: ts.Node, symbol: ts.Symbol) {
-            let stringBuilder = new Array<string>();
-            stringBuilder.push(this.checker.symbolToString(
-                symbol,
-                node,
-                ts.SymbolFlags.PropertyOrAccessor | ts.SymbolFlags.ClassMember,
-                ts.SymbolFormatFlags.WriteTypeParametersOrArguments |
-                ts.SymbolFormatFlags.UseOnlyExternalAliasing |
-                ts.SymbolFormatFlags.AllowAnyNodeKind |
-                ts.SymbolFormatFlags.UseAliasDefinedOutsideCurrentScope
-            ));
-            stringBuilder.push(`symbol`);
-
-            let declarations = symbol.getDeclarations();
-            if (declarations && declarations.length > 0) {
-                let typeDeclaration = declarations.find(o => o.kind === ts.SyntaxKind.ClassDeclaration) ??
-                    declarations.find(o => o.kind === ts.SyntaxKind.InterfaceDeclaration);
-
-                let moduleName = this.getModuleByTypeDeclaration(typeDeclaration);
-                if (moduleName) {
-                    stringBuilder.push(moduleName);
-                }
-            }
-            return stringBuilder.join(" | ");
-        }
-
-        private getModuleByTypeDeclaration(declaration: ts.Declaration) {
-            let node: ts.Node = declaration, moduleName: string = "";
-            while (node) {
-                if (node.kind === ts.SyntaxKind.ModuleDeclaration) {
-                    if (moduleName) moduleName = "." + moduleName;
-
-                    moduleName = (<ts.ModuleDeclaration>node).name.getText() + moduleName;
-                }
-                node = node.parent;
-            }
-            return moduleName;
         }
     }
 

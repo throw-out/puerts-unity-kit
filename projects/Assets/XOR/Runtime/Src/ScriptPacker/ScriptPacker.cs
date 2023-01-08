@@ -9,7 +9,7 @@ namespace XOR
     {
         public static byte[] Pack(Dictionary<string, string> scripts, params object[] decorators)
         {
-            IAuth auth = decorators.FirstOrDefault(d => d is IAuth) as IAuth;
+            ISignature auth = decorators.FirstOrDefault(d => d is ISignature) as ISignature;
             IEncrypt encrypt = decorators.FirstOrDefault(d => d is IEncrypt) as IEncrypt;
 
             byte[] data = PackScripts(scripts);
@@ -38,7 +38,7 @@ namespace XOR
         }
         public static Dictionary<string, string> Unpack(byte[] data, bool throwFailure, params object[] decorators)
         {
-            IAuth auth = decorators.FirstOrDefault(d => d is IAuth) as IAuth;
+            ISignature auth = decorators.FirstOrDefault(d => d is ISignature) as ISignature;
             IEncrypt encrypt = decorators.FirstOrDefault(d => d is IEncrypt) as IEncrypt;
 
             using (MemoryStream stream = new MemoryStream())
@@ -66,7 +66,7 @@ namespace XOR
                     if (auth == null)
                     {
                         if (throwFailure)
-                            throw new ArgumentException($"{nameof(IAuth)} instance required.");
+                            throw new ArgumentException($"{nameof(ISignature)} instance required.");
                         return null;
                     }
 
@@ -74,7 +74,7 @@ namespace XOR
                     if (!auth.Verify(_d, signData))
                     {
                         if (throwFailure)
-                            throw new Exception($"{nameof(IAuth)} verify failure.");
+                            throw new Exception($"{nameof(ISignature)} verify failure.");
                         return null;
                     }
                 }

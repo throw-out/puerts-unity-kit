@@ -8,7 +8,52 @@ namespace XOR
         byte[] Encode(byte[] sourceData);
         byte[] Decode(byte[] encodeData);
     }
-    public class GzipEncrypt : IEncrypt
+
+    public class AESEncrypt : IEncrypt
+    {
+        public string Key { get; set; }
+        public string IV { get; set; }
+        public byte[] Decode(byte[] encodeData)
+        {
+            AES aes = new AES();
+            aes.Key = Key;
+            aes.IV = IV;
+            return aes.Decrypt(encodeData);
+        }
+        public byte[] Encode(byte[] sourceData)
+        {
+            AES aes = new AES();
+            aes.Key = Key;
+            aes.IV = IV;
+            return aes.Encrypt(sourceData);
+        }
+    }
+    public class RSAEncrypt : IEncrypt
+    {
+        public readonly int KeyLength;
+        public string PublicKey { get; set; }
+        public string PrivateKey { get; set; }
+
+        public RSAEncrypt(int keyLength)
+        {
+            this.KeyLength = keyLength;
+        }
+
+        public byte[] Decode(byte[] encodeData)
+        {
+            RSA ras = new RSA(KeyLength);
+            ras.PrivateKey = PrivateKey;
+            return ras.Decrypt(encodeData);
+        }
+
+        public byte[] Encode(byte[] sourceData)
+        {
+            RSA ras = new RSA(KeyLength);
+            ras.PublicKey = PublicKey;
+            return ras.Encrypt(sourceData);
+        }
+    }
+    public class GZipEncrypt : IEncrypt
     {
         const int BUFFER_SIZE = 1024 * 1024;
 
@@ -47,7 +92,7 @@ namespace XOR
             }
         }
 
-        private static void Compress(Stream reader, Stream writer)
+        protected static void Compress(Stream reader, Stream writer)
         {
             using (GZipStream gzip = new GZipStream(writer, CompressionMode.Compress))
             {
@@ -60,7 +105,7 @@ namespace XOR
                 }
             }
         }
-        private static void Decompress(Stream reader, Stream writer)
+        protected static void Decompress(Stream reader, Stream writer)
         {
             using (GZipStream gzip = new GZipStream(reader, CompressionMode.Decompress))
             {
