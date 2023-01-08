@@ -1,21 +1,17 @@
 ﻿using System;
-using System.Collections;
-using System.Collections.Generic;
 using UnityEditor;
-using UnityEngine;
 
 namespace XOR
 {
-    [InitializeOnLoad]
     public class ServiceMenu
     {
         static ServiceMenu()
         {
-            EditorApplication.update += Update;
+            XOR.EditorApplication.Update += Update;
 
             if (Prefs.Enable && !Util.IsRunning())
             {
-                Enable(); 
+                //Enable();
             }
         }
 
@@ -31,7 +27,7 @@ namespace XOR
             TsServiceProcess.ReleaseInstance();
             Util.Enable();
         }
-        [MenuItem("Tools/XOR/Enable")]
+        [MenuItem("Tools/XOR/Enable")] 
         static void Enable() => Util.Enable();
         [MenuItem("Tools/XOR/Enable", true)]
         static bool EnableValidate() => !Util.IsRunning();

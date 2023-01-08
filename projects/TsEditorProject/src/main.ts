@@ -1,18 +1,20 @@
 import * as csharp from "csharp";
-import * as ts from "typescript";
-import { XOR } from "./Program";
+
+import "./lib/threadWorker";
+import "./lib/globalListener";
 
 const { Path } = csharp.System.IO;
+const { Application } = csharp.UnityEngine;
 
-setTimeout(() => {
-    let tsconfigPath = Path.GetFullPath(Path.Combine(
-        Path.GetDirectoryName(csharp.UnityEngine.Application.dataPath),
-        "TsProject/tsconfig.json"
-    ));
-    let program = new XOR.Program(tsconfigPath);
-    //program.print();
-    program.print(statement =>
-        statement.kind === ts.SyntaxKind.ClassDeclaration &&
-        (<ts.ClassDeclaration>statement).name.getText().includes("AnalyzeTest")
-    );
-}, 2000);
+const loader = new csharp.XOR.MergeLoader();
+
+let projectRoot = Path.Combine(Path.GetDirectoryName(Application.dataPath), "TsEditorProject");
+let outputRoot = Path.Combine(projectRoot, "output");
+loader.AddLoader(new csharp.XOR.FileLoader(outputRoot, projectRoot));
+
+const worker = new ThreadWorker(loader);
+worker.start("./child/main");
+
+
+globalListener.quit.add(() => worker.stop());
+

@@ -15,7 +15,7 @@ namespace XOR
                 TsServiceProcess process = TsServiceProcess.GetInstance();
                 process.Env.Eval("require('./main')");
 
-                UnityEngine.Debug.Log($"XOR {nameof(TsServiceProcess)} Enable");
+                UnityEngine.Debug.Log($"<b>XOR.{nameof(TsServiceProcess)}: <color=green>Started</color>.</b>");
             }
             catch (System.Exception e)
             {
@@ -29,7 +29,7 @@ namespace XOR
             Prefs.Enable.SetValue(false);
             TsServiceProcess.ReleaseInstance();
 
-            UnityEngine.Debug.Log($"XOR {nameof(TsServiceProcess)} Disable");
+            UnityEngine.Debug.Log($"<b>XOR.{nameof(TsServiceProcess)}: <color=red>Stoped</color>.</b>");
         }
     }
 }

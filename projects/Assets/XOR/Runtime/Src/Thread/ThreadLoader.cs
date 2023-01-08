@@ -50,7 +50,6 @@ namespace XOR
                 locker.AcquireWriter();
                 this._syncFileExists = new SyncFileExists(filepath);
                 locker.ReleaseWriter();
-
                 //等待主线程同步
                 while (worker.IsAlive)
                 {
@@ -61,7 +60,7 @@ namespace XOR
                     if (isCompleted) break;
                     Thread.Sleep(THREAD_SLEEP);
                 }
-                bool isExists = this._syncFileExists == null && this._syncFileExists.exists;
+                bool isExists = this._syncFileExists != null && this._syncFileExists.exists;
                 this._cacheFileExists.Add(filepath, isExists);
 
                 return isExists;
