@@ -57,8 +57,8 @@ namespace XOR
         }
 
         static readonly string[] XORModules = new string[] {
-            "lib/globalListener",
-            "lib/threadWorker",
+            "puerts/xor/globalListener",
+            "puerts/xor/threadWorker",
         };
         /// <summary>
         /// 初始化XOR依赖模块

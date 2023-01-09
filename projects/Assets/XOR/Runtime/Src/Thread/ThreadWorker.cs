@@ -157,8 +157,13 @@ namespace XOR
         {
             if (this._disposed)
                 return;
-            this._disposed = true;
+            //等待syncing完成并锁定不在接收其他请求
+            while (!AcquireSyncing(false)) { };
 
+            this._disposed = true;
+#if UNITY_EDITOR
+            ThreadWorkerEditorCaller.Unregister(this);
+#endif
             MainThreadHandler = null;
             ChildThreadHandler = null;
             _running = false;
@@ -175,10 +180,6 @@ namespace XOR
 
                 _thread = null;
             }
-#if UNITY_EDITOR
-            EditorApplication.Update -= this.Tick;
-            EditorApplication.Stop -= this.Dispose;
-#endif
         }
 
         void ThreadExecute(bool isESM, string filepath)
@@ -363,16 +364,12 @@ namespace XOR
             if (!UnityEngine.Application.isPlaying)
             {
 #if UNITY_EDITOR
-                EditorApplication.Update += worker.Tick;
-                EditorApplication.Stop += worker.Dispose;
+                ThreadWorkerEditorCaller.Register(worker);
 #endif
             }
             else
             {
-                GameObject gameObject = new GameObject($"{nameof(ThreadWorker)}");
-                UnityEngine.Object.DontDestroyOnLoad(gameObject);
-                ThreadWorkerMonoBehaviour mono = gameObject.AddComponent<ThreadWorkerMonoBehaviour>();
-                mono.worker = worker;
+                UnityEngine.Object.DontDestroyOnLoad(ThreadWorkerCaller.Register(worker));
             }
 
             //Create MergeLoader
@@ -427,18 +424,10 @@ namespace XOR
         }
     }
 
-    internal class ThreadWorkerMonoBehaviour : MonoBehaviour
+    internal class ThreadWorkerCaller : MonoBehaviour
     {
         public ThreadWorker worker;
 
-        void Start()
-        {
-            if (worker == null || worker.Loader == null)
-            {
-                this.enabled = false;
-                UnityEngine.Debug.LogWarning($"{nameof(ThreadWorkerMonoBehaviour)} instance is disable, {nameof(ThreadWorker)} and ILoader instance required.");
-            }
-        }
         void FixedUpdate()
         {
             if (worker == null || worker.Disposed)
@@ -454,6 +443,93 @@ namespace XOR
         {
             worker?.Dispose();
             worker = null;
+        }
+
+        public static GameObject Register(ThreadWorker worker)
+        {
+            if (worker == null || worker.Disposed)
+                return null;
+            GameObject gameObject = new GameObject($"{nameof(ThreadWorkerCaller)}");
+            UnityEngine.Object.DontDestroyOnLoad(gameObject);
+            ThreadWorkerCaller caller = gameObject.AddComponent<ThreadWorkerCaller>();
+            caller.worker = worker;
+            return gameObject;
+        }
+    }
+
+#if UNITY_EDITOR
+    [UnityEditor.InitializeOnLoad]
+#endif
+    internal static class ThreadWorkerEditorCaller
+    {
+#if UNITY_EDITOR
+        static ThreadWorkerEditorCaller()
+        {
+            RegisterHandlers();
+        }
+        static void RegisterHandlers()
+        {
+            UnityEditor.EditorApplication.update += Update;
+            if (AppDomain.CurrentDomain != null)
+            {
+                AppDomain.CurrentDomain.DomainUnload += Dispose;
+                AppDomain.CurrentDomain.ProcessExit += Dispose;
+            }
+            else
+            {
+                UnityEngine.Debug.Log($"XOR.{nameof(ThreadWorkerEditorCaller)} Registered: <b><color=red>Failure</color></b>.");
+            }
+        }
+        static void UnregisterHandlers()
+        {
+            UnityEditor.EditorApplication.update -= Update;
+            if (AppDomain.CurrentDomain != null)
+            {
+                AppDomain.CurrentDomain.DomainUnload -= Dispose;
+                AppDomain.CurrentDomain.ProcessExit -= Dispose;
+            }
+        }
+#endif
+        static HashSet<ThreadWorker> _instances;
+
+        static void Update()
+        {
+            if (_instances == null)
+                return;
+
+            foreach (ThreadWorker worker in _instances)
+            {
+                if (worker.Disposed)
+                    continue;
+            }
+        }
+        static void Dispose(object sender, EventArgs e)
+        {
+            if (_instances == null)
+                return;
+
+            foreach (ThreadWorker worker in _instances)
+            {
+                if (worker.Disposed)
+                    continue;
+                worker.Dispose();
+            }
+            _instances = null;
+        }
+
+        public static void Register(ThreadWorker worker)
+        {
+            if (worker == null || worker.Disposed)
+                return;
+            if (_instances == null)
+                _instances = new HashSet<ThreadWorker>();
+            _instances.Add(worker);
+        }
+        public static void Unregister(ThreadWorker worker)
+        {
+            if (_instances == null)
+                return;
+            _instances.Remove(worker);
         }
     }
 }

@@ -7,7 +7,7 @@ namespace XOR
     {
         public override void OnInspectorGUI()
         {
-            if (!Util.IsRunning())
+            if (!EditorApplicationUtil.IsRunning())
             {
 
             }

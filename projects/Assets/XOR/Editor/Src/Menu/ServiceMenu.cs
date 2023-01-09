@@ -4,38 +4,32 @@ using UnityEngine;
 
 namespace XOR
 {
+    [InitializeOnLoad]
     public class ServiceMenu
     {
         static ServiceMenu()
         {
-            XOR.EditorApplication.Update += Update;
-
-            if (Prefs.Enable && !Util.IsRunning())
+            if (Prefs.Enable && !EditorApplicationUtil.IsRunning())
             {
-                //Enable();
+                EditorApplicationUtil.Start();
             }
         }
-
-        static void Update()
-        {
-            TsServiceProcess.Instance?.Tick();
-        }
-
 
         [MenuItem("Tools/XOR/Reload")]
         static void Reload()
         {
-            TsServiceProcess.ReleaseInstance();
-            Util.Enable();
+            EditorApplicationUtil.Stop(false);
+            EditorApplicationUtil.Start();
         }
+
         [MenuItem("Tools/XOR/Enable")]
-        static void Enable() => Util.Enable();
+        static void Enable() => EditorApplicationUtil.Start();
         [MenuItem("Tools/XOR/Enable", true)]
-        static bool EnableValidate() => !Util.IsRunning();
+        static bool EnableValidate() => !EditorApplicationUtil.IsRunning();
         [MenuItem("Tools/XOR/Disable")]
-        static void Disable() => Util.Disable();
+        static void Disable() => EditorApplicationUtil.Stop();
         [MenuItem("Tools/XOR/Disable", true)]
-        static bool DisableValidate() => Util.IsRunning();
+        static bool DisableValidate() => EditorApplicationUtil.IsRunning();
 
 
         [MenuItem("Tools/XOR/Settings", false, 0)]
