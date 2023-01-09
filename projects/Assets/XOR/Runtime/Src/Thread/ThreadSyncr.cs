@@ -48,23 +48,26 @@ namespace XOR
                 locker.ReleaseWriter();
 
                 //等待主线程同步
+                object result = null; Exception exception = null;
                 while (worker.IsAlive)
                 {
                     locker.AcquireReader();
                     bool isCompleted = this._syncToMainThread == null || this._syncToMainThread.completed;
+                    if (isCompleted)
+                    {
+                        result = this._syncToMainThread?.data;
+                        exception = this._syncToMainThread?.exception;
+                    }
                     locker.ReleaseReader();
 
                     if (isCompleted) break;
                     Thread.Sleep(THREAD_SLEEP);
                 }
                 //检查错误
-                Exception exception = this._syncToMainThread?.exception;
                 if (throwOnError && exception != null)
                 {
                     throw exception;
                 }
-
-                object result = this._syncToMainThread?.data;
                 return result;
             }
             finally
@@ -99,23 +102,26 @@ namespace XOR
                 locker.ReleaseWriter();
 
                 //等待子线程同步
+                object result = null; Exception exception = null;
                 while (worker.IsAlive)
                 {
                     locker.AcquireReader();
                     bool isCompleted = this._syncToChildThread == null || this._syncToChildThread.completed;
+                    if (isCompleted)
+                    {
+                        result = this._syncToChildThread?.data;
+                        exception = this._syncToChildThread?.exception;
+                    }
                     locker.ReleaseReader();
 
                     if (isCompleted) break;
                     Thread.Sleep(THREAD_SLEEP);
                 }
                 //检查错误
-                Exception exception = this._syncToChildThread?.exception;
                 if (throwOnError && exception != null)
                 {
                     throw exception;
                 }
-
-                object result = this._syncToChildThread?.data;
                 return result;
             }
             finally

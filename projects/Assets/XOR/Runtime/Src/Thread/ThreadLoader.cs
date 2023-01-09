@@ -51,16 +51,21 @@ namespace XOR
                 this._syncFileExists = new SyncFileExists(filepath);
                 locker.ReleaseWriter();
                 //等待主线程同步
+                bool isExists = false;
                 while (worker.IsAlive)
                 {
                     locker.AcquireReader();
                     bool isCompleted = this._syncFileExists == null || this._syncFileExists.completed;
+                    if (isCompleted)
+                    {
+                        isExists = this._syncFileExists != null && this._syncFileExists.exists;
+                    }
                     locker.ReleaseReader();
 
                     if (isCompleted) break;
                     Thread.Sleep(THREAD_SLEEP);
                 }
-                bool isExists = this._syncFileExists != null && this._syncFileExists.exists;
+
                 this._cacheFileExists.Add(filepath, isExists);
 
                 return isExists;
@@ -91,20 +96,25 @@ namespace XOR
                 locker.ReleaseWriter();
 
                 //等待主线程同步
+                string _content = null, _debugpath = null;
                 while (worker.IsAlive)
                 {
                     locker.AcquireReader();
                     bool isCompleted = this._syncReadFile == null || this._syncReadFile.completed;
+                    if (isCompleted)
+                    {
+                        _debugpath = this._syncReadFile != null ? _syncReadFile.debugpath : null;
+                        _content = this._syncReadFile != null ? _syncReadFile.content : null;
+                    }
                     locker.ReleaseReader();
 
                     if (isCompleted) break;
                     Thread.Sleep(THREAD_SLEEP);
                 }
-                debugpath = this._syncReadFile != null ? _syncReadFile.debugpath : null;
-                string content = this._syncReadFile != null ? _syncReadFile.content : null;
-                this._cacheReadFile.Add(filepath, new Tuple<string, string>(debugpath, content));
+                debugpath = _debugpath;
+                this._cacheReadFile.Add(filepath, new Tuple<string, string>(_debugpath, _content));
 
-                return content;
+                return _content;
             }
             finally
             {
