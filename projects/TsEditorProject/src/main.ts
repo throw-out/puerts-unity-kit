@@ -1,7 +1,7 @@
 import * as csharp from "csharp";
 
-import "./lib/threadWorker";
-import "./lib/globalListener";
+import "./xor/threadWorker";
+import "./xor/globalListener";
 
 const { Path } = csharp.System.IO;
 const { Application } = csharp.UnityEngine;
