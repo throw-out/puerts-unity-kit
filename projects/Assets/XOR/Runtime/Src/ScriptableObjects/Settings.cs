@@ -12,6 +12,8 @@ namespace XOR
 
         private static T __instance__ = null;
 
+        public static T Instance { get => __instance__; }
+
         /// <summary>获取实例对象 </summary>
         public static T Load() => Load(true, false);
         /// <summary>
@@ -82,6 +84,16 @@ namespace XOR
         public string EditorProject = "../TsEditorProject/tsconfig.json";
         /// <summary>是否使用ESM模块 </summary>
         public bool IsESM = false;
+
+        public LOGGER Logger = LOGGER.FULL;
+        public enum LOGGER
+        {
+            NONE = 0,
+            INFO = 1,
+            WARN = 2,
+            ERROR = 4,
+            FULL = INFO | WARN | ERROR
+        }
     }
 
 #if UNITY_EDITOR

@@ -25845,8 +25845,38 @@ declare namespace CS {
             public constructor()
             public constructor($other: XOR.MergeLoader)
         }
+        class Subscription extends System.Object {
+            protected [__keep_incompatibility]: never;
+            public get Closed(): boolean;
+            public Unsubscribe(): void
+            public constructor()
+        }
+        class Subscriber extends XOR.Subscription {
+            protected [__keep_incompatibility]: never;
+            public OnClose($handler: System.Action): void
+            public Next(): void
+            public constructor($callback: System.Action)
+            public constructor()
+        }
+        class Observable extends System.Object {
+            protected [__keep_incompatibility]: never;
+            public get Closed(): boolean;
+            public get Count(): number;
+            public Subscribe($callback: System.Action, $immediately?: boolean): XOR.Subscription
+            public Next(): void
+            public Unsubscribe(): void
+            public Dispose(): void
+            public constructor()
+            public constructor($subscribe: System.Action$1<XOR.Subscriber>)
+        }
         class JsEnvExtension extends System.Object {
             protected [__keep_incompatibility]: never;
+            public static GlobalListenerQuit($env: Puerts.JsEnv): void
+            public static TryAutoUsing($env: Puerts.JsEnv, $printWarning?: boolean): void
+            public static SupportCommonJS($env: Puerts.JsEnv): void
+            public static RequireXORModules($env: Puerts.JsEnv): void
+            public static RequireXORModules($env: Puerts.JsEnv, $isESM: boolean): void
+            public static RequireXORModules($env: Puerts.JsEnv, $isESM: boolean, $throwOnFailure: boolean): void
         }
         class FileLoader extends System.Object implements Puerts.ILoader {
             protected [__keep_incompatibility]: never;
@@ -25871,10 +25901,13 @@ declare namespace CS {
         class Logger extends XOR.Singleton$1<XOR.Logger>
         {
             protected [__keep_incompatibility]: never;
-            public add_logMessageReceived($value: UnityEngine.Application.LogCallback): void
-            public remove_logMessageReceived($value: UnityEngine.Application.LogCallback): void
-            public add_logMessageReceivedThreaded($value: UnityEngine.Application.LogCallback): void
-            public remove_logMessageReceivedThreaded($value: UnityEngine.Application.LogCallback): void
+            public add_LogMessageReceived($value: UnityEngine.Application.LogCallback): void
+            public remove_LogMessageReceived($value: UnityEngine.Application.LogCallback): void
+            public add_LogMessageReceivedThreaded($value: UnityEngine.Application.LogCallback): void
+            public remove_LogMessageReceivedThreaded($value: UnityEngine.Application.LogCallback): void
+            public static Log($firstMessage: any, ...messages: any[]): void
+            public static LogWarning($firstMessage: any, ...messages: any[]): void
+            public static LogError($firstMessage: any, ...messages: any[]): void
             public constructor()
         }
         interface IEncrypt {
@@ -25933,6 +25966,23 @@ declare namespace CS {
             public constructor($keyLength: number)
             public constructor()
         }
+        class ScriptableObject$1<T> extends UnityEngine.ScriptableObject {
+            protected [__keep_incompatibility]: never;
+        }
+        class Settings extends XOR.ScriptableObject$1<XOR.Settings>
+        {
+            protected [__keep_incompatibility]: never;
+            public Project: string
+            public EditorProject: string
+            public IsESM: boolean
+            public Logger: XOR.Settings.LOGGER
+            public constructor()
+        }
+        class ComponentSettings extends XOR.ScriptableObject$1<XOR.ComponentSettings>
+        {
+            protected [__keep_incompatibility]: never;
+            public constructor()
+        }
         class AES extends System.Object {
             protected [__keep_incompatibility]: never;
             public KeyLength: number
@@ -25975,8 +26025,6 @@ declare namespace CS {
             protected [__keep_incompatibility]: never;
             public get IsReaderLockHeld(): boolean;
             public get IsWriterLockHeld(): boolean;
-            public LockWrite($callback: System.Action, $throwOnFailure?: boolean): boolean
-            public LockRead($callback: System.Action, $throwOnFailure?: boolean): boolean
             public AcquireWriter($throwOnFailure?: boolean): boolean
             public AcquireReader($throwOnFailure?: boolean): boolean
             public ReleaseWriter(): void
@@ -25992,23 +26040,29 @@ declare namespace CS {
             public constructor($worker: XOR.ThreadWorker, $source: Puerts.ILoader)
             public constructor()
         }
-        class ThreadWorker extends UnityEngine.MonoBehaviour implements System.IDisposable {
+        class Multiple$1<T> extends System.Object {
+            protected [__keep_incompatibility]: never;
+        }
+        class ThreadWorker extends XOR.Multiple$1<XOR.ThreadWorker> implements System.IDisposable {
             protected [__keep_incompatibility]: never;
             public MainThreadHandler: System.Func$3<string, XOR.ThreadWorker.EventData, XOR.ThreadWorker.EventData>
             public ChildThreadHandler: System.Func$3<string, XOR.ThreadWorker.EventData, XOR.ThreadWorker.EventData>
             public get IsAlive(): boolean;
             public get Syncr(): XOR.ThreadSyncr;
+            public get Disposed(): boolean;
             public get Env(): Puerts.JsEnv;
             public get Loader(): Puerts.ILoader;
             public get ThreadLoader(): XOR.ThreadLoader;
-            public static Create($loader: Puerts.ILoader): XOR.ThreadWorker
-            public static Create($loader: Puerts.ILoader, $filepath: string): XOR.ThreadWorker
+            public get Options(): XOR.ThreadWorker.CreateOptions;
+            public Tick(): void
             public Run($filepath: string): void
             public VerifyThread($isMainThread: boolean, $throwError?: boolean): boolean
             public PostToMainThread($eventName: string, $data: XOR.ThreadWorker.EventData): void
             public PostToChildThread($eventName: string, $data: XOR.ThreadWorker.EventData): void
             public PostEvalToChildThread($chunk: string, $chunkName?: string): void
             public Dispose(): void
+            public static Create($loader: Puerts.ILoader): XOR.ThreadWorker
+            public static Create($loader: Puerts.ILoader, $options: XOR.ThreadWorker.CreateOptions): XOR.ThreadWorker
             public constructor()
         }
         class ThreadSyncr extends System.Object {
@@ -26210,6 +26264,114 @@ declare namespace CS {
             public static DisposeAll(): void
             public constructor()
         }
+        class ResultPair extends System.Object {
+            protected [__keep_incompatibility]: never;
+            public key: string
+            public value: any
+            public constructor($pair: XOR.IPair)
+            public constructor()
+        }
+        interface IPair {
+            Index: number
+            Key: string
+            Value: any
+        }
+        class Pair$1<T> extends System.Object implements XOR.IPair {
+            protected [__keep_incompatibility]: never;
+            public get Index(): number;
+            public get Key(): string;
+            public get Value(): any;
+        }
+        class String extends XOR.Pair$1<string> implements XOR.IPair {
+            protected [__keep_incompatibility]: never;
+            public get Index(): number;
+            public get Key(): string;
+            public get Value(): any;
+            public constructor()
+        }
+        class Number extends XOR.Pair$1<number> implements XOR.IPair {
+            protected [__keep_incompatibility]: never;
+            public get Index(): number;
+            public get Key(): string;
+            public get Value(): any;
+            public constructor()
+        }
+        class Boolean extends XOR.Pair$1<boolean> implements XOR.IPair {
+            protected [__keep_incompatibility]: never;
+            public get Index(): number;
+            public get Key(): string;
+            public get Value(): any;
+            public constructor()
+        }
+        class Vector2 extends XOR.Pair$1<UnityEngine.Vector2> implements XOR.IPair {
+            protected [__keep_incompatibility]: never;
+            public get Index(): number;
+            public get Key(): string;
+            public get Value(): any;
+            public constructor()
+        }
+        class Vector3 extends XOR.Pair$1<UnityEngine.Vector3> implements XOR.IPair {
+            protected [__keep_incompatibility]: never;
+            public get Index(): number;
+            public get Key(): string;
+            public get Value(): any;
+            public constructor()
+        }
+        class Object extends XOR.Pair$1<UnityEngine.Object> implements XOR.IPair {
+            protected [__keep_incompatibility]: never;
+            public get Index(): number;
+            public get Key(): string;
+            public get Value(): any;
+            public constructor()
+        }
+        class StringArray extends XOR.Pair$1<System.Array$1<string>> implements XOR.IPair {
+            protected [__keep_incompatibility]: never;
+            public get Index(): number;
+            public get Key(): string;
+            public get Value(): any;
+            public constructor()
+        }
+        class DoubleArray extends XOR.Pair$1<System.Array$1<number>> implements XOR.IPair {
+            protected [__keep_incompatibility]: never;
+            public get Index(): number;
+            public get Key(): string;
+            public get Value(): any;
+            public constructor()
+        }
+        class BooleanArray extends XOR.Pair$1<System.Array$1<boolean>> implements XOR.IPair {
+            protected [__keep_incompatibility]: never;
+            public get Index(): number;
+            public get Key(): string;
+            public get Value(): any;
+            public constructor()
+        }
+        class Vector2Array extends XOR.Pair$1<System.Array$1<UnityEngine.Vector2>> implements XOR.IPair {
+            protected [__keep_incompatibility]: never;
+            public get Index(): number;
+            public get Key(): string;
+            public get Value(): any;
+            public constructor()
+        }
+        class Vector3Array extends XOR.Pair$1<System.Array$1<UnityEngine.Vector3>> implements XOR.IPair {
+            protected [__keep_incompatibility]: never;
+            public get Index(): number;
+            public get Key(): string;
+            public get Value(): any;
+            public constructor()
+        }
+        class ObjectArray extends XOR.Pair$1<System.Array$1<UnityEngine.Object>> implements XOR.IPair {
+            protected [__keep_incompatibility]: never;
+            public get Index(): number;
+            public get Key(): string;
+            public get Value(): any;
+            public constructor()
+        }
+        class MenuPathAttribute extends System.Attribute implements System.Runtime.InteropServices._Attribute {
+            protected [__keep_incompatibility]: never;
+            public get path(): string;
+            public constructor($path: string)
+            public constructor()
+        }
         class TsComponent extends UnityEngine.MonoBehaviour {
             protected [__keep_incompatibility]: never;
             public constructor()
@@ -26231,6 +26393,10 @@ declare namespace CS {
         class TsPropertys extends UnityEngine.MonoBehaviour {
             protected [__keep_incompatibility]: never;
             public get Pairs(): System.Array$1<XOR.TsPropertys.ResultPair>;
+            public constructor()
+        }
+        class TsScriptableObject extends UnityEngine.ScriptableObject {
+            protected [__keep_incompatibility]: never;
             public constructor()
         }
         class BufferUtil extends System.Object {
@@ -26270,12 +26436,6 @@ declare namespace CS {
         }
         interface _MethodInfo {
         }
-        interface _PropertyInfo {
-        }
-        interface _ConstructorInfo {
-        }
-        interface _FieldInfo {
-        }
         interface _AssemblyName {
         }
         class StructLayoutAttribute extends System.Attribute implements System.Runtime.InteropServices._Attribute {
@@ -26283,7 +26443,13 @@ declare namespace CS {
         }
         interface _Module {
         }
+        interface _ConstructorInfo {
+        }
+        interface _FieldInfo {
+        }
         interface _EventInfo {
+        }
+        interface _PropertyInfo {
         }
     }
     namespace UnityEngine.Playables {
@@ -26410,37 +26576,23 @@ declare namespace CS {
             public GetCustomAttributesData(): System.Collections.Generic.IList$1<System.Reflection.CustomAttributeData>
         }
         enum BindingFlags { Default = 0, IgnoreCase = 1, DeclaredOnly = 2, Instance = 4, Static = 8, Public = 16, NonPublic = 32, FlattenHierarchy = 64, InvokeMethod = 256, CreateInstance = 512, GetField = 1024, SetField = 2048, GetProperty = 4096, SetProperty = 8192, PutDispProperty = 16384, PutRefDispProperty = 32768, ExactBinding = 65536, SuppressChangeType = 131072, OptionalParamBinding = 262144, IgnoreReturn = 16777216 }
-        class PropertyInfo extends System.Reflection.MemberInfo implements System.Reflection.ICustomAttributeProvider, System.Runtime.InteropServices._PropertyInfo, System.Runtime.InteropServices._MemberInfo {
+        interface MemberFilter {
+            (m: System.Reflection.MemberInfo, filterCriteria: any): boolean;
+            Invoke?: (m: System.Reflection.MemberInfo, filterCriteria: any) => boolean;
+        }
+        var MemberFilter: { new(func: (m: System.Reflection.MemberInfo, filterCriteria: any) => boolean): MemberFilter; }
+        enum MemberTypes { Constructor = 1, Event = 2, Field = 4, Method = 8, Property = 16, TypeInfo = 32, Custom = 64, NestedType = 128, All = 191 }
+        class AssemblyName extends System.Object implements System.ICloneable, System.Runtime.Serialization.IDeserializationCallback, System.Runtime.InteropServices._AssemblyName, System.Runtime.Serialization.ISerializable {
             protected [__keep_incompatibility]: never;
-            public get Attributes(): System.Reflection.PropertyAttributes;
-            public get CanRead(): boolean;
-            public get CanWrite(): boolean;
-            public get GetMethod(): System.Reflection.MethodInfo;
-            public get SetMethod(): System.Reflection.MethodInfo;
-            public get IsSpecialName(): boolean;
-            public get MemberType(): System.Reflection.MemberTypes;
-            public get PropertyType(): System.Type;
-            public GetAccessors(): System.Array$1<System.Reflection.MethodInfo>
-            public GetAccessors($nonPublic: boolean): System.Array$1<System.Reflection.MethodInfo>
-            public GetGetMethod(): System.Reflection.MethodInfo
-            public GetGetMethod($nonPublic: boolean): System.Reflection.MethodInfo
-            public GetIndexParameters(): System.Array$1<System.Reflection.ParameterInfo>
-            public GetSetMethod(): System.Reflection.MethodInfo
-            public GetSetMethod($nonPublic: boolean): System.Reflection.MethodInfo
-            public GetValue($obj: any, $index: System.Array$1<any>): any
-            public GetValue($obj: any): any
-            public GetValue($obj: any, $invokeAttr: System.Reflection.BindingFlags, $binder: System.Reflection.Binder, $index: System.Array$1<any>, $culture: System.Globalization.CultureInfo): any
-            public SetValue($obj: any, $value: any, $index: System.Array$1<any>): void
-            public SetValue($obj: any, $value: any): void
-            public SetValue($obj: any, $value: any, $invokeAttr: System.Reflection.BindingFlags, $binder: System.Reflection.Binder, $index: System.Array$1<any>, $culture: System.Globalization.CultureInfo): void
-            public GetOptionalCustomModifiers(): System.Array$1<System.Type>
-            public GetRequiredCustomModifiers(): System.Array$1<System.Type>
-            public GetConstantValue(): any
-            public GetRawConstantValue(): any
-            public static op_Equality($left: System.Reflection.PropertyInfo, $right: System.Reflection.PropertyInfo): boolean
-            public static op_Inequality($left: System.Reflection.PropertyInfo, $right: System.Reflection.PropertyInfo): boolean
-            public static op_Equality($left: System.Reflection.MemberInfo, $right: System.Reflection.MemberInfo): boolean
-            public static op_Inequality($left: System.Reflection.MemberInfo, $right: System.Reflection.MemberInfo): boolean
+        }
+        class Binder extends System.Object {
+            protected [__keep_incompatibility]: never;
+        }
+        class ParameterModifier extends System.ValueType {
+            protected [__keep_incompatibility]: never;
+        }
+        class Module extends System.Object implements System.Runtime.InteropServices._Module, System.Reflection.ICustomAttributeProvider, System.Runtime.Serialization.ISerializable {
+            protected [__keep_incompatibility]: never;
         }
         class ConstructorInfo extends System.Reflection.MethodBase implements System.Runtime.InteropServices._MethodBase, System.Runtime.InteropServices._ConstructorInfo, System.Reflection.ICustomAttributeProvider, System.Runtime.InteropServices._MemberInfo {
             protected [__keep_incompatibility]: never;
@@ -26458,6 +26610,7 @@ declare namespace CS {
             public Invoke($obj: any, $invokeAttr: System.Reflection.BindingFlags, $binder: System.Reflection.Binder, $parameters: System.Array$1<any>, $culture: System.Globalization.CultureInfo): any
             public Invoke($obj: any, $parameters: System.Array$1<any>): any
         }
+        enum CallingConventions { Standard = 1, VarArgs = 2, Any = 3, HasThis = 32, ExplicitThis = 64 }
         class FieldInfo extends System.Reflection.MemberInfo implements System.Runtime.InteropServices._FieldInfo, System.Reflection.ICustomAttributeProvider, System.Runtime.InteropServices._MemberInfo {
             protected [__keep_incompatibility]: never;
             public get Attributes(): System.Reflection.FieldAttributes;
@@ -26494,25 +26647,6 @@ declare namespace CS {
             public static op_Equality($left: System.Reflection.MemberInfo, $right: System.Reflection.MemberInfo): boolean
             public static op_Inequality($left: System.Reflection.MemberInfo, $right: System.Reflection.MemberInfo): boolean
         }
-        interface MemberFilter {
-            (m: System.Reflection.MemberInfo, filterCriteria: any): boolean;
-            Invoke?: (m: System.Reflection.MemberInfo, filterCriteria: any) => boolean;
-        }
-        var MemberFilter: { new(func: (m: System.Reflection.MemberInfo, filterCriteria: any) => boolean): MemberFilter; }
-        enum MemberTypes { Constructor = 1, Event = 2, Field = 4, Method = 8, Property = 16, TypeInfo = 32, Custom = 64, NestedType = 128, All = 191 }
-        class AssemblyName extends System.Object implements System.ICloneable, System.Runtime.Serialization.IDeserializationCallback, System.Runtime.InteropServices._AssemblyName, System.Runtime.Serialization.ISerializable {
-            protected [__keep_incompatibility]: never;
-        }
-        class Binder extends System.Object {
-            protected [__keep_incompatibility]: never;
-        }
-        class ParameterModifier extends System.ValueType {
-            protected [__keep_incompatibility]: never;
-        }
-        class Module extends System.Object implements System.Runtime.InteropServices._Module, System.Reflection.ICustomAttributeProvider, System.Runtime.Serialization.ISerializable {
-            protected [__keep_incompatibility]: never;
-        }
-        enum CallingConventions { Standard = 1, VarArgs = 2, Any = 3, HasThis = 32, ExplicitThis = 64 }
         interface TypeFilter {
             (m: System.Type, filterCriteria: any): boolean;
             Invoke?: (m: System.Type, filterCriteria: any) => boolean;
@@ -26520,6 +26654,38 @@ declare namespace CS {
         var TypeFilter: { new(func: (m: System.Type, filterCriteria: any) => boolean): TypeFilter; }
         class EventInfo extends System.Reflection.MemberInfo implements System.Runtime.InteropServices._EventInfo, System.Reflection.ICustomAttributeProvider, System.Runtime.InteropServices._MemberInfo {
             protected [__keep_incompatibility]: never;
+        }
+        class PropertyInfo extends System.Reflection.MemberInfo implements System.Reflection.ICustomAttributeProvider, System.Runtime.InteropServices._PropertyInfo, System.Runtime.InteropServices._MemberInfo {
+            protected [__keep_incompatibility]: never;
+            public get Attributes(): System.Reflection.PropertyAttributes;
+            public get CanRead(): boolean;
+            public get CanWrite(): boolean;
+            public get GetMethod(): System.Reflection.MethodInfo;
+            public get SetMethod(): System.Reflection.MethodInfo;
+            public get IsSpecialName(): boolean;
+            public get MemberType(): System.Reflection.MemberTypes;
+            public get PropertyType(): System.Type;
+            public GetAccessors(): System.Array$1<System.Reflection.MethodInfo>
+            public GetAccessors($nonPublic: boolean): System.Array$1<System.Reflection.MethodInfo>
+            public GetGetMethod(): System.Reflection.MethodInfo
+            public GetGetMethod($nonPublic: boolean): System.Reflection.MethodInfo
+            public GetIndexParameters(): System.Array$1<System.Reflection.ParameterInfo>
+            public GetSetMethod(): System.Reflection.MethodInfo
+            public GetSetMethod($nonPublic: boolean): System.Reflection.MethodInfo
+            public GetValue($obj: any, $index: System.Array$1<any>): any
+            public GetValue($obj: any): any
+            public GetValue($obj: any, $invokeAttr: System.Reflection.BindingFlags, $binder: System.Reflection.Binder, $index: System.Array$1<any>, $culture: System.Globalization.CultureInfo): any
+            public SetValue($obj: any, $value: any, $index: System.Array$1<any>): void
+            public SetValue($obj: any, $value: any): void
+            public SetValue($obj: any, $value: any, $invokeAttr: System.Reflection.BindingFlags, $binder: System.Reflection.Binder, $index: System.Array$1<any>, $culture: System.Globalization.CultureInfo): void
+            public GetOptionalCustomModifiers(): System.Array$1<System.Type>
+            public GetRequiredCustomModifiers(): System.Array$1<System.Type>
+            public GetConstantValue(): any
+            public GetRawConstantValue(): any
+            public static op_Equality($left: System.Reflection.PropertyInfo, $right: System.Reflection.PropertyInfo): boolean
+            public static op_Inequality($left: System.Reflection.PropertyInfo, $right: System.Reflection.PropertyInfo): boolean
+            public static op_Equality($left: System.Reflection.MemberInfo, $right: System.Reflection.MemberInfo): boolean
+            public static op_Inequality($left: System.Reflection.MemberInfo, $right: System.Reflection.MemberInfo): boolean
         }
         enum TypeAttributes { VisibilityMask = 7, NotPublic = 0, Public = 1, NestedPublic = 2, NestedPrivate = 3, NestedFamily = 4, NestedAssembly = 5, NestedFamANDAssem = 6, NestedFamORAssem = 7, LayoutMask = 24, AutoLayout = 0, SequentialLayout = 8, ExplicitLayout = 16, ClassSemanticsMask = 32, Class = 0, Interface = 32, Abstract = 128, Sealed = 256, SpecialName = 1024, Import = 4096, Serializable = 8192, WindowsRuntime = 16384, StringFormatMask = 196608, AnsiClass = 0, UnicodeClass = 65536, AutoClass = 131072, CustomFormatClass = 196608, CustomFormatMask = 12582912, BeforeFieldInit = 1048576, ReservedMask = 264192, RTSpecialName = 2048, HasSecurity = 262144 }
         enum GenericParameterAttributes { None = 0, VarianceMask = 3, Covariant = 1, Contravariant = 2, SpecialConstraintMask = 28, ReferenceTypeConstraint = 4, NotNullableValueTypeConstraint = 8, DefaultConstructorConstraint = 16 }
@@ -29412,6 +29578,12 @@ declare namespace CS {
             public constructor($loader: Puerts.ILoader, $debugPort: number, $externalRuntime: System.IntPtr, $externalContext: System.IntPtr)
         }
         interface JsEnv {
+            GlobalListenerQuit(): void;
+            TryAutoUsing($printWarning?: boolean): void;
+            SupportCommonJS(): void;
+            RequireXORModules(): void;
+            RequireXORModules($isESM: boolean): void;
+            RequireXORModules($isESM: boolean, $throwOnFailure: boolean): void;
             UsingTick(): void;
             AutoUsing(): void;
             UsingAction(...args: string[]): void;
@@ -29985,6 +30157,9 @@ declare namespace CS {
             public IsExtension: boolean
         }
     }
+    namespace XOR.Settings {
+        enum LOGGER { NONE = 0, INFO = 1, WARN = 2, ERROR = 4, FULL = 7 }
+    }
     namespace XOR.ThreadWorker {
         class EventData extends System.Object {
             protected [__keep_incompatibility]: never;
@@ -29992,6 +30167,13 @@ declare namespace CS {
             public Value: any
             public Key: any
             public Id: number
+            public constructor()
+        }
+        class CreateOptions extends System.Object {
+            protected [__keep_incompatibility]: never;
+            public static NONE: XOR.ThreadWorker.CreateOptions
+            public Filepath: string
+            public Remote: boolean
             public constructor()
         }
         enum ValueType { Unknown = 0, Value = 1, Object = 2, Array = 3, ArrayBuffer = 4, JSON = 5, RefObject = 6 }
@@ -30039,9 +30221,6 @@ declare namespace CS {
             Invoke?: () => any;
         }
         var GetValueForCheck: { new(func: () => any): GetValueForCheck; }
-    }
-    class DelegateUtil extends System.Object {
-        protected [__keep_incompatibility]: never;
     }
     namespace PuertsStaticWrap {
         class AutoStaticCodeUsing extends System.Object {

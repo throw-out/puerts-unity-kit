@@ -18,3 +18,6 @@ setTimeout(() => {
         (<ts.ClassDeclaration>statement).name.getText().includes("AnalyzeTest")
     );
 }, 2000);
+
+console.log("child thread ready.");
+setInterval(() => console.log("child thread active:"), 1000);

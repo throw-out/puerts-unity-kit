@@ -15,12 +15,12 @@ class ThreadWorkerImpl {
     private readonly worker: csharp.XOR.ThreadWorker;
     private readonly events: Map<string, Function[]>;
 
-    constructor(loader: csharp.Puerts.ILoader) {
+    constructor(loader: csharp.Puerts.ILoader, options?: csharp.XOR.ThreadWorker.CreateOptions) {
         if (loader instanceof csharp.XOR.ThreadWorker) {
             this.worker = loader;
             this.mainThread = false;
         } else {
-            this.worker = csharp.XOR.ThreadWorker.Create(loader);
+            this.worker = csharp.XOR.ThreadWorker.Create(loader, options);
             this.mainThread = true;
         }
         this.worker.VerifyThread(this.mainThread);
@@ -36,9 +36,6 @@ class ThreadWorkerImpl {
         if (this.mainThread) {
             this.events.clear();
             this.worker.Dispose();
-            if (!this.worker.Equals(null)) {
-                csharp.UnityEngine.GameObject.Destroy(this.worker.gameObject);
-            }
         } else {
             this.post(CLOSE_EVENT_NAME);
         }
@@ -190,36 +187,41 @@ class ThreadWorkerImpl {
             };
         } else {
             this.worker.ChildThreadHandler = onmessage;
-            //创建remote proxy, 实现在子线程内访问Unity Api
-            let createProxy = (namespace: string) => {
-                return new Proxy(Object.create(null), {
-                    get: (cache, name) => {
-                        if (!(name in cache) && typeof (name) === "string") {
-                            let fullName = namespace ? (namespace + '.' + name) : name;
-                            //同步调用Unity Api
-                            if (fullName.startsWith("UnityEngine") && fullName !== "UnityEngine.Debug") {
-                                let cls = this.postSync(REMOTE_EVENT_NAME, fullName);
-                                if (cls) {
-                                    cache[name] = cls;
-                                }
-                                else {
-                                    cache[name] = createProxy(fullName);
-                                }
-                            } else {
-                                let value = CS;
-                                fullName.split(".").forEach(name => {
-                                    if (value && name) { value = value[name]; }
-                                });
-                                cache[name] = value;
-                            }
-                        }
-                        return cache[name];
-                    }
-                });
+            if (this.worker.Options && this.worker.Options.Remote) {
+                this.registerRemoteProxy();
             }
-            let puerts = require("puerts");
-            puerts.registerBuildinModule('csharp', createProxy(undefined));
         }
+    }
+    //创建remote proxy, 实现在子线程内访问Unity Api
+    private registerRemoteProxy() {
+        let createProxy = (namespace: string) => {
+            return new Proxy(Object.create(null), {
+                get: (cache, name) => {
+                    if (!(name in cache) && typeof (name) === "string") {
+                        let fullName = namespace ? (namespace + '.' + name) : name;
+                        //同步调用Unity Api
+                        if (fullName.startsWith("UnityEngine") && fullName !== "UnityEngine.Debug") {
+                            let cls = this.postSync(REMOTE_EVENT_NAME, fullName);
+                            if (cls) {
+                                cache[name] = cls;
+                            }
+                            else {
+                                cache[name] = createProxy(fullName);
+                            }
+                        } else {
+                            let value = csharp;
+                            fullName.split(".").forEach(name => {
+                                if (value && name) { value = value[name]; }
+                            });
+                            cache[name] = value;
+                        }
+                    }
+                    return cache[name];
+                }
+            });
+        }
+        let puerts = require("puerts");
+        puerts.registerBuildinModule('csharp', createProxy(undefined));
     }
 
     private pack(data: any): csharp.XOR.ThreadWorker.EventData {

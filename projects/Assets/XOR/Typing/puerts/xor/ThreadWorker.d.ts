@@ -15,6 +15,7 @@ declare class ThreadWorkerImpl {
     remove(eventName: string, fn: Function): void;
     removeAll(eventName?: string): void;
     private register;
+    private registerRemoteProxy;
     private pack;
     private unpack;
     private _packByRefs;

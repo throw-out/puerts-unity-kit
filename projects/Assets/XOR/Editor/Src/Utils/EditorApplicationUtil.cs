@@ -8,13 +8,15 @@ namespace XOR
 
         internal static void Start()
         {
-            Prefs.Enable.SetValue(true); 
+            Prefs.Enable.SetValue(true);
             try
             {
+                Logger.Log($"<b>XOR.{nameof(EditorApplication)}: <color=green>Executing</color></b>");
+
                 EditorApplication process = EditorApplication.GetInstance();
                 process.Env.Eval("require('./main/main')");
 
-                UnityEngine.Debug.Log($"<b>XOR.{nameof(EditorApplication)}: <color=green>Started</color>.</b>");
+                Logger.Log($"<b>XOR.{nameof(EditorApplication)}: <color=green>Started</color>.</b>");
             }
             catch (System.Exception e)
             {
@@ -32,7 +34,7 @@ namespace XOR
                 ThreadWorker.ReleaseAllInstance();
             }
 
-            if (print) UnityEngine.Debug.Log($"<b>XOR.{nameof(EditorApplication)}: <color=red>Stoped</color>.</b>");
+            if (print) Logger.Log($"<b>XOR.{nameof(EditorApplication)}: <color=red>Stoped</color>.</b>");
         }
     }
 }

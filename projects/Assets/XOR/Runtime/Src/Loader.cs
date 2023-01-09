@@ -148,7 +148,7 @@ namespace XOR
 #if UNITY_EDITOR
             var path = filepath;
             if (!path.EndsWith(".js") && !path.EndsWith(".cjs") && !path.EndsWith(".mjs") && !path.EndsWith(".json"))
-                UnityEngine.Debug.LogWarning("unknown file extension: " + filepath);
+                Logger.LogWarning("unknown file extension: " + filepath);
 
             if (path.StartsWith("node_modules/"))
                 path = Path.Combine(projectRoot, path);

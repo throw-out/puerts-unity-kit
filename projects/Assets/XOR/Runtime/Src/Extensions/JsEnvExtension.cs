@@ -32,7 +32,7 @@ namespace XOR
             }
             else if (printWarning)
             {
-                Debug.LogWarning($"AutoUsingCode not generate ");
+                Logger.LogWarning($"AutoUsingCode Not Generate.");
             }
         }
         public static void SupportCommonJS(this JsEnv env)

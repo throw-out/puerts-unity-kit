@@ -37,7 +37,7 @@ namespace XOR
             {
                 if (throwOnError)
                     throw new ThreadStateException("Thread busy!");
-                UnityEngine.Debug.LogWarning("Thread busy!");
+                Logger.LogWarning("Thread busy!");
                 return null;
             }
             try
@@ -91,7 +91,7 @@ namespace XOR
             {
                 if (throwOnError)
                     throw new ThreadStateException("Thread busy!");
-                UnityEngine.Debug.LogWarning("Thread busy!");
+                Logger.LogWarning("Thread busy!");
                 return null;
             }
             try

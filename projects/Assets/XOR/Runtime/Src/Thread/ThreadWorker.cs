@@ -47,6 +47,7 @@ namespace XOR
         public JsEnv Env { get; private set; }
         public ILoader Loader { get; private set; }
         public ThreadLoader ThreadLoader { get; private set; }
+        public CreateOptions Options { get; private set; }
         private bool _running = false;
         private bool _disposed = false;
         //跨线程同步
@@ -162,6 +163,7 @@ namespace XOR
         {
             if (this._disposed)
                 return;
+            Env = null;
 #if UNITY_EDITOR
             ThreadWorkerEditorCaller.Unregister(this);
 #endif
@@ -172,7 +174,7 @@ namespace XOR
             this._running = false;
             MainThreadHandler = null;
             ChildThreadHandler = null;
-            Env = null;
+
             if (_thread != null)
             {
                 //此处仅通知线程抛出异常自行结束(使用Abort将导致crash<puerts>)
@@ -189,6 +191,9 @@ namespace XOR
 
         void ThreadExecute(bool isESM, string filepath)
         {
+            int id = Thread.CurrentThread.ManagedThreadId;
+
+            Logger.Log($"<b>XOR.{nameof(ThreadWorker)}({id}): <color=green>Executing</color></b>");
             JsEnv env = null;
             try
             {
@@ -202,6 +207,7 @@ namespace XOR
                 env.BindThreadWorker(this);
                 env.Eval(string.Format("require('{0}')", filepath));
 
+                Logger.Log($"<b>XOR.{nameof(ThreadWorker)}({id}): <color=green>Started</color></b>");
                 while (env == this.Env && IsAlive)
                 {
                     env.Tick();
@@ -215,11 +221,11 @@ namespace XOR
             catch (ThreadInterruptedException /** e */)
             {
                 //线程在休眠期间, 调用thread.Interrupt()抛出此异常, 此处不处理, 不影响运行
-                //UnityEngine.Debug.Log(e.ToString());
+                Logger.Log($"<b>XOR.{nameof(ThreadWorker)}({id}): <color=red>Abort</color></b>");
             }
             catch (Exception e)
             {
-                UnityEngine.Debug.LogError(e.ToString());
+                Logger.LogError($"<b>XOR.{nameof(ThreadWorker)}({id}): <color=red>Exception</color></b>\n{e}");
             }
             finally
             {
@@ -230,6 +236,7 @@ namespace XOR
                     env.Tick();
                     env.Dispose();
                 }
+                Logger.Log($"<b>XOR.{nameof(ThreadWorker)}({id}): <color=red>Stoped</color></b>");
             }
         }
 
@@ -256,7 +263,7 @@ namespace XOR
                     }
                     catch (Exception e)
                     {
-                        UnityEngine.Debug.LogError(e.Message);
+                        Logger.LogError(e.Message);
                     }
                 }
             }
@@ -283,7 +290,7 @@ namespace XOR
                     }
                     catch (Exception e)
                     {
-                        UnityEngine.Debug.LogError(e.Message);
+                        Logger.LogError(e.Message);
                     }
                 }
             }
@@ -308,7 +315,7 @@ namespace XOR
                 }
                 catch (Exception e)
                 {
-                    UnityEngine.Debug.LogError(e.Message);
+                    Logger.LogError(e.Message);
                 }
             }
         }
@@ -331,7 +338,7 @@ namespace XOR
                 return false;
 
             DateTime timeout = DateTime.Now + TimeSpan.FromMilliseconds(THREAD_LOCK_TIMEOUT);
-            while (DateTime.Now <= timeout)
+            while (DateTime.Now <= timeout && this.IsAlive)
             {
                 //请求锁
                 locker.AcquireWriter(true);
@@ -359,7 +366,7 @@ namespace XOR
         }
 
         public static ThreadWorker Create(ILoader loader) => Create(loader, null);
-        public static ThreadWorker Create(ILoader loader, string filepath)
+        public static ThreadWorker Create(ILoader loader, CreateOptions options)
         {
 #if !UNITY_EDITOR && UNITY_WEBGL
             throw new InvalidOperationException();
@@ -395,12 +402,23 @@ namespace XOR
 
             worker.Loader = mloader;
             worker.ThreadLoader = tloader;
+            worker.Options = options != null ? options : CreateOptions.NONE;
 
-            if (!string.IsNullOrEmpty(filepath))
+            if (options != null && !string.IsNullOrEmpty(options.Filepath))
             {
-                worker.Run(filepath);
+                worker.Run(options.Filepath);
             }
             return worker;
+        }
+
+        public class CreateOptions
+        {
+            public static readonly CreateOptions NONE = new CreateOptions();
+            public string Filepath;
+            /// <summary>
+            /// 创建remote代理端口
+            /// </summary>
+            public bool Remote;
         }
 
         private class Event
@@ -482,7 +500,7 @@ namespace XOR
             }
             else
             {
-                UnityEngine.Debug.Log($"XOR.{nameof(ThreadWorkerEditorCaller)} Registered: <b><color=red>Failure</color></b>.");
+                UnityEngine.Debug.LogError($"XOR.{nameof(ThreadWorkerEditorCaller)} Registered: <b><color=red>Failure</color></b>.");
             }
         }
         static void UnregisterHandlers()
@@ -496,6 +514,7 @@ namespace XOR
         }
 #endif
         static HashSet<ThreadWorker> _instances;
+        static object locker = new object();
 
         static void Update()
         {
@@ -504,22 +523,31 @@ namespace XOR
 
             foreach (ThreadWorker worker in _instances)
             {
-                if (worker.Disposed)
+                if (worker.Disposed || !worker.IsAlive)
                     continue;
+                worker.Tick();
             }
         }
         static void Dispose(object sender, EventArgs e)
         {
-            if (_instances == null)
+            HashSet<ThreadWorker> workers = null;
+            lock (locker)
+            {
+                if (_instances != null)
+                {
+                    workers = _instances;
+                    _instances = null;
+                }
+            }
+            if (workers == null)
                 return;
 
-            foreach (ThreadWorker worker in _instances)
+            foreach (ThreadWorker worker in workers)
             {
                 if (worker.Disposed)
                     continue;
                 worker.Dispose();
             }
-            _instances = null;
         }
 
         public static void Register(ThreadWorker worker)
@@ -527,7 +555,12 @@ namespace XOR
             if (worker == null || worker.Disposed)
                 return;
             if (_instances == null)
-                _instances = new HashSet<ThreadWorker>();
+            {
+                lock (locker)
+                {
+                    if (_instances == null) _instances = new HashSet<ThreadWorker>();
+                }
+            }
             _instances.Add(worker);
         }
         public static void Unregister(ThreadWorker worker)

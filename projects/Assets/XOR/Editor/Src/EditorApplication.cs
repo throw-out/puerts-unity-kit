@@ -104,7 +104,7 @@ namespace XOR
             }
             else
             {
-                UnityEngine.Debug.Log($"XOR.{nameof(EditorApplicationHandler)} Registered: <b><color=red>Failure</color></b>.");
+                UnityEngine.Debug.LogError($"XOR.{nameof(EditorApplicationHandler)} Registered: <b><color=red>Failure</color></b>.");
             }
         }
         static void UnregisterHandlers()

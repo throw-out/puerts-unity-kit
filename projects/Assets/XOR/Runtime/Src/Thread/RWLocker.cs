@@ -14,40 +14,6 @@ namespace XOR
         {
             this.timeout = millisecondsTimeout;
         }
-
-        public bool LockWrite(Action callback, bool throwOnFailure = true)
-        {
-            if (!AcquireWriter(throwOnFailure))
-            {
-                return false;
-            }
-            try
-            {
-                callback();
-            }
-            finally
-            {
-                ReleaseWriter();
-            }
-            return true;
-        }
-        public bool LockRead(Action callback, bool throwOnFailure = true)
-        {
-            if (!AcquireReader(throwOnFailure))
-            {
-                return false;
-            }
-            try
-            {
-                callback();
-            }
-            finally
-            {
-                ReleaseReader();
-            }
-            return true;
-        }
-
         public bool AcquireWriter(bool throwOnFailure = true)
         {
             try

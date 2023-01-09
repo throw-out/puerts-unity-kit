@@ -117,7 +117,7 @@ _g.nodeRequire = _g.nodeRequire || _g.require;
             }
             catch (Exception e)
             {
-                Debug.LogWarning(e);
+                Logger.LogWarning(e);
             }
         }
     }

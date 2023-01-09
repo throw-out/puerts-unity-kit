@@ -157,37 +157,39 @@ class ThreadWorkerImpl {
         }
         else {
             this.worker.ChildThreadHandler = onmessage;
-            let createProxy = (namespace) => {
-                return new Proxy(Object.create(null), {
-                    get: (cache, name) => {
-                        if (!(name in cache) && typeof (name) === "string") {
-                            let fullName = namespace ? (namespace + '.' + name) : name;
-                            if (fullName.startsWith("UnityEngine") && fullName !== "UnityEngine.Debug") {
-                                let cls = this.postSync(REMOTE_EVENT_NAME, fullName);
-                                if (cls) {
-                                    cache[name] = cls;
-                                }
-                                else {
-                                    cache[name] = createProxy(fullName);
-                                }
+        }
+    }
+    registerRemoteProxy() {
+        let createProxy = (namespace) => {
+            return new Proxy(Object.create(null), {
+                get: (cache, name) => {
+                    if (!(name in cache) && typeof (name) === "string") {
+                        let fullName = namespace ? (namespace + '.' + name) : name;
+                        if (fullName.startsWith("UnityEngine") && fullName !== "UnityEngine.Debug") {
+                            let cls = this.postSync(REMOTE_EVENT_NAME, fullName);
+                            if (cls) {
+                                cache[name] = cls;
                             }
                             else {
-                                let value = CS;
-                                fullName.split(".").forEach(name => {
-                                    if (value && name) {
-                                        value = value[name];
-                                    }
-                                });
-                                cache[name] = value;
+                                cache[name] = createProxy(fullName);
                             }
                         }
-                        return cache[name];
+                        else {
+                            let value = CS;
+                            fullName.split(".").forEach(name => {
+                                if (value && name) {
+                                    value = value[name];
+                                }
+                            });
+                            cache[name] = value;
+                        }
                     }
-                });
-            };
-            let puerts = require("puerts");
-            puerts.registerBuildinModule('csharp', createProxy(undefined));
-        }
+                    return cache[name];
+                }
+            });
+        };
+        let puerts = require("puerts");
+        puerts.registerBuildinModule('csharp', createProxy(undefined));
     }
     pack(data) {
         switch (this._validate(data)) {
@@ -386,4 +388,4 @@ function register() {
     _g.XOR["globalWorker"] = undefined;
 }
 register();
-//# sourceMappingURL=ThreadWorker.js.map
+//# sourceMappingURL=threadWorker.js.map
