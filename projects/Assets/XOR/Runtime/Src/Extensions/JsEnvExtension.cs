@@ -57,8 +57,10 @@ namespace XOR
         }
 
         static readonly string[] XORModules = new string[] {
-            "puerts/xor/globalListener",
-            "puerts/xor/threadWorker",
+            "puerts/xor/GlobalListener.js",
+            "puerts/xor/ThreadWorker.js",
+            "puerts/xor/components/TsBehaviour.js",
+            "puerts/xor/components/TsComponent.js",
         };
         /// <summary>
         /// 初始化XOR依赖模块
@@ -112,7 +114,7 @@ namespace XOR
 function func(worker){ 
     let _g = (function(){ return global || globalThis || this; })();
     _g.XOR = _g.XOR ?? {};
-    _g.XOR.globalWorker = new ThreadWorker(worker);
+    _g.XOR.globalWorker = new XOR.ThreadWorker(worker);
 }
 func
 ";

@@ -1,18 +1,18 @@
-import * as CS from "csharp";
+import * as csharp from "csharp";
 import { $typeof } from "puerts";
 
-import Transform = CS.UnityEngine.Transform;
-import GameObject = CS.UnityEngine.GameObject;
-import RectTransform = CS.UnityEngine.RectTransform;
-import Application = CS.UnityEngine.Application;
-import PointerEventData = CS.UnityEngine.EventSystems.PointerEventData;
-import Collision = CS.UnityEngine.Collision;
-import Collision2D = CS.UnityEngine.Collision2D;
-import Collider = CS.UnityEngine.Collider;
-import Collider2D = CS.UnityEngine.Collider2D;
-import Time = CS.UnityEngine.Time;
+import Transform = csharp.UnityEngine.Transform;
+import GameObject = csharp.UnityEngine.GameObject;
+import RectTransform = csharp.UnityEngine.RectTransform;
+import Application = csharp.UnityEngine.Application;
+import PointerEventData = csharp.UnityEngine.EventSystems.PointerEventData;
+import Collision = csharp.UnityEngine.Collision;
+import Collision2D = csharp.UnityEngine.Collision2D;
+import Collider = csharp.UnityEngine.Collider;
+import Collider2D = csharp.UnityEngine.Collider2D;
+import Time = csharp.UnityEngine.Time;
 
-const { File, Path } = CS.System.IO;
+const { File, Path } = csharp.System.IO;
 const isEditor = Application.isEditor;
 
 /**
@@ -101,31 +101,31 @@ abstract class IGizmos {
 abstract class IOnPointerHandler {
     /**
      * 实现C#接口: UnityEngine.EventSystems.IPointerClickHandler
-     * @see CS.UnityEngine.EventSystems.IPointerClickHandler
+     * @see csharp.UnityEngine.EventSystems.IPointerClickHandler
      * @param eventData 
      */
     protected OnPointerClick?(eventData: PointerEventData): void;
     /**
      * 实现C#接口: UnityEngine.EventSystems.IPointerDownHandler
-     * @see CS.UnityEngine.EventSystems.IPointerDownHandler
+     * @see csharp.UnityEngine.EventSystems.IPointerDownHandler
      * @param eventData 
      */
     protected OnPointerDown?(eventData: PointerEventData): void;
     /**
      * 实现C#接口: UnityEngine.EventSystems.IPointerUpHandler
-     * @see CS.UnityEngine.EventSystems.IPointerUpHandler
+     * @see csharp.UnityEngine.EventSystems.IPointerUpHandler
      * @param eventData 
      */
     protected OnPointerUp?(eventData: PointerEventData): void;
     /**
      * 实现C#接口: UnityEngine.EventSystems.IPointerEnterHandler
-     * @see CS.UnityEngine.EventSystems.IPointerEnterHandler
+     * @see csharp.UnityEngine.EventSystems.IPointerEnterHandler
      * @param eventData 
      */
     protected OnPointerEnter?(eventData: PointerEventData): void;
     /**
      * 实现C#接口: UnityEngine.EventSystems.IPointerExitHandler
-     * @see CS.UnityEngine.EventSystems.IPointerExitHandler
+     * @see csharp.UnityEngine.EventSystems.IPointerExitHandler
      * @param eventData 
      */
     protected OnPointerExit?(eventData: PointerEventData): void;
@@ -133,19 +133,19 @@ abstract class IOnPointerHandler {
 abstract class IOnDragHandler {
     /**
      * 实现C#接口: UnityEngine.EventSystems.IBeginDragHandler
-     * @see CS.UnityEngine.EventSystems.IBeginDragHandler
+     * @see csharp.UnityEngine.EventSystems.IBeginDragHandler
      * @param eventData 
      */
     protected OnBeginDrag?(eventData: PointerEventData): void;
     /**
      * 实现C#接口: UnityEngine.EventSystems.IDragHandler
-     * @see CS.UnityEngine.EventSystems.IDragHandler
+     * @see csharp.UnityEngine.EventSystems.IDragHandler
      * @param eventData 
      */
     protected OnDrag?(eventData: PointerEventData): void;
     /**
      * 实现C#接口: UnityEngine.EventSystems.IEndDragHandler
-     * @see CS.UnityEngine.EventSystems.IEndDragHandler
+     * @see csharp.UnityEngine.EventSystems.IEndDragHandler
      * @param eventData 
      */
     protected OnEndDrag?(eventData: PointerEventData): void;
@@ -261,31 +261,30 @@ abstract class IOnMouse {
     protected OnMouseUpAsButton?(): void;
 }
 
-
 /**
  * 沿用C# MonoBehaviour习惯, 将OnEnable丶Update丶OnEnable等方法绑定到C#对象上, Unity将在生命周期内调用
  * 
  * 注: 为避免多次跨语言调用, Update丶FixedUpdate丶LateUpdate方法将由BatchProxy统一管理(并非绑定到各自的GameObject上)
  * @see Standalone 如果需要绑定独立的组件, 在对应方法上添加此标注
  */
-export class TsBehaviour {
+class TsBehaviourImpl {
     private __transform__: Transform;
     private __gameObject__: GameObject;
-    private __component__: CS.XOR.TsBehaviour;
+    private __component__: csharp.XOR.TsBehaviour;
     private __listeners__: Map<string, Function[]>;
-    private __listenerProxy__: CS.XOR.TsMessages;
+    private __listenerProxy__: csharp.XOR.TsMessages;
 
-    public constructor(trf: Transform | GameObject, refs?: boolean | CS.XOR.TsPropertys | CS.XOR.TsPropertys[]) {
+    public constructor(trf: Transform | GameObject, refs?: boolean | csharp.XOR.TsPropertys | csharp.XOR.TsPropertys[]) {
         if (trf instanceof GameObject)
             trf = trf.transform;
         this.__transform__ = trf;
         this.__gameObject__ = trf.gameObject;
         //bind props
         if (refs === undefined || refs === true) {
-            TsBehaviour.bindPropertys(this, trf.GetComponents($typeof(CS.XOR.TsPropertys)) as CS.System.Array$1<CS.XOR.TsPropertys>, false);
+            TsBehaviourImpl.bindPropertys(this, trf.GetComponents($typeof(csharp.XOR.TsPropertys)) as csharp.System.Array$1<csharp.XOR.TsPropertys>, false);
         }
         else if (refs) {
-            TsBehaviour.bindPropertys(this, refs, false);
+            TsBehaviourImpl.bindPropertys(this, refs, false);
         }
         //call constructor
         let ctor: Function = this["onConstructor"];
@@ -304,12 +303,12 @@ export class TsBehaviour {
         this._bindModuleForEditor();
     }
     //协程
-    public StartCoroutine(routine: ((...args: any[]) => Generator) | Generator, ...args: any[]): CS.UnityEngine.Coroutine {
+    public StartCoroutine(routine: ((...args: any[]) => Generator) | Generator, ...args: any[]): csharp.UnityEngine.Coroutine {
         //传入了js Generator方法, 转为C#迭代器对象
         var iterator = cs_generator(routine, ...args);
         return this.component.StartCoroutine(iterator);
     }
-    public StopCoroutine(routine: CS.UnityEngine.Coroutine) {
+    public StopCoroutine(routine: csharp.UnityEngine.Coroutine) {
         this.component.StopCoroutine(routine);
     }
     public StopAllCoroutines() {
@@ -324,9 +323,9 @@ export class TsBehaviour {
         //create message proxy
         if (!this.__listenerProxy__ || this.__listenerProxy__.Equals(null)) {
             this.__listenerProxy__ = (
-                this.__gameObject__.GetComponent($typeof(CS.XOR.TsMessages)) ??
-                this.__gameObject__.AddComponent($typeof(CS.XOR.TsMessages))
-            ) as CS.XOR.TsMessages;
+                this.__gameObject__.GetComponent($typeof(csharp.XOR.TsMessages)) ??
+                this.__gameObject__.AddComponent($typeof(csharp.XOR.TsMessages))
+            ) as csharp.XOR.TsMessages;
             this.__listenerProxy__.emptyCallback = () => this._invokeListeners('');
             this.__listenerProxy__.callback = (name, args) => this._invokeListeners(name, args);
         }
@@ -384,7 +383,7 @@ export class TsBehaviour {
         this.__listenerProxy__.callback = null;
         this.__listenerProxy__.emptyCallback = null;
     }
-    private _invokeListeners(eventName: string, args?: Array<any> | CS.System.Array$1<any>) {
+    private _invokeListeners(eventName: string, args?: Array<any> | csharp.System.Array$1<any>) {
         if (!this.__listeners__) {
             console.warn(`invail invoke: ${eventName}`);
             return;
@@ -393,7 +392,7 @@ export class TsBehaviour {
         if (!functions)
             return;
 
-        if (args instanceof CS.System.Array) {
+        if (args instanceof csharp.System.Array) {
             let _args = new Array<any>();
             for (let i = 0; i < args.Length; i++) {
                 _args.push(args.get_Item(i));
@@ -483,16 +482,16 @@ export class TsBehaviour {
             ["LateUpdate", BatchProxy.LateUpdate],
             ["FixedUpdate", BatchProxy.FixedUpdate],
         ]).map(([funcname, proxy]) => {
-            let waitAsyncComplete = Metadata.getDefineData(proto, funcname, Throttle, false);
+            let waitAsyncComplete = Metadata.getDefineData(proto, funcname, TsBehaviourImpl.Throttle, false);
             let func: Function = bind(this, funcname, waitAsyncComplete);
             if (!func) {
                 return null;
             }
-            if (Metadata.isDefine(proto, funcname, Standalone)) {
-                this.component.CreateProxy(funcname, func as CS.System.Action);
+            if (Metadata.isDefine(proto, funcname, TsBehaviourImpl.Standalone)) {
+                this.component.CreateProxy(funcname, func as csharp.System.Action);
                 return undefined
             }
-            let frameskip = Metadata.getDefineData(proto, funcname, Frameskip, 0);
+            let frameskip = Metadata.getDefineData(proto, funcname, TsBehaviourImpl.Frameskip, 0);
             return <[Function, BatchProxy, number]>[func, proxy, frameskip];
         }).filter(o => !!o);
 
@@ -509,35 +508,35 @@ export class TsBehaviour {
                 proxies.forEach(([func, batch, frameskip]) => batch.removeListener(func, frameskip));
             };
             //生命周期管理
-            let proxy = this.component.GetProxy("OnEnable") as CS.XOR.ProxyAction;
+            let proxy = this.component.GetProxy("OnEnable") as csharp.XOR.ProxyAction;
             if (!proxy || proxy.Equals(null))
                 this.component.CreateProxy("OnEnable", enable);
             else {
-                proxy.callback = CS.System.Delegate.Combine(proxy.callback, new CS.System.Action(enable)) as CS.System.Action;
+                proxy.callback = csharp.System.Delegate.Combine(proxy.callback, new csharp.System.Action(enable)) as csharp.System.Action;
             }
-            proxy = this.component.GetProxy("OnDisable") as CS.XOR.ProxyAction;
+            proxy = this.component.GetProxy("OnDisable") as csharp.XOR.ProxyAction;
             if (!proxy || proxy.Equals(null))
                 this.component.CreateProxy("OnDisable", disable);
             else {
-                proxy.callback = CS.System.Delegate.Combine(proxy.callback, new CS.System.Action(disable)) as CS.System.Action;
+                proxy.callback = csharp.System.Delegate.Combine(proxy.callback, new csharp.System.Action(disable)) as csharp.System.Action;
             }
 
-            proxy = this.component.GetProxy("OnDestroy") as CS.XOR.ProxyAction;
+            proxy = this.component.GetProxy("OnDestroy") as csharp.XOR.ProxyAction;
             if (!proxy || proxy.Equals(null))
                 this.component.CreateProxy("OnDestroy", disable);
             else {
-                proxy.callback = CS.System.Delegate.Combine(proxy.callback, new CS.System.Action(disable)) as CS.System.Action;
+                proxy.callback = csharp.System.Delegate.Combine(proxy.callback, new csharp.System.Action(disable)) as csharp.System.Action;
             }
         };
     }
     private _bindListeners() {
         let proto = Object.getPrototypeOf(this);
         for (let funcname of Metadata.getKeys(proto)) {
-            let eventName = Metadata.getDefineData(proto, funcname, Listener);
+            let eventName = Metadata.getDefineData(proto, funcname, TsBehaviourImpl.Listener);
             if (!eventName)
                 continue;
-            let waitAsyncComplete = Metadata.getDefineData(proto, funcname, Throttle, false);
-            let func: CS.System.Action = bind(this, funcname, waitAsyncComplete);
+            let waitAsyncComplete = Metadata.getDefineData(proto, funcname, TsBehaviourImpl.Throttle, false);
+            let func: csharp.System.Action = bind(this, funcname, waitAsyncComplete);
             if (!func)
                 return undefined;
             this.addListener(eventName, func);
@@ -630,28 +629,28 @@ export class TsBehaviour {
     }
     protected get component() {
         if (!this.__component__ || this.__component__.Equals(null)) {
-            this.__component__ = this.__gameObject__.GetComponent($typeof(CS.XOR.TsBehaviour)) as CS.XOR.TsBehaviour;
+            this.__component__ = this.__gameObject__.GetComponent($typeof(csharp.XOR.TsBehaviour)) as csharp.XOR.TsBehaviour;
             if (!this.__component__ || this.__component__.Equals(null)) {
-                this.__component__ = this.__gameObject__.AddComponent($typeof(CS.XOR.TsBehaviour)) as CS.XOR.TsBehaviour;
+                this.__component__ = this.__gameObject__.AddComponent($typeof(csharp.XOR.TsBehaviour)) as csharp.XOR.TsBehaviour;
             }
         }
         return this.__component__;
     };
 }
 //无实际意义: 仅作为子类实现接口提示用
-export interface TsBehaviour extends IBehaviour, IGizmos, IOnPointerHandler, IOnDragHandler, IOnMouse, IOnCollision, IOnCollision2D, IOnTrigger, IOnTrigger2D {
+interface TsBehaviourImpl extends IBehaviour, IGizmos, IOnPointerHandler, IOnDragHandler, IOnMouse, IOnCollision, IOnCollision2D, IOnTrigger, IOnTrigger2D {
 }
 
-export namespace TsBehaviour {
+namespace TsBehaviourImpl {
     /**将C# TsPropertys中的属性绑定到obj对象上
      * @param instance 
      * @param refs 
      * @param destroy 
      */
-    export function bindPropertys(instance: object, refs: CS.XOR.TsPropertys | CS.XOR.TsPropertys[] | CS.System.Array$1<CS.XOR.TsPropertys>, destroy?: boolean) {
+    export function bindPropertys(instance: object, refs: csharp.XOR.TsPropertys | csharp.XOR.TsPropertys[] | csharp.System.Array$1<csharp.XOR.TsPropertys>, destroy?: boolean) {
         if (refs) {
-            let refsList = new Array<CS.XOR.TsPropertys>();
-            if (refs instanceof CS.XOR.TsPropertys) {
+            let refsList = new Array<csharp.XOR.TsPropertys>();
+            if (refs instanceof csharp.XOR.TsPropertys) {
                 refsList.push(refs);
             }
             else if (Array.isArray(refs)) {
@@ -676,8 +675,8 @@ export namespace TsBehaviour {
                     }
                     let value = prop.value;
                     instance[prop.key] = value;
-                    if (value && value.GetType && (value.GetType() as CS.System.Type).IsArray) {
-                        let arr = value as CS.System.Array;
+                    if (value && value.GetType && (value.GetType() as csharp.System.Type).IsArray) {
+                        let arr = value as csharp.System.Array;
                         for (let i = 0; i < arr.Length; i++) {
                             if (arr.GetValue(i)?.Equals(null)) {
                                 arr.SetValue(null, i);
@@ -689,6 +688,70 @@ export namespace TsBehaviour {
             })
         }
     }
+
+    /**以独立组件的方式调用
+     * 适用于Update丶LateUpdate和FixedUpdate方法, 默认以BatchProxy管理调用以满足更高性能要求
+     * @returns 
+     */
+    export function Standalone(): PropertyDecorator {
+        return (target, key: string) => {
+            let proto = target.constructor.prototype;
+            if (!(proto instanceof TsBehaviourImpl)) {
+                console.warn(`${target.constructor.name}: invaild decorator ${Standalone.name}`);
+                return;
+            }
+            Metadata.define(proto, key, Standalone);
+        };
+    }
+    /**跨帧调用(全局共用/非单独的frameskip分区)
+     * 适用于Update丶LateUpdate和FixedUpdate方法, 仅允许BatchProxy管理调用(与Standalone组件冲突)
+     * @param value  每n帧调用一次(<不包含>大于1时才有效)
+     * @returns 
+     */
+    export function Frameskip(value: number): PropertyDecorator {
+        return (target, key: string) => {
+            let proto = target.constructor.prototype;
+            if (!(proto instanceof TsBehaviourImpl)) {
+                console.warn(`${target.constructor.name}: invaild decorator ${Frameskip.name}`);
+                return;
+            }
+            if (!Number.isInteger(value) || value <= 1) {
+                console.warn(`${target.constructor.name}: invaild decorator parameter ${value} for ${Frameskip.name}`);
+                return;
+            }
+            Metadata.define(proto, key, Frameskip, value);
+        };
+    }
+    /**节流方法
+     * 适用于async/Promise方法, 在上一次调用完成后才会再次调用(Awake丶Update丶FixedUpdate...)
+     * @param enable 
+     * @returns 
+     */
+    export function Throttle(enable: boolean): PropertyDecorator {
+        return (target, key: string) => {
+            let proto = target.constructor.prototype;
+            if (!(proto instanceof TsBehaviourImpl)) {
+                console.warn(`${target.constructor.name}: invaild decorator ${Throttle.name}`);
+                return;
+            }
+            Metadata.define(proto, key, Throttle, !!enable);
+        };
+    }
+    /**注册侦听器
+     * 适用于@see CS.XOR.TsMessages 回调
+     * @param eventName 
+     * @returns 
+     */
+    export function Listener(eventName?: string): PropertyDecorator {
+        return (target, key: string) => {
+            let proto = target.constructor.prototype;
+            if (!(proto instanceof TsBehaviourImpl)) {
+                console.warn(`${target.constructor.name}: invaild decorator ${Listener.name}`);
+                return;
+            }
+            Metadata.define(proto, key, Listener, eventName ?? key);
+        };
+    }
 }
 
 /**Update批量调用 */
@@ -697,22 +760,22 @@ class BatchProxy {
     private static fixedDeltaTime() { return Time.fixedDeltaTime; }
 
     public static get Update() {
-        return this._getter("__Update", CS.XOR.UpdateProxy, this.deltaTime)
+        return this._getter("__Update", csharp.XOR.UpdateProxy, this.deltaTime)
     };
     public static get FixedUpdate() {
-        return this._getter("__FixedUpdate", CS.XOR.FixedUpdateProxy, this.fixedDeltaTime)
+        return this._getter("__FixedUpdate", csharp.XOR.FixedUpdateProxy, this.fixedDeltaTime)
     };
     public static get LateUpdate() {
-        return this._getter("__LateUpdate", CS.XOR.LateUpdateProxy, this.deltaTime)
+        return this._getter("__LateUpdate", csharp.XOR.LateUpdateProxy, this.deltaTime)
     };
 
-    private static _getter(key: string, type: { new(...args: any[]): CS.XOR.ProxyAction }, timeGetter?: () => number) {
+    private static _getter(key: string, type: { new(...args: any[]): csharp.XOR.ProxyAction }, timeGetter?: () => number) {
         let proxy: BatchProxy = this[key];
         if (!proxy) {
-            let gameObject: CS.UnityEngine.GameObject = this["_gameObject_"];
+            let gameObject: csharp.UnityEngine.GameObject = this["_gameObject_"];
             if (!gameObject || gameObject.Equals(null)) {
-                gameObject = new CS.UnityEngine.GameObject("SingletonUpdater");
-                gameObject.transform.SetParent((CS.XOR.Application.GetInstance() as CS.XOR.Application).transform);
+                gameObject = new csharp.UnityEngine.GameObject("SingletonUpdater");
+                gameObject.transform.SetParent((csharp.XOR.Application.GetInstance() as csharp.XOR.Application).transform);
                 this["_gameObject_"] = gameObject;
             }
             proxy = new BatchProxy(gameObject.AddComponent($typeof(type)) as any, timeGetter);
@@ -721,11 +784,11 @@ class BatchProxy {
         return proxy;
     }
 
-    private readonly caller: CS.XOR.ProxyAction;
+    private readonly caller: csharp.XOR.ProxyAction;
     private readonly efHanlders: Function[] = [];
     private readonly sfHandlers: Map<number, { tick: number, dt: number, readonly methods: Function[], readonly frameskip: number }> = new Map();
 
-    private constructor(caller: CS.XOR.ProxyAction, timeGetter: () => number) {
+    private constructor(caller: csharp.XOR.ProxyAction, timeGetter: () => number) {
         this.caller = caller;
         this.caller.callback = (...args: any[]) => {
             let dt = timeGetter ? timeGetter() : 0;
@@ -800,7 +863,7 @@ function bind(thisArg: object, funcname: string | Function, waitAsyncComplete?: 
 }
 
 /**创建C#迭代器 */
-function cs_generator(func: ((...args: any[]) => Generator) | Generator, ...args: any[]): CS.System.Collections.IEnumerator {
+function cs_generator(func: ((...args: any[]) => Generator) | Generator, ...args: any[]): csharp.System.Collections.IEnumerator {
     let generator: Generator = undefined;
     if (typeof (func) === "function") {
         generator = func(...args);
@@ -811,81 +874,17 @@ function cs_generator(func: ((...args: any[]) => Generator) | Generator, ...args
         generator = func;
     }
 
-    return CS.XOR.IEnumeratorUtil.Generator(function () {
-        let tick: CS.XOR.IEnumeratorUtil.Tick;
+    return csharp.XOR.IEnumeratorUtil.Generator(function () {
+        let tick: csharp.XOR.IEnumeratorUtil.Tick;
         try {
             let next = generator.next();
-            tick = new CS.XOR.IEnumeratorUtil.Tick(next.value, next.done);
+            tick = new csharp.XOR.IEnumeratorUtil.Tick(next.value, next.done);
         } catch (e) {
-            tick = new CS.XOR.IEnumeratorUtil.Tick(null, true);
+            tick = new csharp.XOR.IEnumeratorUtil.Tick(null, true);
             console.error(e.message + "\n" + e.stack);
         }
         return tick;
     });
-}
-
-/**以独立组件的方式调用
- * 适用于Update丶LateUpdate和FixedUpdate方法, 默认以BatchProxy管理调用以满足更高性能要求
- * @returns 
- */
-export function Standalone(): PropertyDecorator {
-    return (target, key: string) => {
-        let proto = target.constructor.prototype;
-        if (!(proto instanceof TsBehaviour)) {
-            console.warn(`${target.constructor.name}: invaild decorator ${Standalone.name}`);
-            return;
-        }
-        Metadata.define(proto, key, Standalone);
-    };
-}
-/**跨帧调用(全局共用/非单独的frameskip分区)
- * 适用于Update丶LateUpdate和FixedUpdate方法, 仅允许BatchProxy管理调用(与Standalone组件冲突)
- * @param value  每n帧调用一次(<不包含>大于1时才有效)
- * @returns 
- */
-export function Frameskip(value: number): PropertyDecorator {
-    return (target, key: string) => {
-        let proto = target.constructor.prototype;
-        if (!(proto instanceof TsBehaviour)) {
-            console.warn(`${target.constructor.name}: invaild decorator ${Frameskip.name}`);
-            return;
-        }
-        if (!Number.isInteger(value) || value <= 1) {
-            console.warn(`${target.constructor.name}: invaild decorator parameter ${value} for ${Frameskip.name}`);
-            return;
-        }
-        Metadata.define(proto, key, Frameskip, value);
-    };
-}
-/**节流方法
- * 适用于async/Promise方法, 在上一次调用完成后才会再次调用(Awake丶Update丶FixedUpdate...)
- * @param enable 
- * @returns 
- */
-export function Throttle(enable: boolean): PropertyDecorator {
-    return (target, key: string) => {
-        let proto = target.constructor.prototype;
-        if (!(proto instanceof TsBehaviour)) {
-            console.warn(`${target.constructor.name}: invaild decorator ${Throttle.name}`);
-            return;
-        }
-        Metadata.define(proto, key, Throttle, !!enable);
-    };
-}
-/**注册侦听器
- * 适用于@see CS.XOR.TsMessages 回调
- * @param eventName 
- * @returns 
- */
-export function Listener(eventName?: string): PropertyDecorator {
-    return (target, key: string) => {
-        let proto = target.constructor.prototype;
-        if (!(proto instanceof TsBehaviour)) {
-            console.warn(`${target.constructor.name}: invaild decorator ${Listener.name}`);
-            return;
-        }
-        Metadata.define(proto, key, Listener, eventName ?? key);
-    };
 }
 
 const MATEDATA_INFO = Symbol("__MATEDATA_INFO__");
@@ -926,5 +925,19 @@ const Metadata = {
             return defaultValue;
         }
         return attributes.find(define => define.attribute === attribute)?.data ?? defaultValue;
+    }
+}
+
+function register() {
+    let _g = (global ?? globalThis ?? this);
+    _g.XOR = _g.XOR || {};
+    _g.XOR.TsBehaviour = TsBehaviourImpl;
+}
+register();
+
+/**接口声明 */
+declare global {
+    namespace XOR {
+        class TsBehaviour extends TsBehaviourImpl { }
     }
 }

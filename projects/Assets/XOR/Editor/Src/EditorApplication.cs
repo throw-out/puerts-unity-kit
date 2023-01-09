@@ -18,8 +18,6 @@ namespace XOR
         {
             base.Init();
 
-            bool isESM = Settings.Load().IsESM;
-
             Loader = new MergeLoader();
             Loader.AddLoader(new DefaultLoader(), int.MaxValue);
 
@@ -30,7 +28,7 @@ namespace XOR
             Env = new JsEnv(Loader);
             Env.TryAutoUsing();
             Env.SupportCommonJS();
-            Env.RequireXORModules(isESM);
+            Env.RequireXORModules(false);
 
             this.RegisterHandlers();
         }
@@ -39,8 +37,6 @@ namespace XOR
         {
             base.Release();
             this.Dispose();
-
-            this.UnregisterHandlers();
         }
         public void Tick()
         {
@@ -49,6 +45,7 @@ namespace XOR
 
         public void Dispose()
         {
+            this.UnregisterHandlers();
             if (Env != null)
             {
                 Env.GlobalListenerQuit();

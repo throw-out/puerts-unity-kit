@@ -2,11 +2,7 @@ console.log("child thread started.");
 
 import * as csharp from "csharp";
 import * as ts from "typescript";
-import { XOR } from "../Program";
-
-import "./lib/globalListener";
-import "./lib/threadWorker";
-
+import { XOR } from "./Program";
 
 const { Path } = csharp.System.IO;
 

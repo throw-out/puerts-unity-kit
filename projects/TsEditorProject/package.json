@@ -7,8 +7,9 @@
         "webpack:debug": "webpack --config webpack.config.js --watch",
         "webpack:publish": "webpack --config webpack.config.js",
         "xor:compile": "tsc -p tsconfig.json",
-        "xor:copy": "node ./xor-workflow.mjs copydir --source ./xor --target ../Assets/XOR/Runtime/Resources/puerts/xor",
-        "xor:publish": "npm run xor:compile && npm run xor:copy"
+        "xor:copy": "node ./xor-workflow.mjs copydir --append .txt --source ./output/xor --target ../Assets/XOR/Runtime/Resources/puerts/xor",
+        "xor:copy-dts": "node ./xor-workflow.mjs copydir --filter .ts --source ./output/xor --target ../Assets/XOR/Typing/puerts/xor",
+        "xor:publish": "npm run xor:compile && npm run xor:copy && npm run xor:copy-dts"
     },
     "dependencies": {},
     "devDependencies": {

@@ -1,9 +1,13 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
 class Listener {
-    private handlers: Function[] = [];
-    public add(fn: Function) {
+    constructor() {
+        this.handlers = [];
+    }
+    add(fn) {
         this.handlers.push(fn);
     }
-    public remove(fn: Function) {
+    remove(fn) {
         let index = this.handlers.indexOf(fn);
         if (index >= 0) {
             for (let i = index; i < this.handlers.length - 1; i++) {
@@ -12,30 +16,21 @@ class Listener {
             this.handlers.pop();
         }
     }
-    public removeAll() {
+    removeAll() {
         this.handlers = [];
     }
-    public invoke(...args: any[]) {
+    invoke(...args) {
         for (let func of this.handlers) {
             func(...args);
         }
     }
 }
-
-(function () {
+function register() {
     let _g = (global ?? globalThis ?? this);
-    _g["globalListener"] = _g["globalListener"] ?? {
+    _g.XOR = _g.XOR || {};
+    _g.XOR["globalListener"] = _g.XOR.globalListener ?? {
         quit: new Listener()
     };
-})();
-
-export { }
-/**
- * 接口声明
- */
-declare global {
-    /**全局监听器 */
-    const globalListener: {
-        quit: Listener
-    }
 }
+register();
+//# sourceMappingURL=GlobalListener.js.map

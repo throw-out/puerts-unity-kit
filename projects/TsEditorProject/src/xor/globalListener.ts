@@ -22,20 +22,24 @@ class Listener {
     }
 }
 
-(function () {
+function register() {
     let _g = (global ?? globalThis ?? this);
-    _g["globalListener"] = _g["globalListener"] ?? {
+    _g.XOR = _g.XOR || {};
+    _g.XOR["globalListener"] = _g.XOR.globalListener ?? {
         quit: new Listener()
     };
-})();
+}
+register();
 
 export { }
 /**
  * 接口声明
  */
 declare global {
-    /**全局监听器 */
-    const globalListener: {
-        quit: Listener
+    namespace XOR {
+        /**全局监听器 */
+        const globalListener: {
+            readonly quit: Listener
+        }
     }
 }

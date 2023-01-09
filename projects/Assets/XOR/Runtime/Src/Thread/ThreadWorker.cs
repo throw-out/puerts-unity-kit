@@ -6,7 +6,7 @@ using UnityEngine;
 
 namespace XOR
 {
-    public class ThreadWorker : IDisposable
+    public class ThreadWorker : Multiple<ThreadWorker>, IDisposable
     {
         /// <summary>线程锁定超时(毫秒) </summary>
         private const int THREAD_LOCK_TIMEOUT = 1000;
@@ -153,6 +153,11 @@ namespace XOR
         }
 
 
+        public override void Release()
+        {
+            base.Release();
+            this.Dispose();
+        }
         public void Dispose()
         {
             if (this._disposed)

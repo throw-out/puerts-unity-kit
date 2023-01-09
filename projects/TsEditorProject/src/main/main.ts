@@ -1,7 +1,6 @@
-import * as csharp from "csharp";
+console.log("main thread started.");
 
-import "./xor/threadWorker";
-import "./xor/globalListener";
+import * as csharp from "csharp";
 
 const { Path } = csharp.System.IO;
 const { Application } = csharp.UnityEngine;
@@ -12,9 +11,8 @@ let projectRoot = Path.Combine(Path.GetDirectoryName(Application.dataPath), "TsE
 let outputRoot = Path.Combine(projectRoot, "output");
 loader.AddLoader(new csharp.XOR.FileLoader(outputRoot, projectRoot));
 
-const worker = new ThreadWorker(loader);
-worker.start("./child/main");
+const worker = new XOR.ThreadWorker(loader);
+//worker.start("./child/main");
 
-
-globalListener.quit.add(() => worker.stop());
+XOR.globalListener.quit.add(() => worker.stop());
 

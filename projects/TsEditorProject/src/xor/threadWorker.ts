@@ -28,7 +28,7 @@ class ThreadWorkerImpl {
         this.register();
     }
     public start(filepath: string) {
-        if (!this.mainThread || globalWorker && globalWorker.worker === this.worker)
+        if (!this.mainThread || XOR.globalWorker && XOR.globalWorker.worker === this.worker)
             throw new Error("Invalid operation ");
         this.worker.Run(filepath);
     }
@@ -86,7 +86,7 @@ class ThreadWorkerImpl {
      * @param chunkName 
      */
     public eval(chunk: string, chunkName?: string) {
-        if (!this.mainThread || globalWorker && globalWorker.worker === this.worker)
+        if (!this.mainThread || XOR.globalWorker && XOR.globalWorker.worker === this.worker)
             throw new Error("Invalid operation ");
         this.worker.PostEvalToChildThread(chunk, chunkName);
     }
@@ -410,12 +410,22 @@ class ThreadWorkerImpl {
     _g["globalWorker"] = undefined;
 })();
 
+function register() {
+    let _g = (global ?? globalThis ?? this);
+    _g.XOR = _g.XOR || {};
+    _g.XOR["ThreadWorker"] = ThreadWorkerImpl;
+    _g.XOR["globalWorker"] = undefined;
+}
+register();
+
 /**接口声明 */
 declare global {
-    class ThreadWorker extends ThreadWorkerImpl { }
+    namespace XOR {
+        class ThreadWorker extends ThreadWorkerImpl { }
 
-    /**
-     * 只能在JsWorker内部访问, 与主线程交互的对象
-     */
-    const globalWorker: ThreadWorkerImpl;
+        /**
+         * 只能在JsWorker内部访问, 与主线程交互的对象
+         */
+        const globalWorker: ThreadWorkerImpl;
+    }
 }

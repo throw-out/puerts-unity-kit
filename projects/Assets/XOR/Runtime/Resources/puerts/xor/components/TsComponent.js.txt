@@ -1,0 +1,11 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+class TsComponentImpl extends XOR.TsBehaviour {
+}
+function register() {
+    let _g = (global ?? globalThis ?? this);
+    _g.XOR = _g.XOR || {};
+    _g.XOR["TsComponent"] = TsComponentImpl;
+}
+register();
+//# sourceMappingURL=TsComponent.js.map
