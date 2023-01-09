@@ -162,16 +162,16 @@ namespace XOR
         {
             if (this._disposed)
                 return;
+#if UNITY_EDITOR
+            ThreadWorkerEditorCaller.Unregister(this);
+#endif
             //等待syncing完成并锁定不在接收其他请求
             while (!AcquireSyncing(false)) { };
 
             this._disposed = true;
-#if UNITY_EDITOR
-            ThreadWorkerEditorCaller.Unregister(this);
-#endif
+            this._running = false;
             MainThreadHandler = null;
             ChildThreadHandler = null;
-            _running = false;
             Env = null;
             if (_thread != null)
             {
