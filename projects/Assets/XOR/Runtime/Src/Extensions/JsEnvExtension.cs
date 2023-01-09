@@ -10,25 +10,49 @@ namespace XOR
     {
         internal static void GlobalListenerQuit(this JsEnv env)
         {
-            env.Eval(
-    @"(function(){
-    let listener = (globalThis ?? global ?? this)['globalListener'];
-    if(listener && listener.quit){
+            env.Eval(@"
+(function(){
+    let listener = (global || globalThis || this)['globalListener'];
+    if( listener && listener.quit){
         listener.quit.invoke();
     }
 })();");
         }
 
-        internal static void TryAutoUsing(this JsEnv env)
+        internal static void TryAutoUsing(this JsEnv env, bool printWarning = true)
         {
             const string typeName = "PuertsStaticWrap.AutoStaticCodeUsing";
-            var type = (from _assembly in AppDomain.CurrentDomain.GetAssemblies()
-                        let _type = _assembly.GetType(typeName, false)
-                        where _type != null
-                        select _type).FirstOrDefault();
+            Type type = (from _assembly in AppDomain.CurrentDomain.GetAssemblies()
+                         let _type = _assembly.GetType(typeName, false)
+                         where _type != null
+                         select _type).FirstOrDefault();
             if (type != null)
             {
                 type.GetMethod("AutoUsing").Invoke(null, new object[] { env });
+            }
+            else if (printWarning)
+            {
+                Debug.LogWarning($"AutoUsingCode not generate ");
+            }
+        }
+        internal static void SupportCommonJS(this JsEnv env)
+        {
+            try
+            {
+                if (PuertsDLL.GetApiLevel() >= 18)
+                {
+                    env.Eval(@"
+(function(){
+    let _g = (global || globalThis || this);
+    _g.nodeRequire = _g.nodeRequire || _g.require;
+})();
+");
+                    Puerts.ThirdParty.CommonJS.InjectSupportForCJS(env);
+                }
+            }
+            catch (Exception e)
+            {
+                Debug.LogWarning(e);
             }
         }
 
@@ -36,6 +60,9 @@ namespace XOR
             "lib/globalListener",
             "lib/threadWorker",
         };
+        /// <summary>
+        /// 初始化XOR依赖模块
+        /// </summary>
         internal static void RequireXORModules(this JsEnv env) => RequireXORModules(env, false, false);
         internal static void RequireXORModules(this JsEnv env, bool isESM) => RequireXORModules(env, isESM, false);
         internal static void RequireXORModules(this JsEnv env, bool isESM, bool throwOnFailure)
@@ -53,6 +80,7 @@ namespace XOR
                 if (throwOnFailure)
                     throw Helper.NullReferenceException();
                 Debug.LogWarning(Helper.NullReferenceException().Message);
+                return;
             }
 
             foreach (string module in XORModules)
@@ -82,8 +110,8 @@ namespace XOR
         {
             string script = @"
 function func(worker){ 
-    let _g = (function(){ return global ?? globalThis ?? this; })();
-    _g.XOR = _g.XOR ?? { };
+    let _g = (function(){ return global || globalThis || this; })();
+    _g.XOR = _g.XOR ?? {};
     _g.XOR.globalWorker = new ThreadWorker(worker);
 }
 func

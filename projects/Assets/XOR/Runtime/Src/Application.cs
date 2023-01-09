@@ -56,8 +56,8 @@ namespace XOR
             }
 #endif
             Env.TryAutoUsing();
+            Env.SupportCommonJS();
             Env.RequireXORModules();
-            SupportCommonJS(Env);
         }
         void Update()
         {

@@ -184,16 +184,14 @@ namespace XOR
             JsEnv env = null;
             try
             {
-                // JsEnv脚本放在Resource目录下,故ILoader仅允许在主线程调用
-                // 子线程_SyncLoader接口会阻塞线程, 直到主线程调用ILoader后才会继续执行
-                // JsEnv初始化时将调用_SyncLoader接口
+                // JsEnv内置脚本放在Resource目录下并使用DefaultLoader加载,故仅允许在主线程调用
+                // 子线程ThreadLoader接口会阻塞线程, 直到主线程调用ThreadLoader.Process后才会继续执行
+                // JsEnv初始化时将调用ThreadLoader接口
                 env = Env = new JsEnv(Loader);
-                env.UsingAction<string, string>();
-                env.UsingAction<string, EventData>();
-                env.UsingFunc<string, EventData, object>();
-                env.UsingFunc<string, EventData, EventData>();
-                Env.RequireXORModules();
-                Env.BindThreadWorker(this);
+                env.TryAutoUsing();
+                env.SupportCommonJS();
+                env.RequireXORModules();
+                env.BindThreadWorker(this);
                 env.Eval(string.Format("require('{0}')", filepath));
 
                 while (env == this.Env && IsAlive)
