@@ -1,5 +1,3 @@
-console.log("main thread started.");
-
 import * as csharp from "csharp";
 
 require("puerts/console-track");
@@ -17,7 +15,7 @@ loader.AddLoader(new csharp.XOR.FileLoader(outputRoot, projectRoot));
 const options = new csharp.XOR.ThreadWorker.CreateOptions();
 options.Remote = true;
 
-const worker = new XOR.ThreadWorker(loader);
+const worker = new XOR.ThreadWorker(loader, options);
 worker.start("./child/main");
 
 XOR.globalListener.quit.add(() => worker.stop());

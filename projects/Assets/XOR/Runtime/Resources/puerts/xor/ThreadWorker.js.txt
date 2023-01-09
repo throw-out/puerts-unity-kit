@@ -5,13 +5,13 @@ const puerts_1 = require("puerts");
 let List_Object = (0, puerts_1.$generic)(csharp.System.Collections.Generic.List$1, csharp.System.Object);
 const CLOSE_EVENT_NAME = "__e_close", REMOTE_EVENT_NAME = "__e_remote";
 class ThreadWorkerImpl {
-    constructor(loader) {
+    constructor(loader, options) {
         if (loader instanceof csharp.XOR.ThreadWorker) {
             this.worker = loader;
             this.mainThread = false;
         }
         else {
-            this.worker = csharp.XOR.ThreadWorker.Create(loader);
+            this.worker = csharp.XOR.ThreadWorker.Create(loader, options);
             this.mainThread = true;
         }
         this.worker.VerifyThread(this.mainThread);
@@ -27,9 +27,6 @@ class ThreadWorkerImpl {
         if (this.mainThread) {
             this.events.clear();
             this.worker.Dispose();
-            if (!this.worker.Equals(null)) {
-                csharp.UnityEngine.GameObject.Destroy(this.worker.gameObject);
-            }
         }
         else {
             this.post(CLOSE_EVENT_NAME);
@@ -137,6 +134,9 @@ class ThreadWorkerImpl {
                         break;
                     case REMOTE_EVENT_NAME:
                         {
+                            let _data = getValue(data);
+                            if (typeof _data !== "string")
+                                return null;
                             let value = csharp;
                             getValue(data).split(".").forEach(name => {
                                 if (value && name)
@@ -146,7 +146,7 @@ class ThreadWorkerImpl {
                             if (t !== "undefined" && t !== "object" && t !== "function") {
                                 return this.pack(value);
                             }
-                            return undefined;
+                            return null;
                         }
                         break;
                     default:
@@ -157,6 +157,9 @@ class ThreadWorkerImpl {
         }
         else {
             this.worker.ChildThreadHandler = onmessage;
+            if (this.worker.Options && this.worker.Options.Remote) {
+                this.registerRemoteProxy();
+            }
         }
     }
     registerRemoteProxy() {
@@ -175,7 +178,7 @@ class ThreadWorkerImpl {
                             }
                         }
                         else {
-                            let value = CS;
+                            let value = csharp;
                             fullName.split(".").forEach(name => {
                                 if (value && name) {
                                     value = value[name];
@@ -218,7 +221,7 @@ class ThreadWorkerImpl {
     unpack(data) {
         switch (data.Type) {
             case csharp.XOR.ThreadWorker.ValueType.JSON:
-                return JSON.parse(data.Value);
+                return JSON.parse(data.Value) ?? data.Value;
                 break;
             default:
                 return this._unpackByRefs(data, new Map());

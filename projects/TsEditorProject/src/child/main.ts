@@ -1,5 +1,3 @@
-console.log("child thread started.");
-
 import * as csharp from "csharp";
 import * as ts from "typescript";
 import { XOR } from "./Program";
@@ -7,8 +5,12 @@ import { XOR } from "./Program";
 const { Path } = csharp.System.IO;
 
 setTimeout(() => {
+    let p: any = csharp.UnityEngine.Application.dataPath;
+    console.log(typeof p);
+    console.log(p instanceof csharp.System.Object ? p.GetType().FullName : 'null');
+    console.log(p);
     let tsconfigPath = Path.GetFullPath(Path.Combine(
-        Path.GetDirectoryName(csharp.UnityEngine.Application.dataPath),
+        Path.GetDirectoryName(p),
         "TsProject/tsconfig.json"
     ));
     let program = new XOR.Program(tsconfigPath);
@@ -19,5 +21,4 @@ setTimeout(() => {
     );
 }, 2000);
 
-console.log("child thread ready.");
 setInterval(() => console.log("child thread active:"), 1000);

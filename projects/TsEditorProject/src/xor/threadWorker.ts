@@ -169,6 +169,10 @@ class ThreadWorkerImpl {
                         break;
                     case REMOTE_EVENT_NAME:
                         {
+                            let _data = (<string>getValue(data));
+                            if (typeof _data !== "string")
+                                return null;
+
                             let value = csharp;
                             (<string>getValue(data)).split(".").forEach(name => {
                                 if (value && name) value = value[name];
@@ -177,7 +181,7 @@ class ThreadWorkerImpl {
                             if (t !== "undefined" && t !== "object" && t !== "function") {
                                 return this.pack(value);
                             }
-                            return undefined;
+                            return null;
                         }
                         break;
                     default:
@@ -250,7 +254,7 @@ class ThreadWorkerImpl {
     private unpack(data: csharp.XOR.ThreadWorker.EventData): any {
         switch (data.Type) {
             case csharp.XOR.ThreadWorker.ValueType.JSON:
-                return JSON.parse(data.Value);
+                return JSON.parse(data.Value) ?? data.Value;
                 break;
             default:
                 return this._unpackByRefs(data, new Map());

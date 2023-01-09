@@ -63,6 +63,7 @@ namespace XOR
             this.mainThreadMessages = new Queue<Event>();
             this.childThreadMessages = new Queue<Event>();
             this.childThreadEval = new Queue<Tuple<string, string>>();
+            this.Init();
         }
         ~ThreadWorker()
         {
@@ -73,7 +74,7 @@ namespace XOR
         {
             if (!this.IsAlive) return;
             ProcessMainThreadMessages();
-            syncr.ProcessChildThredMessages();
+            syncr.ProcessMainThredMessages();
             ThreadLoader?.Process();
         }
 
@@ -164,11 +165,8 @@ namespace XOR
             if (this._disposed)
                 return;
             Env = null;
-#if UNITY_EDITOR
-            ThreadWorkerEditorCaller.Unregister(this);
-#endif
             //等待syncing完成并锁定不在接收其他请求
-            while (!AcquireSyncing(false)) { };
+            //while (!AcquireSyncing(false)) { };
 
             this._disposed = true;
             this._running = false;
@@ -184,9 +182,11 @@ namespace XOR
                 //GC
                 //System.GC.Collect();
                 //System.GC.WaitForPendingFinalizers();
-
                 _thread = null;
             }
+#if UNITY_EDITOR
+            ThreadWorkerEditorCaller.Unregister(this);
+#endif
         }
 
         void ThreadExecute(bool isESM, string filepath)

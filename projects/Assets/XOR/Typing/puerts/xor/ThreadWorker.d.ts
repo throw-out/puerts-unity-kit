@@ -4,7 +4,7 @@ declare class ThreadWorkerImpl {
     private readonly mainThread;
     private readonly worker;
     private readonly events;
-    constructor(loader: csharp.Puerts.ILoader);
+    constructor(loader: csharp.Puerts.ILoader, options?: csharp.XOR.ThreadWorker.CreateOptions);
     start(filepath: string): void;
     stop(): void;
     post(eventName: string, data?: any): void;

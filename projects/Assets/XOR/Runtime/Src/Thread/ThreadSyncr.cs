@@ -135,6 +135,9 @@ namespace XOR
 
         void Process(SyncEventData d, Func<string, ThreadWorker.EventData, ThreadWorker.EventData> invoke)
         {
+            if (d == null || d.completed)
+                return;
+  
             locker.AcquireWriter();
             try
             {

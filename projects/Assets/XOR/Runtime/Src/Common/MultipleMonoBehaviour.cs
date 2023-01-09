@@ -13,11 +13,11 @@ namespace XOR
 
         public static void ReleaseAllInstance()
         {
-            foreach (var weak_ref in referenceInstances)
+            foreach (var weakRef in referenceInstances)
             {
-                if (weak_ref.IsAlive)
+                if (weakRef.IsAlive)
                 {
-                    var t = (weak_ref.Target as MultipleMonoBehaviour<T>);
+                    var t = (weakRef.Target as MultipleMonoBehaviour<T>);
                     t.referenceSelf = null;
                     t.Release();
                     DestroyImmediate(t.gameObject); //立即删除实例对象(不触发OnDestroy-Function)

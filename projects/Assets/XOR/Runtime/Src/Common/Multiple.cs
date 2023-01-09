@@ -12,11 +12,11 @@ namespace XOR
 
         public static void ReleaseAllInstance()
         {
-            foreach (var weak_ref in referenceInstances)
+            foreach (var weakRef in referenceInstances)
             {
-                if (weak_ref.IsAlive)
+                if (weakRef.IsAlive)
                 {
-                    var t = (weak_ref.Target as Multiple<T>);
+                    var t = (weakRef.Target as Multiple<T>);
                     t.referenceSelf = null;
                     t.Release();
                 }
