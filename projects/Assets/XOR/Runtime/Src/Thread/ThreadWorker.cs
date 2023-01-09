@@ -16,9 +16,6 @@ namespace XOR
         private const int PROCESS_EVENT_COUNT = 5;
         /// <summary>Unity主线程ID </summary>
         private static readonly int MAIN_THREAD_ID = Thread.CurrentThread.ManagedThreadId;
-        /// <summary>ts ThreadWorker脚本 </summary>
-        private static readonly string THREAD_WORKER_SCRIPT = "require('./lib/threadWorker')";
-        private static readonly string THREAD_WORKER_REGISTER = @"(function (_w){ (this ?? globalThis)['globalWorker'] = new ThreadWorker(_w); })";
 
         //消息接口
         public Func<string, EventData, EventData> MainThreadHandler;
@@ -195,9 +192,8 @@ namespace XOR
                 env.UsingAction<string, EventData>();
                 env.UsingFunc<string, EventData, object>();
                 env.UsingFunc<string, EventData, EventData>();
-                env.TryAutoUsing();
-                env.Eval(THREAD_WORKER_SCRIPT);
-                env.Eval<Action<ThreadWorker>>(THREAD_WORKER_REGISTER)(this);
+                Env.RequireXORModules();
+                Env.BindThreadWorker(this);
                 env.Eval(string.Format("require('{0}')", filepath));
 
                 while (env == this.Env && IsAlive)

@@ -12,9 +12,14 @@ public static class DelegateUtil
     public static TDelegate CreateMethodDelegate<TDelegate>(MethodInfo memberInfo, object firstArgument = null, bool throwOnBindFailure = true)
         where TDelegate : Delegate
     {
-        if (memberInfo.IsGenericMethodDefinition)
+        if (memberInfo.IsGenericMethodDefinition)       //应额外检查DeclaringType是否泛型类
         {
-
+            //TODO 泛型方法实现
+            if (throwOnBindFailure)
+            {
+                throw Helper.BindFailureException();
+            }
+            return null;
         }
         return Delegate.CreateDelegate(typeof(TDelegate), firstArgument, memberInfo, throwOnBindFailure) as TDelegate;
     }
