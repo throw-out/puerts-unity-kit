@@ -83,9 +83,11 @@ namespace XOR
             if (this.Loader == null)
                 throw new Exception("Thread cannot work, loader instance required.");
 
+            bool isESM = Settings.Load().IsESM;
+
             _running = true;
             _syncing = false;
-            _thread = new Thread(new ThreadStart(() => ThreadExecute(filepath)));
+            _thread = new Thread(new ThreadStart(() => ThreadExecute(isESM, filepath)));
             _thread.IsBackground = true;
             _thread.Start();
         }
@@ -179,7 +181,7 @@ namespace XOR
 #endif
         }
 
-        void ThreadExecute(string filepath)
+        void ThreadExecute(bool isESM, string filepath)
         {
             JsEnv env = null;
             try
@@ -190,7 +192,7 @@ namespace XOR
                 env = Env = new JsEnv(Loader);
                 env.TryAutoUsing();
                 env.SupportCommonJS();
-                env.RequireXORModules();
+                env.RequireXORModules(isESM);
                 env.BindThreadWorker(this);
                 env.Eval(string.Format("require('{0}')", filepath));
 
@@ -353,6 +355,10 @@ namespace XOR
         public static ThreadWorker Create(ILoader loader) => Create(loader, null);
         public static ThreadWorker Create(ILoader loader, string filepath)
         {
+#if !UNITY_EDITOR && UNITY_WEBGL
+            throw new InvalidOperationException();
+#endif
+
             ThreadWorker worker = new ThreadWorker();
             if (!UnityEngine.Application.isPlaying)
             {

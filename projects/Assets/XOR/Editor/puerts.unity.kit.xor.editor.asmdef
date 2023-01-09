@@ -1,8 +1,8 @@
 {
     "name": "puerts.unity.kit.xor.Editor",
     "references": [
-        "GUID:1a2cdf6dca6325c4383249e60701865a",
-        "GUID:9b79b96f12870c2449e05764a16cea5f"
+        "GUID:9b79b96f12870c2449e05764a16cea5f",
+        "GUID:1a2cdf6dca6325c4383249e60701865a"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

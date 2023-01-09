@@ -43,9 +43,10 @@ namespace XOR
             }
             __instance = this;
 
+            bool isESM = Settings.Load().IsESM;
+
             Loader = new MergeLoader();
             Loader.AddLoader(new DefaultLoader(), int.MaxValue);
-            Env = new JsEnv(Loader, DebugPort);
 #if UNITY_EDITOR
             string projectRoot = Path.Combine(Path.GetDirectoryName(UnityEngine.Application.dataPath), "TsProject");
             string outputRoot = Path.Combine(projectRoot, "output");
@@ -55,9 +56,11 @@ namespace XOR
                 Env.WaitDebugger();
             }
 #endif
+
+            Env = new JsEnv(Loader, DebugPort);
             Env.TryAutoUsing();
             Env.SupportCommonJS();
-            Env.RequireXORModules();
+            Env.RequireXORModules(isESM);
         }
         void Update()
         {

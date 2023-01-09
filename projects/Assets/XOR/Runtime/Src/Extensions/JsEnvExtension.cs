@@ -8,7 +8,7 @@ namespace XOR
 {
     public static class JsEnvExtension
     {
-        internal static void GlobalListenerQuit(this JsEnv env)
+        public static void GlobalListenerQuit(this JsEnv env)
         {
             env.Eval(@"
 (function(){
@@ -19,7 +19,7 @@ namespace XOR
 })();");
         }
 
-        internal static void TryAutoUsing(this JsEnv env, bool printWarning = true)
+        public static void TryAutoUsing(this JsEnv env, bool printWarning = true)
         {
             const string typeName = "PuertsStaticWrap.AutoStaticCodeUsing";
             Type type = (from _assembly in AppDomain.CurrentDomain.GetAssemblies()
@@ -35,7 +35,7 @@ namespace XOR
                 Debug.LogWarning($"AutoUsingCode not generate ");
             }
         }
-        internal static void SupportCommonJS(this JsEnv env)
+        public static void SupportCommonJS(this JsEnv env)
         {
             try
             {
@@ -63,9 +63,9 @@ namespace XOR
         /// <summary>
         /// 初始化XOR依赖模块
         /// </summary>
-        internal static void RequireXORModules(this JsEnv env) => RequireXORModules(env, false, false);
-        internal static void RequireXORModules(this JsEnv env, bool isESM) => RequireXORModules(env, isESM, false);
-        internal static void RequireXORModules(this JsEnv env, bool isESM, bool throwOnFailure)
+        public static void RequireXORModules(this JsEnv env) => RequireXORModules(env, false, false);
+        public static void RequireXORModules(this JsEnv env, bool isESM) => RequireXORModules(env, isESM, false);
+        public static void RequireXORModules(this JsEnv env, bool isESM, bool throwOnFailure)
         {
             if (Helper.GetLoader == null)
             {

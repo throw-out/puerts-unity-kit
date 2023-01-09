@@ -17,6 +17,8 @@ namespace XOR
         {
             base.Init();
 
+            bool isESM = Settings.Load().IsESM;
+
             Loader = new MergeLoader();
             Loader.AddLoader(new DefaultLoader(), int.MaxValue);
 
@@ -25,6 +27,9 @@ namespace XOR
             Loader.AddLoader(new FileLoader(outputRoot, projectRoot));
 
             Env = new JsEnv(Loader);
+            Env.TryAutoUsing();
+            Env.SupportCommonJS();
+            Env.RequireXORModules(isESM);
         }
         public override void Release()
         {

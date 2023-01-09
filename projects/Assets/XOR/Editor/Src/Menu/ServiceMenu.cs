@@ -1,5 +1,6 @@
 ﻿using System;
 using UnityEditor;
+using UnityEngine;
 
 namespace XOR
 {
@@ -27,7 +28,7 @@ namespace XOR
             TsServiceProcess.ReleaseInstance();
             Util.Enable();
         }
-        [MenuItem("Tools/XOR/Enable")] 
+        [MenuItem("Tools/XOR/Enable")]
         static void Enable() => Util.Enable();
         [MenuItem("Tools/XOR/Enable", true)]
         static bool EnableValidate() => !Util.IsRunning();
@@ -35,5 +36,12 @@ namespace XOR
         static void Disable() => Util.Disable();
         [MenuItem("Tools/XOR/Disable", true)]
         static bool DisableValidate() => Util.IsRunning();
+
+
+        [MenuItem("Tools/XOR/Settings", false, 0)]
+        static void OpenSettings()
+        {
+            XOR.Settings.Load(true, true);
+        }
     }
 }
