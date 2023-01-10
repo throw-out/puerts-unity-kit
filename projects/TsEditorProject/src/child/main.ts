@@ -21,4 +21,4 @@ setTimeout(() => {
     );
 }, 2000);
 
-setInterval(() => console.log("child thread active:"), 1000);
+//setInterval(() => console.log("child thread active:"), 1000);

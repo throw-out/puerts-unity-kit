@@ -7,7 +7,7 @@ declare class Listener {
 }
 export {};
 declare global {
-    namespace XOR {
+    namespace xor {
         const globalListener: {
             readonly quit: Listener;
         };

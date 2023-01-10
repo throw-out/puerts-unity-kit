@@ -32,7 +32,7 @@ class ThreadWorkerImpl {
         this.register();
     }
     public start(filepath: string) {
-        if (!this.mainThread || XOR.globalWorker && XOR.globalWorker.worker === this.worker)
+        if (!this.mainThread || xor.globalWorker && xor.globalWorker.worker === this.worker)
             throw new Error("Invalid operation ");
         this.worker.Run(filepath);
     }
@@ -97,7 +97,7 @@ class ThreadWorkerImpl {
      * @param chunkName 
      */
     public eval(chunk: string, chunkName?: string) {
-        if (!this.mainThread || XOR.globalWorker && XOR.globalWorker.worker === this.worker)
+        if (!this.mainThread || xor.globalWorker && xor.globalWorker.worker === this.worker)
             throw new Error("Invalid operation ");
         this.worker.PostEvalToChildThread(chunk, chunkName);
     }
@@ -220,7 +220,10 @@ class ThreadWorkerImpl {
                     case REMOTE_EVENT:
                         {
                             let result = this.executeRemoteResolver(getValue(data));
-                            return this.pack(result);
+                            if (result !== undefined && result !== null && result !== void 0) {
+                                result = this.pack(result);
+                            }
+                            return result;
                         }
                         break;
                     default:
@@ -244,9 +247,7 @@ class ThreadWorkerImpl {
                         let fullName = namespace ? (namespace + '.' + name) : name;
                         //同步调用Unity Api
                         if (fullName.startsWith("UnityEngine") && fullName !== "UnityEngine.Debug") {
-                            console.log(`request: ${fullName}`);
                             let cls = this.postSync(REMOTE_EVENT, fullName);
-                            console.log(`response: (${typeof (cls)})${cls}`);
                             if (cls) {
                                 cache[name] = cls;
                             }
@@ -272,13 +273,14 @@ class ThreadWorkerImpl {
     private executeRemoteResolver(data: string): any {
         if (typeof data !== "string")
             return null;
-
         let result = csharp;
         data.split(".").forEach(name => {
             if (result && name) result = result[name];
         });
-        if (result instanceof Proxy)
-            return null;
+
+        if (/**typeof (result) === "object" && */ this._validate(result) === PackValidate.Unsupport) {
+            result = null;
+        }
         return result;
     }
 
@@ -482,15 +484,15 @@ enum PackValidate {
 }
 function register() {
     let _g = (global ?? globalThis ?? this);
-    _g.XOR = _g.XOR || {};
-    _g.XOR["ThreadWorker"] = ThreadWorkerImpl;
-    _g.XOR["globalWorker"] = undefined;
+    _g.xor = _g.xor || {};
+    _g.xor.ThreadWorker = ThreadWorkerImpl;
+    _g.xor.globalWorker = undefined;
 }
 register();
 
 /**接口声明 */
 declare global {
-    namespace XOR {
+    namespace xor {
         class ThreadWorker extends ThreadWorkerImpl { }
 
         /**

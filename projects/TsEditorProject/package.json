@@ -7,9 +7,9 @@
         "webpack:debug": "webpack --config webpack.config.js --watch",
         "webpack:publish": "webpack --config webpack.config.js",
         "xor:compile": "tsc -p tsconfig.json",
-        "xor:copy": "node ./xor-workflow.mjs copydir --append .txt --source ./output/xor --target ../Assets/XOR/Runtime/Resources/puerts/xor",
-        "xor:copy-dts": "node ./xor-workflow.mjs copydir --filter .ts --source ./output/xor --target ../Assets/XOR/Typing/puerts/xor",
-        "xor:publish": "npm run xor:compile && npm run xor:copy && npm run xor:copy-dts"
+        "xor:copy-js": "node ./xor-workflow.mjs copydir --filter=.js/.mjs --append=.txt --source=./output/xor --target=../Assets/XOR/Runtime/Resources/puerts/xor",
+        "xor:copy-dts": "node ./xor-workflow.mjs copydir --filter=.ts --source=./output/xor --target=../Assets/XOR/Typing/puerts/xor",
+        "xor:publish": "npm run xor:compile && npm run xor:copy-js && npm run xor:copy-dts"
     },
     "dependencies": {},
     "devDependencies": {
@@ -17,6 +17,7 @@
         "buffer": "^6.0.3",
         "eslint": "^7.32.0",
         "json5": "^2.2.3",
+        "minimist": "^1.2.7",
         "source-map-support": "^0.5.19",
         "ts-loader": "^9.4.2",
         "typescript": "^4.6.3",

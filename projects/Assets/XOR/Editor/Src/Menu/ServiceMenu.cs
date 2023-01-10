@@ -35,7 +35,7 @@ namespace XOR
         [MenuItem("Tools/XOR/Settings", false, 0)]
         static void OpenSettings()
         {
-            XOR.Settings.Load(true, true);
+            Selection.activeObject = XOR.Settings.Load(true, true);
         }
     }
 }

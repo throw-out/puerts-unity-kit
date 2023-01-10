@@ -73,7 +73,7 @@ namespace XOR
         }
 
         static readonly int MAIN_THREAD_ID = Thread.CurrentThread.ManagedThreadId;
-        static bool IsEnable(Settings.LOGGER type)
+        public static bool IsEnable(Settings.LOGGER type)
         {
             Settings.LOGGER current = Settings.LOGGER.NONE;
             if (Settings.Instance != null)
@@ -83,6 +83,10 @@ namespace XOR
             else if (Thread.CurrentThread.ManagedThreadId == MAIN_THREAD_ID)
             {
                 current = Settings.Load(true, false).Logger;
+            }
+            else
+            {
+                current = type;             //(child thread)force log
             }
             return (current & type) == type;
         }

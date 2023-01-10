@@ -85,14 +85,16 @@ namespace XOR
         /// <summary>是否使用ESM模块 </summary>
         public bool IsESM = false;
 
-        public LOGGER Logger = LOGGER.FULL;
+        public LOGGER Logger = LOGGER.DEBUG;
         public enum LOGGER
         {
             NONE = 0,
-            INFO = 1,
-            WARN = 2,
-            ERROR = 4,
-            FULL = INFO | WARN | ERROR
+            PROFILE = 1,
+            INFO = 2,
+            WARN = 4,
+            ERROR = 8,
+            DEBUG = INFO | WARN | ERROR,
+            FULL = PROFILE | INFO | WARN | ERROR,
         }
     }
 

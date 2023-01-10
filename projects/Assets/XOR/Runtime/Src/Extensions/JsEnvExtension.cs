@@ -12,7 +12,8 @@ namespace XOR
         {
             env.Eval(@"
 (function(){
-    let listener = (global || globalThis || this)['globalListener'];
+    let _g = (global || globalThis || this);
+    let listener = _g?.xor?.globalListener;
     if( listener && listener.quit){
         listener.quit.invoke();
     }
@@ -65,8 +66,8 @@ namespace XOR
         /// <summary>
         /// 初始化XOR依赖模块
         /// </summary>
-        public static void RequireXORModules(this JsEnv env) => RequireXORModules(env, false, false);
-        public static void RequireXORModules(this JsEnv env, bool isESM) => RequireXORModules(env, isESM, false);
+        public static void RequireXORModules(this JsEnv env) => RequireXORModules(env, false, true);
+        public static void RequireXORModules(this JsEnv env, bool isESM) => RequireXORModules(env, isESM, true);
         public static void RequireXORModules(this JsEnv env, bool isESM, bool throwOnFailure)
         {
             if (Helper.GetLoader == null)
@@ -113,8 +114,8 @@ namespace XOR
             string script = @"
 function func(worker){ 
     let _g = (function(){ return global || globalThis || this; })();
-    _g.XOR = _g.XOR ?? {};
-    _g.XOR.globalWorker = new XOR.ThreadWorker(worker);
+    _g.xor = _g.xor ?? {};
+    _g.xor.globalWorker = new xor.ThreadWorker(worker);
 }
 func
 ";

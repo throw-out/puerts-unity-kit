@@ -24,8 +24,8 @@ class Listener {
 
 function register() {
     let _g = (global ?? globalThis ?? this);
-    _g.XOR = _g.XOR || {};
-    _g.XOR["globalListener"] = _g.XOR.globalListener ?? {
+    _g.xor = _g.xor || {};
+    _g.xor.globalListener = _g.xor.globalListener ?? {
         quit: new Listener()
     };
 }
@@ -36,7 +36,7 @@ export { }
  * 接口声明
  */
 declare global {
-    namespace XOR {
+    namespace xor {
         /**全局监听器 */
         const globalListener: {
             readonly quit: Listener

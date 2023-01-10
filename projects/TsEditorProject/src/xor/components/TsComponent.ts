@@ -1,13 +1,13 @@
 import * as csharp from "csharp";
 import { $typeof } from "puerts";
 
-class TsComponentImpl extends XOR.TsBehaviour {
+class TsComponentImpl extends xor.TsBehaviour {
 
 }
 
 function register() {
     let _g = (global ?? globalThis ?? this);
-    _g.XOR = _g.XOR || {};
-    _g.XOR["TsComponent"] = TsComponentImpl;
+    _g.xor = _g.xor || {};
+    _g.xor.TsComponent = TsComponentImpl;
 }
 register();

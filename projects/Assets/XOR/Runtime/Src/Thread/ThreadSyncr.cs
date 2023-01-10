@@ -59,7 +59,7 @@ namespace XOR
                     bool isCompleted = this._syncToMainThread == null || this._syncToMainThread.completed;
                     if (isCompleted)
                     {
-                        result = this._syncToMainThread?.data;
+                        result = this._syncToMainThread?.result;
                         exception = this._syncToMainThread?.exception;
                     }
                     locker.ReleaseReader();
@@ -68,9 +68,10 @@ namespace XOR
                     Thread.Sleep(THREAD_SLEEP);
                 }
                 //检查错误
-                if (throwOnError && exception != null)
+                if (exception != null)
                 {
-                    throw exception;
+                    if (throwOnError) throw exception;
+                    result = null;
                 }
                 return result;
             }
@@ -113,7 +114,7 @@ namespace XOR
                     bool isCompleted = this._syncToChildThread == null || this._syncToChildThread.completed;
                     if (isCompleted)
                     {
-                        result = this._syncToChildThread?.data;
+                        result = this._syncToChildThread?.result;
                         exception = this._syncToChildThread?.exception;
                     }
                     locker.ReleaseReader();
@@ -122,9 +123,10 @@ namespace XOR
                     Thread.Sleep(THREAD_SLEEP);
                 }
                 //检查错误
-                if (throwOnError && exception != null)
+                if (exception != null)
                 {
-                    throw exception;
+                    if (throwOnError) throw exception;
+                    result = null;
                 }
                 return result;
             }

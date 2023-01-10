@@ -109,7 +109,7 @@ declare namespace TsBehaviourImpl {
     function Listener(eventName?: string): PropertyDecorator;
 }
 declare global {
-    namespace XOR {
+    namespace xor {
         class TsBehaviour extends TsBehaviourImpl {
         }
     }

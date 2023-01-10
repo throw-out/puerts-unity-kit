@@ -930,14 +930,14 @@ const Metadata = {
 
 function register() {
     let _g = (global ?? globalThis ?? this);
-    _g.XOR = _g.XOR || {};
-    _g.XOR.TsBehaviour = TsBehaviourImpl;
+    _g.xor = _g.xor || {};
+    _g.xor.TsBehaviour = TsBehaviourImpl;
 }
 register();
 
 /**接口声明 */
 declare global {
-    namespace XOR {
+    namespace xor {
         class TsBehaviour extends TsBehaviourImpl { }
     }
 }

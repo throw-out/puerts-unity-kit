@@ -606,8 +606,8 @@ const Metadata = {
 };
 function register() {
     let _g = (global ?? globalThis ?? this);
-    _g.XOR = _g.XOR || {};
-    _g.XOR.TsBehaviour = TsBehaviourImpl;
+    _g.xor = _g.xor || {};
+    _g.xor.TsBehaviour = TsBehaviourImpl;
 }
 register();
 //# sourceMappingURL=TsBehaviour.js.map

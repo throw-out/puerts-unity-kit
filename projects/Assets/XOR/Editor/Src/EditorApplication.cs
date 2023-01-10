@@ -18,6 +18,8 @@ namespace XOR
         {
             base.Init();
 
+            bool isESM = Settings.Load().IsESM;
+
             Loader = new MergeLoader();
             Loader.AddLoader(new DefaultLoader(), int.MaxValue);
 

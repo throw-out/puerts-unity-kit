@@ -30,7 +30,7 @@ declare class ThreadWorkerImpl {
     private _isResultId;
 }
 declare global {
-    namespace XOR {
+    namespace xor {
         class ThreadWorker extends ThreadWorkerImpl {
         }
         const globalWorker: ThreadWorkerImpl;

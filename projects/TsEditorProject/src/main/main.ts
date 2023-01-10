@@ -15,10 +15,10 @@ loader.AddLoader(new csharp.XOR.FileLoader(outputRoot, projectRoot));
 const options = new csharp.XOR.ThreadWorker.CreateOptions();
 options.Remote = true;
 
-const worker = new XOR.ThreadWorker(loader, options);
+const worker = new xor.ThreadWorker(loader, options);
 worker.start("./child/main");
 
-XOR.globalListener.quit.add(() => worker.stop());
+xor.globalListener.quit.add(() => worker.stop());
 
 //console.log("main thread ready.");
 //setInterval(() => console.log("main thread active:"), 1000);
