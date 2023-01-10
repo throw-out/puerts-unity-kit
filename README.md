@@ -18,7 +18,7 @@ TODO
 
 ## 规划
 ------------
-- [x]在typescript脚本中使用Unity生命周期函数Start丶Update丶OnTriggerEnter...
+- [x] 在typescript脚本中使用Unity生命周期函数Start丶Update丶OnTriggerEnter...
 - [x] 在GameObject上挂载TsPropertys(C#)实现引用/值序列化
 - [x] ThreadWorker实现:
  - [x] 实现主线程JsEnv对子线程JsEnv异步/同步调用
