@@ -33,4 +33,4 @@ function register() {
     };
 }
 register();
-//# sourceMappingURL=globalListener.js.map
+//# sourceMappingURL=GlobalListener.js.map

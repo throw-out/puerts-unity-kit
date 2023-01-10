@@ -11,8 +11,9 @@ namespace XOR
         private const int THREAD_LOCK_TIMEOUT = 1000;
         private const int THREAD_SLEEP = 5;
 
+        private readonly ThreadWorker worker;
         private readonly ILoader source;
-        private readonly ThreadWorker worker = null;
+        private readonly Func<string, bool> match;
         private readonly RWLocker locker;
 
         //脚本缓存
@@ -23,10 +24,12 @@ namespace XOR
         private SyncFileExists _syncFileExists;
         private SyncReadFile _syncReadFile;
 
-        public ThreadLoader(ThreadWorker worker, ILoader source)
+        public ThreadLoader(ThreadWorker worker, ILoader source) : this(worker, source, null) { }
+        public ThreadLoader(ThreadWorker worker, ILoader source, Func<string, bool> match)
         {
             this.worker = worker;
             this.source = source;
+            this.match = match;
             this.locker = new RWLocker(THREAD_LOCK_TIMEOUT);
             this._cacheFileExists = new Dictionary<string, bool>();
             this._cacheReadFile = new Dictionary<string, Tuple<string, string>>();
@@ -38,6 +41,10 @@ namespace XOR
             if (this._cacheFileExists.TryGetValue(filepath, out bool exists))
             {
                 return exists;
+            }
+            if (this.match != null && !this.match(filepath))
+            {
+                return false;
             }
             //锁定ThreadWorker同步状态
             if (!worker.AcquireSyncing())
@@ -82,6 +89,11 @@ namespace XOR
             {
                 debugpath = script.Item1;
                 return script.Item2;
+            }
+            if (this.match != null && !this.match(filepath))
+            {
+                debugpath = null;
+                return null;
             }
             //锁定ThreadWorker同步状态
             if (!worker.AcquireSyncing())

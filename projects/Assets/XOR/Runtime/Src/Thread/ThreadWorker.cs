@@ -386,7 +386,7 @@ namespace XOR
 
             //Create MergeLoader
             MergeLoader mloader;
-            if (loader is MergeLoader)
+            if (typeof(MergeLoader).IsAssignableFrom(loader.GetType()))
             {
                 mloader = new MergeLoader((MergeLoader)loader);
             }
@@ -397,7 +397,10 @@ namespace XOR
             }
             mloader.RemoveLoader<DefaultLoader>();
             //Create ThreadLoader
-            ThreadLoader tloader = new ThreadLoader(worker, new DefaultLoader());
+            ThreadLoader tloader = new ThreadLoader(worker, new DefaultLoader(), filepath => !string.IsNullOrEmpty(filepath) && (
+                filepath.StartsWith("puerts/") ||
+                filepath.StartsWith("puer-commonjs/")
+            ));
             mloader.AddLoader(tloader, int.MaxValue);
 
             worker.Loader = mloader;
