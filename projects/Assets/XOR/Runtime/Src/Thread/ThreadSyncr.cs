@@ -3,6 +3,10 @@ using System.Threading;
 
 namespace XOR
 {
+    public interface ISyncProcess
+    {
+        void Process();
+    }
     public class ThreadSyncr
     {
         /// <summary>线程锁定超时(毫秒) </summary>
@@ -137,7 +141,7 @@ namespace XOR
         {
             if (d == null || d.completed)
                 return;
-  
+
             locker.AcquireWriter();
             try
             {

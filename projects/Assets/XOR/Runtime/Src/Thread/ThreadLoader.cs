@@ -5,7 +5,7 @@ using Puerts;
 
 namespace XOR
 {
-    public class ThreadLoader : ILoader
+    public class ThreadLoader : ILoader, ISyncProcess
     {
         /// <summary>线程锁定超时(毫秒) </summary>
         private const int THREAD_LOCK_TIMEOUT = 1000;

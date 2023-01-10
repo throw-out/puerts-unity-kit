@@ -46,7 +46,6 @@ namespace XOR
 
         public JsEnv Env { get; private set; }
         public ILoader Loader { get; private set; }
-        public ThreadLoader ThreadLoader { get; private set; }
         public CreateOptions Options { get; private set; }
         private bool _running = false;
         private bool _disposed = false;
@@ -55,11 +54,13 @@ namespace XOR
         private Thread _thread;
         private readonly RWLocker locker;
         private readonly ThreadSyncr syncr;
+        private readonly HashSet<ISyncProcess> syncProcesses;
 
         public ThreadWorker()
         {
             this.locker = new RWLocker(THREAD_LOCK_TIMEOUT);
             this.syncr = new ThreadSyncr(this);
+            this.syncProcesses = new HashSet<ISyncProcess>();
             this.mainThreadMessages = new Queue<Event>();
             this.childThreadMessages = new Queue<Event>();
             this.childThreadEval = new Queue<Tuple<string, string>>();
@@ -75,7 +76,7 @@ namespace XOR
             if (!this.IsAlive) return;
             ProcessMainThreadMessages();
             syncr.ProcessMainThredMessages();
-            ThreadLoader?.Process();
+            ProcessMainThreadProcesses();
         }
 
         public void Run(string filepath)
@@ -287,6 +288,15 @@ namespace XOR
                 Logger.LogError($"{nameof(ThreadWorker)}.{nameof(MainThreadHandler)} unregister.");
             }
         }
+        void ProcessMainThreadProcesses()
+        {
+            if (syncProcesses.Count == 0)
+                return;
+            foreach (ISyncProcess process in syncProcesses)
+            {
+                process.Process();
+            }
+        }
         void ProcessChildThreadMessages()
         {
             if (childThreadMessages.Count == 0)
@@ -362,7 +372,7 @@ namespace XOR
             if (Thread.CurrentThread.ManagedThreadId == MAIN_THREAD_ID)
             {
                 syncr.ProcessMainThredMessages();
-                ThreadLoader.Process();
+                ProcessMainThreadProcesses();
             }
             else
             {
@@ -441,7 +451,7 @@ namespace XOR
             mloader.AddLoader(tloader, int.MaxValue);
 
             worker.Loader = mloader;
-            worker.ThreadLoader = tloader;
+            worker.syncProcesses.Add(tloader);
             worker.Options = options != null ? options : CreateOptions.NONE;
 
             if (options != null && !string.IsNullOrEmpty(options.Filepath))

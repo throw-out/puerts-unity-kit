@@ -26032,7 +26032,7 @@ declare namespace CS {
             public constructor($millisecondsTimeout: number)
             public constructor()
         }
-        class ThreadLoader extends System.Object implements Puerts.ILoader {
+        class ThreadLoader extends System.Object implements Puerts.ILoader, XOR.ISyncProcess {
             protected [__keep_incompatibility]: never;
             public FileExists($filepath: string): boolean
             public ReadFile($filepath: string, $debugpath: $Ref<string>): string
@@ -26040,6 +26040,9 @@ declare namespace CS {
             public constructor($worker: XOR.ThreadWorker, $source: Puerts.ILoader)
             public constructor($worker: XOR.ThreadWorker, $source: Puerts.ILoader, $match: System.Func$2<string, boolean>)
             public constructor()
+        }
+        interface ISyncProcess {
+            Process(): void
         }
         class Multiple$1<T> extends System.Object {
             protected [__keep_incompatibility]: never;
@@ -26053,7 +26056,6 @@ declare namespace CS {
             public get Disposed(): boolean;
             public get Env(): Puerts.JsEnv;
             public get Loader(): Puerts.ILoader;
-            public get ThreadLoader(): XOR.ThreadLoader;
             public get Options(): XOR.ThreadWorker.CreateOptions;
             public Tick(): void
             public Run($filepath: string): void
