@@ -26038,6 +26038,7 @@ declare namespace CS {
             public ReadFile($filepath: string, $debugpath: $Ref<string>): string
             public Process(): void
             public constructor($worker: XOR.ThreadWorker, $source: Puerts.ILoader)
+            public constructor($worker: XOR.ThreadWorker, $source: Puerts.ILoader, $match: System.Func$2<string, boolean>)
             public constructor()
         }
         class Multiple$1<T> extends System.Object {
@@ -26057,8 +26058,8 @@ declare namespace CS {
             public Tick(): void
             public Run($filepath: string): void
             public VerifyThread($isMainThread: boolean, $throwError?: boolean): boolean
-            public PostToMainThread($eventName: string, $data: XOR.ThreadWorker.EventData): void
-            public PostToChildThread($eventName: string, $data: XOR.ThreadWorker.EventData): void
+            public PostToMainThread($eventName: string, $data: XOR.ThreadWorker.EventData, $resultEventName?: string): void
+            public PostToChildThread($eventName: string, $data: XOR.ThreadWorker.EventData, $resultEventName?: string): void
             public PostEvalToChildThread($chunk: string, $chunkName?: string): void
             public Dispose(): void
             public static Create($loader: Puerts.ILoader): XOR.ThreadWorker
@@ -30176,7 +30177,7 @@ declare namespace CS {
             public Remote: boolean
             public constructor()
         }
-        enum ValueType { Unknown = 0, Value = 1, Object = 2, Array = 3, ArrayBuffer = 4, JSON = 5, RefObject = 6 }
+        enum ValueType { Unknown = 0, Value = 1, Object = 2, Array = 3, ArrayBuffer = 4, RefObject = 5, JSON = 6, ERROR = 7 }
     }
     namespace XOR.TsPropertys {
         class ResultPair extends System.Object {

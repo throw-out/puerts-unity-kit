@@ -109,15 +109,16 @@ namespace XOR
         /// </summary>
         /// <param name="eventName"></param>
         /// <param name="data"></param>
-        public void PostToMainThread(string eventName, EventData data)
+        public void PostToMainThread(string eventName, EventData data, string resultEventName = null)
         {
             VerifyThread(false, true);
             lock (mainThreadMessages)
             {
                 mainThreadMessages.Enqueue(new Event()
                 {
-                    eventName = eventName,
-                    data = data
+                    EventName = eventName,
+                    ResultEventName = resultEventName,
+                    Data = data
                 });
             }
         }
@@ -126,15 +127,16 @@ namespace XOR
         /// </summary>
         /// <param name="eventName"></param>
         /// <param name="data"></param>
-        public void PostToChildThread(string eventName, EventData data)
+        public void PostToChildThread(string eventName, EventData data, string resultEventName = null)
         {
             VerifyThread(true, true);
             lock (childThreadMessages)
             {
                 childThreadMessages.Enqueue(new Event()
                 {
-                    eventName = eventName,
-                    data = data
+                    EventName = eventName,
+                    ResultEventName = resultEventName,
+                    Data = data
                 });
             }
         }
@@ -257,15 +259,32 @@ namespace XOR
             {
                 for (int i = 0; i < events.Count; i++)
                 {
+                    Event _event = events[i];
                     try
                     {
-                        func(events[i].eventName, events[i].data);
+                        EventData result = func(_event.EventName, _event.Data);
+                        if (!string.IsNullOrEmpty(_event.ResultEventName))
+                        {
+                            PostToChildThread(_event.ResultEventName, result);
+                        }
                     }
                     catch (Exception e)
                     {
                         Logger.LogError(e.Message);
+                        if (!string.IsNullOrEmpty(_event.ResultEventName))
+                        {
+                            PostToChildThread(_event.ResultEventName, new EventData()
+                            {
+                                Type = ValueType.ERROR,
+                                Value = e
+                            });
+                        }
                     }
                 }
+            }
+            else
+            {
+                Logger.LogError($"{nameof(ThreadWorker)}.{nameof(MainThreadHandler)} unregister.");
             }
         }
         void ProcessChildThreadMessages()
@@ -279,20 +298,38 @@ namespace XOR
                 while (count-- > 0 && childThreadMessages.Count > 0)
                     events.Add(childThreadMessages.Dequeue());
             }
+
             Func<string, EventData, EventData> func = this.ChildThreadHandler;
             if (func != null)
             {
                 for (int i = 0; i < events.Count; i++)
                 {
+                    Event _event = events[i];
                     try
                     {
-                        func(events[i].eventName, events[i].data);
+                        EventData result = func(_event.EventName, _event.Data);
+                        if (!string.IsNullOrEmpty(_event.ResultEventName))
+                        {
+                            PostToMainThread(_event.ResultEventName, result);
+                        }
                     }
                     catch (Exception e)
                     {
                         Logger.LogError(e.Message);
+                        if (!string.IsNullOrEmpty(_event.ResultEventName))
+                        {
+                            PostToMainThread(_event.ResultEventName, new EventData()
+                            {
+                                Type = ValueType.ERROR,
+                                Value = e
+                            });
+                        }
                     }
                 }
+            }
+            else
+            {
+                Logger.LogError($"{nameof(ThreadWorker)}.{nameof(ChildThreadHandler)} unregister.");
             }
         }
         void ProcessChildThreadEval()
@@ -426,8 +463,9 @@ namespace XOR
 
         private class Event
         {
-            public string eventName;
-            public EventData data;
+            public string EventName;
+            public string ResultEventName;
+            public EventData Data;
         }
         public class EventData
         {
@@ -445,8 +483,9 @@ namespace XOR
             Object,
             Array,
             ArrayBuffer,
+            RefObject,
             JSON,
-            RefObject
+            ERROR
         }
     }
 

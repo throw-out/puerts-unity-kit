@@ -4,8 +4,11 @@ let List_Object = $generic(csharp.System.Collections.Generic.List$1, csharp.Syst
     new(): csharp.System.Collections.Generic.List$1<csharp.System.Object>
 };
 
-const CLOSE_EVENT_NAME = "__e_close",
-    REMOTE_EVENT_NAME = "__e_remote";
+const INVOKE_TICK = Symbol("INVOKE_TICK");
+
+const CLOSE_EVENT = "__e_close__",
+    REMOTE_EVENT = "__e_remote__",
+    RESULT_EVENT = "__e_result__";
 
 /**
  * 跨JsEnv实例交互封装
@@ -14,6 +17,7 @@ class ThreadWorkerImpl {
     private readonly mainThread: boolean;
     private readonly worker: csharp.XOR.ThreadWorker;
     private readonly events: Map<string, Function[]>;
+    private _postIndex: number;
 
     constructor(loader: csharp.Puerts.ILoader, options?: csharp.XOR.ThreadWorker.CreateOptions) {
         if (loader instanceof csharp.XOR.ThreadWorker) {
@@ -37,22 +41,32 @@ class ThreadWorkerImpl {
             this.events.clear();
             this.worker.Dispose();
         } else {
-            this.post(CLOSE_EVENT_NAME);
+            this.post(CLOSE_EVENT);
         }
     }
     /**异步调用事件, 无返回值
      * @param eventName 
      * @param data 
+     * @param notResult 不获取返回值 
      */
-    public post(eventName: string, data?: any): void {
+    public post<TResult = void>(eventName: string, data?: any, notResult?: true): Promise<TResult> {
         let edata: csharp.XOR.ThreadWorker.EventData;
         if (data !== undefined && data !== null && data !== void 0) {
             edata = this.pack(data);
         }
+        let resultId = this.getResultId();
         if (this.mainThread) {
-            this.worker.PostToChildThread(eventName, edata);
+            this.worker.PostToChildThread(eventName, edata, resultId);
         } else {
-            this.worker.PostToMainThread(eventName, edata);
+            this.worker.PostToMainThread(eventName, edata, resultId);
+        }
+        if (resultId) {
+            return new Promise<TResult>((resolve, reject) => {
+                this.once(resultId, function (d: { error: Error, result: TResult }) {
+                    if (d.error) reject(d.error);
+                    else resolve(d.result);
+                });
+            });
         }
     }
     /**同步调用事件, 并立即获取返回值
@@ -61,12 +75,12 @@ class ThreadWorkerImpl {
      * @param throwOnError      
      * @returns 
      */
-    public postSync<T = any>(eventName: string, data?: any, throwOnError: boolean = true): T {
+    public postSync<TResult = any>(eventName: string, data?: any, throwOnError: boolean = true): TResult {
         let edata: csharp.XOR.ThreadWorker.EventData;
         if (data !== undefined && data !== null && data !== void 0) {
             edata = this.pack(data);
         }
-        let result: T;
+        let result: TResult;
         if (this.mainThread) {
             edata = this.worker.Syncr.PostToChildThread(eventName, edata, throwOnError);
         } else {
@@ -92,22 +106,27 @@ class ThreadWorkerImpl {
      * @param eventName 
      * @param fn 
      */
-    public on(eventName: typeof CLOSE_EVENT_NAME, fn: () => void | false): void;
+    public on(eventName: typeof CLOSE_EVENT, fn: () => void | false): this;
     /**监听事件信息
      * @param eventName 
      * @param fn 
      */
-    public on<T = any, TResult = void>(eventName: string, fn: (data?: T) => TResult): void;
+    public on<T = any, TResult = void>(eventName: string, fn: (data?: T) => TResult): this;
     public on() {
         let eventName: string = arguments[0], fn: Function = arguments[1];
-        if (eventName && fn) {
-            let funcs = this.events.get(eventName);
-            if (!funcs) {
-                funcs = [];
-                this.events.set(eventName, funcs);
-            }
-            funcs.push(fn);
-        }
+        delete fn[INVOKE_TICK];
+        this._on(eventName, fn);
+        return this;
+    }
+    /**箭头事件信息, 并返回
+     * @param eventName 
+     * @param fn 
+     * @returns 
+     */
+    public once(eventName: string, fn: Function): this {
+        fn[INVOKE_TICK] = 1;
+        this._on(eventName, fn);
+        return this;
     }
     /**移除指定监听事件 */
     public remove(eventName: string, fn: Function) {
@@ -127,6 +146,34 @@ class ThreadWorkerImpl {
             this.events.clear();
     }
 
+    private _on(eventName: string, fn: Function) {
+        if (eventName && fn) {
+            let funcs = this.events.get(eventName);
+            if (!funcs) {
+                funcs = [];
+                this.events.set(eventName, funcs);
+            }
+            funcs.push(fn);
+        }
+    }
+    private _emit(eventName: string, ...args: any[]) {
+        let functions = this.events.get(eventName);
+        if (!functions)
+            return null;
+        let rmHandlers = new Array<Function>(), result: any;
+        functions.forEach(func => {
+            let r = func.apply(undefined, args);
+            result = result ?? r;
+            if (INVOKE_TICK in func && (--(<number>func[INVOKE_TICK])) <= 0) {
+                rmHandlers.push(func);
+            }
+        });
+        if (rmHandlers.length > 0) {
+            this.events.set(eventName, functions.filter(func => !rmHandlers.includes(func)));
+        }
+        return result;
+    }
+
     private register() {
         let getValue = (data: csharp.XOR.ThreadWorker.EventData) => {
             if (data !== undefined && data !== null && data !== void 0) {
@@ -135,15 +182,18 @@ class ThreadWorkerImpl {
             return null;
         };
         let onmessage = (eventName: string, data: csharp.XOR.ThreadWorker.EventData, hasReturn: boolean = true): csharp.XOR.ThreadWorker.EventData => {
-            let result: any;
-
-            let funcs = this.events.get(eventName);
-            if (funcs) {
-                let _data = getValue(data);
-                for (let fn of funcs) {
-                    result = fn(_data) || result;
+            if (eventName && eventName.startsWith(RESULT_EVENT)) {
+                let error: Error, result: any;
+                if (data.Type === csharp.XOR.ThreadWorker.ValueType.ERROR) {
+                    error = new Error(`${data.Value}`);
+                } else {
+                    result = getValue(data);
                 }
+                this._emit(eventName, { error, result });
+                return;
             }
+            let result: any = this._emit(eventName, getValue(data));
+
             if (hasReturn && result !== undefined && result !== null && result !== void 0)
                 return this.pack(result);
             return null;
@@ -151,10 +201,10 @@ class ThreadWorkerImpl {
         if (this.mainThread) {
             this.worker.MainThreadHandler = (eventName, data) => {
                 switch (eventName) {
-                    case CLOSE_EVENT_NAME:
+                    case CLOSE_EVENT:
                         {
                             let closing = true;
-                            let funcs = this.events.get(CLOSE_EVENT_NAME);
+                            let funcs = this.events.get(CLOSE_EVENT);
                             if (funcs) {
                                 let _data = getValue(data);
                                 for (let fn of funcs) {
@@ -167,7 +217,7 @@ class ThreadWorkerImpl {
                             return this.pack(closing);
                         }
                         break;
-                    case REMOTE_EVENT_NAME:
+                    case REMOTE_EVENT:
                         {
                             let _data = (<string>getValue(data));
                             if (typeof _data !== "string")
@@ -205,7 +255,7 @@ class ThreadWorkerImpl {
                         let fullName = namespace ? (namespace + '.' + name) : name;
                         //同步调用Unity Api
                         if (fullName.startsWith("UnityEngine") && fullName !== "UnityEngine.Debug") {
-                            let cls = this.postSync(REMOTE_EVENT_NAME, fullName);
+                            let cls = this.postSync(REMOTE_EVENT, fullName);
                             if (cls) {
                                 cache[name] = cls;
                             }
@@ -226,6 +276,11 @@ class ThreadWorkerImpl {
         }
         let puerts = require("puerts");
         puerts.registerBuildinModule('csharp', createProxy(undefined));
+    }
+
+    private getResultId() {
+        if (!this._postIndex) this._postIndex = 1;
+        return `${RESULT_EVENT}${this._postIndex++}`;
     }
 
     private pack(data: any): csharp.XOR.ThreadWorker.EventData {
