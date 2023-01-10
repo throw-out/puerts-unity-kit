@@ -38,7 +38,7 @@ class ThreadWorkerImpl {
         if (data !== undefined && data !== null && data !== void 0) {
             edata = this.pack(data);
         }
-        let resultId = this.getResultId();
+        let resultId = this._getResultId();
         if (this.mainThread) {
             this.worker.PostToChildThread(eventName, edata, resultId);
         }
@@ -139,7 +139,7 @@ class ThreadWorkerImpl {
             return null;
         };
         let onmessage = (eventName, data, hasReturn = true) => {
-            if (eventName && eventName.startsWith(RESULT_EVENT)) {
+            if (this._isResultId(eventName)) {
                 let error, result;
                 if (data.Type === csharp.XOR.ThreadWorker.ValueType.ERROR) {
                     error = new Error(`${data.Value}`);
@@ -177,7 +177,8 @@ class ThreadWorkerImpl {
                         break;
                     case REMOTE_EVENT:
                         {
-                            return this.resolveRemote(getValue(data));
+                            let result = this.executeRemoteResolver(getValue(data));
+                            return this.pack(result);
                         }
                         break;
                     default:
@@ -227,7 +228,7 @@ class ThreadWorkerImpl {
         let puerts = require("puerts");
         puerts.registerBuildinModule('csharp', createProxy(undefined));
     }
-    resolveRemote(data) {
+    executeRemoteResolver(data) {
         if (typeof data !== "string")
             return null;
         let result = csharp;
@@ -235,34 +236,13 @@ class ThreadWorkerImpl {
             if (result && name)
                 result = result[name];
         });
-        let t = typeof (result);
-        if (t !== "undefined" && t !== "object" && t !== "function") {
-            return this.pack(result);
-        }
-        switch (typeof (result)) {
-            case "number":
-            case "string":
-            case "bigint":
-            case "boolean":
-            case "object":
-                return this.pack(result);
-                break;
-            case "function":
-                return null;
-                break;
-            default:
-                return null;
-                break;
-        }
-    }
-    getResultId() {
-        if (!this._postIndex)
-            this._postIndex = 1;
-        return `${RESULT_EVENT}${this._postIndex++}`;
+        if (result instanceof Proxy)
+            return null;
+        return result;
     }
     pack(data) {
         switch (this._validate(data)) {
-            case 0:
+            case PackValidate.Json:
                 {
                     let result = new csharp.XOR.ThreadWorker.EventData();
                     if (typeof (data) === "object") {
@@ -276,10 +256,10 @@ class ThreadWorkerImpl {
                     return result;
                 }
                 break;
-            case 1:
+            case PackValidate.Reference:
                 return this._packByRefs(data, { mapping: new WeakMap(), id: 1 });
                 break;
-            case 2:
+            case PackValidate.Unsupport:
                 throw new Error("unsupport data");
                 break;
         }
@@ -412,45 +392,54 @@ class ThreadWorkerImpl {
             case "object":
                 if (data instanceof csharp.System.Object ||
                     data instanceof ArrayBuffer) {
-                    return 1;
+                    return PackValidate.Reference;
                 }
                 if (!refs)
                     refs = new WeakSet();
                 if (refs.has(data)) {
-                    return 1;
+                    return PackValidate.Reference;
                 }
                 refs.add(data);
                 if (Array.isArray(data)) {
                     for (let _d of data) {
                         let t = this._validate(_d, refs);
-                        if (t > 0)
+                        if (t !== PackValidate.Json)
                             return t;
                     }
                 }
                 else {
                     for (let key of Object.keys(data)) {
                         let t = this._validate(key, refs);
-                        if (t > 0)
+                        if (t !== PackValidate.Json)
                             return t;
                         t = this._validate(data[key], refs);
-                        if (t > 0)
+                        if (t !== PackValidate.Json)
                             return t;
                     }
                 }
                 break;
             case "symbol":
             case "function":
-                return 2;
+                return PackValidate.Unsupport;
                 break;
         }
-        return 0;
+        return PackValidate.Json;
+    }
+    _getResultId() {
+        if (!this._postIndex)
+            this._postIndex = 1;
+        return `${RESULT_EVENT}${this._postIndex++}`;
+    }
+    _isResultId(eventName) {
+        return eventName && eventName.startsWith(RESULT_EVENT);
     }
 }
-(function () {
-    let _g = (global ?? globalThis ?? this);
-    _g["ThreadWorker"] = ThreadWorkerImpl;
-    _g["globalWorker"] = undefined;
-})();
+var PackValidate;
+(function (PackValidate) {
+    PackValidate[PackValidate["Json"] = 0] = "Json";
+    PackValidate[PackValidate["Reference"] = 1] = "Reference";
+    PackValidate[PackValidate["Unsupport"] = 2] = "Unsupport";
+})(PackValidate || (PackValidate = {}));
 function register() {
     let _g = (global ?? globalThis ?? this);
     _g.XOR = _g.XOR || {};

@@ -20,13 +20,14 @@ declare class ThreadWorkerImpl {
     private _emit;
     private register;
     private registerRemoteProxy;
-    private resolveRemote;
-    private getResultId;
+    private executeRemoteResolver;
     private pack;
     private unpack;
     private _packByRefs;
     private _unpackByRefs;
     private _validate;
+    private _getResultId;
+    private _isResultId;
 }
 declare global {
     namespace XOR {
