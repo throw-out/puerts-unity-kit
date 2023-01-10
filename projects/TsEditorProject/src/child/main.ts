@@ -6,9 +6,9 @@ const { Path } = csharp.System.IO;
 
 setTimeout(() => {
     let p: any = csharp.UnityEngine.Application.dataPath;
-    console.log(typeof p);
-    console.log(p instanceof csharp.System.Object ? p.GetType().FullName : 'null');
-    console.log(p);
+    //console.log(typeof p);
+    //console.log(p instanceof csharp.System.Object ? p.GetType().FullName : 'null');
+    //console.log(p);
     let tsconfigPath = Path.GetFullPath(Path.Combine(
         Path.GetDirectoryName(p),
         "TsProject/tsconfig.json"

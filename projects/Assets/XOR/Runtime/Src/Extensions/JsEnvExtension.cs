@@ -108,7 +108,7 @@ namespace XOR
         /// 绑定ThreadWorker实例(仅ThreadWorker子线程可调用)
         /// </summary>
         /// <param name="env"></param>
-        internal static void BindThreadWorker(this JsEnv env, ThreadWorker worker)
+        internal static void BindXORThreadWorker(this JsEnv env, ThreadWorker worker)
         {
             string script = @"
 function func(worker){ 

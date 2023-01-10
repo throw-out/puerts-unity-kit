@@ -30177,6 +30177,7 @@ declare namespace CS {
             public static NONE: XOR.ThreadWorker.CreateOptions
             public Filepath: string
             public Remote: boolean
+            public StopOnError: boolean
             public constructor()
         }
         enum ValueType { Unknown = 0, Value = 1, Object = 2, Array = 3, ArrayBuffer = 4, RefObject = 5, JSON = 6, ERROR = 7 }

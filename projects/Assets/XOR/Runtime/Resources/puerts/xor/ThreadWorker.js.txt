@@ -3,7 +3,8 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const csharp = require("csharp");
 const puerts_1 = require("puerts");
 let List_Object = (0, puerts_1.$generic)(csharp.System.Collections.Generic.List$1, csharp.System.Object);
-const CLOSE_EVENT_NAME = "__e_close", REMOTE_EVENT_NAME = "__e_remote";
+const INVOKE_TICK = Symbol("INVOKE_TICK");
+const CLOSE_EVENT = "__e_close__", REMOTE_EVENT = "__e_remote__", RESULT_EVENT = "__e_result__";
 class ThreadWorkerImpl {
     constructor(loader, options) {
         if (loader instanceof csharp.XOR.ThreadWorker) {
@@ -29,19 +30,30 @@ class ThreadWorkerImpl {
             this.worker.Dispose();
         }
         else {
-            this.post(CLOSE_EVENT_NAME);
+            this.post(CLOSE_EVENT);
         }
     }
-    post(eventName, data) {
+    post(eventName, data, notResult) {
         let edata;
         if (data !== undefined && data !== null && data !== void 0) {
             edata = this.pack(data);
         }
+        let resultId = this.getResultId();
         if (this.mainThread) {
-            this.worker.PostToChildThread(eventName, edata);
+            this.worker.PostToChildThread(eventName, edata, resultId);
         }
         else {
-            this.worker.PostToMainThread(eventName, edata);
+            this.worker.PostToMainThread(eventName, edata, resultId);
+        }
+        if (resultId) {
+            return new Promise((resolve, reject) => {
+                this.once(resultId, function (d) {
+                    if (d.error)
+                        reject(d.error);
+                    else
+                        resolve(d.result);
+                });
+            });
         }
     }
     postSync(eventName, data, throwOnError = true) {
@@ -59,7 +71,7 @@ class ThreadWorkerImpl {
         if (edata !== undefined && edata !== null && edata !== void 0) {
             result = this.unpack(edata);
         }
-        return null;
+        return result;
     }
     eval(chunk, chunkName) {
         if (!this.mainThread || XOR.globalWorker && XOR.globalWorker.worker === this.worker)
@@ -68,14 +80,14 @@ class ThreadWorkerImpl {
     }
     on() {
         let eventName = arguments[0], fn = arguments[1];
-        if (eventName && fn) {
-            let funcs = this.events.get(eventName);
-            if (!funcs) {
-                funcs = [];
-                this.events.set(eventName, funcs);
-            }
-            funcs.push(fn);
-        }
+        delete fn[INVOKE_TICK];
+        this._on(eventName, fn);
+        return this;
+    }
+    once(eventName, fn) {
+        fn[INVOKE_TICK] = 1;
+        this._on(eventName, fn);
+        return this;
     }
     remove(eventName, fn) {
         let funcs = this.events.get(eventName);
@@ -92,6 +104,33 @@ class ThreadWorkerImpl {
         else
             this.events.clear();
     }
+    _on(eventName, fn) {
+        if (eventName && fn) {
+            let funcs = this.events.get(eventName);
+            if (!funcs) {
+                funcs = [];
+                this.events.set(eventName, funcs);
+            }
+            funcs.push(fn);
+        }
+    }
+    _emit(eventName, ...args) {
+        let functions = this.events.get(eventName);
+        if (!functions)
+            return null;
+        let rmHandlers = new Array(), result;
+        functions.forEach(func => {
+            let r = func.apply(undefined, args);
+            result = result ?? r;
+            if (INVOKE_TICK in func && (--func[INVOKE_TICK]) <= 0) {
+                rmHandlers.push(func);
+            }
+        });
+        if (rmHandlers.length > 0) {
+            this.events.set(eventName, functions.filter(func => !rmHandlers.includes(func)));
+        }
+        return result;
+    }
     register() {
         let getValue = (data) => {
             if (data !== undefined && data !== null && data !== void 0) {
@@ -100,14 +139,18 @@ class ThreadWorkerImpl {
             return null;
         };
         let onmessage = (eventName, data, hasReturn = true) => {
-            let result;
-            let funcs = this.events.get(eventName);
-            if (funcs) {
-                let _data = getValue(data);
-                for (let fn of funcs) {
-                    result = fn(_data) || result;
+            if (eventName && eventName.startsWith(RESULT_EVENT)) {
+                let error, result;
+                if (data.Type === csharp.XOR.ThreadWorker.ValueType.ERROR) {
+                    error = new Error(`${data.Value}`);
                 }
+                else {
+                    result = getValue(data);
+                }
+                this._emit(eventName, { error, result });
+                return;
             }
+            let result = this._emit(eventName, getValue(data));
             if (hasReturn && result !== undefined && result !== null && result !== void 0)
                 return this.pack(result);
             return null;
@@ -115,10 +158,10 @@ class ThreadWorkerImpl {
         if (this.mainThread) {
             this.worker.MainThreadHandler = (eventName, data) => {
                 switch (eventName) {
-                    case CLOSE_EVENT_NAME:
+                    case CLOSE_EVENT:
                         {
                             let closing = true;
-                            let funcs = this.events.get(CLOSE_EVENT_NAME);
+                            let funcs = this.events.get(CLOSE_EVENT);
                             if (funcs) {
                                 let _data = getValue(data);
                                 for (let fn of funcs) {
@@ -132,21 +175,9 @@ class ThreadWorkerImpl {
                             return this.pack(closing);
                         }
                         break;
-                    case REMOTE_EVENT_NAME:
+                    case REMOTE_EVENT:
                         {
-                            let _data = getValue(data);
-                            if (typeof _data !== "string")
-                                return null;
-                            let value = csharp;
-                            getValue(data).split(".").forEach(name => {
-                                if (value && name)
-                                    value = value[name];
-                            });
-                            let t = typeof (value);
-                            if (t !== "undefined" && t !== "object" && t !== "function") {
-                                return this.pack(value);
-                            }
-                            return null;
+                            return this.resolveRemote(getValue(data));
                         }
                         break;
                     default:
@@ -169,7 +200,9 @@ class ThreadWorkerImpl {
                     if (!(name in cache) && typeof (name) === "string") {
                         let fullName = namespace ? (namespace + '.' + name) : name;
                         if (fullName.startsWith("UnityEngine") && fullName !== "UnityEngine.Debug") {
-                            let cls = this.postSync(REMOTE_EVENT_NAME, fullName);
+                            console.log(`request: ${fullName}`);
+                            let cls = this.postSync(REMOTE_EVENT, fullName);
+                            console.log(`response: (${typeof (cls)})${cls}`);
                             if (cls) {
                                 cache[name] = cls;
                             }
@@ -194,6 +227,39 @@ class ThreadWorkerImpl {
         let puerts = require("puerts");
         puerts.registerBuildinModule('csharp', createProxy(undefined));
     }
+    resolveRemote(data) {
+        if (typeof data !== "string")
+            return null;
+        let result = csharp;
+        data.split(".").forEach(name => {
+            if (result && name)
+                result = result[name];
+        });
+        let t = typeof (result);
+        if (t !== "undefined" && t !== "object" && t !== "function") {
+            return this.pack(result);
+        }
+        switch (typeof (result)) {
+            case "number":
+            case "string":
+            case "bigint":
+            case "boolean":
+            case "object":
+                return this.pack(result);
+                break;
+            case "function":
+                return null;
+                break;
+            default:
+                return null;
+                break;
+        }
+    }
+    getResultId() {
+        if (!this._postIndex)
+            this._postIndex = 1;
+        return `${RESULT_EVENT}${this._postIndex++}`;
+    }
     pack(data) {
         switch (this._validate(data)) {
             case 0:
@@ -207,10 +273,11 @@ class ThreadWorkerImpl {
                         result.Type = csharp.XOR.ThreadWorker.ValueType.Value;
                         result.Value = data;
                     }
+                    return result;
                 }
                 break;
             case 1:
-                return this._packByRefs(data, { objs: new WeakMap(), id: 1 });
+                return this._packByRefs(data, { mapping: new WeakMap(), id: 1 });
                 break;
             case 2:
                 throw new Error("unsupport data");
@@ -221,7 +288,7 @@ class ThreadWorkerImpl {
     unpack(data) {
         switch (data.Type) {
             case csharp.XOR.ThreadWorker.ValueType.JSON:
-                return JSON.parse(data.Value) ?? data.Value;
+                return JSON.parse(data.Value);
                 break;
             default:
                 return this._unpackByRefs(data, new Map());
@@ -232,15 +299,15 @@ class ThreadWorkerImpl {
     _packByRefs(data, refs) {
         let result = new csharp.XOR.ThreadWorker.EventData();
         let t = typeof (data);
-        if (t === "object" && refs.objs.has(data)) {
+        if (t === "object" && refs.mapping.has(data)) {
             result.Type = csharp.XOR.ThreadWorker.ValueType.RefObject;
-            result.Value = refs.objs.get(data) ?? -1;
+            result.Value = refs.mapping.get(data) ?? -1;
         }
         else {
             switch (t) {
                 case "object":
                     let id = refs.id++;
-                    refs.objs.set(data, id);
+                    refs.mapping.set(data, id);
                     result.Id = id;
                     if (data instanceof csharp.System.Object) {
                         result.Type = csharp.XOR.ThreadWorker.ValueType.Value;
@@ -391,4 +458,4 @@ function register() {
     _g.XOR["globalWorker"] = undefined;
 }
 register();
-//# sourceMappingURL=threadWorker.js.map
+//# sourceMappingURL=ThreadWorker.js.map

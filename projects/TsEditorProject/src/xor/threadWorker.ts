@@ -90,7 +90,7 @@ class ThreadWorkerImpl {
         if (edata !== undefined && edata !== null && edata !== void 0) {
             result = this.unpack(edata);
         }
-        return null;
+        return result;
     }
     /**执行一段代码, 只能由主线程调用
      * @param chunk 
@@ -182,7 +182,7 @@ class ThreadWorkerImpl {
             return null;
         };
         let onmessage = (eventName: string, data: csharp.XOR.ThreadWorker.EventData, hasReturn: boolean = true): csharp.XOR.ThreadWorker.EventData => {
-            if (eventName && eventName.startsWith(RESULT_EVENT)) {
+            if (eventName && eventName.startsWith(RESULT_EVENT)) {  //post return data event
                 let error: Error, result: any;
                 if (data.Type === csharp.XOR.ThreadWorker.ValueType.ERROR) {
                     error = new Error(`${data.Value}`);
@@ -219,19 +219,7 @@ class ThreadWorkerImpl {
                         break;
                     case REMOTE_EVENT:
                         {
-                            let _data = (<string>getValue(data));
-                            if (typeof _data !== "string")
-                                return null;
-
-                            let value = csharp;
-                            (<string>getValue(data)).split(".").forEach(name => {
-                                if (value && name) value = value[name];
-                            });
-                            let t = typeof (value);
-                            if (t !== "undefined" && t !== "object" && t !== "function") {
-                                return this.pack(value);
-                            }
-                            return null;
+                            return this.resolveRemote(getValue(data));
                         }
                         break;
                     default:
@@ -255,7 +243,9 @@ class ThreadWorkerImpl {
                         let fullName = namespace ? (namespace + '.' + name) : name;
                         //同步调用Unity Api
                         if (fullName.startsWith("UnityEngine") && fullName !== "UnityEngine.Debug") {
+                            console.log(`request: ${fullName}`);
                             let cls = this.postSync(REMOTE_EVENT, fullName);
+                            console.log(`response: (${typeof (cls)})${cls}`);
                             if (cls) {
                                 cache[name] = cls;
                             }
@@ -277,6 +267,35 @@ class ThreadWorkerImpl {
         let puerts = require("puerts");
         puerts.registerBuildinModule('csharp', createProxy(undefined));
     }
+    //处理remote request, 由主线程调用
+    private resolveRemote(data: string) {
+        if (typeof data !== "string")
+            return null;
+
+        let result = csharp;
+        data.split(".").forEach(name => {
+            if (result && name) result = result[name];
+        });
+        let t = typeof (result);
+        if (t !== "undefined" && t !== "object" && t !== "function") {
+            return this.pack(result);
+        }
+        switch (typeof (result)) {
+            case "number":
+            case "string":
+            case "bigint":
+            case "boolean":
+            case "object":
+                return this.pack(result);
+                break;
+            case "function":
+                return null;
+                break;
+            default:
+                return null;
+                break;
+        }
+    }
 
     private getResultId() {
         if (!this._postIndex) this._postIndex = 1;
@@ -295,10 +314,11 @@ class ThreadWorkerImpl {
                         result.Type = csharp.XOR.ThreadWorker.ValueType.Value;
                         result.Value = data;
                     }
+                    return result;
                 }
                 break;
             case 1:
-                return this._packByRefs(data, { objs: new WeakMap(), id: 1 });
+                return this._packByRefs(data, { mapping: new WeakMap(), id: 1 });
                 break;
             case 2:
                 throw new Error("unsupport data");
@@ -309,7 +329,7 @@ class ThreadWorkerImpl {
     private unpack(data: csharp.XOR.ThreadWorker.EventData): any {
         switch (data.Type) {
             case csharp.XOR.ThreadWorker.ValueType.JSON:
-                return JSON.parse(data.Value) ?? data.Value;
+                return JSON.parse(data.Value);
                 break;
             default:
                 return this._unpackByRefs(data, new Map());
@@ -317,19 +337,19 @@ class ThreadWorkerImpl {
         }
         return null;
     }
-    private _packByRefs(data: any, refs: { objs: WeakMap<object, number>, id: number }): csharp.XOR.ThreadWorker.EventData {
+    private _packByRefs(data: any, refs: { readonly mapping: WeakMap<object, number>, id: number }): csharp.XOR.ThreadWorker.EventData {
         let result = new csharp.XOR.ThreadWorker.EventData();
 
         let t = typeof (data);
-        if (t === "object" && refs.objs.has(data)) {
+        if (t === "object" && refs.mapping.has(data)) {
             result.Type = csharp.XOR.ThreadWorker.ValueType.RefObject;
-            result.Value = refs.objs.get(data) ?? -1;
+            result.Value = refs.mapping.get(data) ?? -1;
         } else {
             switch (t) {
                 case "object":
                     //添加对象引用
                     let id = refs.id++;
-                    refs.objs.set(data, id);
+                    refs.mapping.set(data, id);
                     //创建对象引用
                     result.Id = id;
                     if (data instanceof csharp.System.Object) {

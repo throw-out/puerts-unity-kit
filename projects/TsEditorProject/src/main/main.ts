@@ -1,7 +1,7 @@
 import * as csharp from "csharp";
 
-require("puerts/console-track");
-require("puerts/puerts-source-map-support");
+//require("puerts/console-track");
+//require("puerts/puerts-source-map-support");
 
 const { Path } = csharp.System.IO;
 const { Application } = csharp.UnityEngine;

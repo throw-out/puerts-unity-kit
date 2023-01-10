@@ -207,16 +207,13 @@ namespace XOR
                 env.TryAutoUsing();
                 env.SupportCommonJS();
                 env.RequireXORModules(isESM);
-                env.BindThreadWorker(this);
-                env.Eval(string.Format("require('{0}')", filepath));
+                env.BindXORThreadWorker(this);
+                ThreadExecuteRun(env, filepath, !Options.StopOnError);
 
                 Logger.Log($"<b>XOR.{nameof(ThreadWorker)}({id}): <color=green>Started</color></b>");
                 while (env == this.Env && IsAlive)
                 {
-                    env.Tick();
-                    ProcessChildThreadMessages();
-                    syncr.ProcessChildThredMessages();
-                    ProcessChildThreadEval();
+                    ThreadExecuteTick(env, !Options.StopOnError);
 
                     Thread.Sleep(THREAD_SLEEP);
                 }
@@ -242,6 +239,52 @@ namespace XOR
                 Logger.Log($"<b>XOR.{nameof(ThreadWorker)}({id}): <color=red>Stoped</color></b>");
             }
         }
+        void ThreadExecuteRun(JsEnv env, string filepath, bool catchException)
+        {
+
+            if (catchException)
+            {
+                try
+                {
+                    env.Eval(string.Format("require('{0}')", filepath));
+                }
+                catch (Exception e)
+                {
+                    int id = Thread.CurrentThread.ManagedThreadId;
+                    Logger.LogError($"<b>XOR.{nameof(ThreadWorker)}({id}): <color=red>Exception</color></b>\n{e}");
+                }
+            }
+            else
+            {
+                env.Eval(string.Format("require('{0}')", filepath));
+            }
+        }
+        void ThreadExecuteTick(JsEnv env, bool catchException)
+        {
+            if (catchException)
+            {
+                try
+                {
+                    env.Tick();
+                    ProcessChildThreadMessages();
+                    syncr.ProcessChildThredMessages();
+                    ProcessChildThreadEval();
+                }
+                catch (Exception e)
+                {
+                    int id = Thread.CurrentThread.ManagedThreadId;
+                    Logger.LogError($"<b>XOR.{nameof(ThreadWorker)}({id}): <color=red>Exception</color></b>\n{e}");
+                }
+            }
+            else
+            {
+                env.Tick();
+                ProcessChildThreadMessages();
+                syncr.ProcessChildThredMessages();
+                ProcessChildThreadEval();
+            }
+        }
+
 
         void ProcessMainThreadMessages()
         {
@@ -469,6 +512,10 @@ namespace XOR
             /// 创建remote代理端口
             /// </summary>
             public bool Remote;
+            /// <summary>
+            /// 发生错误时停止执行
+            /// </summary>
+            public bool StopOnError;
         }
 
         private class Event
