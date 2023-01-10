@@ -54,7 +54,7 @@ class ThreadWorkerImpl {
         if (data !== undefined && data !== null && data !== void 0) {
             edata = this.pack(data);
         }
-        let resultId = this.getResultId();
+        let resultId = this._getResultId();
         if (this.mainThread) {
             this.worker.PostToChildThread(eventName, edata, resultId);
         } else {
@@ -182,7 +182,7 @@ class ThreadWorkerImpl {
             return null;
         };
         let onmessage = (eventName: string, data: csharp.XOR.ThreadWorker.EventData, hasReturn: boolean = true): csharp.XOR.ThreadWorker.EventData => {
-            if (eventName && eventName.startsWith(RESULT_EVENT)) {  //post return data event
+            if (this._isResultId(eventName)) {          //post return data event
                 let error: Error, result: any;
                 if (data.Type === csharp.XOR.ThreadWorker.ValueType.ERROR) {
                     error = new Error(`${data.Value}`);
@@ -219,7 +219,8 @@ class ThreadWorkerImpl {
                         break;
                     case REMOTE_EVENT:
                         {
-                            return this.resolveRemote(getValue(data));
+                            let result = this.executeRemoteResolver(getValue(data));
+                            return this.pack(result);
                         }
                         break;
                     default:
@@ -268,7 +269,7 @@ class ThreadWorkerImpl {
         puerts.registerBuildinModule('csharp', createProxy(undefined));
     }
     //处理remote request, 由主线程调用
-    private resolveRemote(data: string) {
+    private executeRemoteResolver(data: string): any {
         if (typeof data !== "string")
             return null;
 
@@ -276,35 +277,14 @@ class ThreadWorkerImpl {
         data.split(".").forEach(name => {
             if (result && name) result = result[name];
         });
-        let t = typeof (result);
-        if (t !== "undefined" && t !== "object" && t !== "function") {
-            return this.pack(result);
-        }
-        switch (typeof (result)) {
-            case "number":
-            case "string":
-            case "bigint":
-            case "boolean":
-            case "object":
-                return this.pack(result);
-                break;
-            case "function":
-                return null;
-                break;
-            default:
-                return null;
-                break;
-        }
-    }
-
-    private getResultId() {
-        if (!this._postIndex) this._postIndex = 1;
-        return `${RESULT_EVENT}${this._postIndex++}`;
+        if (result instanceof Proxy)
+            return null;
+        return result;
     }
 
     private pack(data: any): csharp.XOR.ThreadWorker.EventData {
         switch (this._validate(data)) {
-            case 0:
+            case PackValidate.Json:
                 {
                     let result = new csharp.XOR.ThreadWorker.EventData();
                     if (typeof (data) === "object") {
@@ -317,10 +297,10 @@ class ThreadWorkerImpl {
                     return result;
                 }
                 break;
-            case 1:
+            case PackValidate.Reference:
                 return this._packByRefs(data, { mapping: new WeakMap(), id: 1 });
                 break;
-            case 2:
+            case PackValidate.Unsupport:
                 throw new Error("unsupport data");
                 break;
         }
@@ -447,50 +427,59 @@ class ThreadWorkerImpl {
      * @param data 
      * @returns 0:纯json数据, 1:引用UnityObject, 2:包含js functon/js symbol等参数
      */
-    private _validate(data: any, refs?: WeakSet<object>,): 0 | 1 | 2 {
+    private _validate(data: any, refs?: WeakSet<object>,): PackValidate {
         let t = typeof (data);
         switch (t) {
             case "object":
                 if (data instanceof csharp.System.Object ||
                     data instanceof ArrayBuffer
                 ) {
-                    return 1;
+                    return PackValidate.Reference;
                 }
 
                 if (!refs) refs = new WeakSet();
                 if (refs.has(data)) {   //引用自身
-                    return 1;
+                    return PackValidate.Reference;
                 }
                 refs.add(data);
                 if (Array.isArray(data)) {
                     for (let _d of data) {
                         let t = this._validate(_d, refs);
-                        if (t > 0) return t;
+                        if (t !== PackValidate.Json) return t;
                     }
                 } else {
                     for (let key of Object.keys(data)) {
                         let t = this._validate(key, refs);
-                        if (t > 0) return t;
+                        if (t !== PackValidate.Json) return t;
 
                         t = this._validate(data[key], refs);
-                        if (t > 0) return t;
+                        if (t !== PackValidate.Json) return t;
                     }
                 }
                 break;
             case "symbol":
             case "function":
-                return 2;
+                return PackValidate.Unsupport;
                 break;
         }
-        return 0;
+        return PackValidate.Json;
+    }
+    /**post返回事件名
+     * @returns 
+     */
+    private _getResultId() {
+        if (!this._postIndex) this._postIndex = 1;
+        return `${RESULT_EVENT}${this._postIndex++}`;
+    }
+    private _isResultId(eventName: string) {
+        return eventName && eventName.startsWith(RESULT_EVENT);
     }
 }
-(function () {
-    let _g = (global ?? globalThis ?? this);
-    _g["ThreadWorker"] = ThreadWorkerImpl;
-    _g["globalWorker"] = undefined;
-})();
-
+enum PackValidate {
+    Json = 0,
+    Reference = 1,
+    Unsupport = 2,
+}
 function register() {
     let _g = (global ?? globalThis ?? this);
     _g.XOR = _g.XOR || {};
