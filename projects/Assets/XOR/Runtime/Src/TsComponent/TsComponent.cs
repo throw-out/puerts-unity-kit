@@ -8,11 +8,13 @@ namespace XOR
     public class TsComponent : MonoBehaviour
     {
         [SerializeField]
-        internal string ScriptId;       //脚本classId
+        internal string guid;
         [SerializeField]
-        internal string ScriptPath;     //脚本SourceFile路径
+        internal string route;
         [SerializeField]
-        internal string Version;
+        internal string source;
+        [SerializeField]
+        internal string version;
 
     }
 }

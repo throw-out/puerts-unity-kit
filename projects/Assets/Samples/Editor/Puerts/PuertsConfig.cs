@@ -119,6 +119,7 @@ public class PuertsConfig
 
                 "Puerts",
                 "XOR",
+                "XOR.Services",
             };
             var unityTypes = (from assembly in AppDomain.CurrentDomain.GetAssemblies()
                               where !(assembly.ManifestModule is System.Reflection.Emit.ModuleBuilder)

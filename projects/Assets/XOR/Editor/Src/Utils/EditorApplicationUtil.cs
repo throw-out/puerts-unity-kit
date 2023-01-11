@@ -5,6 +5,8 @@ namespace XOR
     internal static class EditorApplicationUtil
     {
         internal static bool IsRunning() => EditorApplication.Instance != null;
+        internal static bool IsInitializing() => IsRunning() && EditorApplication.Instance.IsInitializing();
+        internal static bool IsWorkerRunning() => IsRunning() && EditorApplication.Instance.IsWorkerRunning();
 
         internal static void Start()
         {

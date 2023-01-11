@@ -8,6 +8,7 @@ namespace XOR
     {
         internal JsEnv Env { get; private set; }
         internal MergeLoader Loader { get; private set; }
+        internal ThreadWorker Worker { get; private set; }
 
         ~EditorApplication()
         {
@@ -39,6 +40,12 @@ namespace XOR
         {
             base.Release();
             this.Dispose();
+
+            if (Worker != null)
+            {
+                Worker.Dispose();
+                Worker = null;
+            }
         }
         public void Tick()
         {
@@ -61,6 +68,18 @@ namespace XOR
                 Loader = null;
             }
         }
+        public void SetWorker(ThreadWorker worker)
+        {
+            this.Worker = worker;
+        }
+        public bool IsInitializing()
+        {
+            return Worker != null && Worker.IsAlive && !Worker.IsInitialized;
+        }
+        public bool IsWorkerRunning()
+        {
+            return Worker != null && Worker.IsAlive;
+        }
 
         void RegisterHandlers()
         {
@@ -72,7 +91,6 @@ namespace XOR
             EditorApplicationHandler.Update -= Tick;
             EditorApplicationHandler.Dispose -= Dispose;
         }
-
     }
 
 #if UNITY_EDITOR

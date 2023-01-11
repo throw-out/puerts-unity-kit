@@ -10,17 +10,23 @@ namespace TsComponentImpl {
      * @param guid 
      * @returns 
      */
-    export function ComponentId(guid: number | string): ClassDecorator {
+    export function guid(guid: number | string): ClassDecorator {
         return (target) => {
 
         };
     }
     /**定义组件别名(后续可由此名称Get/Add TsComponent)
-     * @param uniqueName 
+     * @param path 
      * @returns 
      */
-    export function ComponentAlias(uniqueName: string): ClassDecorator {
+    export function route(path: string): ClassDecorator {
         return (target) => {
+
+        };
+    }
+
+    export function fieldType(): PropertyDecorator {
+        return (target, key) => {
 
         };
     }
