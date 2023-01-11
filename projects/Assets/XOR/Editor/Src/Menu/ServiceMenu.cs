@@ -9,6 +9,12 @@ namespace XOR
     {
         static ServiceMenu()
         {
+            EditorApplicationHandler.DelayCall += InitializeStart;
+        }
+
+        static void InitializeStart()
+        {
+            EditorApplicationHandler.DelayCall -= InitializeStart;
             if (Prefs.Enable && !EditorApplicationUtil.IsRunning())
             {
                 EditorApplicationUtil.Start();

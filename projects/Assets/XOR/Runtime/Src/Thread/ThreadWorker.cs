@@ -301,12 +301,13 @@ namespace XOR
             Func<string, EventData, EventData> func = this.MainThreadHandler;
             if (func != null)
             {
+                EventData result = null;
                 for (int i = 0; i < events.Count; i++)
                 {
                     Event _event = events[i];
                     try
                     {
-                        EventData result = func(_event.EventName, _event.Data);
+                        result = func(_event.EventName, _event.Data);
                         if (!string.IsNullOrEmpty(_event.ResultEventName))
                         {
                             PostToChildThread(_event.ResultEventName, result);
@@ -355,12 +356,13 @@ namespace XOR
             Func<string, EventData, EventData> func = this.ChildThreadHandler;
             if (func != null)
             {
+                EventData result = null;
                 for (int i = 0; i < events.Count; i++)
                 {
                     Event _event = events[i];
                     try
                     {
-                        EventData result = func(_event.EventName, _event.Data);
+                        result = func(_event.EventName, _event.Data);
                         if (!string.IsNullOrEmpty(_event.ResultEventName))
                         {
                             PostToMainThread(_event.ResultEventName, result);

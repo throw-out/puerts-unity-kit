@@ -117,11 +117,10 @@ class ThreadWorkerImpl {
     _emit(eventName, ...args) {
         let functions = this.events.get(eventName);
         if (!functions)
-            return null;
+            return undefined;
         let rmHandlers = new Array(), result;
         functions.forEach(func => {
-            let r = func.apply(undefined, args);
-            result = result ?? r;
+            result = func.apply(undefined, args) || result;
             if (INVOKE_TICK in func && (--func[INVOKE_TICK]) <= 0) {
                 rmHandlers.push(func);
             }
@@ -136,7 +135,7 @@ class ThreadWorkerImpl {
             if (data !== undefined && data !== null && data !== void 0) {
                 return this.unpack(data);
             }
-            return null;
+            return undefined;
         };
         let onmessage = (eventName, data, hasReturn = true) => {
             if (this._isResultId(eventName)) {
@@ -151,9 +150,10 @@ class ThreadWorkerImpl {
                 return;
             }
             let result = this._emit(eventName, getValue(data));
-            if (hasReturn && result !== undefined && result !== null && result !== void 0)
+            if (hasReturn) {
                 return this.pack(result);
-            return null;
+            }
+            return undefined;
         };
         if (this.mainThread) {
             this.worker.MainThreadHandler = (eventName, data) => {
@@ -191,7 +191,7 @@ class ThreadWorkerImpl {
             };
         }
         else {
-            this.worker.ChildThreadHandler = onmessage;
+            this.worker.ChildThreadHandler = (eventName, data) => onmessage(eventName, data, true);
             if (this.worker.Options && this.worker.Options.Remote) {
                 this.registerRemoteProxy();
             }
@@ -231,14 +231,14 @@ class ThreadWorkerImpl {
     }
     executeRemoteResolver(data) {
         if (typeof data !== "string")
-            return null;
+            return undefined;
         let result = csharp;
         data.split(".").forEach(name => {
             if (result && name)
                 result = result[name];
         });
         if (this._validate(result) === PackValidate.Unsupport) {
-            result = null;
+            result = undefined;
         }
         return result;
     }
@@ -265,7 +265,7 @@ class ThreadWorkerImpl {
                 throw new Error("unsupport data");
                 break;
         }
-        return null;
+        return undefined;
     }
     unpack(data) {
         switch (data.Type) {
@@ -276,7 +276,7 @@ class ThreadWorkerImpl {
                 return this._unpackByRefs(data, new Map());
                 break;
         }
-        return null;
+        return undefined;
     }
     _packByRefs(data, refs) {
         let result = new csharp.XOR.ThreadWorker.EventData();
@@ -392,6 +392,9 @@ class ThreadWorkerImpl {
         let t = typeof (data);
         switch (t) {
             case "object":
+                if (data === null) {
+                    return PackValidate.Json;
+                }
                 if (data instanceof csharp.System.Object ||
                     data instanceof ArrayBuffer) {
                     return PackValidate.Reference;

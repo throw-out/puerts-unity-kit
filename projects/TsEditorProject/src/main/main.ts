@@ -1,6 +1,6 @@
 import * as csharp from "csharp";
 
-//require("puerts/console-track");
+require("puerts/console-track");
 //require("puerts/puerts-source-map-support");
 
 const { Path } = csharp.System.IO;
@@ -22,4 +22,10 @@ xor.globalListener.quit.add(() => worker.stop());
 
 //console.log("main thread ready.");
 //setInterval(() => console.log("main thread active:"), 1000);
+
+worker.post('test1', 'async info').then(r => {
+    console.log('response: ' + r);
+});
+//let r = worker.postSync('test1', 'async info');
+//console.log('response: ' + r);
 

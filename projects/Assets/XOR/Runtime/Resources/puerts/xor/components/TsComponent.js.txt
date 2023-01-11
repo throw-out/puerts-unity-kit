@@ -2,6 +2,18 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 class TsComponentImpl extends xor.TsBehaviour {
 }
+(function (TsComponentImpl) {
+    function ComponentId(guid) {
+        return (target) => {
+        };
+    }
+    TsComponentImpl.ComponentId = ComponentId;
+    function ComponentAlias(uniqueName) {
+        return (target) => {
+        };
+    }
+    TsComponentImpl.ComponentAlias = ComponentAlias;
+})(TsComponentImpl || (TsComponentImpl = {}));
 function register() {
     let _g = (global ?? globalThis ?? this);
     _g.xor = _g.xor || {};

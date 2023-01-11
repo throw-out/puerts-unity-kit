@@ -2,6 +2,8 @@ import * as csharp from "csharp";
 import * as ts from "typescript";
 import { XOR } from "./Program";
 
+require("puerts/console-track");
+
 const { Path } = csharp.System.IO;
 
 setTimeout(() => {
@@ -22,3 +24,7 @@ setTimeout(() => {
 }, 2000);
 
 //setInterval(() => console.log("child thread active:"), 1000);
+
+
+let id = 1;
+xor.globalWorker.on('testFunc', (argv: string | number) => `child recv:${argv}, id: ${id++}`);

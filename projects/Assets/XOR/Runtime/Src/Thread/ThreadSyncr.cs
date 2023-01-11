@@ -32,7 +32,7 @@ namespace XOR
         /// <param name="data"></param>
         /// <param name="throwOnError"></param>
         /// <returns></returns>
-        public object PostToMainThread(string eventName, ThreadWorker.EventData data, bool throwOnError = true)
+        public ThreadWorker.EventData PostToMainThread(string eventName, ThreadWorker.EventData data, bool throwOnError = true)
         {
             worker.VerifyThread(false, true);
 
@@ -52,7 +52,7 @@ namespace XOR
                 locker.ReleaseWriter();
 
                 //等待主线程同步
-                object result = null; Exception exception = null;
+                ThreadWorker.EventData result = null; Exception exception = null;
                 while (worker.IsAlive)
                 {
                     locker.AcquireReader();
@@ -87,7 +87,7 @@ namespace XOR
         /// <param name="data"></param>
         /// <param name="throwOnError"></param>
         /// <returns></returns>
-        public object PostToChildThread(string eventName, ThreadWorker.EventData data, bool throwOnError = true)
+        public ThreadWorker.EventData PostToChildThread(string eventName, ThreadWorker.EventData data, bool throwOnError = true)
         {
             worker.VerifyThread(true, true);
 
@@ -107,7 +107,7 @@ namespace XOR
                 locker.ReleaseWriter();
 
                 //等待子线程同步
-                object result = null; Exception exception = null;
+                ThreadWorker.EventData result = null; Exception exception = null;
                 while (worker.IsAlive)
                 {
                     locker.AcquireReader();
@@ -170,7 +170,7 @@ namespace XOR
             public readonly string eventName;
             public readonly ThreadWorker.EventData data;
             public bool completed;
-            public object result;
+            public ThreadWorker.EventData result;
             public Exception exception;
             public SyncEventData(string eventName, ThreadWorker.EventData data)
             {
