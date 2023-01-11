@@ -8,7 +8,7 @@ namespace XOR
 {
     [CustomEditor(typeof(Settings))]
     //[CanEditMultipleObjects]
-    public class Settings_GUI : Editor
+    internal class Settings_GUI : Editor
     {
         public override void OnInspectorGUI()
         {

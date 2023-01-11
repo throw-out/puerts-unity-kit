@@ -4,7 +4,7 @@ using UnityEngine;
 
 namespace XOR
 {
-    public class Language
+    internal class Language
     {
         internal static Env Type = Env.EN_US;
         internal static readonly Language Default = new Language("i18n/default.json");

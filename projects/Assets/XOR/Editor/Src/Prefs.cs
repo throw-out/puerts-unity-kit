@@ -4,7 +4,7 @@ using UnityEditor;
 
 namespace XOR
 {
-    public static class Prefs
+    internal static class Prefs
     {
         /// <summary>
         /// 框架服务总开关

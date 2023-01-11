@@ -6,6 +6,7 @@ require("puerts/console-track");
 
 const { Path } = csharp.System.IO;
 
+/*
 setTimeout(() => {
     let p: any = csharp.UnityEngine.Application.dataPath;
     //console.log(typeof p);
@@ -22,9 +23,6 @@ setTimeout(() => {
         (<ts.ClassDeclaration>statement).name.getText().includes("AnalyzeTest")
     );
 }, 2000);
+//*/
 
 //setInterval(() => console.log("child thread active:"), 1000);
-
-
-let id = 1;
-xor.globalWorker.on('test1', (argv: string | number) => `child recv:${argv}, id: ${id++}`);

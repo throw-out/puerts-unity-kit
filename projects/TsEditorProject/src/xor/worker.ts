@@ -19,6 +19,11 @@ class ThreadWorkerImpl {
     private readonly events: Map<string, Function[]>;
     private _postIndex: number;
 
+    /**线程是否正在工作 */
+    public get isAlive() { return this.worker.IsAlive; }
+    /**线程是否已初始化完成 */
+    public get isInitialized() { return this.worker.IsInitialized; }
+
     constructor(loader: csharp.Puerts.ILoader, options?: csharp.XOR.ThreadWorker.CreateOptions) {
         if (loader instanceof csharp.XOR.ThreadWorker) {
             this.worker = loader;
@@ -118,7 +123,7 @@ class ThreadWorkerImpl {
         this._on(eventName, fn);
         return this;
     }
-    /**箭头事件信息, 并返回
+    /**监听事件信息(仅回调一次后自动取消注册)
      * @param eventName 
      * @param fn 
      * @returns 
@@ -468,7 +473,7 @@ class ThreadWorkerImpl {
         }
         return PackValidate.Json;
     }
-    /**post返回事件名
+    /**postSync返回值接口事件名
      * @returns 
      */
     private _getResultId() {

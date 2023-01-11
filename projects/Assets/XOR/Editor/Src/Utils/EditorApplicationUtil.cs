@@ -2,7 +2,7 @@ using System.IO;
 
 namespace XOR
 {
-    public static class EditorApplicationUtil
+    internal static class EditorApplicationUtil
     {
         internal static bool IsRunning() => EditorApplication.Instance != null;
 

@@ -4,7 +4,7 @@ using UnityEngine;
 
 namespace XOR
 {
-    public static class GUIUtil
+    internal static class GUIUtil
     {
 
     }

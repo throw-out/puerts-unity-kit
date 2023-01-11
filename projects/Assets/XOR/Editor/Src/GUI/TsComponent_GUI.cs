@@ -3,7 +3,7 @@
 namespace XOR
 {
     [CustomEditor(typeof(TsComponent))]
-    public class TsComponent_GUI : Editor
+    internal class TsComponent_GUI : Editor
     {
         public override void OnInspectorGUI()
         {

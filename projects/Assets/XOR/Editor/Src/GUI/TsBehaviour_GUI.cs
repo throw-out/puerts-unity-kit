@@ -8,7 +8,7 @@ namespace XOR
 {
     [CustomEditor(typeof(TsBehaviour))]
     //[CanEditMultipleObjects]
-    public class TsBehaviour_GUI : Editor
+    internal class TsBehaviour_GUI : Editor
     {
         public override void OnInspectorGUI()
         {

@@ -33,12 +33,15 @@ namespace XOR
                     this._thread != null && this._thread.IsAlive;
             }
         }
+        public bool IsInitialized { get; private set; } = false;
         public ThreadSyncr Syncr
         {
             get
             {
                 if (!this.IsAlive)
-                    throw new ThreadStateException($"{nameof(ThreadWorker)} not work.");
+                    throw new ThreadStateException($"{nameof(ThreadWorker)} is not alive.");
+                if (!this.IsInitialized)
+                    throw new InvalidOperationException($"{nameof(ThreadWorker)} is initializing.");
                 return this.syncr;
             }
         }
@@ -88,11 +91,12 @@ namespace XOR
 
             bool isESM = Settings.Load().IsESM;
 
-            _running = true;
-            _syncing = false;
-            _thread = new Thread(new ThreadStart(() => ThreadExecute(isESM, filepath)));
-            _thread.IsBackground = true;
-            _thread.Start();
+            this.IsInitialized = false;
+            this._running = true;
+            this._syncing = false;
+            this._thread = new Thread(new ThreadStart(() => ThreadExecute(isESM, filepath)));
+            this._thread.IsBackground = true;
+            this._thread.Start();
         }
         public bool VerifyThread(bool isMainThread, bool throwError = true)
         {
@@ -201,7 +205,7 @@ namespace XOR
             JsEnv env = null;
             try
             {
-                // JsEnv内置脚本放在Resource目录下并使用DefaultLoader加载,故仅允许在主线程调用
+                // JsEnv内置脚本放在Resource目录下并使用DefaultLoader(Resolutions.Load)加载, 仅允许在主线程调用
                 // 子线程ThreadLoader接口会阻塞线程, 直到主线程调用ThreadLoader.Process后才会继续执行
                 // JsEnv初始化时将调用ThreadLoader接口
                 env = this.Env = new JsEnv(Loader);
@@ -211,6 +215,7 @@ namespace XOR
                 env.BindXORThreadWorker(this);
                 ThreadExecuteRun(env, filepath, !Options.stopOnError);
 
+                this.IsInitialized = true;
                 Logger.Log($"<b>XOR.{nameof(ThreadWorker)}({id}): <color=green>Started</color></b>");
                 while (env == this.Env && IsAlive)
                 {
@@ -242,7 +247,6 @@ namespace XOR
         }
         void ThreadExecuteRun(JsEnv env, string filepath, bool catchException)
         {
-
             if (catchException)
             {
                 try

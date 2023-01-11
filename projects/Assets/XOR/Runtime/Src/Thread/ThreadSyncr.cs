@@ -35,7 +35,14 @@ namespace XOR
         public ThreadWorker.EventData PostToMainThread(string eventName, ThreadWorker.EventData data, bool throwOnError = true)
         {
             worker.VerifyThread(false, true);
-
+            //检查worker是否初始化完成
+            if (!worker.IsInitialized)
+            {
+                if (throwOnError)
+                    throw new InvalidOperationException($"{nameof(ThreadWorker)} is initializing.");
+                Logger.LogWarning($"{nameof(ThreadWorker)} is initializing.");
+                return null;
+            }
             //锁定ThreadWorker同步状态
             if (!worker.AcquireSyncing())
             {
@@ -90,7 +97,14 @@ namespace XOR
         public ThreadWorker.EventData PostToChildThread(string eventName, ThreadWorker.EventData data, bool throwOnError = true)
         {
             worker.VerifyThread(true, true);
-
+            //检查worker是否初始化完成
+            if (!worker.IsInitialized)
+            {
+                if (throwOnError)
+                    throw new InvalidOperationException($"{nameof(ThreadWorker)} is initializing.");
+                Logger.LogWarning($"{nameof(ThreadWorker)} is initializing.");
+                return null;
+            }
             //锁定ThreadWorker同步状态
             if (!worker.AcquireSyncing())
             {
@@ -141,7 +155,7 @@ namespace XOR
 
         void Process(SyncEventData d, Func<string, ThreadWorker.EventData, ThreadWorker.EventData> invoke)
         {
-            if (d == null || d.completed)
+            if (d == null || d.completed || invoke == null)
                 return;
 
             locker.AcquireWriter();

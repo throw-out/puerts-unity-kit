@@ -26053,6 +26053,7 @@ declare namespace CS {
             public MainThreadHandler: System.Func$3<string, XOR.ThreadWorker.EventData, XOR.ThreadWorker.EventData>
             public ChildThreadHandler: System.Func$3<string, XOR.ThreadWorker.EventData, XOR.ThreadWorker.EventData>
             public get IsAlive(): boolean;
+            public get IsInitialized(): boolean;
             public get Syncr(): XOR.ThreadSyncr;
             public get Disposed(): boolean;
             public get Env(): Puerts.JsEnv;

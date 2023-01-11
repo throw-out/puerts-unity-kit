@@ -5,7 +5,7 @@ using UnityEngine;
 namespace XOR
 {
     [InitializeOnLoad]
-    public class ServiceMenu
+    internal class ServiceMenu
     {
         static ServiceMenu()
         {
