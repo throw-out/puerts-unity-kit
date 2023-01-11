@@ -14,6 +14,7 @@ loader.AddLoader(new csharp.XOR.FileLoader(outputRoot, projectRoot));
 
 const options = new csharp.XOR.ThreadWorker.CreateOptions();
 options.remote = true;
+options.isEditor = true;
 
 const worker = new xor.ThreadWorker(loader, options);
 worker.start("./child/main");

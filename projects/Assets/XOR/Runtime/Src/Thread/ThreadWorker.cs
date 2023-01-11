@@ -187,6 +187,7 @@ namespace XOR
                 //System.GC.WaitForPendingFinalizers();
                 _thread = null;
             }
+            ThreadWorkerCaller.Unregister(this);
 #if UNITY_EDITOR
             ThreadWorkerEditorCaller.Unregister(this);
 #endif
@@ -461,19 +462,21 @@ namespace XOR
         public static ThreadWorker Create(ILoader loader, CreateOptions options)
         {
 #if !UNITY_EDITOR && UNITY_WEBGL
-            throw new InvalidOperationException();
+            throw new InvalidOperationException("environment not supported");
 #endif
 
             ThreadWorker worker = new ThreadWorker();
-            if (!UnityEngine.Application.isPlaying)
+            if (!UnityEngine.Application.isPlaying || options != null && options.isEditor)
             {
 #if UNITY_EDITOR
                 ThreadWorkerEditorCaller.Register(worker);
+#else
+                throw new InvalidOperationException("environment not supported");
 #endif
             }
             else
             {
-                UnityEngine.Object.DontDestroyOnLoad(ThreadWorkerCaller.Register(worker));
+                ThreadWorkerCaller.Register(worker);
             }
 
             //Create MergeLoader
@@ -554,34 +557,70 @@ namespace XOR
 
     internal class ThreadWorkerCaller : MonoBehaviour
     {
-        public ThreadWorker worker;
+        static HashSet<ThreadWorker> _instances;
+        static ThreadWorkerCaller _instance;
+        static object locker = new object();
 
+        void Awake()
+        {
+            if (_instance != null && _instance != this)
+            {
+                UnityEngine.Object.DestroyImmediate(this);
+                return;
+            }
+            _instance = this;
+        }
         void FixedUpdate()
         {
-            if (worker == null || worker.Disposed)
+            if (_instances == null)
+                return;
+            foreach (ThreadWorker worker in _instances)
             {
-                GameObject.Destroy(gameObject);
-            }
-            else
-            {
+                if (worker.Disposed || !worker.IsAlive)
+                    continue;
                 worker.Tick();
             }
         }
         void OnDestroy()
         {
-            worker?.Dispose();
-            worker = null;
-        }
 
-        public static GameObject Register(ThreadWorker worker)
+        }
+        static void TryCreateCaller()
+        {
+            if (_instance != null)
+                return;
+
+            lock (locker)
+            {
+                if (_instance == null)
+                {
+                    GameObject gameObject = new GameObject($"{nameof(ThreadWorkerCaller)}");
+                    UnityEngine.Object.DontDestroyOnLoad(gameObject);
+                    _instance = gameObject.AddComponent<ThreadWorkerCaller>();
+                }
+            }
+        }
+        public static void Register(ThreadWorker worker)
         {
             if (worker == null || worker.Disposed)
-                return null;
-            GameObject gameObject = new GameObject($"{nameof(ThreadWorkerCaller)}");
-            UnityEngine.Object.DontDestroyOnLoad(gameObject);
-            ThreadWorkerCaller caller = gameObject.AddComponent<ThreadWorkerCaller>();
-            caller.worker = worker;
-            return gameObject;
+                return;
+
+            if (_instances == null)
+            {
+                lock (locker)
+                {
+                    if (_instances == null) _instances = new HashSet<ThreadWorker>();
+                }
+            }
+            _instances.Add(worker);
+
+            TryCreateCaller();
+        }
+        public static void Unregister(ThreadWorker worker)
+        {
+            if (_instances == null)
+                return;
+            _instances.Remove(worker);
         }
     }
 
