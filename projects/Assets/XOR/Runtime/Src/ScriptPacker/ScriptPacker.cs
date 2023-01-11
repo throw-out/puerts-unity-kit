@@ -118,15 +118,15 @@ namespace XOR
         /// </summary>
         /// <param name="rootPath"></param>
         /// <param name="moduleNames"></param>
-        /// <param name="fileSuffixs"></param>
+        /// <param name="fileExtNames"></param>
         /// <returns></returns>
-        public static Dictionary<string, string> ScanModule(string rootPath, string[] moduleNames, string[] fileSuffixs = null)
+        public static Dictionary<string, string> ScanModule(string rootPath, string[] moduleNames, string[] fileExtNames = null)
         {
-            if (fileSuffixs == null || fileSuffixs.Length == 0)
+            if (fileExtNames == null || fileExtNames.Length == 0)
             {
-                fileSuffixs = new string[] { ".js", ".mjs", ".cjs", ".json" };
+                fileExtNames = new string[] { ".js", ".mjs", ".cjs", ".json" };
             }
-            HashSet<string> extNames = new HashSet<string>(fileSuffixs);
+            HashSet<string> extNames = new HashSet<string>(fileExtNames);
 
             rootPath = rootPath.Replace("\"", "/");
             if (!rootPath.EndsWith("/")) rootPath += "/";
