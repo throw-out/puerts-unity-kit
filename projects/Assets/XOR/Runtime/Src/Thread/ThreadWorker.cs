@@ -462,7 +462,7 @@ namespace XOR
             locker.ReleaseWriter();
         }
 
-        public static ThreadWorker Create(ILoader loader) => Create(loader, null);
+        public static ThreadWorker Create(ILoader loader) => Create(loader, default);
         public static ThreadWorker Create(ILoader loader, CreateOptions options)
         {
 #if !UNITY_EDITOR && UNITY_WEBGL
@@ -470,10 +470,11 @@ namespace XOR
 #endif
 
             ThreadWorker worker = new ThreadWorker();
-            if (!UnityEngine.Application.isPlaying || options != null && options.isEditor)
+            if (!UnityEngine.Application.isPlaying || options.isEditor)
             {
 #if UNITY_EDITOR
                 ThreadWorkerEditorCaller.Register(worker);
+                options.isEditor = true;
 #else
                 throw new InvalidOperationException("environment not supported");
 #endif
@@ -504,18 +505,17 @@ namespace XOR
 
             worker.Loader = mloader;
             worker.syncProcesses.Add(tloader);
-            worker.Options = options != null ? options : CreateOptions.None;
+            worker.Options = options;
 
-            if (options != null && !string.IsNullOrEmpty(options.filepath))
+            if (!string.IsNullOrEmpty(options.filepath))
             {
                 worker.Run(options.filepath);
             }
             return worker;
         }
 
-        public class CreateOptions
+        public struct CreateOptions
         {
-            public static readonly CreateOptions None = new CreateOptions();
             public string filepath;
             /// <summary>
             /// 创建remote代理端口

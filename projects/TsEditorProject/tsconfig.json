@@ -2,12 +2,12 @@
     //引用的文件
     "files": [
         "../Assets/Gen/Typing/csharp/index.d.ts",
-        "../Assets/Puerts/Typing/puerts/index.d.ts"
     ],
     //编译目录,支持文件夹丶后缀名识别
     "include": [
         "./src/*",
         "./src/**/*.ts",
+        "../Library/PackageCache/com.tencent.puerts.core@**/Typing/"
     ],
     //黑名单目录,支持文件夹丶后缀名识别
     "exclude": [],

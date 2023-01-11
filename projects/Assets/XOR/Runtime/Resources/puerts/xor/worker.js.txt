@@ -6,6 +6,8 @@ let List_Object = (0, puerts_1.$generic)(csharp.System.Collections.Generic.List$
 const INVOKE_TICK = Symbol("INVOKE_TICK");
 const CLOSE_EVENT = "__e_close__", REMOTE_EVENT = "__e_remote__", RESULT_EVENT = "__e_result__";
 class ThreadWorkerImpl {
+    get isAlive() { return this.worker.IsAlive; }
+    get isInitialized() { return this.worker.IsInitialized; }
     constructor(loader, options) {
         if (loader instanceof csharp.XOR.ThreadWorker) {
             this.worker = loader;
