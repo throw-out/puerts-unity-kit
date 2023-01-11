@@ -86,19 +86,19 @@ namespace XOR
         /// 扫描指定目录下的所有js文件
         /// </summary>
         /// <param name="outputPath">js文件输出路径</param>
-        /// <param name="fileSuffixs">指定js文件后缀</param>
+        /// <param name="fileExtNames">指定js文件后缀</param>
         /// <returns></returns>
-        public static Dictionary<string, string> Scan(string outputPath, string[] fileSuffixs = null)
+        public static Dictionary<string, string> Scan(string outputPath, string[] fileExtNames = null)
         {
-            if (fileSuffixs == null || fileSuffixs.Length == 0)
+            if (fileExtNames == null || fileExtNames.Length == 0)
             {
-                fileSuffixs = new string[] { ".js", ".mjs", ".cjs" };
+                fileExtNames = new string[] { ".js", ".mjs", ".cjs" };
             }
-            HashSet<string> extensions = new HashSet<string>(fileSuffixs);
+            HashSet<string> extNames = new HashSet<string>(fileExtNames);
 
             Dictionary<string, string> scripts = new Dictionary<string, string>();
 
-            string[] files = GetFiles(outputPath, extensions);
+            string[] files = GetFiles(outputPath, extNames);
             if (files != null)
             {
                 outputPath = outputPath.Replace("\"", "/");
@@ -126,7 +126,7 @@ namespace XOR
             {
                 fileSuffixs = new string[] { ".js", ".mjs", ".cjs", ".json" };
             }
-            HashSet<string> extensions = new HashSet<string>(fileSuffixs);
+            HashSet<string> extNames = new HashSet<string>(fileSuffixs);
 
             rootPath = rootPath.Replace("\"", "/");
             if (!rootPath.EndsWith("/")) rootPath += "/";
@@ -134,10 +134,10 @@ namespace XOR
             Dictionary<string, string> scripts = new Dictionary<string, string>();
             foreach (string moduleName in moduleNames)
             {
-                string[] files = GetFiles(Path.Combine(rootPath, "node_modules", moduleName), extensions);
+                string[] files = GetFiles(Path.Combine(rootPath, "node_modules", moduleName), extNames);
                 if (files == null)
                 {
-                    UnityEngine.Debug.LogWarning($"node_modules {moduleName} is not installed, rootPath= {rootPath}");
+                    UnityEngine.Debug.LogWarning($"node_modules {moduleName} is not installe, rootPath= {rootPath}");
                     continue;
                 }
                 foreach (string filePath in files)
@@ -183,7 +183,7 @@ namespace XOR
                 return scripts;
             }
         }
-        static string[] GetFiles(string path, HashSet<string> fileExtensions = null)
+        static string[] GetFiles(string path, HashSet<string> extNames = null)
         {
             DirectoryInfo dir = new DirectoryInfo(path);
             if (!dir.Exists)
@@ -192,7 +192,7 @@ namespace XOR
             List<string> result = new List<string>();
             foreach (FileInfo fileInfo in dir.GetFiles())
             {
-                if (fileExtensions != null && !fileExtensions.Contains(fileInfo.Extension))
+                if (extNames != null && !extNames.Contains(fileInfo.Extension))
                 {
                     continue;
                 }
@@ -200,7 +200,7 @@ namespace XOR
             }
             foreach (DirectoryInfo dirInfo in dir.GetDirectories())
             {
-                string[] files = GetFiles(dirInfo.FullName, fileExtensions);
+                string[] files = GetFiles(dirInfo.FullName, extNames);
                 if (files != null)
                     result.AddRange(files);
             }

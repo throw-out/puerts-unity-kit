@@ -216,9 +216,14 @@ namespace XOR
 
             return null;
         }
+
         public void AddScript(string filepath, string script)
         {
-            filepath = CombinePath(filepath)?.ToLower();
+            filepath = CombinePath(filepath);
+            if (ignoreCase)
+            {
+                filepath = filepath?.ToLower();
+            }
 
             if (scripts.ContainsKey(filepath))
             {
@@ -226,9 +231,30 @@ namespace XOR
             }
             scripts.Add(filepath, script);
         }
+        public void AddScripts(Dictionary<string, string> scripts)
+        {
+            string filepath = null;
+            foreach (var _script in scripts)
+            {
+                filepath = CombinePath(_script.Key);
+                if (ignoreCase)
+                {
+                    filepath = filepath?.ToLower();
+                }
+                if (scripts.ContainsKey(filepath))
+                {
+                    scripts.Remove(filepath);
+                }
+                this.scripts.Add(filepath, _script.Value);
+            }
+        }
         public bool RemoveScript(string filepath)
         {
-            filepath = CombinePath(filepath)?.ToLower();
+            filepath = CombinePath(filepath);
+            if (ignoreCase)
+            {
+                filepath = filepath?.ToLower();
+            }
 
             return scripts.Remove(filepath);
         }
