@@ -23,9 +23,8 @@ xor.globalListener.quit.add(() => worker.stop());
 //console.log("main thread ready.");
 //setInterval(() => console.log("main thread active:"), 1000);
 
-worker.post('test1', 'async info').then(r => {
+worker.post('test1', 'testMessage1').then(r => {
     console.log('response: ' + r);
 });
-//let r = worker.postSync('test1', 'async info');
-//console.log('response: ' + r);
-
+//let r = worker.postSync('test1', 'atestMessage2');
+//console.log('response: ' + r)

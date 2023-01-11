@@ -610,4 +610,4 @@ function register() {
     _g.xor.TsBehaviour = TsBehaviourImpl;
 }
 register();
-//# sourceMappingURL=TsBehaviour.js.map
+//# sourceMappingURL=behaviour.js.map

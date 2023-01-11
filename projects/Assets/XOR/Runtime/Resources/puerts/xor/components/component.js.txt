@@ -20,4 +20,4 @@ function register() {
     _g.xor.TsComponent = TsComponentImpl;
 }
 register();
-//# sourceMappingURL=TsComponent.js.map
+//# sourceMappingURL=component.js.map

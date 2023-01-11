@@ -27,4 +27,4 @@ setTimeout(() => {
 
 
 let id = 1;
-xor.globalWorker.on('testFunc', (argv: string | number) => `child recv:${argv}, id: ${id++}`);
+xor.globalWorker.on('test1', (argv: string | number) => `child recv:${argv}, id: ${id++}`);

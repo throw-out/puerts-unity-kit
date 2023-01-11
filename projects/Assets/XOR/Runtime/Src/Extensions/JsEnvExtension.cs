@@ -58,10 +58,10 @@ namespace XOR
         }
 
         static readonly string[] XORModules = new string[] {
-            "puerts/xor/GlobalListener.js",
-            "puerts/xor/ThreadWorker.js",
-            "puerts/xor/components/TsBehaviour.js",
-            "puerts/xor/components/TsComponent.js",
+            "puerts/xor/listener.js",
+            "puerts/xor/worker.js",
+            "puerts/xor/components/behaviour.js",
+            "puerts/xor/components/component.js",
         };
         /// <summary>
         /// 初始化XOR依赖模块

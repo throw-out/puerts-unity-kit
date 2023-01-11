@@ -452,4 +452,4 @@ function register() {
     _g.xor.globalWorker = undefined;
 }
 register();
-//# sourceMappingURL=threadWorker.js.map
+//# sourceMappingURL=worker.js.map
