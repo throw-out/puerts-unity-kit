@@ -51,16 +51,20 @@ namespace XOR
             string projectRoot = Path.Combine(Path.GetDirectoryName(UnityEngine.Application.dataPath), "TsProject");
             string outputRoot = Path.Combine(projectRoot, "output");
             Loader.AddLoader(new FileLoader(outputRoot, projectRoot));
-            if (IsWaitDebugger && debugPort > 0)
-            {
-                Env.WaitDebugger();
-            }
+#else
+            //添加Runtime Loader
 #endif
 
             Env = new JsEnv(Loader, debugPort);
             Env.TryAutoUsing();
             Env.SupportCommonJS();
             Env.RequireXORModules(isESM);
+#if UNITY_EDITOR
+            if (IsWaitDebugger && debugPort > 0)
+            {
+                Env.WaitDebugger();
+            }
+#endif
         }
         void Update()
         {
