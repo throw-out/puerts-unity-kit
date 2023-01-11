@@ -8,7 +8,7 @@ namespace XOR
 {
     public class RSA
     {
-        public readonly int KeyLength;
+        public readonly int keySize;
         public string PublicKey { get; set; }
         public string PrivateKey { get; set; }
         public Encoding Encoding { get; set; } = Encoding.UTF8;
@@ -16,15 +16,15 @@ namespace XOR
         private int maxEncryptSize;
         private int maxDecryptSize;
         public RSA() : this(2048) { }
-        public RSA(int keyLength)
+        public RSA(int keySize)
         {
-            this.KeyLength = keyLength;
-            this.maxDecryptSize = keyLength / 8;
-            this.maxEncryptSize = keyLength / 8 - 11;
+            this.keySize = keySize;
+            this.maxDecryptSize = keySize / 8;
+            this.maxEncryptSize = keySize / 8 - 11;
         }
         public void GenerateKeyPair()
         {
-            RSACryptoServiceProvider provider = new RSACryptoServiceProvider(KeyLength);
+            RSACryptoServiceProvider provider = new RSACryptoServiceProvider(keySize);
             this.PublicKey = provider.ToXmlString(false);
             this.PrivateKey = provider.ToXmlString(true);
         }

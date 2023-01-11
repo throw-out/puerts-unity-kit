@@ -8,25 +8,25 @@ namespace XOR
 
     public class RsaSignature : ISignature
     {
-        public readonly int KeyLength;
+        public readonly int keySize;
         public string PublicKey { get; set; }
         public string PrivateKey { get; set; }
 
-        public RsaSignature(int keyLength)
+        public RsaSignature(int keySize)
         {
-            this.KeyLength = keyLength;
+            this.keySize = keySize;
         }
 
         public byte[] Sign(byte[] sourceData)
         {
-            RSA ras = new RSA(KeyLength);
+            RSA ras = new RSA(keySize);
             ras.PrivateKey = PrivateKey;
             return ras.SignData(sourceData);
         }
 
         public bool Verify(byte[] sourceData, byte[] signData)
         {
-            RSA ras = new RSA(KeyLength);
+            RSA ras = new RSA(keySize);
             ras.PublicKey = PublicKey;
             return ras.VerifySign(sourceData, signData);
         }

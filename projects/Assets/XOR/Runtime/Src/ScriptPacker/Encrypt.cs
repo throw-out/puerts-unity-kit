@@ -30,25 +30,25 @@ namespace XOR
     }
     public class RSAEncrypt : IEncrypt
     {
-        public readonly int KeyLength;
+        public readonly int keySize;
         public string PublicKey { get; set; }
         public string PrivateKey { get; set; }
 
-        public RSAEncrypt(int keyLength)
+        public RSAEncrypt(int keySize)
         {
-            this.KeyLength = keyLength;
+            this.keySize = keySize;
         }
 
         public byte[] Decode(byte[] encodeData)
         {
-            RSA ras = new RSA(KeyLength);
+            RSA ras = new RSA(keySize);
             ras.PrivateKey = PrivateKey;
             return ras.Decrypt(encodeData);
         }
 
         public byte[] Encode(byte[] sourceData)
         {
-            RSA ras = new RSA(KeyLength);
+            RSA ras = new RSA(keySize);
             ras.PublicKey = PublicKey;
             return ras.Encrypt(sourceData);
         }

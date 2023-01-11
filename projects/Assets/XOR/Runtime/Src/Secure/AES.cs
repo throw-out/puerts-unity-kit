@@ -6,20 +6,20 @@ namespace XOR
 {
     public class AES
     {
-        public readonly int KeyLength;
+        public readonly int keySize;
         public string Key { get; set; }
         public string IV { get; set; }
         public Encoding Encoding { get; set; } = Encoding.UTF8;
 
         public AES() : this(16) { }
-        public AES(int keyLength)
+        public AES(int keySize)
         {
-            this.KeyLength = keyLength;
+            this.keySize = keySize;
         }
         public void GenerateKeyPair()
         {
-            this.IV = GenerateRandomeString(KeyLength);
-            this.Key = GenerateRandomeString(KeyLength);
+            this.IV = GenerateRandomeString(keySize);
+            this.Key = GenerateRandomeString(keySize);
         }
 
         public string Encrypt(string source) => Convert.ToBase64String(Encrypt(Encoding.GetBytes(source)));

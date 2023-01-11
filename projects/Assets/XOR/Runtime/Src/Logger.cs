@@ -6,16 +6,16 @@ namespace XOR
 {
     public class Logger : Singleton<Logger>
     {
-        public event LogCallback LogMessageReceived;
-        public event LogCallback LogMessageReceivedThreaded;
+        public event LogCallback logMessageReceived;
+        public event LogCallback logMessageReceivedThreaded;
 
         void LogReceived(string condition, string stackTrace, LogType type)
         {
-            LogMessageReceived?.Invoke(condition, stackTrace, type);
+            logMessageReceived?.Invoke(condition, stackTrace, type);
         }
         void LogReceivedThreaded(string condition, string stackTrace, LogType type)
         {
-            LogMessageReceivedThreaded?.Invoke(condition, stackTrace, type);
+            logMessageReceivedThreaded?.Invoke(condition, stackTrace, type);
         }
         public override void Init()
         {
@@ -28,8 +28,8 @@ namespace XOR
             base.Release();
             UnityEngine.Application.logMessageReceived -= LogReceived;
             UnityEngine.Application.logMessageReceivedThreaded -= LogReceivedThreaded;
-            this.LogMessageReceived = null;
-            this.LogMessageReceivedThreaded = null;
+            this.logMessageReceived = null;
+            this.logMessageReceivedThreaded = null;
         }
 
         public static void Log(object firstMessage, params object[] messages)

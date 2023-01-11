@@ -13,7 +13,7 @@ namespace XOR
     {
         public JsEnv Env { get; private set; } = null;
         public MergeLoader Loader { get; private set; }
-        public ushort DebugPort = 9090;
+        public ushort debugPort = 9090;
 
         #region  Editor Debugger
 #if UNITY_EDITOR
@@ -51,13 +51,13 @@ namespace XOR
             string projectRoot = Path.Combine(Path.GetDirectoryName(UnityEngine.Application.dataPath), "TsProject");
             string outputRoot = Path.Combine(projectRoot, "output");
             Loader.AddLoader(new FileLoader(outputRoot, projectRoot));
-            if (IsWaitDebugger && DebugPort > 0)
+            if (IsWaitDebugger && debugPort > 0)
             {
                 Env.WaitDebugger();
             }
 #endif
 
-            Env = new JsEnv(Loader, DebugPort);
+            Env = new JsEnv(Loader, debugPort);
             Env.TryAutoUsing();
             Env.SupportCommonJS();
             Env.RequireXORModules(isESM);

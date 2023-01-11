@@ -25828,7 +25828,7 @@ declare namespace CS {
         class Application extends XOR.SingletonMonoBehaviour$1<XOR.Application>
         {
             protected [__keep_incompatibility]: never;
-            public DebugPort: number
+            public debugPort: number
             public get Env(): Puerts.JsEnv;
             public get Loader(): XOR.MergeLoader;
             public constructor()
@@ -25901,13 +25901,14 @@ declare namespace CS {
         class Logger extends XOR.Singleton$1<XOR.Logger>
         {
             protected [__keep_incompatibility]: never;
-            public add_LogMessageReceived($value: UnityEngine.Application.LogCallback): void
-            public remove_LogMessageReceived($value: UnityEngine.Application.LogCallback): void
-            public add_LogMessageReceivedThreaded($value: UnityEngine.Application.LogCallback): void
-            public remove_LogMessageReceivedThreaded($value: UnityEngine.Application.LogCallback): void
+            public add_logMessageReceived($value: UnityEngine.Application.LogCallback): void
+            public remove_logMessageReceived($value: UnityEngine.Application.LogCallback): void
+            public add_logMessageReceivedThreaded($value: UnityEngine.Application.LogCallback): void
+            public remove_logMessageReceivedThreaded($value: UnityEngine.Application.LogCallback): void
             public static Log($firstMessage: any, ...messages: any[]): void
             public static LogWarning($firstMessage: any, ...messages: any[]): void
             public static LogError($firstMessage: any, ...messages: any[]): void
+            public static IsEnable($type: XOR.Settings.LOGGER): boolean
             public constructor()
         }
         interface IEncrypt {
@@ -25926,14 +25927,14 @@ declare namespace CS {
         }
         class RSAEncrypt extends System.Object implements XOR.IEncrypt {
             protected [__keep_incompatibility]: never;
-            public KeyLength: number
+            public keySize: number
             public get PublicKey(): string;
             public set PublicKey(value: string);
             public get PrivateKey(): string;
             public set PrivateKey(value: string);
             public Decode($encodeData: System.Array$1<number>): System.Array$1<number>
             public Encode($sourceData: System.Array$1<number>): System.Array$1<number>
-            public constructor($keyLength: number)
+            public constructor($keySize: number)
             public constructor()
         }
         class GZipEncrypt extends System.Object implements XOR.IEncrypt {
@@ -25956,14 +25957,14 @@ declare namespace CS {
         }
         class RsaSignature extends System.Object implements XOR.ISignature {
             protected [__keep_incompatibility]: never;
-            public KeyLength: number
+            public keySize: number
             public get PublicKey(): string;
             public set PublicKey(value: string);
             public get PrivateKey(): string;
             public set PrivateKey(value: string);
             public Sign($sourceData: System.Array$1<number>): System.Array$1<number>
             public Verify($sourceData: System.Array$1<number>, $signData: System.Array$1<number>): boolean
-            public constructor($keyLength: number)
+            public constructor($keySize: number)
             public constructor()
         }
         class ScriptableObject$1<T> extends UnityEngine.ScriptableObject {
@@ -25985,7 +25986,7 @@ declare namespace CS {
         }
         class AES extends System.Object {
             protected [__keep_incompatibility]: never;
-            public KeyLength: number
+            public keySize: number
             public get Key(): string;
             public set Key(value: string);
             public get IV(): string;
@@ -25998,11 +25999,11 @@ declare namespace CS {
             public Decrypt($source: string): string
             public Decrypt($source: System.Array$1<number>): System.Array$1<number>
             public constructor()
-            public constructor($keyLength: number)
+            public constructor($keySize: number)
         }
         class RSA extends System.Object {
             protected [__keep_incompatibility]: never;
-            public KeyLength: number
+            public keySize: number
             public get PublicKey(): string;
             public set PublicKey(value: string);
             public get PrivateKey(): string;
@@ -26019,7 +26020,7 @@ declare namespace CS {
             public VerifySign($source: string, $signData: string): boolean
             public VerifySign($source: System.Array$1<number>, $signData: System.Array$1<number>): boolean
             public constructor()
-            public constructor($keyLength: number)
+            public constructor($keySize: number)
         }
         class RWLocker extends System.Object {
             protected [__keep_incompatibility]: never;
@@ -26070,8 +26071,8 @@ declare namespace CS {
         }
         class ThreadSyncr extends System.Object {
             protected [__keep_incompatibility]: never;
-            public PostToMainThread($eventName: string, $data: XOR.ThreadWorker.EventData, $throwOnError?: boolean): any
-            public PostToChildThread($eventName: string, $data: XOR.ThreadWorker.EventData, $throwOnError?: boolean): any
+            public PostToMainThread($eventName: string, $data: XOR.ThreadWorker.EventData, $throwOnError?: boolean): XOR.ThreadWorker.EventData
+            public PostToChildThread($eventName: string, $data: XOR.ThreadWorker.EventData, $throwOnError?: boolean): XOR.ThreadWorker.EventData
             public constructor($worker: XOR.ThreadWorker)
             public constructor()
         }
@@ -30161,26 +30162,27 @@ declare namespace CS {
         }
     }
     namespace XOR.Settings {
-        enum LOGGER { NONE = 0, INFO = 1, WARN = 2, ERROR = 4, FULL = 7 }
+        enum LOGGER { NONE = 0, PROFILE = 1, INFO = 2, WARN = 4, ERROR = 8, DEBUG = 14, FULL = 15 }
     }
     namespace XOR.ThreadWorker {
         class EventData extends System.Object {
             protected [__keep_incompatibility]: never;
-            public Type: XOR.ThreadWorker.ValueType
-            public Value: any
-            public Key: any
-            public Id: number
+            public type: XOR.ThreadWorker.ValueType
+            public value: any
+            public key: any
+            public id: number
             public constructor()
         }
         class CreateOptions extends System.Object {
             protected [__keep_incompatibility]: never;
-            public static NONE: XOR.ThreadWorker.CreateOptions
-            public Filepath: string
-            public Remote: boolean
-            public StopOnError: boolean
+            public static None: XOR.ThreadWorker.CreateOptions
+            public filepath: string
+            public remote: boolean
+            public stopOnError: boolean
+            public isEditor: boolean
             public constructor()
         }
-        enum ValueType { Unknown = 0, Value = 1, Object = 2, Array = 3, ArrayBuffer = 4, RefObject = 5, JSON = 6, ERROR = 7 }
+        enum ValueType { Unknown = 0, Value = 1, Object = 2, Array = 3, ArrayBuffer = 4, RefObject = 5, Json = 6, Error = 7 }
     }
     namespace XOR.TsPropertys {
         class ResultPair extends System.Object {

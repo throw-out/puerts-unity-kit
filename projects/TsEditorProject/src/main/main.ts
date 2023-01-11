@@ -13,7 +13,7 @@ let outputRoot = Path.Combine(projectRoot, "output");
 loader.AddLoader(new csharp.XOR.FileLoader(outputRoot, projectRoot));
 
 const options = new csharp.XOR.ThreadWorker.CreateOptions();
-options.Remote = true;
+options.remote = true;
 
 const worker = new xor.ThreadWorker(loader, options);
 worker.start("./child/main");

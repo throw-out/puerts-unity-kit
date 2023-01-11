@@ -117,9 +117,9 @@ namespace XOR
             {
                 mainThreadMessages.Enqueue(new Event()
                 {
-                    EventName = eventName,
-                    ResultEventName = resultEventName,
-                    Data = data
+                    eventName = eventName,
+                    resultEventName = resultEventName,
+                    data = data
                 });
             }
         }
@@ -135,9 +135,9 @@ namespace XOR
             {
                 childThreadMessages.Enqueue(new Event()
                 {
-                    EventName = eventName,
-                    ResultEventName = resultEventName,
-                    Data = data
+                    eventName = eventName,
+                    resultEventName = resultEventName,
+                    data = data
                 });
             }
         }
@@ -203,17 +203,17 @@ namespace XOR
                 // JsEnv内置脚本放在Resource目录下并使用DefaultLoader加载,故仅允许在主线程调用
                 // 子线程ThreadLoader接口会阻塞线程, 直到主线程调用ThreadLoader.Process后才会继续执行
                 // JsEnv初始化时将调用ThreadLoader接口
-                env = Env = new JsEnv(Loader);
+                env = this.Env = new JsEnv(Loader);
                 env.TryAutoUsing();
                 env.SupportCommonJS();
                 env.RequireXORModules(isESM);
                 env.BindXORThreadWorker(this);
-                ThreadExecuteRun(env, filepath, !Options.StopOnError);
+                ThreadExecuteRun(env, filepath, !Options.stopOnError);
 
                 Logger.Log($"<b>XOR.{nameof(ThreadWorker)}({id}): <color=green>Started</color></b>");
                 while (env == this.Env && IsAlive)
                 {
-                    ThreadExecuteTick(env, !Options.StopOnError);
+                    ThreadExecuteTick(env, !Options.stopOnError);
 
                     Thread.Sleep(THREAD_SLEEP);
                 }
@@ -229,7 +229,7 @@ namespace XOR
             }
             finally
             {
-                Env = null;
+                this.Env = null;
                 if (env != null)
                 {
                     env.GlobalListenerQuit();
@@ -307,21 +307,21 @@ namespace XOR
                     Event _event = events[i];
                     try
                     {
-                        result = func(_event.EventName, _event.Data);
-                        if (!string.IsNullOrEmpty(_event.ResultEventName))
+                        result = func(_event.eventName, _event.data);
+                        if (!string.IsNullOrEmpty(_event.resultEventName))
                         {
-                            PostToChildThread(_event.ResultEventName, result);
+                            PostToChildThread(_event.resultEventName, result);
                         }
                     }
                     catch (Exception e)
                     {
                         Logger.LogError(e.Message);
-                        if (!string.IsNullOrEmpty(_event.ResultEventName))
+                        if (!string.IsNullOrEmpty(_event.resultEventName))
                         {
-                            PostToChildThread(_event.ResultEventName, new EventData()
+                            PostToChildThread(_event.resultEventName, new EventData()
                             {
-                                Type = ValueType.ERROR,
-                                Value = e
+                                type = ValueType.Error,
+                                value = e
                             });
                         }
                     }
@@ -362,21 +362,21 @@ namespace XOR
                     Event _event = events[i];
                     try
                     {
-                        result = func(_event.EventName, _event.Data);
-                        if (!string.IsNullOrEmpty(_event.ResultEventName))
+                        result = func(_event.eventName, _event.data);
+                        if (!string.IsNullOrEmpty(_event.resultEventName))
                         {
-                            PostToMainThread(_event.ResultEventName, result);
+                            PostToMainThread(_event.resultEventName, result);
                         }
                     }
                     catch (Exception e)
                     {
                         Logger.LogError(e.Message);
-                        if (!string.IsNullOrEmpty(_event.ResultEventName))
+                        if (!string.IsNullOrEmpty(_event.resultEventName))
                         {
-                            PostToMainThread(_event.ResultEventName, new EventData()
+                            PostToMainThread(_event.resultEventName, new EventData()
                             {
-                                Type = ValueType.ERROR,
-                                Value = e
+                                type = ValueType.Error,
+                                value = e
                             });
                         }
                     }
@@ -497,43 +497,47 @@ namespace XOR
 
             worker.Loader = mloader;
             worker.syncProcesses.Add(tloader);
-            worker.Options = options != null ? options : CreateOptions.NONE;
+            worker.Options = options != null ? options : CreateOptions.None;
 
-            if (options != null && !string.IsNullOrEmpty(options.Filepath))
+            if (options != null && !string.IsNullOrEmpty(options.filepath))
             {
-                worker.Run(options.Filepath);
+                worker.Run(options.filepath);
             }
             return worker;
         }
 
         public class CreateOptions
         {
-            public static readonly CreateOptions NONE = new CreateOptions();
-            public string Filepath;
+            public static readonly CreateOptions None = new CreateOptions();
+            public string filepath;
             /// <summary>
             /// 创建remote代理端口
             /// </summary>
-            public bool Remote;
+            public bool remote;
             /// <summary>
             /// 发生错误时停止执行
             /// </summary>
-            public bool StopOnError;
+            public bool stopOnError;
+            /// <summary>
+            /// 是否为Editor环境
+            /// </summary>
+            public bool isEditor;
         }
 
         private class Event
         {
-            public string EventName;
-            public string ResultEventName;
-            public EventData Data;
+            public string eventName;
+            public string resultEventName;
+            public EventData data;
         }
         public class EventData
         {
-            public ValueType Type;
-            public object Value;
+            public ValueType type;
+            public object value;
             /// <summary>当Type为Array/Object时, 此字段有效 </summary>
-            public object Key;
+            public object key;
             /// <summary>当Type为RefObject时, 此字段有效 </summary>
-            public int Id = -1;
+            public int id = -1;
         }
         public enum ValueType
         {
@@ -543,8 +547,8 @@ namespace XOR
             Array,
             ArrayBuffer,
             RefObject,
-            JSON,
-            ERROR
+            Json,
+            Error
         }
     }
 

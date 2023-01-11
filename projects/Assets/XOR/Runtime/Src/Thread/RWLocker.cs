@@ -5,8 +5,8 @@ namespace XOR
 {
     public class RWLocker
     {
-        private int timeout;
-        private ReaderWriterLock locker = new ReaderWriterLock();
+        private readonly int timeout;
+        private readonly ReaderWriterLock locker = new ReaderWriterLock();
         public bool IsReaderLockHeld { get => locker.IsReaderLockHeld; }
         public bool IsWriterLockHeld { get => locker.IsWriterLockHeld; }
 
