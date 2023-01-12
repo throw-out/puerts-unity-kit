@@ -7,6 +7,7 @@ declare class ThreadWorkerImpl {
     private _postIndex;
     get isAlive(): boolean;
     get isInitialized(): boolean;
+    get source(): csharp.XOR.ThreadWorker;
     constructor(loader: csharp.Puerts.ILoader, options?: csharp.XOR.ThreadWorker.CreateOptions);
     start(filepath: string): void;
     stop(): void;

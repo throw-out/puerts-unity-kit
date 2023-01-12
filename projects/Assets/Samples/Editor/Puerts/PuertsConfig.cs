@@ -85,6 +85,15 @@ public class PuertsConfig
                 typeof(string),
                 //C# System.Text
                 typeof(System.Text.Encoding),
+                //XOR
+                typeof(XOR.Services.CSharpInterfaces),
+                typeof(XOR.Services.TSInterfaces),
+                typeof(XOR.Services.Program),
+                typeof(XOR.Services.Statement),
+                typeof(XOR.Services.EnumDeclaration),
+                typeof(XOR.Services.TypeDeclaration),
+                typeof(XOR.Services.PropertyDeclaration),
+                typeof(XOR.Services.EnumPropertyDeclaration),
                 //Puerts
                 typeof(JsEnv),
                 typeof(ILoader),
@@ -121,11 +130,11 @@ public class PuertsConfig
                 "XOR",
                 "XOR.Services",
             };
-            var unityTypes = (from assembly in AppDomain.CurrentDomain.GetAssemblies()
-                              where !(assembly.ManifestModule is System.Reflection.Emit.ModuleBuilder)
-                              from type in assembly.GetExportedTypes()
-                              where type.Namespace != null && namespaces.Contains(type.Namespace) && !IsExcluded(type)
-                              select type);
+            var selectTypes = (from assembly in AppDomain.CurrentDomain.GetAssemblies()
+                               where !(assembly.ManifestModule is System.Reflection.Emit.ModuleBuilder)
+                               from type in assembly.GetExportedTypes()
+                               where type.Namespace != null && namespaces.Contains(type.Namespace) && !IsExcluded(type)
+                               select type);
 
             string[] customAssemblys = new string[] {
                 "Assembly-CSharp",
@@ -136,7 +145,7 @@ public class PuertsConfig
                                where !IsExcluded(type)
                                select type);
 
-            return unityTypes
+            return selectTypes
                 .Concat(customTypes)
                 .Concat(Bindings)
                 .Distinct();

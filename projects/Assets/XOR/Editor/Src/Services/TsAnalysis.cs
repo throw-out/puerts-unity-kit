@@ -6,8 +6,21 @@ using UnityEngine;
 
 namespace XOR.Services
 {
+    public class CSharpInterfaces
+    {
+        public Action<Program> SetProgram;
+        public Action<ThreadWorker> SetWorker;
+    }
+    public class TSInterfaces
+    {
+        public Action<string, string> Start;
+        public Action Stop;
+    }
+
     public class Program
     {
+        public int error;
+        public bool compiling;
         public readonly Dictionary<string, Statement> statements;
 
         public Program()
@@ -31,6 +44,13 @@ namespace XOR.Services
         {
             this.statements.Remove(guid);
         }
+
+        public void r()
+        {
+            this.error = 0;
+            this.compiling = false;
+            this.statements.Clear();
+        }
     }
 
     public abstract class Statement
@@ -39,9 +59,12 @@ namespace XOR.Services
         public string guid;
         /// <summary>源文件路径 </summary>
         public string source;
-
         /// <summary>当前版本信息 </summary>
         public string version;
+        /// <summary>声明类类名 </summary>
+        public string name;
+        /// <summary>声明类类名(全路径) </summary>
+        public string fullName;
     }
 
     public class EnumDeclaration : Statement

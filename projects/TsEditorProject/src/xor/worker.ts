@@ -23,6 +23,7 @@ class ThreadWorkerImpl {
     public get isAlive() { return this.worker.IsAlive; }
     /**线程是否已初始化完成 */
     public get isInitialized() { return this.worker.IsInitialized; }
+    public get source() { return this.worker; }
 
     constructor(loader: csharp.Puerts.ILoader, options?: csharp.XOR.ThreadWorker.CreateOptions) {
         if (loader instanceof csharp.XOR.ThreadWorker) {

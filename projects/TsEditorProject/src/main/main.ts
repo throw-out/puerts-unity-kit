@@ -6,51 +6,41 @@ require("puerts/console-track");
 const { Path } = csharp.System.IO;
 const { Application } = csharp.UnityEngine;
 
-const loader = new csharp.XOR.MergeLoader();
+class Workflow {
+    private worker: xor.ThreadWorker;
+    private readonly ci: csharp.XOR.Services.CSharpInterfaces;
 
-let projectRoot = Path.Combine(Path.GetDirectoryName(Application.dataPath), "TsEditorProject");
-let outputRoot = Path.Combine(projectRoot, "output");
-loader.AddLoader(new csharp.XOR.FileLoader(outputRoot, projectRoot));
+    constructor(ci: csharp.XOR.Services.CSharpInterfaces) {
+        this.ci = ci;
+    }
+    public start(editorProject: string, project: string) {
+        if (this.worker && this.worker.isAlive)
+            throw new Error("invalid operation");
 
-const options = new csharp.XOR.ThreadWorker.CreateOptions();
-options.remote = true;
-options.isEditor = true;
+        const worker = this._createWorker(editorProject);
+        xor.globalListener.quit.add(() => worker.stop());
+        this.worker = worker;
 
-const worker = new xor.ThreadWorker(loader, options);
-worker.start("./child/main");
-
-xor.globalListener.quit.add(() => worker.stop());
-
-//console.log("main thread ready.");
-//setInterval(() => console.log("main thread active:"), 1000);
-
-function start(currentOutputPath: string, targetProjectPath: string) {
-    const options = new csharp.XOR.ThreadWorker.CreateOptions();
-    options.remote = true;
-    options.isEditor = true;
-
-    const loader = new csharp.XOR.MergeLoader();
-    loader.AddLoader(new csharp.XOR.FileLoader(currentOutputPath, Path.GetDirectoryName(currentOutputPath)));
-
-    const worker = new xor.ThreadWorker(loader, options);
-    worker.start("./child/main");
-
-    xor.globalListener.quit.add(() => worker.stop());
-}
-const r = new class {
-    private _worker: xor.ThreadWorker;
-
-    public start(currentOutputPath: string, targetProjectPath: string) {
-        this._worker = this._create(currentOutputPath);
+        this.ci.SetWorker.Invoke(worker.source);
+    }
+    public stop() {
+        if (this.worker) this.worker.stop();
+        this.worker = null;
     }
 
-    private _create(curOutputPath: string) {
+    public bind(): csharp.XOR.Services.TSInterfaces {
+        let ti = new csharp.XOR.Services.TSInterfaces();
+        ti.Start = (ep, p) => this.start(ep, p);
+        ti.Stop = () => this.stop();
+        return ti;
+    }
+
+    private _createWorker(editorProject: string) {
         const options = new csharp.XOR.ThreadWorker.CreateOptions();
         options.remote = true;
         options.isEditor = true;
-
         const loader = new csharp.XOR.MergeLoader();
-        loader.AddLoader(new csharp.XOR.FileLoader(curOutputPath, Path.GetDirectoryName(curOutputPath)));
+        loader.AddLoader(new csharp.XOR.FileLoader(editorProject, Path.GetDirectoryName(editorProject)));
 
         const worker = new xor.ThreadWorker(loader, options);
         worker.start("./child/main");
@@ -59,4 +49,8 @@ const r = new class {
 
         return worker;
     }
+}
+
+export function init(ci: csharp.XOR.Services.CSharpInterfaces) {
+    return new Workflow(ci).bind();
 }

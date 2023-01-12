@@ -5,16 +5,13 @@ using UnityEngine;
 
 namespace XOR
 {
-    public class TsComponent : MonoBehaviour
+    public partial class TsComponent : MonoBehaviour
     {
         [SerializeField]
-        internal string guid;
+        public string m_Guid;
         [SerializeField]
-        internal string route;
+        public string m_Route;
         [SerializeField]
-        internal string source;
-        [SerializeField]
-        internal string version;
-
+        public string m_Version;
     }
 }

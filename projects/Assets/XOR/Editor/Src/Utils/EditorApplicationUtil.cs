@@ -1,22 +1,44 @@
-using System.IO;
+using System;
+using XOR.Services;
 
 namespace XOR
 {
     internal static class EditorApplicationUtil
     {
-        internal static bool IsRunning() => EditorApplication.Instance != null;
-        internal static bool IsInitializing() => IsRunning() && EditorApplication.Instance.IsInitializing();
-        internal static bool IsWorkerRunning() => IsRunning() && EditorApplication.Instance.IsWorkerRunning();
+        public static bool IsRunning() => EditorApplication.Instance != null;
+        public static bool IsInitializing() => IsRunning() && EditorApplication.Instance.IsInitializing();
+        public static bool IsWorkerRunning() => IsRunning() && EditorApplication.Instance.IsWorkerRunning();
 
-        internal static void Start()
+        public static bool IsAvailable()
+        {
+            return IsRunning() && IsWorkerRunning() && !IsInitializing();
+        }
+
+        public static void Start()
         {
             Prefs.Enable.SetValue(true);
             try
             {
+                string editorProject = Settings.Load().EditorProject;
+                string project = Settings.Load().Project;
+
                 Logger.Log($"<b>XOR.{nameof(EditorApplication)}: <color=green>Executing</color></b>");
 
                 EditorApplication process = EditorApplication.GetInstance();
-                process.Env.Eval("require('./main/main')");
+                //create interfaces
+                CSharpInterfaces ci = new CSharpInterfaces();
+                ci.SetWorker = process.SetWorker;
+                ci.SetProgram = process.SetProgram;
+
+                //init application
+                Func<CSharpInterfaces, TSInterfaces> Init = process.Env.Eval<Func<CSharpInterfaces, TSInterfaces>>(@"
+var m = require('./main/main');
+m.init;
+");
+                TSInterfaces ti = Init(ci);
+                process.SetInterfaces(ti);
+
+                ti.Start(editorProject, project);
 
                 Logger.Log($"<b>XOR.{nameof(EditorApplication)}: <color=green>Started</color>.</b>");
             }
@@ -24,10 +46,10 @@ namespace XOR
             {
                 Prefs.Enable.SetValue(false);
                 EditorApplication.ReleaseInstance();
-                throw e;
+                Logger.Log($"<b>XOR.{nameof(EditorApplication)}: <color=red>Exception</color>:</b>\n{e}");
             }
         }
-        internal static void Stop(bool print = true)
+        public static void Stop(bool print = true)
         {
             Prefs.Enable.SetValue(false);
             EditorApplication.ReleaseInstance();

@@ -25895,6 +25895,7 @@ declare namespace CS {
             public FileExists($filepath: string): boolean
             public ReadFile($filepath: string, $debugpath: $Ref<string>): string
             public AddScript($filepath: string, $script: string): void
+            public AddScripts($scripts: System.Collections.Generic.Dictionary$2<string, string>): void
             public RemoveScript($filepath: string): boolean
             public constructor()
         }
@@ -25948,8 +25949,8 @@ declare namespace CS {
             public static Pack($scripts: System.Collections.Generic.Dictionary$2<string, string>, ...decorators: any[]): System.Array$1<number>
             public static Unpack($data: System.Array$1<number>, ...decorators: any[]): System.Collections.Generic.Dictionary$2<string, string>
             public static Unpack($data: System.Array$1<number>, $throwFailure: boolean, ...decorators: any[]): System.Collections.Generic.Dictionary$2<string, string>
-            public static Scan($outputPath: string, $fileSuffixs?: System.Array$1<string>): System.Collections.Generic.Dictionary$2<string, string>
-            public static ScanModule($rootPath: string, $moduleNames: System.Array$1<string>, $fileSuffixs?: System.Array$1<string>): System.Collections.Generic.Dictionary$2<string, string>
+            public static Scan($outputPath: string, $fileExtNames?: System.Array$1<string>): System.Collections.Generic.Dictionary$2<string, string>
+            public static ScanModule($rootPath: string, $moduleNames: System.Array$1<string>, $fileExtNames?: System.Array$1<string>): System.Collections.Generic.Dictionary$2<string, string>
         }
         interface ISignature {
             Sign($sourceData: System.Array$1<number>): System.Array$1<number>
@@ -26379,6 +26380,9 @@ declare namespace CS {
         }
         class TsComponent extends UnityEngine.MonoBehaviour {
             protected [__keep_incompatibility]: never;
+            public m_Guid: string
+            public m_Route: string
+            public m_Version: string
             public constructor()
         }
         class TsMessages extends UnityEngine.MonoBehaviour {
@@ -30174,14 +30178,12 @@ declare namespace CS {
             public id: number
             public constructor()
         }
-        class CreateOptions extends System.Object {
+        class CreateOptions extends System.ValueType {
             protected [__keep_incompatibility]: never;
-            public static None: XOR.ThreadWorker.CreateOptions
             public filepath: string
             public remote: boolean
             public stopOnError: boolean
             public isEditor: boolean
-            public constructor()
         }
         enum ValueType { Unknown = 0, Value = 1, Object = 2, Array = 3, ArrayBuffer = 4, RefObject = 5, Json = 6, Error = 7 }
     }
@@ -30283,6 +30285,77 @@ declare namespace CS {
         enum AccessControlSections { None = 0, Audit = 1, Access = 2, Owner = 4, Group = 8, All = 15 }
         class DirectorySecurity extends System.Security.AccessControl.FileSystemSecurity {
             protected [__keep_incompatibility]: never;
+        }
+    }
+    namespace XOR.Services {
+        class CSharpInterfaces extends System.Object {
+            protected [__keep_incompatibility]: never;
+            public SetProgram: System.Action$1<XOR.Services.Program>
+            public SetWorker: System.Action$1<XOR.ThreadWorker>
+            public constructor()
+        }
+        class Program extends System.Object {
+            protected [__keep_incompatibility]: never;
+            public error: number
+            public compiling: boolean
+            public statements: System.Collections.Generic.Dictionary$2<string, XOR.Services.Statement>
+            public GetStatement($guid: string, $create?: boolean): XOR.Services.Statement
+            public AddStatement($statement: XOR.Services.Statement): void
+            public RemoveStatement($statement: XOR.Services.Statement): void
+            public RemoveStatement($guid: string): void
+            public r(): void
+            public constructor()
+        }
+        class TSInterfaces extends System.Object {
+            protected [__keep_incompatibility]: never;
+            public Start: System.Action$2<string, string>
+            public Stop: System.Action
+            public constructor()
+        }
+        class Statement extends System.Object {
+            protected [__keep_incompatibility]: never;
+            public guid: string
+            public source: string
+            public version: string
+            public name: string
+            public fullName: string
+        }
+        class EnumDeclaration extends XOR.Services.Statement {
+            protected [__keep_incompatibility]: never;
+            public properties: System.Collections.Generic.Dictionary$2<string, XOR.Services.EnumPropertyDeclaration>
+            public GetNames(): System.Array$1<string>
+            public GetProperties(): System.Array$1<XOR.Services.EnumPropertyDeclaration>
+            public GetProperty($propertyName: string): XOR.Services.EnumPropertyDeclaration
+            public AddProperty($property: XOR.Services.EnumPropertyDeclaration): void
+            public RemoveProperty($property: XOR.Services.EnumPropertyDeclaration): void
+            public RemoveProperty($propertyName: string): void
+            public constructor()
+        }
+        class EnumPropertyDeclaration extends System.Object {
+            protected [__keep_incompatibility]: never;
+            public name: string
+            public value: string
+            public active: boolean
+            public constructor()
+        }
+        class TypeDeclaration extends XOR.Services.Statement {
+            protected [__keep_incompatibility]: never;
+            public route: string
+            public properties: System.Collections.Generic.Dictionary$2<string, XOR.Services.PropertyDeclaration>
+            public GetNames(): System.Array$1<string>
+            public GetProperties(): System.Array$1<XOR.Services.PropertyDeclaration>
+            public GetProperty($propertyName: string): XOR.Services.PropertyDeclaration
+            public AddProperty($property: XOR.Services.PropertyDeclaration): void
+            public RemoveProperty($property: XOR.Services.PropertyDeclaration): void
+            public RemoveProperty($propertyName: string): void
+            public constructor()
+        }
+        class PropertyDeclaration extends System.Object {
+            protected [__keep_incompatibility]: never;
+            public name: string
+            public valueType: System.Type
+            public defaultValue: any
+            public constructor()
         }
     }
 }

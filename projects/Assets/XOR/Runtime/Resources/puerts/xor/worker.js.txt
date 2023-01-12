@@ -8,6 +8,7 @@ const CLOSE_EVENT = "__e_close__", REMOTE_EVENT = "__e_remote__", RESULT_EVENT =
 class ThreadWorkerImpl {
     get isAlive() { return this.worker.IsAlive; }
     get isInitialized() { return this.worker.IsInitialized; }
+    get source() { return this.worker; }
     constructor(loader, options) {
         if (loader instanceof csharp.XOR.ThreadWorker) {
             this.worker = loader;

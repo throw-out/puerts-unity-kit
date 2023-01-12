@@ -1,6 +1,7 @@
 using System;
 using System.IO;
 using Puerts;
+using XOR.Services;
 
 namespace XOR
 {
@@ -9,6 +10,8 @@ namespace XOR
         internal JsEnv Env { get; private set; }
         internal MergeLoader Loader { get; private set; }
         internal ThreadWorker Worker { get; private set; }
+        internal Program Program { get; private set; }
+        internal TSInterfaces Interfaces { get; private set; }
 
         ~EditorApplication()
         {
@@ -71,6 +74,14 @@ namespace XOR
         public void SetWorker(ThreadWorker worker)
         {
             this.Worker = worker;
+        }
+        public void SetProgram(Program program)
+        {
+            this.Program = program;
+        }
+        public void SetInterfaces(TSInterfaces interfaces)
+        {
+            this.Interfaces = interfaces;
         }
         public bool IsInitializing()
         {
