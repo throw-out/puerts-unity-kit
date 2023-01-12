@@ -16,17 +16,17 @@ namespace XOR
             GUILayout.BeginHorizontal();
             click |= GUILayout.Button("服务状态:", Skin.labelBold, GUILayout.ExpandWidth(false));
             click |= GUILayout.Button("●"
-                , EditorApplicationUtil.IsRunning() ? Skin.labelBoldGreen : Skin.labelBoldGray
+                , EditorApplicationUtil.IsRunning() ? Skin.labelGreen : Skin.labelGray
                 , GUILayout.ExpandWidth(false)
             );
             click |= GUILayout.Button("主线程", Skin.label);
             click |= GUILayout.Button("●"
-                , !EditorApplicationUtil.IsWorkerRunning() ? Skin.labelBoldGray : EditorApplicationUtil.IsInitializing() ? Skin.labelBoldYellow : Skin.labelBoldGreen
+                , !EditorApplicationUtil.IsWorkerRunning() ? Skin.labelGray : EditorApplicationUtil.IsInitializing() ? Skin.labelYellow : Skin.labelGreen
                 , GUILayout.ExpandWidth(false)
             );
             click |= GUILayout.Button("工作线程", Skin.label);
             GUILayout.EndHorizontal();
-            GUILayout.Space(5f);
+            GUILayout.Space(Skin.LineSpace);
             GUILayout.EndVertical();
 
             return click;
@@ -34,7 +34,7 @@ namespace XOR
         public static void RenderStatusContent()
         {
             GUILayout.BeginVertical(Skin.groupBox);
-            GUILayout.Space(5f);
+            GUILayout.Space(Skin.LineSpace);
             GUILayout.BeginHorizontal();
             if (EditorApplicationUtil.IsRunning())
             {
@@ -62,7 +62,7 @@ namespace XOR
             GUILayout.Label("编译错误: UNKNOWN");
             GUILayout.Label("脚本数量: UNKNOWN");
             GUILayout.Label("已解析类: UNKNOWN");
-            GUILayout.Space(5f);
+            GUILayout.Space(Skin.LineSpace);
             GUILayout.EndVertical();
         }
 
@@ -74,7 +74,7 @@ namespace XOR
             GUILayout.BeginHorizontal();
             click |= GUILayout.Button(title ?? string.Empty, Skin.labelBold);
             GUILayout.EndHorizontal();
-            GUILayout.Space(5f);
+            GUILayout.Space(Skin.LineSpace);
             GUILayout.EndVertical();
 
             return click;
@@ -82,13 +82,13 @@ namespace XOR
         public static void RenderGroup(Action firstAction, params Action[] actions)
         {
             GUILayout.BeginVertical(Skin.groupBox);
-            GUILayout.Space(5f);
+            GUILayout.Space(Skin.LineSpace);
             firstAction();
             for (int i = 0; i < actions.Length; i++)
             {
                 actions[i]();
             }
-            GUILayout.Space(5f);
+            GUILayout.Space(Skin.LineSpace);
             GUILayout.EndVertical();
         }
     }

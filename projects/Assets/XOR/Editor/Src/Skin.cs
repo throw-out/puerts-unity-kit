@@ -5,31 +5,33 @@ namespace XOR
 {
     internal static class Skin
     {
-        //HeaderButton      亮
-        //GroupBox          暗
-        //HelpBox           暗
+        public const float LineSpace = 5f;
+        public const float RowSpace = 2f;
 
-        internal static readonly Accessor<GUIStyle> headerBox = new Accessor<GUIStyle>(() =>
+        public static readonly Accessor<GUIStyle> headerBox = new Accessor<GUIStyle>(() =>
         {
             GUIStyle style = new GUIStyle("HeaderButton");
             style.alignment = TextAnchor.MiddleLeft;
             return style;
         });
-        internal static readonly Accessor<GUIStyle> groupBox = new Accessor<GUIStyle>(() =>
+        public static readonly Accessor<GUIStyle> groupBox = new Accessor<GUIStyle>(() =>
         {
             GUIStyle style = new GUIStyle("GroupBox");
-            style.padding = new RectOffset();
+            style.padding = new RectOffset()
+            {
+                left = 5
+            };
             style.margin = new RectOffset();
             return style;
         });
-        internal static readonly Accessor<GUIStyle> label = new Accessor<GUIStyle>(() =>
+        public static readonly Accessor<GUIStyle> label = new Accessor<GUIStyle>(() =>
         {
             GUIStyle style = new GUIStyle(GUI.skin.label);
             style.alignment = TextAnchor.MiddleLeft;
             style.richText = true;
             return style;
         });
-        internal static readonly Accessor<GUIStyle> labelBold = new Accessor<GUIStyle>(() =>
+        public static readonly Accessor<GUIStyle> labelBold = new Accessor<GUIStyle>(() =>
         {
             GUIStyle style = new GUIStyle(GUI.skin.label);
             style.alignment = TextAnchor.MiddleLeft;
@@ -38,64 +40,70 @@ namespace XOR
             return style;
         });
 
-        internal static readonly Accessor<GUIStyle> labelBoldGreen = new Accessor<GUIStyle>(() =>
+        public static readonly Accessor<GUIStyle> labelGreen = new Accessor<GUIStyle>(() =>
         {
             GUIStyle style = new GUIStyle(GUI.skin.label);
             style.alignment = TextAnchor.MiddleCenter;
             style.richText = true;
             style.fontStyle = FontStyle.Bold;
             style.normal.textColor = Color.green;
+            style.hover = style.focused = style.active =
+            style.onNormal = style.onHover = style.onActive = style.onFocused = style.normal;
             return style;
         });
-        internal static readonly Accessor<GUIStyle> labelBoldYellow = new Accessor<GUIStyle>(() =>
+        public static readonly Accessor<GUIStyle> labelYellow = new Accessor<GUIStyle>(() =>
         {
             GUIStyle style = new GUIStyle(GUI.skin.label);
             style.alignment = TextAnchor.MiddleCenter;
             style.richText = true;
             style.fontStyle = FontStyle.Bold;
             style.normal.textColor = Color.yellow;
+            style.hover = style.focused = style.active =
+            style.onNormal = style.onHover = style.onActive = style.onFocused = style.normal;
             return style;
         });
-        internal static readonly Accessor<GUIStyle> labelBoldGray = new Accessor<GUIStyle>(() =>
+        public static readonly Accessor<GUIStyle> labelGray = new Accessor<GUIStyle>(() =>
         {
             GUIStyle style = new GUIStyle(GUI.skin.label);
             style.alignment = TextAnchor.MiddleCenter;
             style.richText = true;
             style.fontStyle = FontStyle.Bold;
             style.normal.textColor = Color.gray;
+            style.hover = style.focused = style.active =
+            style.onNormal = style.onHover = style.onActive = style.onFocused = style.normal;
             return style;
         });
 
 
-        internal static readonly Accessor<GUIStyle> ErrorIcon = new Accessor<GUIStyle>(() =>
+        public static readonly Accessor<GUIStyle> ErrorIcon = new Accessor<GUIStyle>(() =>
         {
             //Wizard Error
             return null;
         });
 
         /// <summary>红色圆 </summary>
-        internal static readonly Accessor<GUIStyle> WinBtnCloseMac = new Accessor<GUIStyle>(() =>
+        public static readonly Accessor<GUIStyle> WinBtnCloseMac = new Accessor<GUIStyle>(() =>
         {
             return "WinBtnCloseMac";
         });
         /// <summary>灰色圆 </summary>
-        internal static readonly Accessor<GUIStyle> WinBtnInactiveMac = new Accessor<GUIStyle>(() =>
+        public static readonly Accessor<GUIStyle> WinBtnInactiveMac = new Accessor<GUIStyle>(() =>
         {
             return "WinBtnInactiveMac";
         });
         /// <summary>绿色圆 </summary>
-        internal static readonly Accessor<GUIStyle> WinBtnMaxMac = new Accessor<GUIStyle>(() =>
+        public static readonly Accessor<GUIStyle> WinBtnMaxMac = new Accessor<GUIStyle>(() =>
         {
             return "WinBtnMaxMac";
         });
         /// <summary>黄色圆 </summary>
-        internal static readonly Accessor<GUIStyle> WinBtnMinMac = new Accessor<GUIStyle>(() =>
+        public static readonly Accessor<GUIStyle> WinBtnMinMac = new Accessor<GUIStyle>(() =>
         {
             return "WinBtnMinMac";
         });
 
 
-        internal class Accessor<T>
+        public class Accessor<T>
             where T : new()
         {
             private T _value;

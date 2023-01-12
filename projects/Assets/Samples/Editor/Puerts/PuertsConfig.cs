@@ -89,6 +89,7 @@ public class PuertsConfig
                 typeof(XOR.Services.CSharpInterfaces),
                 typeof(XOR.Services.TSInterfaces),
                 typeof(XOR.Services.Program),
+                typeof(XOR.Services.ProgramState),
                 typeof(XOR.Services.Statement),
                 typeof(XOR.Services.EnumDeclaration),
                 typeof(XOR.Services.TypeDeclaration),

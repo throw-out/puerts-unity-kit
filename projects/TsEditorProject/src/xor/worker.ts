@@ -60,7 +60,7 @@ class ThreadWorkerImpl {
         if (data !== undefined && data !== null && data !== void 0) {
             edata = this.pack(data);
         }
-        let resultId = this._getResultId();
+        let resultId = !notResult ? this._getResultId() : null;
         if (this.mainThread) {
             this.worker.PostToChildThread(eventName, edata, resultId);
         } else {
@@ -247,28 +247,43 @@ class ThreadWorkerImpl {
     private registerRemoteProxy() {
         let createProxy = (namespace: string) => {
             return new Proxy(Object.create(null), {
-                get: (cache, name) => {
-                    if (!(name in cache) && typeof (name) === "string") {
-                        let fullName = namespace ? (namespace + '.' + name) : name;
+                //getter事件
+                get: (target, property) => {
+                    if (!(property in target) && typeof (property) === "string") {
+                        let fullName = namespace ? (namespace + '.' + property) : property;
                         //同步调用Unity Api
                         if (fullName.startsWith("UnityEngine") && fullName !== "UnityEngine.Debug") {
                             let cls = this.postSync(REMOTE_EVENT, fullName);
                             if (cls) {
-                                cache[name] = cls;
+                                target[property] = cls;
                             }
                             else {
-                                cache[name] = createProxy(fullName);
+                                target[property] = createProxy(fullName);
                             }
                         } else {
                             let value = csharp;
                             fullName.split(".").forEach(name => {
                                 if (value && name) { value = value[name]; }
                             });
-                            cache[name] = value;
+                            target[property] = value;
                         }
                     }
-                    return cache[name];
+                    return target[property];
+                },
+                /*
+                //setter 事件
+                set: (target, property, newValue) => {
+                    return false;
                 }
+                //method call事件
+                apply: (target) => {
+
+                },
+                //new() 构造函数事件
+                construct: (target, argArray, newTarget) => {
+                    return null;
+                }
+                //*/
             });
         }
         let puerts = require("puerts");

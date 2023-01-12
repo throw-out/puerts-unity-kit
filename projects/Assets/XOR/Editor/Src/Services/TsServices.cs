@@ -15,42 +15,57 @@ namespace XOR.Services
     {
         public Action<string, string> Start;
         public Action Stop;
+
+        /// <summary>文件更新: 修改/新增/删除 </summary>
+        public Action<string> FileChanged;
     }
 
     public class Program
     {
+        /// <summary>编译错误数量 </summary>
         public int error;
-        public bool compiling;
-        public readonly Dictionary<string, Statement> statements;
+        /// <summary>编译源文件数量 </summary>
+        public int source;
+        /// <summary>当前状态  </summary>
+        public ProgramState state;
+        public Dictionary<string, Statement> Statements { get; private set; }
 
         public Program()
         {
-            this.statements = new Dictionary<string, Statement>();
+            this.Statements = new Dictionary<string, Statement>();
         }
 
         public Statement GetStatement(string guid, bool create = true)
         {
             Statement statement;
-            this.statements.TryGetValue(guid, out statement);
+            this.Statements.TryGetValue(guid, out statement);
             return statement;
         }
         public void AddStatement(Statement statement)
         {
             this.RemoveStatement(statement);
-            this.statements.Add(statement.guid, statement);
+            this.Statements.Add(statement.guid, statement);
         }
         public void RemoveStatement(Statement statement) => RemoveStatement(statement.guid);
         public void RemoveStatement(string guid)
         {
-            this.statements.Remove(guid);
+            this.Statements.Remove(guid);
         }
 
-        public void r()
+        public void Reset()
         {
             this.error = 0;
-            this.compiling = false;
-            this.statements.Clear();
+            this.state = ProgramState.Pending;
+            this.Statements.Clear();
         }
+    }
+
+    public enum ProgramState
+    {
+        Pending,
+        Error,
+        Compiling,
+        Compiled,
     }
 
     public abstract class Statement
@@ -69,34 +84,34 @@ namespace XOR.Services
 
     public class EnumDeclaration : Statement
     {
-        public readonly Dictionary<string, EnumPropertyDeclaration> properties;
+        public Dictionary<string, EnumPropertyDeclaration> Properties { get; private set; }
         public EnumDeclaration()
         {
-            this.properties = new Dictionary<string, EnumPropertyDeclaration>();
+            this.Properties = new Dictionary<string, EnumPropertyDeclaration>();
         }
         public string[] GetNames()
         {
-            return properties.Keys.ToArray();
+            return Properties.Keys.ToArray();
         }
         public EnumPropertyDeclaration[] GetProperties()
         {
-            return properties.Values.ToArray();
+            return Properties.Values.ToArray();
         }
         public EnumPropertyDeclaration GetProperty(string propertyName)
         {
             EnumPropertyDeclaration property;
-            this.properties.TryGetValue(propertyName, out property);
+            this.Properties.TryGetValue(propertyName, out property);
             return property;
         }
         public void AddProperty(EnumPropertyDeclaration property)
         {
             this.RemoveProperty(property);
-            this.properties.Add(property.name, property);
+            this.Properties.Add(property.name, property);
         }
         public void RemoveProperty(EnumPropertyDeclaration property) => RemoveProperty(property.name);
         public void RemoveProperty(string propertyName)
         {
-            this.properties.Remove(propertyName);
+            this.Properties.Remove(propertyName);
         }
     }
     public class TypeDeclaration : Statement
@@ -105,36 +120,36 @@ namespace XOR.Services
         public string route;
 
         /// <summary>成员信息 </summary>
-        public readonly Dictionary<string, PropertyDeclaration> properties;
+        public Dictionary<string, PropertyDeclaration> Properties { get; private set; }
 
         public TypeDeclaration()
         {
-            this.properties = new Dictionary<string, PropertyDeclaration>();
+            this.Properties = new Dictionary<string, PropertyDeclaration>();
         }
         public string[] GetNames()
         {
-            return properties.Keys.ToArray();
+            return Properties.Keys.ToArray();
         }
         public PropertyDeclaration[] GetProperties()
         {
-            return properties.Values.ToArray();
+            return Properties.Values.ToArray();
         }
 
         public PropertyDeclaration GetProperty(string propertyName)
         {
             PropertyDeclaration property;
-            this.properties.TryGetValue(propertyName, out property);
+            this.Properties.TryGetValue(propertyName, out property);
             return property;
         }
         public void AddProperty(PropertyDeclaration property)
         {
             this.RemoveProperty(property);
-            this.properties.Add(property.name, property);
+            this.Properties.Add(property.name, property);
         }
         public void RemoveProperty(PropertyDeclaration property) => RemoveProperty(property.name);
         public void RemoveProperty(string propertyName)
         {
-            this.properties.Remove(propertyName);
+            this.Properties.Remove(propertyName);
         }
     }
     public class PropertyDeclaration
@@ -143,7 +158,6 @@ namespace XOR.Services
         public string name;
         /// <summary>字段值类型  </summary>
         public Type valueType;
-
         /// <summary>字段默认值  </summary>
         public object defaultValue;
     }

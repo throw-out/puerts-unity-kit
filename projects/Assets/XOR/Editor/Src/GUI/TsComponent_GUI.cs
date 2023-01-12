@@ -10,9 +10,9 @@ namespace XOR
         private TsComponent component;
         private Statement statement;
 
-        private bool servicesStatusFoldout = true;
-        private bool componentFoldout = true;
-        private bool memberFoldout = true;
+        private static bool servicesStatusFoldout = true;
+        private static bool componentFoldout = true;
+        private static bool memberFoldout = true;
 
         void OnEnable()
         {
@@ -49,6 +49,10 @@ namespace XOR
             {
                 GUIUtil.RenderStatusContent();
             }
+            else
+            {
+                GUILayout.Space(Skin.LineSpace);
+            }
         }
 
         void RenderComponent()
@@ -76,6 +80,10 @@ namespace XOR
                     }
                 }
             }
+            else
+            {
+                GUILayout.Space(Skin.LineSpace);
+            }
         }
         void RenderComponentMembers()
         {
@@ -89,6 +97,10 @@ namespace XOR
                 {
                     GUIUtil.RenderGroup(_RenderComponentMembers);
                 }
+            }
+            else
+            {
+                GUILayout.Space(Skin.LineSpace);
             }
         }
 

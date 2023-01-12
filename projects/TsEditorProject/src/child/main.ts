@@ -1,28 +1,42 @@
+console.log("child thread ready1");
+/*
 import * as csharp from "csharp";
-import * as ts from "typescript";
+import { WorkerEvent } from "../common/event";
 import { XOR } from "./Program";
 
 require("puerts/console-track");
 
-const { Path } = csharp.System.IO;
+const workflow = new class {
+    private cp: csharp.XOR.Services.Program;
+    private program: XOR.Program;
 
-/*
-setTimeout(() => {
-    let p: any = csharp.UnityEngine.Application.dataPath;
-    //console.log(typeof p);
-    //console.log(p instanceof csharp.System.Object ? p.GetType().FullName : 'null');
-    //console.log(p);
-    let tsconfigPath = Path.GetFullPath(Path.Combine(
-        Path.GetDirectoryName(p),
-        "TsProject/tsconfig.json"
-    ));
-    let program = new XOR.Program(tsconfigPath);
-    //program.print();
-    program.print(statement =>
-        statement.kind === ts.SyntaxKind.ClassDeclaration &&
-        (<ts.ClassDeclaration>statement).name.getText().includes("AnalyzeTest")
-    );
-}, 2000);
+    public setCSharpProgram(program: csharp.XOR.Services.Program) {
+        this.cp = program;
+    }
+    public start(project: string) {
+        this.program = new XOR.Program(project);
+    }
+}
+
+console.log("child thread ready1");
+
+xor.globalWorker.on(WorkerEvent.StartProgream, (data: { project: string, program: csharp.XOR.Services.Program }) => {
+    console.log('start program');
+    workflow.setCSharpProgram(data.program);
+    workflow.start(data.project);
+});
+xor.globalWorker.on(WorkerEvent.FileChanged, (path: string) => {
+
+});
+xor.globalWorker.post(WorkerEvent.Ready);
 //*/
 
-//setInterval(() => console.log("child thread active:"), 1000);
+console.log("child thread ready2");
+
+setInterval(() => {
+    console.log(111);
+}, 1000)
+
+export function init() {
+    console.log('child init');
+}

@@ -190,9 +190,9 @@ export namespace XOR {
         constructor(tsconfigPath: string) {
             const timer = new Timer();
 
+            console.log("==================================================");
             let cfg = readTsconfig(tsconfigPath);
             let rootNames = scanTsconfigFiles(tsconfigPath, cfg);
-            console.log("==================================================");
             console.log(`scan duration ${timer.duration()}ms, total ${rootNames.length} files:\n${rootNames.join("\n")}`);
             timer.reset();
 

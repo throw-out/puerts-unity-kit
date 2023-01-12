@@ -41,7 +41,7 @@ class ThreadWorkerImpl {
         if (data !== undefined && data !== null && data !== void 0) {
             edata = this.pack(data);
         }
-        let resultId = this._getResultId();
+        let resultId = !notResult ? this._getResultId() : null;
         if (this.mainThread) {
             this.worker.PostToChildThread(eventName, edata, resultId);
         }
@@ -203,16 +203,16 @@ class ThreadWorkerImpl {
     registerRemoteProxy() {
         let createProxy = (namespace) => {
             return new Proxy(Object.create(null), {
-                get: (cache, name) => {
-                    if (!(name in cache) && typeof (name) === "string") {
-                        let fullName = namespace ? (namespace + '.' + name) : name;
+                get: (target, property) => {
+                    if (!(property in target) && typeof (property) === "string") {
+                        let fullName = namespace ? (namespace + '.' + property) : property;
                         if (fullName.startsWith("UnityEngine") && fullName !== "UnityEngine.Debug") {
                             let cls = this.postSync(REMOTE_EVENT, fullName);
                             if (cls) {
-                                cache[name] = cls;
+                                target[property] = cls;
                             }
                             else {
-                                cache[name] = createProxy(fullName);
+                                target[property] = createProxy(fullName);
                             }
                         }
                         else {
@@ -222,11 +222,11 @@ class ThreadWorkerImpl {
                                     value = value[name];
                                 }
                             });
-                            cache[name] = value;
+                            target[property] = value;
                         }
                     }
-                    return cache[name];
-                }
+                    return target[property];
+                },
             });
         };
         let puerts = require("puerts");

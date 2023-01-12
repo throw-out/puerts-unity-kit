@@ -11,7 +11,7 @@ namespace XOR
 
         public static bool IsAvailable()
         {
-            return IsRunning() && IsWorkerRunning() && !IsInitializing();
+            return IsRunning() && EditorApplication.Instance.IsWorkerRunning() && !EditorApplication.Instance.IsInitializing();
         }
 
         public static void Start()

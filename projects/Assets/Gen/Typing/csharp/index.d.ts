@@ -30297,21 +30297,24 @@ declare namespace CS {
         class Program extends System.Object {
             protected [__keep_incompatibility]: never;
             public error: number
-            public compiling: boolean
-            public statements: System.Collections.Generic.Dictionary$2<string, XOR.Services.Statement>
+            public source: number
+            public state: XOR.Services.ProgramState
+            public get Statements(): System.Collections.Generic.Dictionary$2<string, XOR.Services.Statement>;
             public GetStatement($guid: string, $create?: boolean): XOR.Services.Statement
             public AddStatement($statement: XOR.Services.Statement): void
             public RemoveStatement($statement: XOR.Services.Statement): void
             public RemoveStatement($guid: string): void
-            public r(): void
+            public Reset(): void
             public constructor()
         }
         class TSInterfaces extends System.Object {
             protected [__keep_incompatibility]: never;
             public Start: System.Action$2<string, string>
             public Stop: System.Action
+            public FileChanged: System.Action$1<string>
             public constructor()
         }
+        enum ProgramState { Pending = 0, Error = 1, Compiling = 2, Compiled = 3 }
         class Statement extends System.Object {
             protected [__keep_incompatibility]: never;
             public guid: string
@@ -30322,7 +30325,7 @@ declare namespace CS {
         }
         class EnumDeclaration extends XOR.Services.Statement {
             protected [__keep_incompatibility]: never;
-            public properties: System.Collections.Generic.Dictionary$2<string, XOR.Services.EnumPropertyDeclaration>
+            public get Properties(): System.Collections.Generic.Dictionary$2<string, XOR.Services.EnumPropertyDeclaration>;
             public GetNames(): System.Array$1<string>
             public GetProperties(): System.Array$1<XOR.Services.EnumPropertyDeclaration>
             public GetProperty($propertyName: string): XOR.Services.EnumPropertyDeclaration
@@ -30341,7 +30344,7 @@ declare namespace CS {
         class TypeDeclaration extends XOR.Services.Statement {
             protected [__keep_incompatibility]: never;
             public route: string
-            public properties: System.Collections.Generic.Dictionary$2<string, XOR.Services.PropertyDeclaration>
+            public get Properties(): System.Collections.Generic.Dictionary$2<string, XOR.Services.PropertyDeclaration>;
             public GetNames(): System.Array$1<string>
             public GetProperties(): System.Array$1<XOR.Services.PropertyDeclaration>
             public GetProperty($propertyName: string): XOR.Services.PropertyDeclaration

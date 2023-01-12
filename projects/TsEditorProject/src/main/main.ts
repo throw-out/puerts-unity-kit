@@ -1,4 +1,5 @@
 import * as csharp from "csharp";
+import { WorkerEvent } from "../common/event";
 
 require("puerts/console-track");
 //require("puerts/puerts-source-map-support");
@@ -18,26 +19,41 @@ class Workflow {
             throw new Error("invalid operation");
 
         const worker = this._createWorker(editorProject);
-        xor.globalListener.quit.add(() => worker.stop());
-        this.worker = worker;
 
+        const program = new csharp.XOR.Services.Program();
+        program.Reset();
+        //请求子线程, 开始解析工程
+        worker.once(WorkerEvent.Ready, () => {
+            console.log("child ready");
+            worker.post<boolean>(WorkerEvent.StartProgream, { project, program }, true);
+        });
+
+        this.worker = worker;
         this.ci.SetWorker.Invoke(worker.source);
+        this.ci.SetProgram.Invoke(program);
     }
     public stop() {
         if (this.worker) this.worker.stop();
         this.worker = null;
+
+        this.ci.SetWorker.Invoke(null);
+        this.ci.SetProgram.Invoke(null);
+    }
+    public change(path: string) {
+        this.worker.post<boolean>(WorkerEvent.FileChanged, path, true);
     }
 
     public bind(): csharp.XOR.Services.TSInterfaces {
         let ti = new csharp.XOR.Services.TSInterfaces();
         ti.Start = (ep, p) => this.start(ep, p);
         ti.Stop = () => this.stop();
+        ti.FileChanged = (path) => this.change(path);
         return ti;
     }
 
     private _createWorker(editorProject: string) {
         const options = new csharp.XOR.ThreadWorker.CreateOptions();
-        options.remote = true;
+        options.remote = false;
         options.isEditor = true;
         const loader = new csharp.XOR.MergeLoader();
         loader.AddLoader(new csharp.XOR.FileLoader(editorProject, Path.GetDirectoryName(editorProject)));

@@ -30,7 +30,8 @@ namespace XOR
             get
             {
                 return !this._disposed && this._running &&
-                    this._thread != null && this._thread.IsAlive;
+                    this._thread != null && this._thread.IsAlive &&
+                    (!this.IsInitialized || this.Env != null);
             }
         }
         public bool IsInitialized { get; private set; } = false;
@@ -231,11 +232,12 @@ namespace XOR
             }
             catch (Exception e)
             {
-                Logger.LogError($"<b>XOR.{nameof(ThreadWorker)}({id}): <color=red>Exception</color></b>\n{e}");
+                Logger.LogError($"<b>XOR.{nameof(ThreadWorker)}({id}): <color=red>Exception</color></b>\n{e.Message}");
             }
             finally
             {
                 this.Env = null;
+                this._running = false;
                 if (env != null)
                 {
                     env.GlobalListenerQuit();
@@ -251,17 +253,24 @@ namespace XOR
             {
                 try
                 {
-                    env.Eval(string.Format("require('{0}')", filepath));
+                    //env.Eval(string.Format("require(\"{0}\")", filepath));
+                    Debug.Log("eval");
+                    var a = env.Eval<Action>($"var m require(\"{filepath}\"); m.init");
+                    Debug.Log(a != null);
+                    if (a != null)
+                    {
+                        a();
+                    }
                 }
                 catch (Exception e)
                 {
                     int id = Thread.CurrentThread.ManagedThreadId;
-                    Logger.LogError($"<b>XOR.{nameof(ThreadWorker)}({id}): <color=red>Exception</color></b>\n{e}");
+                    Logger.LogError($"<b>XOR.{nameof(ThreadWorker)}({id}): <color=red>Exception</color></b>\n{e.Message}");
                 }
             }
             else
             {
-                env.Eval(string.Format("require('{0}')", filepath));
+                env.Eval(string.Format("require(\"{0}\")", filepath));
             }
         }
         void ThreadExecuteTick(JsEnv env, bool catchException)
@@ -278,7 +287,7 @@ namespace XOR
                 catch (Exception e)
                 {
                     int id = Thread.CurrentThread.ManagedThreadId;
-                    Logger.LogError($"<b>XOR.{nameof(ThreadWorker)}({id}): <color=red>Exception</color></b>\n{e}");
+                    Logger.LogError($"<b>XOR.{nameof(ThreadWorker)}({id}): <color=red>Exception</color></b>\n{e.Message}");
                 }
             }
             else
