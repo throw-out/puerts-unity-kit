@@ -1,4 +1,5 @@
 using System;
+using System.IO;
 using XOR.Services;
 
 namespace XOR
@@ -22,23 +23,34 @@ namespace XOR
                 string editorProject = Settings.Load().EditorProject;
                 string project = Settings.Load().Project;
 
+                string editorRoot = Path.GetFullPath(Path.Combine(UnityEngine.Application.dataPath, Path.GetDirectoryName(editorProject)));
+
                 Logger.Log($"<b>XOR.{nameof(EditorApplication)}: <color=green>Executing</color></b>");
 
-                EditorApplication process = EditorApplication.GetInstance();
+                EditorApplication app = EditorApplication.GetInstance();
+
+                //editor loader
+                string projectRoot = Path.Combine(Path.GetDirectoryName(UnityEngine.Application.dataPath), "TsEditorProject");
+                string outputRoot = Path.Combine(projectRoot, "output");
+                app.Loader.AddLoader(new FileLoader(outputRoot, projectRoot));
+
                 //create interfaces
                 CSharpInterfaces ci = new CSharpInterfaces();
-                ci.SetWorker = process.SetWorker;
-                ci.SetProgram = process.SetProgram;
+                ci.SetWorker = app.SetWorker;
+                ci.SetProgram = app.SetProgram;
 
                 //init application
-                Func<CSharpInterfaces, TSInterfaces> Init = process.Env.Eval<Func<CSharpInterfaces, TSInterfaces>>(@"
+                Func<CSharpInterfaces, TSInterfaces> Init = app.Env.Eval<Func<CSharpInterfaces, TSInterfaces>>(@"
 var m = require('./main/main');
 m.init;
 ");
                 TSInterfaces ti = Init(ci);
-                process.SetInterfaces(ti);
+                app.SetInterfaces(ti);
 
-                ti.Start(editorProject, project);
+                ti.Start(
+                    Path.Combine(editorRoot, "output"),
+                    Path.GetFullPath(Path.Combine(UnityEngine.Application.dataPath, project))
+                );
 
                 Logger.Log($"<b>XOR.{nameof(EditorApplication)}: <color=green>Started</color>.</b>");
             }

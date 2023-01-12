@@ -17,16 +17,14 @@ class Workflow {
     public start(editorProject: string, project: string) {
         if (this.worker && this.worker.isAlive)
             throw new Error("invalid operation");
+        //console.log(`workflow start: \neditorProject: ${editorProject}\nproject: ${project}`);
 
         const worker = this._createWorker(editorProject);
 
         const program = new csharp.XOR.Services.Program();
         program.Reset();
         //请求子线程, 开始解析工程
-        worker.once(WorkerEvent.Ready, () => {
-            console.log("child ready");
-            worker.post<boolean>(WorkerEvent.StartProgream, { project, program }, true);
-        });
+        worker.post<boolean>(WorkerEvent.StartProgream, { project, program }, true);
 
         this.worker = worker;
         this.ci.SetWorker.Invoke(worker.source);
@@ -53,7 +51,7 @@ class Workflow {
 
     private _createWorker(editorProject: string) {
         const options = new csharp.XOR.ThreadWorker.CreateOptions();
-        options.remote = false;
+        options.remote = true;
         options.isEditor = true;
         const loader = new csharp.XOR.MergeLoader();
         loader.AddLoader(new csharp.XOR.FileLoader(editorProject, Path.GetDirectoryName(editorProject)));

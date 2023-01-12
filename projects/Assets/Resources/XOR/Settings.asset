@@ -15,5 +15,4 @@ MonoBehaviour:
   Project: ../TsProject/tsconfig.json
   EditorProject: ../TsEditorProject/tsconfig.json
   IsESM: 0
-  EditorDebugger: 9090
-  Logger: 7
+  Logger: 14

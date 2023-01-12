@@ -232,7 +232,7 @@ namespace XOR
             }
             catch (Exception e)
             {
-                Logger.LogError($"<b>XOR.{nameof(ThreadWorker)}({id}): <color=red>Exception</color></b>\n{e.Message}");
+                Logger.LogError($"<b>XOR.{nameof(ThreadWorker)}({id}): <color=red>Exception</color></b>\n{e}");
             }
             finally
             {
@@ -254,18 +254,12 @@ namespace XOR
                 try
                 {
                     //env.Eval(string.Format("require(\"{0}\")", filepath));
-                    Debug.Log("eval");
-                    var a = env.Eval<Action>($"var m require(\"{filepath}\"); m.init");
-                    Debug.Log(a != null);
-                    if (a != null)
-                    {
-                        a();
-                    }
+                    env.Eval($"require('{filepath}');");
                 }
                 catch (Exception e)
                 {
                     int id = Thread.CurrentThread.ManagedThreadId;
-                    Logger.LogError($"<b>XOR.{nameof(ThreadWorker)}({id}): <color=red>Exception</color></b>\n{e.Message}");
+                    Logger.LogError($"<b>XOR.{nameof(ThreadWorker)}({id}): <color=red>Exception</color></b>\n{e}");
                 }
             }
             else
@@ -287,7 +281,7 @@ namespace XOR
                 catch (Exception e)
                 {
                     int id = Thread.CurrentThread.ManagedThreadId;
-                    Logger.LogError($"<b>XOR.{nameof(ThreadWorker)}({id}): <color=red>Exception</color></b>\n{e.Message}");
+                    Logger.LogError($"<b>XOR.{nameof(ThreadWorker)}({id}): <color=red>Exception</color></b>\n{e}");
                 }
             }
             else

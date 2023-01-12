@@ -27,10 +27,6 @@ namespace XOR
             Loader = new MergeLoader();
             Loader.AddLoader(new DefaultLoader(), int.MaxValue);
 
-            string projectRoot = Path.Combine(Path.GetDirectoryName(UnityEngine.Application.dataPath), "TsEditorProject");
-            string outputRoot = Path.Combine(projectRoot, "output");
-            Loader.AddLoader(new FileLoader(outputRoot, projectRoot));
-
             Env = new JsEnv(Loader);
             Env.TryAutoUsing();
             Env.SupportCommonJS();

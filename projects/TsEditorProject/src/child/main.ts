@@ -1,5 +1,3 @@
-console.log("child thread ready1");
-/*
 import * as csharp from "csharp";
 import { WorkerEvent } from "../common/event";
 import { XOR } from "./Program";
@@ -18,25 +16,11 @@ const workflow = new class {
     }
 }
 
-console.log("child thread ready1");
-
 xor.globalWorker.on(WorkerEvent.StartProgream, (data: { project: string, program: csharp.XOR.Services.Program }) => {
-    console.log('start program');
+    //console.log(`start program: ${data.project}`);
     workflow.setCSharpProgram(data.program);
     workflow.start(data.project);
 });
 xor.globalWorker.on(WorkerEvent.FileChanged, (path: string) => {
 
 });
-xor.globalWorker.post(WorkerEvent.Ready);
-//*/
-
-console.log("child thread ready2");
-
-setInterval(() => {
-    console.log(111);
-}, 1000)
-
-export function init() {
-    console.log('child init');
-}
