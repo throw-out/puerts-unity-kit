@@ -13,7 +13,8 @@ using XOR;
 [Configure]
 public class PuertsConfig
 {
-    class SingletonExportDeclare : SingletonMonoBehaviour<SingletonExportDeclare> { }
+    class SingletonExportDeclare : Singleton<SingletonExportDeclare> { }
+    class SingletonMonoExportDeclare : SingletonMonoBehaviour<SingletonMonoExportDeclare> { }
 
     [Typing]
     static IEnumerable<Type> Typeing
@@ -31,7 +32,7 @@ public class PuertsConfig
                 //Custom
                 typeof(ProxyAction<bool>),
                 typeof(Singleton<SingletonExportDeclare>),
-                typeof(SingletonMonoBehaviour<SingletonExportDeclare>),
+                typeof(SingletonMonoBehaviour<SingletonMonoExportDeclare>),
                 //System.Action
                 typeof(Action),
                 typeof(Action<int, int>),

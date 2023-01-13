@@ -25809,7 +25809,7 @@ declare namespace CS {
             public get callback(): System.Action$1<T>;
             public set callback(value: System.Action$1<T>);
         }
-        class SingletonMonoBehaviour$1<T> extends UnityEngine.MonoBehaviour {
+        class Singleton$1<T> extends System.Object {
             protected [__keep_incompatibility]: never;
             public static get Instance(): any;
             public static GetInstance(): any
@@ -25817,7 +25817,7 @@ declare namespace CS {
             public Release(): void
             public Init(): void
         }
-        class Singleton$1<T> extends System.Object {
+        class SingletonMonoBehaviour$1<T> extends UnityEngine.MonoBehaviour {
             protected [__keep_incompatibility]: never;
             public static get Instance(): any;
             public static GetInstance(): any
@@ -26055,11 +26055,12 @@ declare namespace CS {
             public ChildThreadHandler: System.Func$3<string, XOR.ThreadWorker.EventData, XOR.ThreadWorker.EventData>
             public get IsAlive(): boolean;
             public get IsInitialized(): boolean;
+            public get ThreadId(): number;
             public get Syncr(): XOR.ThreadSyncr;
             public get Disposed(): boolean;
             public get Env(): Puerts.JsEnv;
             public get Loader(): Puerts.ILoader;
-            public get Options(): XOR.ThreadWorker.CreateOptions;
+            public get Options(): XOR.ThreadOptions;
             public Tick(): void
             public Run($filepath: string): void
             public VerifyThread($isMainThread: boolean, $throwError?: boolean): boolean
@@ -26068,7 +26069,7 @@ declare namespace CS {
             public PostEvalToChildThread($chunk: string, $chunkName?: string): void
             public Dispose(): void
             public static Create($loader: Puerts.ILoader): XOR.ThreadWorker
-            public static Create($loader: Puerts.ILoader, $options: XOR.ThreadWorker.CreateOptions): XOR.ThreadWorker
+            public static Create($loader: Puerts.ILoader, $options: XOR.ThreadOptions): XOR.ThreadWorker
             public constructor()
         }
         class ThreadSyncr extends System.Object {
@@ -26077,6 +26078,19 @@ declare namespace CS {
             public PostToChildThread($eventName: string, $data: XOR.ThreadWorker.EventData, $throwOnError?: boolean): XOR.ThreadWorker.EventData
             public constructor($worker: XOR.ThreadWorker)
             public constructor()
+        }
+        class ThreadOptions extends System.ValueType {
+            protected [__keep_incompatibility]: never;
+            public filepath: string
+            public remote: boolean
+            public stopOnError: boolean
+            public isEditor: boolean
+            public debugger: XOR.ThreadDebuggerOptions
+        }
+        class ThreadDebuggerOptions extends System.ValueType {
+            protected [__keep_incompatibility]: never;
+            public port: number
+            public wait: boolean
         }
         class OnDragProxy extends XOR.Proxy implements UnityEngine.EventSystems.IDragHandler, UnityEngine.EventSystems.IEndDragHandler, UnityEngine.EventSystems.IEventSystemHandler, System.IDisposable, UnityEngine.EventSystems.IBeginDragHandler {
             protected [__keep_incompatibility]: never;
@@ -26380,9 +26394,6 @@ declare namespace CS {
         }
         class TsComponent extends UnityEngine.MonoBehaviour {
             protected [__keep_incompatibility]: never;
-            public m_Guid: string
-            public m_Route: string
-            public m_Version: string
             public constructor()
         }
         class TsMessages extends UnityEngine.MonoBehaviour {
@@ -26425,7 +26436,11 @@ declare namespace CS {
         }
     }
     namespace PuertsConfig {
-        class SingletonExportDeclare extends XOR.SingletonMonoBehaviour$1<PuertsConfig.SingletonExportDeclare>
+        class SingletonExportDeclare extends XOR.Singleton$1<PuertsConfig.SingletonExportDeclare>
+        {
+            protected [__keep_incompatibility]: never;
+        }
+        class SingletonMonoExportDeclare extends XOR.SingletonMonoBehaviour$1<PuertsConfig.SingletonMonoExportDeclare>
         {
             protected [__keep_incompatibility]: never;
         }
@@ -30177,13 +30192,6 @@ declare namespace CS {
             public key: any
             public id: number
             public constructor()
-        }
-        class CreateOptions extends System.ValueType {
-            protected [__keep_incompatibility]: never;
-            public filepath: string
-            public remote: boolean
-            public stopOnError: boolean
-            public isEditor: boolean
         }
         enum ValueType { Unknown = 0, Value = 1, Object = 2, Array = 3, ArrayBuffer = 4, RefObject = 5, Json = 6, Error = 7 }
     }

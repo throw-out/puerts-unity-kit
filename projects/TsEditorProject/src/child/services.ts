@@ -79,14 +79,6 @@ class ClassDeclaration {
     public readonly node: ts.ClassDeclaration;
     public readonly checker: ts.TypeChecker;
 
-    private _base: TypeDeclaration[];
-    public get base() {
-        if (!this._base) {
-
-        }
-        return this._base;
-    }
-
     private _properties: PropertyDeclaration[];
     public get properties() {
         if (!this._properties) {
@@ -99,6 +91,24 @@ class ClassDeclaration {
         }
         return this._properties;
     };
+
+    private _baseTypes: TypeDeclaration[];
+    /**是否继承自`@see xor.TsComponent` 组件 */
+    public get isSupport() {
+        /*
+        if (!this._base) {
+            this._base = [];
+            console.log("==========================================");
+            console.log(this.name);
+            this.node.heritageClauses?.forEach(heritage => {
+                heritage.types?.forEach(t => {
+                    //console.log(`ts.SyntaxKind.${ts.SyntaxKind[t.kind]}|${t.expression?.name?.getFullText()}`);
+                })
+            });
+        }
+        //*/
+        return true;
+    }
 
     private constructor(node: ts.ClassDeclaration, checker: ts.TypeChecker) {
         this.node = node;
@@ -205,10 +215,9 @@ class ModuleDeclaration {
 }
 
 export class Program {
-    private readonly cp: csharp.XOR.Services.Program;
-
-    private readonly program: ts.Program;
-    private readonly checker: ts.TypeChecker;
+    public readonly cp: csharp.XOR.Services.Program;
+    public readonly program: ts.Program;
+    public readonly checker: ts.TypeChecker;
     private readonly mapping: Map<string, ClassDeclaration>;
 
     constructor(cp: csharp.XOR.Services.Program, rootNames: string[], options: ts.CompilerOptions) {
@@ -253,8 +262,9 @@ export class Program {
     }
     private resolve(statement: ts.ClassDeclaration) {
         let cd = ClassDeclaration.from(statement, this.checker);
+        if (cd.isSupport) {
 
-
+        }
         this.mapping.set(statement.getSourceFile().fileName, cd);
     }
 

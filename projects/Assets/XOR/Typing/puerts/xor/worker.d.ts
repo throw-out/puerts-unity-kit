@@ -8,7 +8,7 @@ declare class ThreadWorkerImpl {
     get isAlive(): boolean;
     get isInitialized(): boolean;
     get source(): csharp.XOR.ThreadWorker;
-    constructor(loader: csharp.Puerts.ILoader, options?: csharp.XOR.ThreadWorker.CreateOptions);
+    constructor(loader: csharp.Puerts.ILoader, options?: csharp.XOR.ThreadOptions);
     start(filepath: string): void;
     stop(): void;
     post<TResult = void>(eventName: string, data?: any, notResult?: true): Promise<TResult>;

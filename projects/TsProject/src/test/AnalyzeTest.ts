@@ -24,8 +24,12 @@ export class AnalyzeTest3 {
     private _prop4: TestClass3;
 }
 export class AnalyzeTest4 {
-    private _prop1: GameObject;
-    private _prop2: GameObject[];
+    protected _prop1: GameObject;
+    protected _prop2: GameObject[];
+}
+export class AnalyzeTest5 extends AnalyzeTest4 {
+    protected _prop3: GameObject;
+    protected _prop4: GameObject[];
 }
 
 declare global {

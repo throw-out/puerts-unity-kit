@@ -47,10 +47,11 @@ namespace XOR
             }
         }
         public bool Disposed => this._disposed;
+        public int ThreadId { get; private set; }
 
         public JsEnv Env { get; private set; }
         public ILoader Loader { get; private set; }
-        public CreateOptions Options { get; private set; }
+        public ThreadOptions Options { get; private set; }
         private bool _running = false;
         private bool _disposed = false;
         //跨线程同步
@@ -200,24 +201,35 @@ namespace XOR
 
         void ThreadExecute(bool isESM, string filepath)
         {
-            int id = Thread.CurrentThread.ManagedThreadId;
+            ThreadId = Thread.CurrentThread.ManagedThreadId;
+            int port =
+#if UNITY_EDITOR
+            Options.debugger.port;
+#else
+            0;
+#endif
+            bool waitDebugger = port > 0 && Options.debugger.wait;
 
-            Logger.Log($"<b>XOR.{nameof(ThreadWorker)}({id}): <color=green>Executing</color></b>");
+            Logger.Log($"<b>XOR.{nameof(ThreadWorker)}({ThreadId}): <color=green>Executing</color></b>");
             JsEnv env = null;
             try
             {
                 // JsEnv内置脚本放在Resource目录下并使用DefaultLoader(Resolutions.Load)加载, 仅允许在主线程调用
                 // 子线程ThreadLoader接口会阻塞线程, 直到主线程调用ThreadLoader.Process后才会继续执行
                 // JsEnv初始化时将调用ThreadLoader接口
-                env = this.Env = new JsEnv(Loader);
+                env = this.Env = new JsEnv(Loader, port);
                 env.TryAutoUsing();
                 env.SupportCommonJS();
                 env.RequireXORModules(isESM);
                 env.BindXORThreadWorker(this);
+                if (waitDebugger)
+                {
+                    env.WaitDebugger();
+                }
                 ThreadExecuteRun(env, filepath, !Options.stopOnError);
 
                 this.IsInitialized = true;
-                Logger.Log($"<b>XOR.{nameof(ThreadWorker)}({id}): <color=green>Started</color></b>");
+                Logger.Log($"<b>XOR.{nameof(ThreadWorker)}({ThreadId}): <color=green>Started</color></b>");
                 while (env == this.Env && IsAlive)
                 {
                     ThreadExecuteTick(env, !Options.stopOnError);
@@ -228,11 +240,11 @@ namespace XOR
             catch (ThreadInterruptedException /** e */)
             {
                 //线程在休眠期间, 调用thread.Interrupt()抛出此异常, 此处不处理, 不影响运行
-                Logger.Log($"<b>XOR.{nameof(ThreadWorker)}({id}): <color=red>Abort</color></b>");
+                Logger.Log($"<b>XOR.{nameof(ThreadWorker)}({ThreadId}): <color=red>Abort</color></b>");
             }
             catch (Exception e)
             {
-                Logger.LogError($"<b>XOR.{nameof(ThreadWorker)}({id}): <color=red>Exception</color></b>\n{e}");
+                Logger.LogError($"<b>XOR.{nameof(ThreadWorker)}({ThreadId}): <color=red>Exception</color></b>\n{e}");
             }
             finally
             {
@@ -244,7 +256,7 @@ namespace XOR
                     env.Tick();
                     env.Dispose();
                 }
-                Logger.Log($"<b>XOR.{nameof(ThreadWorker)}({id}): <color=red>Stoped</color></b>");
+                Logger.Log($"<b>XOR.{nameof(ThreadWorker)}({ThreadId}): <color=red>Stoped</color></b>");
             }
         }
         void ThreadExecuteRun(JsEnv env, string filepath, bool catchException)
@@ -258,8 +270,7 @@ namespace XOR
                 }
                 catch (Exception e)
                 {
-                    int id = Thread.CurrentThread.ManagedThreadId;
-                    Logger.LogError($"<b>XOR.{nameof(ThreadWorker)}({id}): <color=red>Exception</color></b>\n{e}");
+                    Logger.LogError($"<b>XOR.{nameof(ThreadWorker)}({ThreadId}): <color=red>Exception</color></b>\n{e}");
                 }
             }
             else
@@ -280,8 +291,7 @@ namespace XOR
                 }
                 catch (Exception e)
                 {
-                    int id = Thread.CurrentThread.ManagedThreadId;
-                    Logger.LogError($"<b>XOR.{nameof(ThreadWorker)}({id}): <color=red>Exception</color></b>\n{e}");
+                    Logger.LogError($"<b>XOR.{nameof(ThreadWorker)}({ThreadId}): <color=red>Exception</color></b>\n{e}");
                 }
             }
             else
@@ -466,7 +476,7 @@ namespace XOR
         }
 
         public static ThreadWorker Create(ILoader loader) => Create(loader, default);
-        public static ThreadWorker Create(ILoader loader, CreateOptions options)
+        public static ThreadWorker Create(ILoader loader, ThreadOptions options)
         {
 #if !UNITY_EDITOR && UNITY_WEBGL
             throw new InvalidOperationException("environment not supported");
@@ -517,23 +527,6 @@ namespace XOR
             return worker;
         }
 
-        public struct CreateOptions
-        {
-            public string filepath;
-            /// <summary>
-            /// 创建remote代理端口
-            /// </summary>
-            public bool remote;
-            /// <summary>
-            /// 发生错误时停止执行
-            /// </summary>
-            public bool stopOnError;
-            /// <summary>
-            /// 是否为Editor环境
-            /// </summary>
-            public bool isEditor;
-        }
-
         private class Event
         {
             public string eventName;
@@ -560,6 +553,35 @@ namespace XOR
             Json,
             Error
         }
+    }
+    public struct ThreadOptions
+    {
+        public string filepath;
+        /// <summary>
+        /// 创建remote代理端口
+        /// </summary>
+        public bool remote;
+        /// <summary>
+        /// 发生错误时停止执行
+        /// </summary>
+        public bool stopOnError;
+        /// <summary>
+        /// 是否为Editor环境(线程将使用EditorApplication.update调用Tick/不会随stop play销毁线程)
+        /// </summary>
+        public bool isEditor;
+
+        public ThreadDebuggerOptions debugger;
+    }
+    public struct ThreadDebuggerOptions
+    {
+        /// <summary>
+        /// debugger监听端口
+        /// </summary>
+        public ushort port;
+        /// <summary>
+        /// 等待waitDebugger调试器
+        /// </summary>
+        public bool wait;
     }
 
     internal class ThreadWorkerCaller : MonoBehaviour

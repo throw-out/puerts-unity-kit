@@ -50,7 +50,7 @@ class Workflow {
     }
 
     private _createWorker(editorProject: string) {
-        const options = new csharp.XOR.ThreadWorker.CreateOptions();
+        const options = new csharp.XOR.ThreadOptions();
         options.remote = true;
         options.isEditor = true;
         const loader = new csharp.XOR.MergeLoader();

@@ -124,7 +124,7 @@ m.init;
             EditorApplication.ReleaseInstance();
             if (!UnityEngine.Application.isPlaying)
             {
-                ThreadWorker.ReleaseAllInstance();
+                ThreadWorker.ReleaseAllInstances();
             }
 
             if (print) Logger.Log($"<b>XOR.{nameof(EditorApplication)}: <color=red>Stoped</color>.</b>");

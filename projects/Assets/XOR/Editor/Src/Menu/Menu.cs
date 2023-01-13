@@ -1,4 +1,7 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
 using UnityEditor;
 using UnityEngine;
 
@@ -51,5 +54,34 @@ namespace XOR
 
         }
 
+        [MenuItem("Tools/XOR/Therad/Current")]
+        static void ThreadCurrentStatus()
+        {
+            ThreadWorker[] workers = ThreadWorker.GetAllInstances().ToArray();
+            HashSet<ThreadWorker> activeWorkers = new HashSet<ThreadWorker>(workers.Where(w => w.IsAlive));
+
+            StringBuilder builder = new StringBuilder();
+            builder.Append($"{nameof(ThreadWorker)} total {workers.Length}, active {activeWorkers.Count}.");
+            for (int i = 0; i < workers.Length; i++)
+            {
+                builder.AppendLine();
+                builder.Append(workers[i].ThreadId);
+                builder.Append(": ");
+                if (activeWorkers.Contains(workers[i]))
+                {
+                    builder.Append("<color=green>active</color>");
+                }
+                else
+                {
+                    builder.Append("<color=gray>dispose</color>");
+                }
+            }
+            Debug.Log(builder.ToString());
+        }
+        [MenuItem("Tools/XOR/Therad/StopAll")]
+        static void ThreadStopAll()
+        {
+            ThreadWorker.ReleaseAllInstances();
+        }
     }
 }

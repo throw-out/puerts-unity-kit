@@ -4,20 +4,21 @@ using UnityEngine;
 
 namespace XOR
 {
-    public abstract class MultipleMonoBehaviour<T> : MonoBehaviour where T : MultipleMonoBehaviour<T>
+    public abstract class MultipleMonoBehaviour<T> : MonoBehaviour
+        where T : MultipleMonoBehaviour<T>
     {
         //弱引用集合(不影响GC回收)
         protected static readonly List<WeakReference> referenceInstances = new List<WeakReference>();
 
         private WeakReference referenceSelf = null;
 
-        public static void ReleaseAllInstance()
+        public static void ReleaseAllInstances()
         {
             foreach (var weakRef in referenceInstances)
             {
                 if (weakRef.IsAlive)
                 {
-                    var t = (weakRef.Target as MultipleMonoBehaviour<T>);
+                    var t = (weakRef.Target as T);
                     t.referenceSelf = null;
                     t.Release();
                     DestroyImmediate(t.gameObject); //立即删除实例对象(不触发OnDestroy-Function)
@@ -25,14 +26,14 @@ namespace XOR
             }
             referenceInstances.Clear();
         }
-        public static List<MultipleMonoBehaviour<T>> GetAllInstance()
+        public static List<T> GetAllInstances()
         {
-            List<MultipleMonoBehaviour<T>> list = new List<MultipleMonoBehaviour<T>>();
-            foreach (var weak_ref in referenceInstances)
+            List<T> list = new List<T>();
+            foreach (var weakRef in referenceInstances)
             {
-                if (weak_ref.IsAlive)
+                if (weakRef.IsAlive)
                 {
-                    list.Add(weak_ref.Target as MultipleMonoBehaviour<T>);
+                    list.Add(weakRef.Target as T);
                 }
             }
             return list;

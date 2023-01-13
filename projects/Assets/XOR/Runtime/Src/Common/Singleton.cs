@@ -1,7 +1,8 @@
 ﻿using System;
 namespace XOR
 {
-    public abstract class Singleton<T> where T : class, new()
+    public abstract class Singleton<T> 
+        where T : Singleton<T> 
     {
         protected static T __instance = null;
         public static T Instance
@@ -32,7 +33,7 @@ namespace XOR
                 __instance = null;
             }
         }
-        
+
         private bool __is_null_ = false;
         public virtual void Release()
         {

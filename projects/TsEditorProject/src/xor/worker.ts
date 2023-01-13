@@ -25,7 +25,7 @@ class ThreadWorkerImpl {
     public get isInitialized() { return this.worker.IsInitialized; }
     public get source() { return this.worker; }
 
-    constructor(loader: csharp.Puerts.ILoader, options?: csharp.XOR.ThreadWorker.CreateOptions) {
+    constructor(loader: csharp.Puerts.ILoader, options?: csharp.XOR.ThreadOptions) {
         if (loader instanceof csharp.XOR.ThreadWorker) {
             this.worker = loader;
             this.mainThread = false;

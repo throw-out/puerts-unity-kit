@@ -3,34 +3,35 @@ using System.Collections.Generic;
 
 namespace XOR
 {
-    public abstract class Multiple<T> where T : class, new()
+    public abstract class Multiple<T>
+        where T : Multiple<T>
     {
         //弱引用集合(不影响GC回收)
         protected static readonly List<WeakReference> referenceInstances = new List<WeakReference>();
 
         private WeakReference referenceSelf = null;
 
-        public static void ReleaseAllInstance()
+        public static void ReleaseAllInstances()
         {
             foreach (var weakRef in referenceInstances)
             {
                 if (weakRef.IsAlive)
                 {
-                    var t = (weakRef.Target as Multiple<T>);
+                    var t = (weakRef.Target as T);
                     t.referenceSelf = null;
                     t.Release();
                 }
             }
             referenceInstances.Clear();
         }
-        public static List<Multiple<T>> GetAllInstance()
+        public static List<T> GetAllInstances()
         {
-            List<Multiple<T>> list = new List<Multiple<T>>();
-            foreach (var weak_ref in referenceInstances)
+            List<T> list = new List<T>();
+            foreach (var weakRef in referenceInstances)
             {
-                if (weak_ref.IsAlive)
+                if (weakRef.IsAlive)
                 {
-                    list.Add(weak_ref.Target as Multiple<T>);
+                    list.Add(weakRef.Target as T);
                 }
             }
             return list;
