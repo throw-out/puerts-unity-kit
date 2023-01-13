@@ -1,61 +1,87 @@
 import * as csharp from "csharp";
-import * as json5 from "json5";
 import * as ts from "typescript";
 
 const { File, Directory, Path } = csharp.System.IO;
 
-type Tsconfig = {
+type ConfigFile = {
     readonly files?: string[];
     readonly include?: string[];
     readonly exclude?: string[];
+    readonly references?: string[];
     readonly compilerOptions: ts.CompilerOptions;
 };
 
-export function scanFiles(dirpath: string, extensions?: readonly string[]) {
-    let results = new Array<string>();
-
-    let files = Directory.GetFiles(dirpath);
-    for (let i = 0; i < files.Length; i++) {
-        let file = files.get_Item(i);
-        if (extensions && !extensions.find(e => file.endsWith(e)))
-            continue;
-        results.push(file);
+/**读取tsconfig.json文件并反序化成对象
+ * @param path 
+ * @returns 
+ */
+export function readConfigFile(path: string): ConfigFile {
+    let { config, error } = ts.readConfigFile(path, (path) => File.ReadAllText(path));
+    if (error) {
+        throw error;
     }
-    let dirs = Directory.GetDirectories(dirpath);
-    for (let i = 0; i < dirs.Length; i++) {
-        let subfiles = scanFiles(dirs.get_Item(i));
-        if (subfiles.length > 0) results.push(...subfiles);
-    }
-
-    return results;
+    return config;
 }
-export function readTsconfig(path: string): Tsconfig {
-    return json5.parse(File.ReadAllText(path));
+
+/**读取并解析tsconfig.json文件, 获取编译的脚本等
+ * @param tsconfigFile 
+ * @param maxDepth 
+ * @returns 
+ */
+export function parseConfigFile(tsconfigFile: string, maxDepth: number = 10): ts.ParsedCommandLine {
+    const configFile = readConfigFile(tsconfigFile);
+    const jsonConfigFile = ts.readJsonConfigFile(tsconfigFile, (path) => File.ReadAllText(path));
+
+    let basePath = Path.GetDirectoryName(tsconfigFile);
+    if (configFile.include) {
+        let maxUpperLevel = 0, curUpperLevel: number;
+        for (let p of configFile.include) {
+            p = p.replace(/\\/g, '/');
+            curUpperLevel = 0;
+            while (p.startsWith("../")) {
+                p = p.substring(3);
+                curUpperLevel++;
+            }
+            if (curUpperLevel > maxUpperLevel) maxUpperLevel = curUpperLevel;
+        }
+        for (let i = 0; i < maxUpperLevel; i++) {
+            basePath = Path.GetDirectoryName(basePath);
+        }
+    }
+
+    const readDirectory = (rootDir: string, extensions: string[], excludes: string[], includes: string[], depth?: number) => {
+        if (depth && depth > maxDepth)
+            return null;
+        const results = new Array<string>();
+
+        let files = Directory.GetFiles(rootDir);
+        for (let i = 0; i < files.Length; i++) {
+            let file = files.get_Item(i);
+            if (extensions && !extensions.find(ext => file.endsWith(ext))) {
+                continue;
+            }
+            results.push(file);
+        }
+
+        let dirs = Directory.GetDirectories(rootDir);
+        for (let i = 0; i < dirs.Length; i++) {
+            let subFiles = readDirectory(dirs.get_Item(i), extensions, excludes, includes, (depth ?? 0) + 1);
+            if (subFiles && subFiles.length > 0) {
+                results.push(...subFiles);
+            }
+        }
+        return results;
+    };
+
+    return ts.parseJsonConfigFileContent(jsonConfigFile, {
+        useCaseSensitiveFileNames: false,
+        readDirectory,
+        fileExists: (path) => File.Exists(path),
+        readFile: (path) => File.ReadAllText(path),
+        trace: (s) => console.log(s),
+    }, basePath,);
 }
-export function scanTsconfigFiles(root: string, cfg: Tsconfig) {
-    if (File.Exists(root)) root = Path.GetDirectoryName(root);
-    let normal = (path: string) => {
-        if (path.startsWith(".") || path.startsWith(".."))
-            return Path.GetFullPath(Path.Combine(root, path));
-        return path;
-    }
 
-    const results = new Set<string>();
-    if (cfg.files) {
-        cfg.files.forEach(p => results.add(normal(p)));
-    }
-    if (cfg.include) {
-        let files = scanFiles(normal("./type"), [".ts"]);
-        files?.forEach(p => results.add(p));
-
-        files = scanFiles(normal("./src"), [".ts"]);
-        files?.forEach(p => results.add(p));
-    }
-    if (cfg.exclude) {
-
-    }
-    return [...results];
-}
 /**访问修饰符: public/private/protected */
 type AccessModifier = ts.SyntaxKind.PublicKeyword | ts.SyntaxKind.PrivateKeyword | ts.SyntaxKind.ProtectedKeyword;
 
@@ -107,6 +133,18 @@ class ClassDeclaration {
             });
         }
         //*/
+        if (this.name.includes("AnalyzeTest5") || this.name.includes("AnalyzeTest6")) {
+            console.log("==========================================");
+            console.log(this.name);
+
+            this.node.heritageClauses?.forEach(heritage => {
+                heritage.types.forEach(t => {
+                    //PropertyAccessExpression
+                    let td = TypeDeclaration.from(t.expression, this.checker);
+                    console.log(`${td.fullName}|${td.module.fullName}`);
+                });
+            })
+        }
         return true;
     }
 
@@ -145,7 +183,7 @@ class TypeDeclaration {
         public readonly module: ModuleDeclaration,
     ) { }
 
-    public static from(node: ts.TypeNode, checker: ts.TypeChecker) {
+    public static from(node: ts.Node, checker: ts.TypeChecker) {
         let name: string, fullName: string, module: ModuleDeclaration = ModuleDeclaration.NONE;
 
         const type = checker.getTypeAtLocation(node);
@@ -249,7 +287,9 @@ export class Program {
         for (const source of sourceFiles) {
             if (!source.statements)
                 continue;
-            await new Promise<void>(resolve => setTimeout(resolve, 1));
+            if (source.fileName.includes("node_modules"))
+                continue;
+            await new Promise<void>(resolve => setTimeout(resolve, 10));
 
             for (let statement of source.statements) {
                 switch (statement.kind) {

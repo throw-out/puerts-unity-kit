@@ -5,7 +5,6 @@ require("puerts/console-track");
 //require("puerts/puerts-source-map-support");
 
 const { Path } = csharp.System.IO;
-const { Application } = csharp.UnityEngine;
 
 class Workflow {
     private worker: xor.ThreadWorker;
@@ -50,9 +49,14 @@ class Workflow {
     }
 
     private _createWorker(editorProject: string) {
+        const debug = new csharp.XOR.ThreadDebuggerOptions();
+        debug.port = 9090;
+        debug.wait = false;
         const options = new csharp.XOR.ThreadOptions();
         options.remote = true;
         options.isEditor = true;
+        options.debugger = debug;
+
         const loader = new csharp.XOR.MergeLoader();
         loader.AddLoader(new csharp.XOR.FileLoader(editorProject, Path.GetDirectoryName(editorProject)));
 

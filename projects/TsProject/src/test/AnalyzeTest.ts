@@ -31,6 +31,10 @@ export class AnalyzeTest5 extends AnalyzeTest4 {
     protected _prop3: GameObject;
     protected _prop4: GameObject[];
 }
+export class AnalyzeTest6 extends xor.TsComponent {
+    protected _prop3: GameObject;
+    protected _prop4: GameObject[];
+}
 
 declare global {
     class TestClass3 {

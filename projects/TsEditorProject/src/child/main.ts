@@ -1,4 +1,5 @@
 import * as csharp from "csharp";
+import * as ts from "typescript";
 import { WorkerEvent } from "../common/event";
 import * as services from "./services";
 
@@ -11,12 +12,13 @@ xor.globalWorker.on(WorkerEvent.StartProgream, (data: { project: string, program
     const timer = new Timer();
 
     console.log("==================================================");
-    let config = services.readTsconfig(data.project);
-    let rootNames = services.scanTsconfigFiles(data.project, config);
+    let pcl = services.parseConfigFile(data.project);
+    let compilerOptions = pcl.options;
+    let rootNames = (pcl.fileNames ?? []).filter(p => !p.includes("node_modules"));
     console.log(`scan files duration ${timer.duration()}ms, total ${rootNames.length} files:\n${rootNames.join("\n")}`);
     timer.reset();
 
-    program = new services.Program(data.program, rootNames, config.compilerOptions);
+    program = new services.Program(data.program, rootNames, compilerOptions);
 
     console.log(`program parse duration ${timer.duration()}ms`);
     //program.print();
