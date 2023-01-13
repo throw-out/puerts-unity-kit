@@ -5,9 +5,9 @@ using UnityEngine;
 namespace XOR
 {
     [InitializeOnLoad]
-    internal class ServiceMenu
+    internal class Menu
     {
-        static ServiceMenu()
+        static Menu()
         {
             EditorApplicationHandler.DelayCall += InitializeStart;
         }
@@ -21,27 +21,35 @@ namespace XOR
             }
         }
 
-        [MenuItem("Tools/XOR/Reload")]
-        static void Reload()
-        {
-            EditorApplicationUtil.Stop(false);
-            EditorApplicationUtil.Start();
-        }
-
-        [MenuItem("Tools/XOR/Enable")]
-        static void Enable() => EditorApplicationUtil.Start();
-        [MenuItem("Tools/XOR/Enable", true)]
-        static bool EnableValidate() => !EditorApplicationUtil.IsRunning();
-        [MenuItem("Tools/XOR/Disable")]
-        static void Disable() => EditorApplicationUtil.Stop();
-        [MenuItem("Tools/XOR/Disable", true)]
-        static bool DisableValidate() => EditorApplicationUtil.IsRunning();
-
 
         [MenuItem("Tools/XOR/Settings", false, 0)]
         static void OpenSettings()
         {
             Selection.activeObject = XOR.Settings.Load(true, true);
         }
+
+
+        [MenuItem("Tools/XOR/Servies/Restart")]
+        static void Reload()
+        {
+            EditorApplicationUtil.Stop(false);
+            EditorApplicationUtil.Start();
+        }
+        [MenuItem("Tools/XOR/Servies/Start")]
+        static void Enable() => EditorApplicationUtil.Start();
+        [MenuItem("Tools/XOR/Servies/Start", true)]
+        static bool EnableValidate() => !EditorApplicationUtil.IsRunning();
+        [MenuItem("Tools/XOR/Servies/Stop")]
+        static void Disable() => EditorApplicationUtil.Stop();
+        [MenuItem("Tools/XOR/Servies/Stop", true)]
+        static bool DisableValidate() => EditorApplicationUtil.IsRunning();
+
+
+        [MenuItem("Tools/XOR/Component/SyncAll")]
+        static void SyncAllComponents()
+        {
+
+        }
+
     }
 }

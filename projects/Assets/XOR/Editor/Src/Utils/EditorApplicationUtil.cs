@@ -20,25 +20,42 @@ namespace XOR
             Prefs.Enable.SetValue(true);
             try
             {
-                string editorProject = Settings.Load().EditorProject;
-                string project = Settings.Load().Project;
+                string editorProjectConfig = Settings.Load().EditorProject,
+                    projectConfig = Settings.Load().Project;
 
-                string editorRoot = Path.GetFullPath(Path.Combine(UnityEngine.Application.dataPath, Path.GetDirectoryName(editorProject)));
+                editorProjectConfig = PathUtil.GetFullPath(editorProjectConfig);
+                projectConfig = PathUtil.GetFullPath(projectConfig);
+                if (!File.Exists(editorProjectConfig))
+                {
+                    string newPath = GUIUtil.RenderSelectEditorProject(editorProjectConfig);
+                    if (string.IsNullOrEmpty(newPath))
+                    {
+                        return;
+                    }
+                    editorProjectConfig = PathUtil.GetFullPath(newPath);
+                }
+                if (!File.Exists(projectConfig))
+                {
+                    string newPath = GUIUtil.RenderSelectProject(projectConfig);
+                    if (string.IsNullOrEmpty(newPath))
+                    {
+                        return;
+                    }
+                    projectConfig = PathUtil.GetFullPath(newPath);
+                }
 
-                Logger.Log($"<b>XOR.{nameof(EditorApplication)}: <color=green>Executing</color></b>");
+                string editorRoot = Path.GetDirectoryName(editorProjectConfig);
+                string editorOutput = Path.Combine(editorRoot, "output");
+
+                Logger.Log($"<b>XOR.{nameof(EditorApplication)}: <color=green>Executing</color></b> \neditorRoot: {editorRoot}\neditorOutput: {editorOutput}");
 
                 EditorApplication app = EditorApplication.GetInstance();
-
-                //editor loader
-                string projectRoot = Path.Combine(Path.GetDirectoryName(UnityEngine.Application.dataPath), "TsEditorProject");
-                string outputRoot = Path.Combine(projectRoot, "output");
-                app.Loader.AddLoader(new FileLoader(outputRoot, projectRoot));
+                app.Loader.AddLoader(new FileLoader(editorOutput, editorRoot));
 
                 //create interfaces
                 CSharpInterfaces ci = new CSharpInterfaces();
                 ci.SetWorker = app.SetWorker;
                 ci.SetProgram = app.SetProgram;
-
                 //init application
                 Func<CSharpInterfaces, TSInterfaces> Init = app.Env.Eval<Func<CSharpInterfaces, TSInterfaces>>(@"
 var m = require('./main/main');
@@ -47,10 +64,7 @@ m.init;
                 TSInterfaces ti = Init(ci);
                 app.SetInterfaces(ti);
 
-                ti.Start(
-                    Path.Combine(editorRoot, "output"),
-                    Path.GetFullPath(Path.Combine(UnityEngine.Application.dataPath, project))
-                );
+                ti.Start(editorOutput, projectConfig);
 
                 Logger.Log($"<b>XOR.{nameof(EditorApplication)}: <color=green>Started</color>.</b>");
             }

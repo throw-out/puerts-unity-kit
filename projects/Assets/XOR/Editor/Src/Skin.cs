@@ -5,7 +5,7 @@ namespace XOR
 {
     internal static class Skin
     {
-        public const float LineSpace = 5f;
+        public const float LineSpace = 4f;
         public const float RowSpace = 2f;
 
         public static readonly Accessor<GUIStyle> headerBox = new Accessor<GUIStyle>(() =>
@@ -19,7 +19,10 @@ namespace XOR
             GUIStyle style = new GUIStyle("GroupBox");
             style.padding = new RectOffset()
             {
-                left = 5
+                left = 4,
+                right = 4,
+                top = 4,
+                bottom = 4,
             };
             style.margin = new RectOffset();
             return style;

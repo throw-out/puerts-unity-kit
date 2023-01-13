@@ -18,6 +18,10 @@ namespace XOR
         {
             component = target as TsComponent;
             statement = null;
+            if (!EditorApplicationUtil.IsRunning())
+            {
+                servicesStatusFoldout = true;
+            }
         }
         void OnDisable()
         {
@@ -33,8 +37,8 @@ namespace XOR
             EditorGUILayout.BeginVertical();
 
             RenderServicesStatus();
-            RenderComponent();
-            RenderComponentMembers();
+            RenderModule();
+            RenderMembers();
 
             EditorGUILayout.EndVertical();
         }
@@ -55,9 +59,9 @@ namespace XOR
             }
         }
 
-        void RenderComponent()
+        void RenderModule()
         {
-            if (GUIUtil.RenderHeader("脚本"))
+            if (GUIUtil.RenderHeader("模块"))
             {
                 componentFoldout = !componentFoldout;
             }
@@ -68,14 +72,14 @@ namespace XOR
                     if (string.IsNullOrEmpty(component.m_Guid))
                     {
                         GUIUtil.RenderGroup(
-                            _RenderComponentSelector
+                            _RenderModuleSelector
                         );
                     }
                     else
                     {
                         GUIUtil.RenderGroup(
-                            _RenderComponentInfo,
-                            _RenderComponentSelector
+                            _RenderModuleInfo,
+                            _RenderModuleSelector
                         );
                     }
                 }
@@ -85,7 +89,7 @@ namespace XOR
                 GUILayout.Space(Skin.LineSpace);
             }
         }
-        void RenderComponentMembers()
+        void RenderMembers()
         {
             if (GUIUtil.RenderHeader("成员属性"))
             {
@@ -95,7 +99,7 @@ namespace XOR
             {
                 using (new EditorGUI.DisabledScope(!EditorApplicationUtil.IsAvailable()))
                 {
-                    GUIUtil.RenderGroup(_RenderComponentMembers);
+                    GUIUtil.RenderGroup(_RenderMembers);
                 }
             }
             else
@@ -104,15 +108,15 @@ namespace XOR
             }
         }
 
-        void _RenderComponentSelector()
+        void _RenderModuleSelector()
         {
             GUILayout.Button("选择模块");
         }
-        void _RenderComponentInfo()
+        void _RenderModuleInfo()
         {
             GUILayout.Label("SELECT");
         }
-        void _RenderComponentMembers()
+        void _RenderMembers()
         {
             GUILayout.Label("Empty");
         }
