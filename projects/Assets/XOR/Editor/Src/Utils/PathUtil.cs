@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.IO;
 using System.Text;
 
@@ -21,35 +22,73 @@ namespace XOR
         /// <returns></returns>
         public static string GetLocalPath(string fullpath)
         {
-            fullpath = fullpath.Replace("\\", "/");
-            string similar = UnityEngine.Application.dataPath.Replace("\\", "/");
-            int depth = 0;
-            while (similar.Length > 0)
-            {
-                if (fullpath.StartsWith(similar))
-                    break;
-                depth++;
-                similar = Path.GetDirectoryName(similar);
-            }
-            if (similar.Length == 0)
+            if (string.IsNullOrEmpty(fullpath))
+                return null;
+            string datapath = UnityEngine.Application.dataPath;
+            if (!IsSameDriver(datapath, fullpath))
                 return null;
 
-            StringBuilder builder = new StringBuilder();
-            if (depth > 0)
+            string[] fullpathArray = fullpath.Replace("\\", "/").Split('/');
+            string[] datapathArray = datapath.Replace("\\", "/").Split('/');
+
+            bool fork = false;
+            List<string> buidler = new List<string>();
+            for (int i = 0; i < fullpathArray.Length; i++)
             {
-                for (int i = 0; i < depth; i++)
+                if (i >= datapathArray.Length)
                 {
-                    builder.Append("../");
+                    buidler.Add(fullpathArray[i]);
+                }
+                else if (!fork)
+                {
+                    if (!fullpathArray[i].ToLower().Equals(datapathArray[i].ToLower()))
+                    {
+                        fork = true;
+                        buidler.Insert(0, "..");
+                        buidler.Add(fullpathArray[i]);
+                    }
+                }
+                else
+                {
+                    buidler.Insert(0, "..");
+                    buidler.Add(fullpathArray[i]);
                 }
             }
-            else
+            for (int i = fullpathArray.Length; i < datapathArray.Length; i++)
             {
-                builder.Append("./");
+                buidler.Insert(0, "..");
             }
-            string localpath = fullpath.Substring(similar.Length + 1);
-            builder.Append(localpath);
 
-            return builder.ToString();
+            return string.Join("/", buidler);
+        }
+
+
+        static bool IsSameDriver(string path1, string path2)
+        {
+            string dl1 = GetDriverLetter(path1, true),
+                dl2 = GetDriverLetter(path2, true);
+            if (string.IsNullOrEmpty(dl1) && !string.IsNullOrEmpty(dl2) ||
+                !string.IsNullOrEmpty(dl1) && string.IsNullOrEmpty(dl2)
+            )
+            {
+                return false;
+            }
+            return dl1.Equals(dl2);
+        }
+        static string GetDriverLetter(string path, bool caseLower = true)
+        {
+            path = path.Replace("\\", "/");
+            int idx = path.IndexOf("/");
+            if (idx >= 0)
+            {
+                path = path.Substring(0, idx + 1);
+            }
+            idx = path.IndexOf(":");
+            if (idx >= 0)
+            {
+                return path.Substring(0, idx + 1);
+            }
+            return null;
         }
     }
 }

@@ -56,11 +56,23 @@ namespace XOR
             }
             GUILayout.EndHorizontal();
 
-            GUILayout.Label("状态: UNKNOWN");
-            GUILayout.Label("脚本数量: UNKNOWN");
-            GUILayout.Label("编译错误: UNKNOWN");
-            GUILayout.Label("脚本数量: UNKNOWN");
-            GUILayout.Label("已解析类: UNKNOWN");
+            GUILayout.BeginHorizontal();
+            GUILayout.Label("状态: ", GUILayout.ExpandWidth(false));
+            GUILayout.Label(EditorApplicationUtil.GetStatus());
+            GUILayout.EndHorizontal();
+            GUILayout.BeginHorizontal();
+            GUILayout.Label("编译错误: ", GUILayout.ExpandWidth(false));
+            GUILayout.Label(EditorApplicationUtil.GetErrors());
+            GUILayout.EndHorizontal();
+            GUILayout.BeginHorizontal();
+            GUILayout.Label("脚本数量: ", GUILayout.ExpandWidth(false));
+            GUILayout.Label(EditorApplicationUtil.GetScripts());
+            GUILayout.EndHorizontal();
+            GUILayout.BeginHorizontal();
+            GUILayout.Label("已解析类: ", GUILayout.ExpandWidth(false));
+            GUILayout.Label(EditorApplicationUtil.GetTypeCount());
+            GUILayout.EndHorizontal();
+
             GUILayout.EndVertical();
         }
 
@@ -95,7 +107,15 @@ namespace XOR
         /// <returns></returns>
         public static string RenderSelectEditorProject(string currentPath)
         {
-            string newPath = EditorUtility.OpenFilePanelWithFilters("编辑器项目", "请选择XOR typescript编辑器项目路径", new string[] { "NPM", ".json" });
+            if (!string.IsNullOrEmpty(currentPath))
+            {
+                bool ok = EditorUtility.DisplayDialog("编辑器项目", $"以下配置文件不存在:\n{currentPath}", "配置", "取消");
+                if (!ok)
+                {
+                    return string.Empty;
+                }
+            }
+            string newPath = EditorUtility.OpenFilePanelWithFilters("编辑器项目", "请选择XOR.typescript tsconfig.json文件", new string[] { "NPM", "json" });
             if (!string.IsNullOrEmpty(newPath) && File.Exists(newPath))
             {
                 Settings asset = Settings.Load(true, true);
@@ -115,7 +135,15 @@ namespace XOR
         /// <returns></returns>
         public static string RenderSelectProject(string currentPath)
         {
-            string newPath = EditorUtility.OpenFilePanelWithFilters("编辑器项目", "请选择typescript项目路径", new string[] { "NPM", ".json" });
+            if (!string.IsNullOrEmpty(currentPath))
+            {
+                bool ok = EditorUtility.DisplayDialog("编辑器项目", $"以下配置文件不存在:\n{currentPath}", "配置", "取消");
+                if (!ok)
+                {
+                    return string.Empty;
+                }
+            }
+            string newPath = EditorUtility.OpenFilePanelWithFilters("游戏项目", "请选择typescript tsconfig.json文件", new string[] { "NPM", "json" });
             if (!string.IsNullOrEmpty(newPath) && File.Exists(newPath))
             {
                 Settings asset = Settings.Load(true, true);

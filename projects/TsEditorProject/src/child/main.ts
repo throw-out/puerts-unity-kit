@@ -1,26 +1,39 @@
 import * as csharp from "csharp";
 import { WorkerEvent } from "../common/event";
-import { XOR } from "./Program";
+import * as services from "./services";
 
 require("puerts/console-track");
+require("puerts/puerts-source-map-support");
 
-const workflow = new class {
-    private cp: csharp.XOR.Services.Program;
-    private program: XOR.Program;
-
-    public setCSharpProgram(program: csharp.XOR.Services.Program) {
-        this.cp = program;
-    }
-    public start(project: string) {
-        this.program = new XOR.Program(project);
-    }
-}
+let program: services.Program;
 
 xor.globalWorker.on(WorkerEvent.StartProgream, (data: { project: string, program: csharp.XOR.Services.Program }) => {
-    //console.log(`start program: ${data.project}`);
-    workflow.setCSharpProgram(data.program);
-    workflow.start(data.project);
+    const timer = new Timer();
+
+    console.log("==================================================");
+    let config = services.readTsconfig(data.project);
+    let rootNames = services.scanTsconfigFiles(data.project, config);
+    console.log(`scan files duration ${timer.duration()}ms, total ${rootNames.length} files:\n${rootNames.join("\n")}`);
+    timer.reset();
+
+    program = new services.Program(data.program, rootNames, config.compilerOptions);
+
+    console.log(`program parse duration ${timer.duration()}ms`);
+    //program.print();
 });
 xor.globalWorker.on(WorkerEvent.FileChanged, (path: string) => {
 
 });
+
+class Timer {
+    private _start: number;
+    constructor() {
+        this.reset();
+    }
+    public reset() {
+        this._start = new Date().valueOf();
+    }
+    public duration() {
+        return new Date().valueOf() - this._start;
+    }
+}

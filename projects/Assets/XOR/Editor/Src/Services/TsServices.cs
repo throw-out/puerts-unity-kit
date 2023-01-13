@@ -23,9 +23,9 @@ namespace XOR.Services
     public class Program
     {
         /// <summary>编译错误数量 </summary>
-        public int error;
+        public int errors;
         /// <summary>编译源文件数量 </summary>
-        public int source;
+        public int scripts;
         /// <summary>当前状态  </summary>
         public ProgramState state;
         public Dictionary<string, Statement> Statements { get; private set; }
@@ -54,7 +54,7 @@ namespace XOR.Services
 
         public void Reset()
         {
-            this.error = 0;
+            this.errors = 0;
             this.state = ProgramState.Pending;
             this.Statements.Clear();
         }

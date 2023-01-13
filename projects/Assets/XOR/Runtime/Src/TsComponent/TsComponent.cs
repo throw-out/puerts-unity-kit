@@ -8,10 +8,10 @@ namespace XOR
     public partial class TsComponent : MonoBehaviour
     {
         [SerializeField]
-        public string m_Guid;
+        protected string guid;
         [SerializeField]
-        public string m_Route;
+        protected string route;
         [SerializeField]
-        public string m_Version;
+        protected string version;
     }
 }

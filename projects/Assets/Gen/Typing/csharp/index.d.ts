@@ -30296,8 +30296,8 @@ declare namespace CS {
         }
         class Program extends System.Object {
             protected [__keep_incompatibility]: never;
-            public error: number
-            public source: number
+            public errors: number
+            public scripts: number
             public state: XOR.Services.ProgramState
             public get Statements(): System.Collections.Generic.Dictionary$2<string, XOR.Services.Statement>;
             public GetStatement($guid: string, $create?: boolean): XOR.Services.Statement

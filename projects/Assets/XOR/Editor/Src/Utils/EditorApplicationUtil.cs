@@ -9,10 +9,51 @@ namespace XOR
         public static bool IsRunning() => EditorApplication.Instance != null;
         public static bool IsInitializing() => IsRunning() && EditorApplication.Instance.IsInitializing();
         public static bool IsWorkerRunning() => IsRunning() && EditorApplication.Instance.IsWorkerRunning();
-
         public static bool IsAvailable()
         {
             return IsRunning() && EditorApplication.Instance.IsWorkerRunning() && !EditorApplication.Instance.IsInitializing();
+        }
+        public static string GetStatus()
+        {
+            if (!IsRunning())
+                return "UNKNOWN";
+            Program program = EditorApplication.Instance?.Program;
+            if (program == null)
+                return "Initializing";
+            switch (program.state)
+            {
+                case ProgramState.Pending:
+                    return "Pending";
+                //break;
+                case ProgramState.Compiling:
+                    return "Compiling";
+                //break;
+                case ProgramState.Compiled:
+                    return "Compiled";
+                    //break;
+            }
+            return "UNKNOWN";
+        }
+        public static string GetScripts()
+        {
+            EditorApplication app = EditorApplication.Instance;
+            if (app == null || app.Program == null)
+                return "UNKNOWN";
+            return $"{app.Program.scripts}";
+        }
+        public static string GetErrors()
+        {
+            EditorApplication app = EditorApplication.Instance;
+            if (app == null || app.Program == null)
+                return "UNKNOWN";
+            return $"{app.Program.errors}";
+        }
+        public static string GetTypeCount()
+        {
+            EditorApplication app = EditorApplication.Instance;
+            if (app == null || app.Program == null)
+                return "UNKNOWN";
+            return $"{app.Program.Statements.Count}";
         }
 
         public static void Start()
@@ -30,6 +71,7 @@ namespace XOR
                     string newPath = GUIUtil.RenderSelectEditorProject(editorProjectConfig);
                     if (string.IsNullOrEmpty(newPath))
                     {
+                        Prefs.Enable.SetValue(false);
                         return;
                     }
                     editorProjectConfig = PathUtil.GetFullPath(newPath);
@@ -39,6 +81,7 @@ namespace XOR
                     string newPath = GUIUtil.RenderSelectProject(projectConfig);
                     if (string.IsNullOrEmpty(newPath))
                     {
+                        Prefs.Enable.SetValue(false); 
                         return;
                     }
                     projectConfig = PathUtil.GetFullPath(newPath);

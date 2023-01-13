@@ -69,7 +69,7 @@ namespace XOR
             {
                 using (new EditorGUI.DisabledScope(!EditorApplicationUtil.IsAvailable()))
                 {
-                    if (string.IsNullOrEmpty(component.m_Guid))
+                    if (string.IsNullOrEmpty(ComponentUtil.GetGuid(component)))
                     {
                         GUIUtil.RenderGroup(
                             _RenderModuleSelector

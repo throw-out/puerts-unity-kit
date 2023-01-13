@@ -107,7 +107,7 @@ namespace XOR
 
 
         public class Accessor<T>
-            where T : new()
+            where T : class
         {
             private T _value;
             private Func<T> _creator;
