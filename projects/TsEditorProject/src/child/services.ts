@@ -82,6 +82,117 @@ export function parseConfigFile(tsconfigFile: string, maxDepth: number = 10): ts
     }, basePath,);
 }
 
+export class Program {
+    private readonly cp: csharp.XOR.Services.Program;
+    private readonly program: ts.Program;
+    private readonly checker: ts.TypeChecker;
+
+    private readonly classes: Map<string, ts.ClassDeclaration>;
+
+
+    constructor(cp: csharp.XOR.Services.Program, rootNames: string[], options: ts.CompilerOptions) {
+        cp.state = csharp.XOR.Services.ProgramState.Compiling;
+
+        this.cp = cp;
+        this.program = ts.createProgram({
+            rootNames,
+            options: {
+                target: options.target,
+                module: options.module,
+                noEmit: true,
+            }
+        });
+        this.checker = this.program.getTypeChecker();
+        this.classes = new Map();
+
+        cp.state = csharp.XOR.Services.ProgramState.Compiled;
+
+        this.resolveSources().then(() => this.test());
+    }
+    public getChecker() { return this.checker; }
+
+
+    private async resolveSources() {
+        let sourceFiles = this.program.getSourceFiles();
+        this.cp.errors = 0;
+        this.cp.scripts = sourceFiles.length;
+
+        //开始解析文件
+        for (const source of sourceFiles) {
+            if (!source.statements)
+                continue;
+            await new Promise<void>(resolve => setTimeout(resolve, 10));
+
+            this.resolveStatements(source.statements);
+        }
+    }
+    private resolveStatements(statements: ts.NodeArray<ts.Statement>) {
+        for (let statement of statements) {
+            switch (statement.kind) {
+                case ts.SyntaxKind.ClassDeclaration:
+                    this.resolveClassDeclaration(<ts.ClassDeclaration>statement);
+                    break;
+                case ts.SyntaxKind.ModuleDeclaration:
+                    this.resolveModuleDeclaration(<ts.ModuleDeclaration>statement);
+                    break;
+            }
+        }
+    }
+    private resolveClassDeclaration(node: ts.ClassDeclaration) {
+        this.classes.set(
+            util.getAbsoluteName(node, this.checker),
+            node
+        );
+        if (!util.hasExport(node) || util.isAbstract(node))
+            return;
+    }
+    private resolveModuleDeclaration(node: ts.ModuleDeclaration) {
+        let sourceFile = node.getSourceFile().fileName;
+        let childrens = node.getChildren();
+        for (let childNode of node.getChildren()) {
+            switch (childNode.kind) {
+                case ts.SyntaxKind.ModuleBlock:
+                    this.resolveStatements((<ts.ModuleBlock>childNode).statements);
+                    break;
+                case ts.SyntaxKind.Identifier:
+                    break;
+            }
+        }
+    }
+
+    public isInheritFromTsComponent(node: ts.ClassDeclaration) {
+        if (util.getFullName(node, this.checker) === "xor.TsComponent" &&
+            util.getModuleFromNode(node, this.checker) === "global"
+        ) {
+            return false;
+        }
+        //检测继承类
+        if (node.heritageClauses) {
+            for (let clause of node.heritageClauses ?? []) {
+                for (let ewta of clause.types) {
+                    let cd = this.classes.get(util.getAbsoluteName(ewta.expression, this.checker));
+                    if (cd) {
+                        if (this.isInheritFromTsComponent(cd))
+                            return true;
+                    } else {
+                        console.warn(`无效的继承对象:${util.getAbsoluteName(ewta.expression, this.checker)}`);
+                    }
+                }
+            }
+        }
+        return false;
+    }
+
+    private test() {
+        for (let [absoluteName, cd] of this.classes) {
+            if (absoluteName.includes("AnalyzeTest6")) {
+                let a = this.isInheritFromTsComponent(cd);
+                console.log(a);
+            }
+        }
+    }
+}
+
 /**访问修饰符: public/private/protected */
 type AccessModifier = ts.SyntaxKind.PublicKeyword | ts.SyntaxKind.PrivateKeyword | ts.SyntaxKind.ProtectedKeyword;
 
@@ -97,251 +208,125 @@ const util = new class {
         }
         return ts.SyntaxKind.PublicKeyword;
     }
-}
 
-class ClassDeclaration {
-    public readonly name: string;
-    //public readonly type: TypeDeclaration;
-    public readonly node: ts.ClassDeclaration;
-    public readonly checker: ts.TypeChecker;
+    public isGlobal(node: ts.Node) {
 
-    private _properties: PropertyDeclaration[];
-    public get properties() {
-        if (!this._properties) {
-            this._properties = [];
-            for (let m of this.node.members) {
-                if (m.kind === ts.SyntaxKind.PropertyDeclaration) {
-                    this._properties.push(PropertyDeclaration.from(<ts.PropertyDeclaration>m, this.checker));
+    }
+    public hasExport(node: ts.Node) {
+        if (!ts.canHaveModifiers(node))
+            return false;
+        let modifiers = ts.getModifiers(node);
+        if (modifiers) {
+            for (let modifier of modifiers) {
+                if (modifier.kind === ts.SyntaxKind.ExportKeyword) {
+                    return true;
                 }
             }
         }
-        return this._properties;
-    };
-
-    private _baseTypes: TypeDeclaration[];
-    /**是否继承自`@see xor.TsComponent` 组件 */
-    public get isSupport() {
-        /*
-        if (!this._base) {
-            this._base = [];
-            console.log("==========================================");
-            console.log(this.name);
-            this.node.heritageClauses?.forEach(heritage => {
-                heritage.types?.forEach(t => {
-                    //console.log(`ts.SyntaxKind.${ts.SyntaxKind[t.kind]}|${t.expression?.name?.getFullText()}`);
-                })
-            });
+        return false;
+    }
+    public isAbstract(node: ts.Node) {
+        if (!ts.canHaveModifiers(node))
+            return false;
+        let modifiers = ts.getModifiers(node);
+        if (modifiers) {
+            for (let modifier of modifiers) {
+                if (modifier.kind === ts.SyntaxKind.AbstractKeyword) {
+                    return true;
+                }
+            }
         }
-        //*/
-        if (this.name.includes("AnalyzeTest5") || this.name.includes("AnalyzeTest6")) {
-            console.log("==========================================");
-            console.log(this.name);
-
-            this.node.heritageClauses?.forEach(heritage => {
-                heritage.types.forEach(t => {
-                    //PropertyAccessExpression
-                    let td = TypeDeclaration.from(t.expression, this.checker);
-                    console.log(`${td.fullName}|${td.module.fullName}`);
-                });
-            })
+        return false;
+    }
+    public isPublic(node: ts.Node, defaultValue: boolean = true) {
+        if (!ts.canHaveModifiers(node))
+            return false;
+        let modifiers = ts.getModifiers(node);
+        if (modifiers) {
+            for (let modifier of modifiers) {
+                switch (modifier.kind) {
+                    case ts.SyntaxKind.PublicKeyword:
+                        return true;
+                        break;
+                    case ts.SyntaxKind.PrivateKeyword:
+                    case ts.SyntaxKind.ProtectedKeyword:
+                        return false;
+                        break;
+                }
+            }
         }
-        return true;
+        return defaultValue;
+    }
+    public isPrivateOrProtected(node: ts.Node, defaultValue: boolean = true) {
+        return !this.isPublic(node, defaultValue);
     }
 
-    private constructor(node: ts.ClassDeclaration, checker: ts.TypeChecker) {
-        this.node = node;
-        this.checker = checker;
-        this.name = node.name.getText();
+    public getAbsoluteName(node: ts.Node, checker: ts.TypeChecker) {
+        let module = util.getModuleFromNode(node, checker);
+        if (module.includes("CS") || module.includes("global")) {
+            debugger;
+        }
+        let fullName = util.getFullName(node, checker);
+        return `${module}|${fullName}`;
     }
-
-    public static from(node: ts.ClassDeclaration, checker: ts.TypeChecker) {
-        return new ClassDeclaration(node, checker);
-    }
-}
-class PropertyDeclaration {
-    private constructor(
-        public readonly name: string,
-        public readonly type: TypeDeclaration,
-        public readonly accessModifier: AccessModifier,
-    ) { }
-
-    public static from(node: ts.PropertyDeclaration, checker: ts.TypeChecker) {
-        let name = node.name.getText();
-        let type = TypeDeclaration.from(node.type, checker);
-        let am = util.getAccessModifier(node.modifiers);
-        return new PropertyDeclaration(
-            name,
-            type,
-            am
-        );
-    }
-}
-class TypeDeclaration {
-    private constructor(
-        public readonly name: string,
-        public readonly fullName: string,
-        public readonly module: ModuleDeclaration,
-    ) { }
-
-    public static from(node: ts.Node, checker: ts.TypeChecker) {
-        let name: string, fullName: string, module: ModuleDeclaration = ModuleDeclaration.NONE;
-
+    public getFullName(node: ts.Node, checker: ts.TypeChecker) {
         const type = checker.getTypeAtLocation(node);
         const symbol = type.getSymbol();
         if (symbol) {
-            name = checker.symbolToString(
-                symbol,
-                node,
-            );
-            fullName = checker.symbolToString(
-                symbol,
-                node,
-                ts.SymbolFlags.PropertyOrAccessor | ts.SymbolFlags.ClassMember,
-                ts.SymbolFormatFlags.WriteTypeParametersOrArguments |
+            const flags = ts.SymbolFlags.Class |
+                ts.SymbolFlags.Interface |
+                ts.SymbolFlags.Enum |
+                ts.SymbolFlags.Type |
+                ts.SymbolFlags.Namespace |
+                ts.SymbolFlags.Module |
+                ts.SymbolFlags.PropertyOrAccessor |
+                ts.SymbolFlags.ClassMember;
+            const formatFlags = ts.SymbolFormatFlags.WriteTypeParametersOrArguments |
                 ts.SymbolFormatFlags.UseOnlyExternalAliasing |
                 ts.SymbolFormatFlags.AllowAnyNodeKind |
-                ts.SymbolFormatFlags.UseAliasDefinedOutsideCurrentScope
+                ts.SymbolFormatFlags.UseAliasDefinedOutsideCurrentScope;
+            return checker.symbolToString(
+                symbol,
+                node,
+                flags,
+                formatFlags
             );
-            let declarations = symbol.getDeclarations();
-            if (declarations && declarations.length > 0) {
-                module = ModuleDeclaration.from(
-                    declarations.find(o => o.kind === ts.SyntaxKind.ClassDeclaration) ??
-                    declarations.find(o => o.kind === ts.SyntaxKind.InterfaceDeclaration)
-                )
-            }
         }
         else {
-            name = checker.typeToString(
+            return checker.typeToString(
                 type,
                 node,
                 ts.TypeFormatFlags.NodeBuilderFlagsMask
-            );
-            fullName = name;
-        }
-        return new TypeDeclaration(name, fullName, module);
-    }
-}
-class ModuleDeclaration {
-    public static readonly NONE = new ModuleDeclaration(null);
-
-    /**is declare in global */
-    public readonly global: boolean;
-    public readonly name: string;
-    public readonly fullName: string;
-    public readonly path: string[];
-
-    private constructor(modulePath: string[]) {
-        this.global = !modulePath || modulePath.length == 0 || !!modulePath.find(m => m === "global");
-        this.path = modulePath;
-        if (!this.global) {
-            this.name = modulePath[0];
-            this.fullName = modulePath.join(".");
+            )
         }
     }
-
-    public static from(node: ts.Declaration) {
-        let _node: ts.Node = node,
-            modulePath = new Array<string>();
-        while (_node) {
-            if (_node.kind === ts.SyntaxKind.ModuleDeclaration) {
-                modulePath.unshift((<ts.ModuleDeclaration>_node).name.getText());
-            }
-            _node = _node.parent;
-        }
-        return new ModuleDeclaration(modulePath);
-    }
-}
-
-export class Program {
-    public readonly cp: csharp.XOR.Services.Program;
-    public readonly program: ts.Program;
-    public readonly checker: ts.TypeChecker;
-    private readonly mapping: Map<string, ClassDeclaration>;
-
-    constructor(cp: csharp.XOR.Services.Program, rootNames: string[], options: ts.CompilerOptions) {
-        cp.state = csharp.XOR.Services.ProgramState.Compiling;
-
-        this.cp = cp;
-        this.program = ts.createProgram({
-            rootNames,
-            options: {
-                target: options.target,
-                module: options.module,
-                noEmit: true,
-            }
-        });
-        this.checker = this.program.getTypeChecker();
-        this.mapping = new Map();
-
-        cp.state = csharp.XOR.Services.ProgramState.Compiled;
-
-        this.fp();
-    }
-
-    private async fp() {
-        let sourceFiles = this.program.getSourceFiles();
-        this.cp.errors = 0;
-        this.cp.scripts = sourceFiles.length;
-
-        //开始解析文件
-        for (const source of sourceFiles) {
-            if (!source.statements)
-                continue;
-            if (source.fileName.includes("node_modules"))
-                continue;
-            await new Promise<void>(resolve => setTimeout(resolve, 10));
-
-            for (let statement of source.statements) {
-                switch (statement.kind) {
-                    case ts.SyntaxKind.ClassDeclaration:
-                        this.resolve(<ts.ClassDeclaration>statement);
-                        break;
-                }
+    public getModuleFromNode(node: ts.Node, checker: ts.TypeChecker) {
+        const type = checker.getTypeAtLocation(node);
+        const symbol = type.getSymbol();
+        if (symbol) {
+            let declarations = symbol.getDeclarations();
+            if (declarations && declarations.length > 0) {
+                return this.getModuleFromDeclaration(
+                    declarations.find(d => d.kind === ts.SyntaxKind.ClassDeclaration) ||
+                    declarations.find(d => d.kind === ts.SyntaxKind.InterfaceDeclaration) ||
+                    declarations[0]
+                );
             }
         }
     }
-    private resolve(statement: ts.ClassDeclaration) {
-        let cd = ClassDeclaration.from(statement, this.checker);
-        if (cd.isSupport) {
+    public getModuleFromDeclaration(declaration: ts.Declaration) {
+        let moduleName: string;
 
-        }
-        this.mapping.set(statement.getSourceFile().fileName, cd);
-    }
-
-    public async print(filter?: (statement: ts.Statement) => boolean) {
-        for (const source of this.program.getSourceFiles()) {
-            if (!source.statements)
-                continue;
-            await new Promise<void>(resolve => setTimeout(resolve, 1));
-
-            for (let statement of source.statements) {
-                if (filter && !filter(statement))
-                    continue;
-
-                switch (statement.kind) {
-                    case ts.SyntaxKind.ClassDeclaration:
-                        this.printClassDeclaration(<ts.ClassDeclaration>statement);
-                        break;
-                    default:
-                        console.warn(`Unknown statement kind: ts.ScriptKind.${ts.ScriptKind[statement.kind]}(${statement.kind})`);
-                        break;
-                }
+        let node: ts.Node = declaration;
+        while (node) {
+            if (node.kind === ts.SyntaxKind.ModuleDeclaration) {
+                moduleName = (<ts.ModuleDeclaration>node).name.text;
             }
+            node = node.parent;
         }
-    }
-    public printClassDeclaration(classDeclaration: ts.ClassDeclaration) {
-        console.log("==================================================");
-        console.log(classDeclaration.name.getText() + "\n" + classDeclaration.getSourceFile().fileName);
-        if (!classDeclaration.members)
-            return;
-
-        let memberProps = classDeclaration.members
-            .filter(m => m.kind === ts.SyntaxKind.PropertyDeclaration)
-            .map(m => <ts.PropertyDeclaration>m)
-            .map(p => {
-                let { name, type } = PropertyDeclaration.from(p, this.checker);
-                return `${name}: ${type.fullName}(${type.module.fullName})`;
-            })
-        console.log(memberProps.join("\n"));
+        if (moduleName) {
+            return moduleName;
+        }
+        return declaration.getSourceFile().fileName;
     }
 }
