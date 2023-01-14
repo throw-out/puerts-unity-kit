@@ -1,10 +1,10 @@
-import * as CS from "csharp";
+import * as csharp from "csharp";
 import { GameObject, Transform } from "csharp.UnityEngine";
 import { ButtonAlias } from "./types";
 import * as t from "testModule";
 
 type TransformAlias = Transform;
-import GameObjectAlias = CS.UnityEngine.GameObject;
+import GameObjectAlias = csharp.UnityEngine.GameObject;
 
 export class AnalyzeTest1 {
     private _prop1: GameObjectAlias;
@@ -15,7 +15,7 @@ export class AnalyzeTest1 {
 }
 export class AnalyzeTest2 {
     private _prop1: GameObject;
-    private _prop2: CS.UnityEngine.GameObject;
+    private _prop2: csharp.UnityEngine.GameObject;
 }
 export class AnalyzeTest3 {
     private _prop1: GameObject;

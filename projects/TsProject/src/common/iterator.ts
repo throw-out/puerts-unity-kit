@@ -1,13 +1,13 @@
-import * as CS from "csharp";
+import * as csharp from "csharp";
 import { $generic, $typeof } from "puerts";
 
-import CSObject = CS.System.Object;
-import CSArray = CS.System.Array;
-import CSArray$1 = CS.System.Array$1;
-import CSList$1 = CS.System.Collections.Generic.List$1;
-import CSDictionary$2 = CS.System.Collections.Generic.Dictionary$2;
-import CSIEnumerator = CS.System.Collections.IEnumerator;
-import CSIEnumerator$1 = CS.System.Collections.Generic.IEnumerator$1;
+import CSObject = csharp.System.Object;
+import CSArray = csharp.System.Array;
+import CSArray$1 = csharp.System.Array$1;
+import CSList$1 = csharp.System.Collections.Generic.List$1;
+import CSDictionary$2 = csharp.System.Collections.Generic.Dictionary$2;
+import CSIEnumerator = csharp.System.Collections.IEnumerator;
+import CSIEnumerator$1 = csharp.System.Collections.Generic.IEnumerator$1;
 
 type Array$1Iterator<T> = {
     /**
@@ -201,7 +201,7 @@ export function iterator<TKey = any, TValue = any>(instance: CSDictionary$2<TKey
 /**迭代System.Collections.IEnumerable接口实现
  * @example
  * ```
- * let obj: CS.System.Collections.Generic.HashSet$1<number>;
+ * let obj: csharp.System.Collections.Generic.HashSet$1<number>;
  * let objIterator = iterator(obj);
  * let jsArray = [...objIterator];     //number[]
  * ```
@@ -265,7 +265,7 @@ function test() {
     };
 
     execute(`Array`, () => {
-        let obj = CS.System.Array.CreateInstance($typeof(CS.System.Int32), 5) as CS.System.Array$1<number>;
+        let obj = csharp.System.Array.CreateInstance($typeof(csharp.System.Int32), 5) as csharp.System.Array$1<number>;
         obj.set_Item(0, 1);
         obj.set_Item(1, 2);
         obj.set_Item(2, 3);
@@ -276,8 +276,8 @@ function test() {
         });
     });
     execute(`List`, () => {
-        const List_Number = $generic(CS.System.Collections.Generic.List$1, CS.System.Int32) as {
-            new(): CS.System.Collections.Generic.List$1<number>;
+        const List_Number = $generic(csharp.System.Collections.Generic.List$1, csharp.System.Int32) as {
+            new(): csharp.System.Collections.Generic.List$1<number>;
         };
         let obj = new List_Number();
         obj.Add(4);
@@ -290,8 +290,8 @@ function test() {
         });
     });
     execute(`Dictionary`, () => {
-        const Dictionary_Number_String = $generic(CS.System.Collections.Generic.Dictionary$2, CS.System.Int32, CS.System.String) as {
-            new(): CS.System.Collections.Generic.Dictionary$2<number, string>;
+        const Dictionary_Number_String = $generic(csharp.System.Collections.Generic.Dictionary$2, csharp.System.Int32, csharp.System.String) as {
+            new(): csharp.System.Collections.Generic.Dictionary$2<number, string>;
         };
         let obj = new Dictionary_Number_String();
         obj.set_Item(1, `message 1`);
@@ -309,7 +309,7 @@ function test() {
         }
     });
     execute(`Hashtable`, () => {
-        let obj = new CS.System.Collections.Hashtable();
+        let obj = new csharp.System.Collections.Hashtable();
         obj.Add(`key1`, `message 1`);
         obj.Add(`key2`, `message 2`);
         obj.Add(`key3`, `message 3`);

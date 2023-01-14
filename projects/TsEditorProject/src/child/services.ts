@@ -123,36 +123,39 @@ export class Program {
                 continue;
             await new Promise<void>(resolve => setTimeout(resolve, 10));
 
-            this.resolveStatements(source.statements);
+            await this.resolveStatements(source.statements);
         }
     }
-    private resolveStatements(statements: ts.NodeArray<ts.Statement>) {
+    private async resolveStatements(statements: ts.NodeArray<ts.Statement>) {
         for (let statement of statements) {
             switch (statement.kind) {
                 case ts.SyntaxKind.ClassDeclaration:
-                    this.resolveClassDeclaration(<ts.ClassDeclaration>statement);
+                    await this.resolveClassDeclaration(<ts.ClassDeclaration>statement);
                     break;
                 case ts.SyntaxKind.ModuleDeclaration:
-                    this.resolveModuleDeclaration(<ts.ModuleDeclaration>statement);
+                    await this.resolveModuleDeclaration(<ts.ModuleDeclaration>statement);
                     break;
             }
         }
     }
-    private resolveClassDeclaration(node: ts.ClassDeclaration) {
+    private async resolveClassDeclaration(node: ts.ClassDeclaration) {
         this.classes.set(
             util.getAbsoluteName(node, this.checker),
             node
         );
+        if (this.classes.size % 10 === 0) {
+            await new Promise<void>(resolve => setTimeout(resolve, 1));
+        }
         if (!util.hasExport(node) || util.isAbstract(node))
             return;
     }
-    private resolveModuleDeclaration(node: ts.ModuleDeclaration) {
+    private async resolveModuleDeclaration(node: ts.ModuleDeclaration) {
         let sourceFile = node.getSourceFile().fileName;
         let childrens = node.getChildren();
         for (let childNode of node.getChildren()) {
             switch (childNode.kind) {
                 case ts.SyntaxKind.ModuleBlock:
-                    this.resolveStatements((<ts.ModuleBlock>childNode).statements);
+                    await this.resolveStatements((<ts.ModuleBlock>childNode).statements);
                     break;
                 case ts.SyntaxKind.Identifier:
                     break;
@@ -164,7 +167,7 @@ export class Program {
         if (util.getFullName(node, this.checker) === "xor.TsComponent" &&
             util.getModuleFromNode(node, this.checker) === "global"
         ) {
-            return false;
+            return true;
         }
         //检测继承类
         if (node.heritageClauses) {
@@ -185,7 +188,12 @@ export class Program {
 
     private test() {
         for (let [absoluteName, cd] of this.classes) {
-            if (absoluteName.includes("AnalyzeTest6")) {
+            if (absoluteName.includes("System.Object")) {
+                let d = util.getModuleFromNode(cd, this.checker);
+            }
+            if (absoluteName.includes("xor.TsComponent")) {
+                let d = util.getModuleFromNode(cd, this.checker);
+
                 let a = this.isInheritFromTsComponent(cd);
                 console.log(a);
             }
@@ -211,6 +219,19 @@ const util = new class {
 
     public isGlobal(node: ts.Node) {
 
+    }
+    public hasDeclare(node: ts.Node) {
+        if (!ts.canHaveModifiers(node))
+            return false;
+        let modifiers = ts.getModifiers(node);
+        if (modifiers) {
+            for (let modifier of modifiers) {
+                if (modifier.kind === ts.SyntaxKind.DeclareKeyword) {
+                    return true;
+                }
+            }
+        }
+        return false;
     }
     public hasExport(node: ts.Node) {
         if (!ts.canHaveModifiers(node))
@@ -262,17 +283,15 @@ const util = new class {
     }
 
     public getAbsoluteName(node: ts.Node, checker: ts.TypeChecker) {
-        let module = util.getModuleFromNode(node, checker);
-        if (module.includes("CS") || module.includes("global")) {
-            debugger;
-        }
-        let fullName = util.getFullName(node, checker);
+        let module = util.getModuleFromNode(node, checker),
+            fullName = util.getFullName(node, checker);
         return `${module}|${fullName}`;
     }
     public getFullName(node: ts.Node, checker: ts.TypeChecker) {
         const type = checker.getTypeAtLocation(node);
         const symbol = type.getSymbol();
         if (symbol) {
+            /*
             const flags = ts.SymbolFlags.Class |
                 ts.SymbolFlags.Interface |
                 ts.SymbolFlags.Enum |
@@ -280,7 +299,7 @@ const util = new class {
                 ts.SymbolFlags.Namespace |
                 ts.SymbolFlags.Module |
                 ts.SymbolFlags.PropertyOrAccessor |
-                ts.SymbolFlags.ClassMember;
+                ts.SymbolFlags.ClassMember;//*/
             const formatFlags = ts.SymbolFormatFlags.WriteTypeParametersOrArguments |
                 ts.SymbolFormatFlags.UseOnlyExternalAliasing |
                 ts.SymbolFormatFlags.AllowAnyNodeKind |
@@ -288,7 +307,7 @@ const util = new class {
             return checker.symbolToString(
                 symbol,
                 node,
-                flags,
+                0xffffffff,
                 formatFlags
             );
         }
@@ -313,19 +332,31 @@ const util = new class {
                 );
             }
         }
+        return "global";
     }
     public getModuleFromDeclaration(declaration: ts.Declaration) {
-        let moduleName: string;
+        let module: string;
 
-        let node: ts.Node = declaration;
+        let node: ts.Node = declaration, flags: ts.NodeFlags, sourceFile: ts.SourceFile;
         while (node) {
-            if (node.kind === ts.SyntaxKind.ModuleDeclaration) {
-                moduleName = (<ts.ModuleDeclaration>node).name.text;
+            switch (node.kind) {
+                case ts.SyntaxKind.ModuleDeclaration:
+                    flags = node.flags;
+                    module = (<ts.ModuleDeclaration>node).name.text;
+                    if ((flags & ts.NodeFlags.Namespace) !== ts.NodeFlags.Namespace &&
+                        (flags & ts.NodeFlags.NestedNamespace) !== ts.NodeFlags.NestedNamespace
+                    ) {
+                        return module;
+                    }
+                    break;
+                case ts.SyntaxKind.SourceFile:
+                    sourceFile = <ts.SourceFile>node;
+                    break;
             }
             node = node.parent;
         }
-        if (moduleName) {
-            return moduleName;
+        if (module && sourceFile && (sourceFile.flags & ts.NodeFlags.ExportContext) !== ts.NodeFlags.ExportContext) {
+            return module;
         }
         return declaration.getSourceFile().fileName;
     }

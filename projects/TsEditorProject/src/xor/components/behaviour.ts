@@ -738,7 +738,7 @@ namespace TsBehaviourImpl {
         };
     }
     /**注册侦听器
-     * 适用于@see CS.XOR.TsMessages 回调
+     * 适用于@see csharp.XOR.TsMessages 回调
      * @param eventName 
      * @returns 
      */
