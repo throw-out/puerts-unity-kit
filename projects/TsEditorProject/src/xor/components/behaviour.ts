@@ -267,7 +267,7 @@ abstract class IOnMouse {
  * 注: 为避免多次跨语言调用, Update丶FixedUpdate丶LateUpdate方法将由BatchProxy统一管理(并非绑定到各自的GameObject上)
  * @see Standalone 如果需要绑定独立的组件, 在对应方法上添加此标注
  */
-class TsBehaviourImpl {
+class TsBehaviourConstructor {
     private __transform__: Transform;
     private __gameObject__: GameObject;
     private __component__: csharp.XOR.TsBehaviour;
@@ -281,10 +281,10 @@ class TsBehaviourImpl {
         this.__gameObject__ = trf.gameObject;
         //bind props
         if (refs === undefined || refs === true) {
-            TsBehaviourImpl.bindPropertys(this, trf.GetComponents($typeof(csharp.XOR.TsPropertys)) as csharp.System.Array$1<csharp.XOR.TsPropertys>, false);
+            TsBehaviourConstructor.bindPropertys(this, trf.GetComponents($typeof(csharp.XOR.TsPropertys)) as csharp.System.Array$1<csharp.XOR.TsPropertys>, false);
         }
         else if (refs) {
-            TsBehaviourImpl.bindPropertys(this, refs, false);
+            TsBehaviourConstructor.bindPropertys(this, refs, false);
         }
         //call constructor
         let ctor: Function = this["onConstructor"];
@@ -482,16 +482,16 @@ class TsBehaviourImpl {
             ["LateUpdate", BatchProxy.LateUpdate],
             ["FixedUpdate", BatchProxy.FixedUpdate],
         ]).map(([funcname, proxy]) => {
-            let waitAsyncComplete = Metadata.getDefineData(proto, funcname, TsBehaviourImpl.Throttle, false);
+            let waitAsyncComplete = Metadata.getDefineData(proto, funcname, TsBehaviourConstructor.Throttle, false);
             let func: Function = bind(this, funcname, waitAsyncComplete);
             if (!func) {
                 return null;
             }
-            if (Metadata.isDefine(proto, funcname, TsBehaviourImpl.Standalone)) {
+            if (Metadata.isDefine(proto, funcname, TsBehaviourConstructor.Standalone)) {
                 this.component.CreateProxy(funcname, func as csharp.System.Action);
                 return undefined
             }
-            let frameskip = Metadata.getDefineData(proto, funcname, TsBehaviourImpl.Frameskip, 0);
+            let frameskip = Metadata.getDefineData(proto, funcname, TsBehaviourConstructor.Frameskip, 0);
             return <[Function, BatchProxy, number]>[func, proxy, frameskip];
         }).filter(o => !!o);
 
@@ -532,10 +532,10 @@ class TsBehaviourImpl {
     private _bindListeners() {
         let proto = Object.getPrototypeOf(this);
         for (let funcname of Metadata.getKeys(proto)) {
-            let eventName = Metadata.getDefineData(proto, funcname, TsBehaviourImpl.Listener);
+            let eventName = Metadata.getDefineData(proto, funcname, TsBehaviourConstructor.Listener);
             if (!eventName)
                 continue;
-            let waitAsyncComplete = Metadata.getDefineData(proto, funcname, TsBehaviourImpl.Throttle, false);
+            let waitAsyncComplete = Metadata.getDefineData(proto, funcname, TsBehaviourConstructor.Throttle, false);
             let func: csharp.System.Action = bind(this, funcname, waitAsyncComplete);
             if (!func)
                 return undefined;
@@ -638,10 +638,10 @@ class TsBehaviourImpl {
     };
 }
 //无实际意义: 仅作为子类实现接口提示用
-interface TsBehaviourImpl extends IBehaviour, IGizmos, IOnPointerHandler, IOnDragHandler, IOnMouse, IOnCollision, IOnCollision2D, IOnTrigger, IOnTrigger2D {
+interface TsBehaviourConstructor extends IBehaviour, IGizmos, IOnPointerHandler, IOnDragHandler, IOnMouse, IOnCollision, IOnCollision2D, IOnTrigger, IOnTrigger2D {
 }
 
-namespace TsBehaviourImpl {
+namespace TsBehaviourConstructor {
     /**将C# TsPropertys中的属性绑定到obj对象上
      * @param instance 
      * @param refs 
@@ -696,7 +696,7 @@ namespace TsBehaviourImpl {
     export function Standalone(): PropertyDecorator {
         return (target, key: string) => {
             let proto = target.constructor.prototype;
-            if (!(proto instanceof TsBehaviourImpl)) {
+            if (!(proto instanceof TsBehaviourConstructor)) {
                 console.warn(`${target.constructor.name}: invaild decorator ${Standalone.name}`);
                 return;
             }
@@ -711,7 +711,7 @@ namespace TsBehaviourImpl {
     export function Frameskip(value: number): PropertyDecorator {
         return (target, key: string) => {
             let proto = target.constructor.prototype;
-            if (!(proto instanceof TsBehaviourImpl)) {
+            if (!(proto instanceof TsBehaviourConstructor)) {
                 console.warn(`${target.constructor.name}: invaild decorator ${Frameskip.name}`);
                 return;
             }
@@ -730,7 +730,7 @@ namespace TsBehaviourImpl {
     export function Throttle(enable: boolean): PropertyDecorator {
         return (target, key: string) => {
             let proto = target.constructor.prototype;
-            if (!(proto instanceof TsBehaviourImpl)) {
+            if (!(proto instanceof TsBehaviourConstructor)) {
                 console.warn(`${target.constructor.name}: invaild decorator ${Throttle.name}`);
                 return;
             }
@@ -745,7 +745,7 @@ namespace TsBehaviourImpl {
     export function Listener(eventName?: string): PropertyDecorator {
         return (target, key: string) => {
             let proto = target.constructor.prototype;
-            if (!(proto instanceof TsBehaviourImpl)) {
+            if (!(proto instanceof TsBehaviourConstructor)) {
                 console.warn(`${target.constructor.name}: invaild decorator ${Listener.name}`);
                 return;
             }
@@ -931,13 +931,13 @@ const Metadata = {
 function register() {
     let _g = (global ?? globalThis ?? this);
     _g.xor = _g.xor || {};
-    _g.xor.TsBehaviour = TsBehaviourImpl;
+    _g.xor.TsBehaviour = TsBehaviourConstructor;
 }
 register();
 
 /**接口声明 */
 declare global {
     namespace xor {
-        class TsBehaviour extends TsBehaviourImpl { }
+        class TsBehaviour extends TsBehaviourConstructor { }
     }
 }

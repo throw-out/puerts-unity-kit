@@ -23,8 +23,7 @@ namespace XOR
             click |= GUILayout.Button("主线程", Skin.label);
             click |= GUILayout.Button("●"
                 , !EditorApplicationUtil.IsWorkerRunning() ? Skin.labelGray : EditorApplicationUtil.IsInitializing() ? Skin.labelYellow : Skin.labelGreen
-                , GUILayout.ExpandWidth(false)
-            );
+                , GUILayout.ExpandWidth(false));
             click |= GUILayout.Button("工作线程", Skin.label);
             GUILayout.EndHorizontal();
             GUILayout.EndVertical();

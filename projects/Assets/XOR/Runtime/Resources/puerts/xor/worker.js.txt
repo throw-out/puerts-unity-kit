@@ -5,8 +5,13 @@ const puerts_1 = require("puerts");
 let List_Object = (0, puerts_1.$generic)(csharp.System.Collections.Generic.List$1, csharp.System.Object);
 const INVOKE_TICK = Symbol("INVOKE_TICK");
 const CLOSE_EVENT = "__e_close__", REMOTE_EVENT = "__e_remote__", RESULT_EVENT = "__e_result__";
+/**
+ * 跨JsEnv实例交互封装
+ */
 class ThreadWorkerImpl {
+    /**线程是否正在工作 */
     get isAlive() { return this.worker.IsAlive; }
+    /**线程是否已初始化完成 */
     get isInitialized() { return this.worker.IsInitialized; }
     get source() { return this.worker; }
     constructor(loader, options) {
@@ -36,6 +41,11 @@ class ThreadWorkerImpl {
             this.post(CLOSE_EVENT);
         }
     }
+    /**异步调用事件, 无返回值
+     * @param eventName
+     * @param data
+     * @param notResult 不获取返回值
+     */
     post(eventName, data, notResult) {
         let edata;
         if (data !== undefined && data !== null && data !== void 0) {
@@ -59,6 +69,12 @@ class ThreadWorkerImpl {
             });
         }
     }
+    /**同步调用事件, 并立即获取返回值
+     * @param eventName
+     * @param data
+     * @param throwOnError
+     * @returns
+     */
     postSync(eventName, data, throwOnError = true) {
         let edata;
         if (data !== undefined && data !== null && data !== void 0) {
@@ -71,11 +87,16 @@ class ThreadWorkerImpl {
         else {
             edata = this.worker.Syncr.PostToMainThread(eventName, edata, throwOnError);
         }
+        //Result
         if (edata !== undefined && edata !== null && edata !== void 0) {
             result = this.unpack(edata);
         }
         return result;
     }
+    /**执行一段代码, 只能由主线程调用
+     * @param chunk
+     * @param chunkName
+     */
     eval(chunk, chunkName) {
         if (!this.mainThread || xor.globalWorker && xor.globalWorker.worker === this.worker)
             throw new Error("Invalid operation ");
@@ -87,11 +108,17 @@ class ThreadWorkerImpl {
         this._on(eventName, fn);
         return this;
     }
+    /**监听事件信息(仅回调一次后自动取消注册)
+     * @param eventName
+     * @param fn
+     * @returns
+     */
     once(eventName, fn) {
         fn[INVOKE_TICK] = 1;
         this._on(eventName, fn);
         return this;
     }
+    /**移除指定监听事件 */
     remove(eventName, fn) {
         let funcs = this.events.get(eventName);
         if (funcs) {
@@ -101,6 +128,7 @@ class ThreadWorkerImpl {
             }
         }
     }
+    /**移除所有监听事件 */
     removeAll(eventName) {
         if (eventName)
             this.events.delete(eventName);
@@ -141,7 +169,7 @@ class ThreadWorkerImpl {
             return undefined;
         };
         let onmessage = (eventName, data, hasReturn = true) => {
-            if (this._isResultId(eventName)) {
+            if (this._isResultId(eventName)) { //post return data event
                 let error, result;
                 if (data.type === csharp.XOR.ThreadWorker.ValueType.Error) {
                     error = new Error(`${data.value}`);
@@ -200,12 +228,15 @@ class ThreadWorkerImpl {
             }
         }
     }
+    //创建remote proxy, 实现在子线程内访问Unity Api
     registerRemoteProxy() {
         let createProxy = (namespace) => {
             return new Proxy(Object.create(null), {
+                //getter事件
                 get: (target, property) => {
                     if (!(property in target) && typeof (property) === "string") {
                         let fullName = namespace ? (namespace + '.' + property) : property;
+                        //同步调用Unity Api
                         if (fullName.startsWith("UnityEngine") && fullName !== "UnityEngine.Debug") {
                             let cls = this.postSync(REMOTE_EVENT, fullName);
                             if (cls) {
@@ -227,11 +258,26 @@ class ThreadWorkerImpl {
                     }
                     return target[property];
                 },
+                /*
+                //setter 事件
+                set: (target, property, newValue) => {
+                    return false;
+                }
+                //method call事件
+                apply: (target) => {
+
+                },
+                //new() 构造函数事件
+                construct: (target, argArray, newTarget) => {
+                    return null;
+                }
+                //*/
             });
         };
         let puerts = require("puerts");
         puerts.registerBuildinModule('csharp', createProxy(undefined));
     }
+    //处理remote request, 由主线程调用
     executeRemoteResolver(data) {
         if (typeof data !== "string")
             return undefined;
@@ -240,7 +286,7 @@ class ThreadWorkerImpl {
             if (result && name)
                 result = result[name];
         });
-        if (this._validate(result) === PackValidate.Unsupport) {
+        if ( /**typeof (result) === "object" && */this._validate(result) === PackValidate.Unsupport) {
             result = undefined;
         }
         return result;
@@ -291,8 +337,10 @@ class ThreadWorkerImpl {
         else {
             switch (t) {
                 case "object":
+                    //添加对象引用
                     let id = refs.id++;
                     refs.mapping.set(data, id);
+                    //创建对象引用
                     result.id = id;
                     if (data instanceof csharp.System.Object) {
                         result.type = csharp.XOR.ThreadWorker.ValueType.Value;
@@ -345,7 +393,7 @@ class ThreadWorkerImpl {
                 {
                     result = {};
                     if (Id > 0)
-                        refs.set(Id, result);
+                        refs.set(Id, result); //add object ref
                     let list = Value;
                     for (let i = 0; i < list.Count; i++) {
                         let member = list.get_Item(i);
@@ -357,7 +405,7 @@ class ThreadWorkerImpl {
                 {
                     result = [];
                     if (Id > 0)
-                        refs.set(Id, result);
+                        refs.set(Id, result); //add object ref
                     let list = Value;
                     for (let i = 0; i < list.Count; i++) {
                         let member = list.get_Item(i);
@@ -368,7 +416,7 @@ class ThreadWorkerImpl {
             case csharp.XOR.ThreadWorker.ValueType.ArrayBuffer:
                 result = csharp.XOR.BufferUtil.ToBuffer(Value);
                 if (Id > 0)
-                    refs.set(Id, result);
+                    refs.set(Id, result); //add object ref
                 break;
             case csharp.XOR.ThreadWorker.ValueType.RefObject:
                 if (refs.has(Value)) {
@@ -381,16 +429,20 @@ class ThreadWorkerImpl {
             case csharp.XOR.ThreadWorker.ValueType.Json:
                 result = JSON.parse(data.value);
                 if (Id > 0)
-                    refs.set(Id, result);
+                    refs.set(Id, result); //add object ref
                 break;
             default:
                 result = Value;
                 if (Id > 0)
-                    refs.set(Id, result);
+                    refs.set(Id, result); //add object ref
                 break;
         }
         return result;
     }
+    /**验证data数据
+     * @param data
+     * @returns 0:纯json数据, 1:引用UnityObject, 2:包含js functon/js symbol等参数
+     */
     _validate(data, refs) {
         let t = typeof (data);
         switch (t) {
@@ -404,7 +456,7 @@ class ThreadWorkerImpl {
                 }
                 if (!refs)
                     refs = new WeakSet();
-                if (refs.has(data)) {
+                if (refs.has(data)) { //引用自身
                     return PackValidate.Reference;
                 }
                 refs.add(data);
@@ -433,6 +485,9 @@ class ThreadWorkerImpl {
         }
         return PackValidate.Json;
     }
+    /**postSync返回值接口事件名
+     * @returns
+     */
     _getResultId() {
         if (!this._postIndex)
             this._postIndex = 1;

@@ -20,19 +20,13 @@ namespace XOR
             Program program = EditorApplication.Instance?.Program;
             if (program == null)
                 return "Initializing";
-            switch (program.state)
+
+            string stateStr = Enum.GetName(typeof(ProgramState), program.state);
+            if (!string.IsNullOrEmpty(program.stateMessage))
             {
-                case ProgramState.Pending:
-                    return "Pending";
-                //break;
-                case ProgramState.Compiling:
-                    return "Compiling";
-                //break;
-                case ProgramState.Compiled:
-                    return "Compiled";
-                    //break;
+                stateStr += $"({program.stateMessage})";
             }
-            return "UNKNOWN";
+            return stateStr;
         }
         public static string GetScripts()
         {
@@ -81,7 +75,7 @@ namespace XOR
                     string newPath = GUIUtil.RenderSelectProject(projectConfig);
                     if (string.IsNullOrEmpty(newPath))
                     {
-                        Prefs.Enable.SetValue(false); 
+                        Prefs.Enable.SetValue(false);
                         return;
                     }
                     projectConfig = PathUtil.GetFullPath(newPath);

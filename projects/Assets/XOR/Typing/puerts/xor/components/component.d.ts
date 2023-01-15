@@ -1,14 +1,35 @@
-declare class TsComponentImpl extends xor.TsBehaviour {
+declare class TsComponentConstructor extends xor.TsBehaviour {
 }
-declare namespace TsComponentImpl {
-    function guid(guid: number | string): ClassDecorator;
-    function route(path: string): ClassDecorator;
-    function fieldType(): PropertyDecorator;
-}
+/**接口声明 */
 declare global {
     namespace xor {
-        class TsComponent extends TsComponentImpl {
+        class TsComponent extends TsComponentConstructor {
         }
+        /**定义组件guid(全局唯一性)
+         * @param guid
+         * @example
+         * ```
+         * //⚠⚠⚠警告: 此语句由xor自动生成并与class/enum声明绑定, 用户不应该手动创建丶修改丶移动或删除
+         * \@xor.guid('global uniqure identifier')
+         * export class Example extends xor.TsComponent{
+         *      //......
+         * }
+         * ```
+         */
+        function guid(guid: number | string): ClassDecorator;
+        /**定义组件别名(后续可由此名称Get/Add TsComponent)
+         * @param path
+         * @example
+         * ```
+         * //⚠⚠⚠警告: 此语句由xor自动生成并与class/enum声明绑定, 用户不应该手动创建丶修改丶移动或删除
+         * \@xor.route('global unique arbitrary string')
+         * export class Example extends xor.TsComponent{
+         *      //......
+         * }
+         * ```
+         */
+        function route(path: string): ClassDecorator;
+        function field(): PropertyDecorator;
     }
 }
 export {};

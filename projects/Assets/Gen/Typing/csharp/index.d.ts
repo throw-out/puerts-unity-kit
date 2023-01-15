@@ -26055,9 +26055,9 @@ declare namespace CS {
             public ChildThreadHandler: System.Func$3<string, XOR.ThreadWorker.EventData, XOR.ThreadWorker.EventData>
             public get IsAlive(): boolean;
             public get IsInitialized(): boolean;
-            public get ThreadId(): number;
             public get Syncr(): XOR.ThreadSyncr;
             public get Disposed(): boolean;
+            public get ThreadId(): number;
             public get Env(): Puerts.JsEnv;
             public get Loader(): Puerts.ILoader;
             public get Options(): XOR.ThreadOptions;
@@ -30307,6 +30307,7 @@ declare namespace CS {
             public errors: number
             public scripts: number
             public state: XOR.Services.ProgramState
+            public stateMessage: string
             public get Statements(): System.Collections.Generic.Dictionary$2<string, XOR.Services.Statement>;
             public GetStatement($guid: string, $create?: boolean): XOR.Services.Statement
             public AddStatement($statement: XOR.Services.Statement): void
@@ -30322,7 +30323,7 @@ declare namespace CS {
             public FileChanged: System.Action$1<string>
             public constructor()
         }
-        enum ProgramState { Pending = 0, Error = 1, Compiling = 2, Compiled = 3 }
+        enum ProgramState { Pending = 0, Scanning = 1, Compiling = 2, Analyzing = 3, Allocating = 4, Completed = 5, Error = 6 }
         class Statement extends System.Object {
             protected [__keep_incompatibility]: never;
             public guid: string

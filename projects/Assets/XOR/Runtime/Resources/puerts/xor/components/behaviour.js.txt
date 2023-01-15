@@ -8,6 +8,9 @@ var Application = csharp.UnityEngine.Application;
 var Time = csharp.UnityEngine.Time;
 const { File, Path } = csharp.System.IO;
 const isEditor = Application.isEditor;
+/**
+ * 详情参阅: https://docs.unity3d.com/cn/current/ScriptReference/MonoBehaviour.html
+ */
 class IBehaviour {
 }
 class IGizmos {
@@ -26,18 +29,26 @@ class IOnTrigger2D {
 }
 class IOnMouse {
 }
-class TsBehaviourImpl {
+/**
+ * 沿用C# MonoBehaviour习惯, 将OnEnable丶Update丶OnEnable等方法绑定到C#对象上, Unity将在生命周期内调用
+ *
+ * 注: 为避免多次跨语言调用, Update丶FixedUpdate丶LateUpdate方法将由BatchProxy统一管理(并非绑定到各自的GameObject上)
+ * @see Standalone 如果需要绑定独立的组件, 在对应方法上添加此标注
+ */
+class TsBehaviourConstructor {
     constructor(trf, refs) {
         if (trf instanceof GameObject)
             trf = trf.transform;
         this.__transform__ = trf;
         this.__gameObject__ = trf.gameObject;
+        //bind props
         if (refs === undefined || refs === true) {
-            TsBehaviourImpl.bindPropertys(this, trf.GetComponents((0, puerts_1.$typeof)(csharp.XOR.TsPropertys)), false);
+            TsBehaviourConstructor.bindPropertys(this, trf.GetComponents((0, puerts_1.$typeof)(csharp.XOR.TsPropertys)), false);
         }
         else if (refs) {
-            TsBehaviourImpl.bindPropertys(this, refs, false);
+            TsBehaviourConstructor.bindPropertys(this, refs, false);
         }
+        //call constructor
         let ctor = this["onConstructor"];
         if (ctor && typeof (ctor) === "function") {
             try {
@@ -52,7 +63,9 @@ class TsBehaviourImpl {
         this._bindListeners();
         this._bindModuleForEditor();
     }
+    //协程
     StartCoroutine(routine, ...args) {
+        //传入了js Generator方法, 转为C#迭代器对象
         var iterator = cs_generator(routine, ...args);
         return this.component.StartCoroutine(iterator);
     }
@@ -62,13 +75,19 @@ class TsBehaviourImpl {
     StopAllCoroutines() {
         this.component.StopAllCoroutines();
     }
+    /**添加Unity Message listener
+     * @param eventName
+     * @param fn
+     */
     addListener(eventName, fn) {
+        //create message proxy
         if (!this.__listenerProxy__ || this.__listenerProxy__.Equals(null)) {
             this.__listenerProxy__ = (this.__gameObject__.GetComponent((0, puerts_1.$typeof)(csharp.XOR.TsMessages)) ??
                 this.__gameObject__.AddComponent((0, puerts_1.$typeof)(csharp.XOR.TsMessages)));
             this.__listenerProxy__.emptyCallback = () => this._invokeListeners('');
             this.__listenerProxy__.callback = (name, args) => this._invokeListeners(name, args);
         }
+        //add listeners
         if (!this.__listeners__) {
             this.__listeners__ = new Map();
         }
@@ -81,6 +100,10 @@ class TsBehaviourImpl {
         }
         functions.push(fn);
     }
+    /**移除Unity Message listener
+     * @param eventName
+     * @param fn
+     */
     removeListener(eventName, fn) {
         if (!this.__listeners__)
             return;
@@ -99,6 +122,9 @@ class TsBehaviourImpl {
                 this.clearListeners();
         }
     }
+    /**移除所有Unity Message listener
+     * @param eventName
+     */
     removeAllListeners(eventName) {
         if (!this.__listeners__)
             return;
@@ -108,6 +134,7 @@ class TsBehaviourImpl {
         if (this.__listeners__.size === 0)
             this.clearListeners();
     }
+    /**清空Unity Message listener */
     clearListeners() {
         if (!this.__listeners__)
             return;
@@ -132,11 +159,13 @@ class TsBehaviourImpl {
         }
         functions.forEach(fn => fn.apply(undefined, args));
     }
+    //protected
     disponse() {
         this.__gameObject__ = undefined;
         this.__transform__ = undefined;
         this.__component__ = undefined;
     }
+    //绑定Proxy方法
     _bindProxies() {
         ["Awake", "Start", "OnDestroy"].forEach(name => {
             let func = bind(this, name);
@@ -169,18 +198,21 @@ class TsBehaviourImpl {
                 this.component.CreateProxy(name, func);
             }
         });
+        //Action<bool>
         ["OnApplicationFocus", "OnApplicationPause", "OnBecameVisible"].forEach(name => {
             let func = bind(this, name);
             if (func) {
                 this.component.CreateProxyForBool(name, func);
             }
         });
+        //Action<PointerEventData>
         ["OnPointerClick", "OnPointerDown", "OnPointerEnter", "OnPointerExit", "OnPointerUp"].forEach(name => {
             let func = bind(this, name);
             if (func) {
                 this.component.CreateProxyForEventData(name, func);
             }
         });
+        //触发器方法 Collision Trigger
         const proxyCfg = [
             ["CreateProxyForDrag", "OnBeginDrag", "OnDrag", "OnEndDrag"],
             ["CreateProxyForCollision", "OnCollisionEnter", "OnCollisionStay", "OnCollisionExit"],
@@ -197,21 +229,22 @@ class TsBehaviourImpl {
     }
     _bindUpdateProxies() {
         let proto = Object.getPrototypeOf(this);
+        //Update方法
         const proxies = [
             ["Update", BatchProxy.Update],
             ["LateUpdate", BatchProxy.LateUpdate],
             ["FixedUpdate", BatchProxy.FixedUpdate],
         ].map(([funcname, proxy]) => {
-            let waitAsyncComplete = Metadata.getDefineData(proto, funcname, TsBehaviourImpl.Throttle, false);
+            let waitAsyncComplete = Metadata.getDefineData(proto, funcname, TsBehaviourConstructor.Throttle, false);
             let func = bind(this, funcname, waitAsyncComplete);
             if (!func) {
                 return null;
             }
-            if (Metadata.isDefine(proto, funcname, TsBehaviourImpl.Standalone)) {
+            if (Metadata.isDefine(proto, funcname, TsBehaviourConstructor.Standalone)) {
                 this.component.CreateProxy(funcname, func);
                 return undefined;
             }
-            let frameskip = Metadata.getDefineData(proto, funcname, TsBehaviourImpl.Frameskip, 0);
+            let frameskip = Metadata.getDefineData(proto, funcname, TsBehaviourConstructor.Frameskip, 0);
             return [func, proxy, frameskip];
         }).filter(o => !!o);
         if (proxies.length > 0) {
@@ -228,6 +261,7 @@ class TsBehaviourImpl {
                 enabled = false;
                 proxies.forEach(([func, batch, frameskip]) => batch.removeListener(func, frameskip));
             };
+            //生命周期管理
             let proxy = this.component.GetProxy("OnEnable");
             if (!proxy || proxy.Equals(null))
                 this.component.CreateProxy("OnEnable", enable);
@@ -252,34 +286,40 @@ class TsBehaviourImpl {
     _bindListeners() {
         let proto = Object.getPrototypeOf(this);
         for (let funcname of Metadata.getKeys(proto)) {
-            let eventName = Metadata.getDefineData(proto, funcname, TsBehaviourImpl.Listener);
+            let eventName = Metadata.getDefineData(proto, funcname, TsBehaviourConstructor.Listener);
             if (!eventName)
                 continue;
-            let waitAsyncComplete = Metadata.getDefineData(proto, funcname, TsBehaviourImpl.Throttle, false);
+            let waitAsyncComplete = Metadata.getDefineData(proto, funcname, TsBehaviourConstructor.Throttle, false);
             let func = bind(this, funcname, waitAsyncComplete);
             if (!func)
                 return undefined;
             this.addListener(eventName, func);
         }
     }
+    //绑定脚本内容
     _bindModuleForEditor() {
         if (!isEditor || !this.__gameObject__ || this.__gameObject__.Equals(null))
             return;
+        //堆栈信息
         let stack = new Error().stack
             .replace(/\r\n/g, "\n")
             .split('\n')
             .slice(2)
             .join("\n");
+        //class名称
         let className = Object.getPrototypeOf(this).constructor.name;
         let m_ModuleName, m_ModulePath, m_Line, m_Column;
+        //匹配new构造函数
+        //let regex = /at [a-zA-z0-9#$._ ]+ \(([a-zA-Z0-9:/\\._ ]+(.js|.ts))\:([0-9]+)\:([0-9]+)\)/g;
         let regex = /at [a-zA-z0-9#$._ ]+ \(([^\n\r\*\"\|\<\>]+(.js|.cjs|.mjs|.ts|.mts))\:([0-9]+)\:([0-9]+)\)/g;
         let match;
         while (match = regex.exec(stack)) {
-            let isConstructor = match[0].includes("at new ");
+            let isConstructor = match[0].includes("at new "); //是否调用构造对象函数
             if (isConstructor) {
                 let path = match[1].replace(/\\/g, "/");
                 let line = match[3], column = match[4];
                 if (path.endsWith(".js") || path.endsWith(".cjs") || path.endsWith(".mjs")) {
+                    //class在声明变量时赋初值, 构造函数中sourceMap解析会失败: 故此处尝试读取js.map文件手动解析
                     try {
                         let mapPath = path + ".map", tsPath;
                         let sourceMap = JSON.parse(File.Exists(mapPath) ? File.ReadAllText(mapPath) : "");
@@ -289,6 +329,7 @@ class TsBehaviourImpl {
                         if (File.Exists(tsPath)) {
                             path = tsPath;
                             line = column = "0";
+                            //尝试寻常class信息
                             let lines = File.ReadAllLines(tsPath);
                             for (let i = 0; i < lines.Length; i++) {
                                 let content = lines.get_Item(i);
@@ -324,6 +365,7 @@ class TsBehaviourImpl {
             console.warn(`Unresolved module: ${className}\n${stack}`);
         }
     }
+    //Getter 丶 Setter
     get transform() { return this.__transform__; }
     get gameObject() { return this.__gameObject__; }
     get enabled() { return this.component.enabled; }
@@ -352,7 +394,12 @@ class TsBehaviourImpl {
     }
     ;
 }
-(function (TsBehaviourImpl) {
+(function (TsBehaviourConstructor) {
+    /**将C# TsPropertys中的属性绑定到obj对象上
+     * @param instance
+     * @param refs
+     * @param destroy
+     */
     function bindPropertys(instance, refs, destroy) {
         if (refs) {
             let refsList = new Array();
@@ -373,6 +420,7 @@ class TsBehaviourImpl {
                 let props = ref.Pairs;
                 for (let i = 0; i < props.Length; i++) {
                     let prop = props.get_Item(i);
+                    //if (!prop) continue;
                     if (isEditor && prop.key in instance) {
                         console.warn(`Object ${instance}(${instance["name"]}) already exists prop '${prop.key}' ---> ${instance[prop.key]}`);
                     }
@@ -392,22 +440,31 @@ class TsBehaviourImpl {
             });
         }
     }
-    TsBehaviourImpl.bindPropertys = bindPropertys;
+    TsBehaviourConstructor.bindPropertys = bindPropertys;
+    /**以独立组件的方式调用
+     * 适用于Update丶LateUpdate和FixedUpdate方法, 默认以BatchProxy管理调用以满足更高性能要求
+     * @returns
+     */
     function Standalone() {
         return (target, key) => {
             let proto = target.constructor.prototype;
-            if (!(proto instanceof TsBehaviourImpl)) {
+            if (!(proto instanceof TsBehaviourConstructor)) {
                 console.warn(`${target.constructor.name}: invaild decorator ${Standalone.name}`);
                 return;
             }
             Metadata.define(proto, key, Standalone);
         };
     }
-    TsBehaviourImpl.Standalone = Standalone;
+    TsBehaviourConstructor.Standalone = Standalone;
+    /**跨帧调用(全局共用/非单独的frameskip分区)
+     * 适用于Update丶LateUpdate和FixedUpdate方法, 仅允许BatchProxy管理调用(与Standalone组件冲突)
+     * @param value  每n帧调用一次(<不包含>大于1时才有效)
+     * @returns
+     */
     function Frameskip(value) {
         return (target, key) => {
             let proto = target.constructor.prototype;
-            if (!(proto instanceof TsBehaviourImpl)) {
+            if (!(proto instanceof TsBehaviourConstructor)) {
                 console.warn(`${target.constructor.name}: invaild decorator ${Frameskip.name}`);
                 return;
             }
@@ -418,30 +475,41 @@ class TsBehaviourImpl {
             Metadata.define(proto, key, Frameskip, value);
         };
     }
-    TsBehaviourImpl.Frameskip = Frameskip;
+    TsBehaviourConstructor.Frameskip = Frameskip;
+    /**节流方法
+     * 适用于async/Promise方法, 在上一次调用完成后才会再次调用(Awake丶Update丶FixedUpdate...)
+     * @param enable
+     * @returns
+     */
     function Throttle(enable) {
         return (target, key) => {
             let proto = target.constructor.prototype;
-            if (!(proto instanceof TsBehaviourImpl)) {
+            if (!(proto instanceof TsBehaviourConstructor)) {
                 console.warn(`${target.constructor.name}: invaild decorator ${Throttle.name}`);
                 return;
             }
             Metadata.define(proto, key, Throttle, !!enable);
         };
     }
-    TsBehaviourImpl.Throttle = Throttle;
+    TsBehaviourConstructor.Throttle = Throttle;
+    /**注册侦听器
+     * 适用于@see csharp.XOR.TsMessages 回调
+     * @param eventName
+     * @returns
+     */
     function Listener(eventName) {
         return (target, key) => {
             let proto = target.constructor.prototype;
-            if (!(proto instanceof TsBehaviourImpl)) {
+            if (!(proto instanceof TsBehaviourConstructor)) {
                 console.warn(`${target.constructor.name}: invaild decorator ${Listener.name}`);
                 return;
             }
             Metadata.define(proto, key, Listener, eventName ?? key);
         };
     }
-    TsBehaviourImpl.Listener = Listener;
-})(TsBehaviourImpl || (TsBehaviourImpl = {}));
+    TsBehaviourConstructor.Listener = Listener;
+})(TsBehaviourConstructor || (TsBehaviourConstructor = {}));
+/**Update批量调用 */
 class BatchProxy {
     static deltaTime() { return Time.deltaTime; }
     static fixedDeltaTime() { return Time.fixedDeltaTime; }
@@ -477,12 +545,14 @@ class BatchProxy {
         this.caller = caller;
         this.caller.callback = (...args) => {
             let dt = timeGetter ? timeGetter() : 0;
+            //每帧调用
             if (this.efHanlders.length > 0) {
                 let _args = [...args, dt];
                 for (let method of this.efHanlders) {
                     method.apply(undefined, _args);
                 }
             }
+            //跨帧调用
             for (const state of this.sfHandlers.values()) {
                 state.dt += dt;
                 if ((--state.tick) > 0)
@@ -519,9 +589,13 @@ class BatchProxy {
         }
     }
 }
+/**
+ * 将对象与方法绑定
+ */
 function bind(thisArg, funcname, waitAsyncComplete) {
     const func = typeof (funcname) === "string" ? thisArg[funcname] : funcname;
     if (func !== undefined && typeof (func) === "function") {
+        //return (...args: any[]) => func.call(thisArg, ...srcArgs, ...args);
         if (waitAsyncComplete) {
             let executing = false;
             return function (...args) {
@@ -529,7 +603,7 @@ function bind(thisArg, funcname, waitAsyncComplete) {
                     return;
                 let result = func.call(thisArg, ...args);
                 if (result instanceof Promise) {
-                    executing = true;
+                    executing = true; //wait async function finish
                     result.finally(() => executing = false);
                 }
                 return result;
@@ -541,6 +615,7 @@ function bind(thisArg, funcname, waitAsyncComplete) {
     }
     return undefined;
 }
+/**创建C#迭代器 */
 function cs_generator(func, ...args) {
     let generator = undefined;
     if (typeof (func) === "function") {
@@ -607,7 +682,7 @@ const Metadata = {
 function register() {
     let _g = (global ?? globalThis ?? this);
     _g.xor = _g.xor || {};
-    _g.xor.TsBehaviour = TsBehaviourImpl;
+    _g.xor.TsBehaviour = TsBehaviourConstructor;
 }
 register();
 //# sourceMappingURL=behaviour.js.map

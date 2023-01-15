@@ -1,6 +1,7 @@
 import * as csharp from "csharp";
 import * as ts from "typescript";
 
+import Type = csharp.System.Type;
 const { File, Directory, Path } = csharp.System.IO;
 
 type ConfigFile = {
@@ -25,10 +26,17 @@ export function readConfigFile(path: string): ConfigFile {
 
 /**读取并解析tsconfig.json文件, 获取编译的脚本等
  * @param tsconfigFile 
- * @param maxDepth 
+ * @param options 
  * @returns 
  */
-export function parseConfigFile(tsconfigFile: string, maxDepth: number = 10): ts.ParsedCommandLine {
+export function parseConfigFile(tsconfigFile: string, options?: {
+    /**文件夹搜索最大深度, default:100  */
+    maxDepth?: number;
+    /**文件搜索状态回调 */
+    status?: (folders: number, files: number) => void;
+}): ts.ParsedCommandLine {
+    let { maxDepth = 100, status } = options ?? {};
+
     const configFile = readConfigFile(tsconfigFile);
     const jsonConfigFile = ts.readJsonConfigFile(tsconfigFile, (path) => File.ReadAllText(path));
 
@@ -49,10 +57,16 @@ export function parseConfigFile(tsconfigFile: string, maxDepth: number = 10): ts
         }
     }
 
+    let folderCount = 0, fileCount = 0;
     const readDirectory = (rootDir: string, extensions: string[], excludes: string[], includes: string[], depth?: number) => {
         if (depth && depth > maxDepth)
             return null;
         const results = new Array<string>();
+
+        if (status) {
+            folderCount++;
+            status(folderCount, fileCount);
+        }
 
         let files = Directory.GetFiles(rootDir);
         for (let i = 0; i < files.Length; i++) {
@@ -61,6 +75,10 @@ export function parseConfigFile(tsconfigFile: string, maxDepth: number = 10): ts
                 continue;
             }
             results.push(file);
+            if (status) {
+                fileCount++;
+                status(folderCount, fileCount);
+            }
         }
 
         let dirs = Directory.GetDirectories(rootDir);
@@ -88,10 +106,11 @@ export class Program {
     private readonly checker: ts.TypeChecker;
 
     private readonly classes: Map<string, ts.ClassDeclaration>;
-
+    private readonly classDecorator: Map<string, ClassDefine>;
 
     constructor(cp: csharp.XOR.Services.Program, rootNames: string[], options: ts.CompilerOptions) {
         cp.state = csharp.XOR.Services.ProgramState.Compiling;
+        cp.stateMessage = '';
 
         this.cp = cp;
         this.program = ts.createProgram({
@@ -104,25 +123,28 @@ export class Program {
         });
         this.checker = this.program.getTypeChecker();
         this.classes = new Map();
+        this.classDecorator = new Map();
 
-        cp.state = csharp.XOR.Services.ProgramState.Compiled;
-
-        this.resolveSources().then(() => this.test());
+        this.resolves();
     }
-    public getChecker() { return this.checker; }
+    private async resolves() {
+        await this.resolveSources();
+        await this.resolveComponents();
+    }
 
-
+    //#region SourceFile 处理流程
     private async resolveSources() {
         let sourceFiles = this.program.getSourceFiles();
         this.cp.errors = 0;
         this.cp.scripts = sourceFiles.length;
 
+        this.cp.state = csharp.XOR.Services.ProgramState.Analyzing;
+        this.cp.stateMessage = 'file';
         //开始解析文件
         for (const source of sourceFiles) {
             if (!source.statements)
                 continue;
             await new Promise<void>(resolve => setTimeout(resolve, 10));
-
             await this.resolveStatements(source.statements);
         }
     }
@@ -159,25 +181,58 @@ export class Program {
             }
         }
     }
+    //#endregion
 
-    private test() {
+
+    //#region   Decorator定义处理流程
+    private async resolveComponents() {
+        this.cp.state = csharp.XOR.Services.ProgramState.Analyzing;
+        this.cp.stateMessage = 'component';
+
         for (let [absoluteName, cd] of this.classes) {
-            if (absoluteName.includes("System.Object")) {
-                let d = this.getModuleFromNode(cd);
-            }
-            if (absoluteName.includes("xor.TsComponent")) {
-                let d = this.getModuleFromNode(cd);
+            if (!this.isInheritFromTsComponent(cd) || this.isTsComponent(cd))
+                continue;
+            console.log(absoluteName);
 
-                let a = this.isInheritFromTsComponent(cd);
-                console.log(a);
+            let define: ClassDefine = {};
+            this.resolveComponentDecorator(cd, define);
+            if (!define.guid) {
+
+            }
+            this.classDecorator.set(absoluteName, define);
+        }
+    }
+    private resolveComponentDecorator(node: ts.ClassDeclaration, define: ClassDefine) {
+        for (let modifier of node.modifiers) {
+            if (modifier.kind !== ts.SyntaxKind.Decorator)
+                continue;
+            let callExpression = (<ts.Decorator>modifier).expression;
+            if (callExpression.kind !== ts.SyntaxKind.CallExpression)
+                continue;
+
+            let { expression: target, arguments: args } = <ts.CallExpression>callExpression;
+            let fullName = this.getFullName(target), module = this.getModuleFromNode(target);
+            if (module !== "global")
+                continue;
+            switch (fullName) {
+                case "xor.guid":
+                    define.guid = (<ts.StringLiteral>args[0]).text;
+                    break;
+                case "xor.route":
+                    define.route = (<ts.StringLiteral>args[0]).text;
+                    break;
             }
         }
     }
+    //#endregion
 
+
+    private isTsComponent(node: ts.ClassDeclaration) {
+        return this.getFullName(node) === "xor.TsComponent" &&
+            this.getModuleFromNode(node) === "global";
+    }
     private isInheritFromTsComponent(node: ts.ClassDeclaration) {
-        if (this.getFullName(node) === "xor.TsComponent" &&
-            this.getModuleFromNode(node) === "global"
-        ) {
+        if (this.isTsComponent(node)) {
             return true;
         }
         //检测继承类
@@ -189,14 +244,32 @@ export class Program {
                         if (this.isInheritFromTsComponent(cd))
                             return true;
                     } else {
-                        console.warn(`无效的继承对象:${this.getAbsoluteName(ewta.expression)}`);
+                        //console.warn(`无效的继承对象:${this.getAbsoluteName(ewta.expression)}`);
                     }
                 }
             }
         }
         return false;
     }
-    /**以`moduleName + namespaceName +typeName`组合绝对名称
+    private getCharpType(node: ts.Node, underlyingType?: Type) {
+        let module = this.getModuleFromNode(node),
+            fullName = this.getFullName(node);
+        if (module === "global") {
+            if (!fullName.startsWith("CS."))
+                return null;
+            fullName = fullName.substring(3);
+        } else if (module !== "csharp") {
+            return null;
+        }
+        let type = Type.GetType(fullName, false);
+        if (type && underlyingType && underlyingType.IsAssignableFrom(type)) {
+            type = underlyingType;
+        }
+        return type;
+    }
+
+    //#region 类型方法
+    /**获取类型唯一值名称, 以`moduleName + namespaceName +typeName`组合并返回
      * @param node 
      * @returns 
      */
@@ -280,16 +353,23 @@ export class Program {
             }
             node = node.parent;
         }
-        //sourceFile为全局声明模块, 且存在顶层namspace声明
-        if (module && (declaration.getSourceFile().flags & ts.NodeFlags.ExportContext) !== ts.NodeFlags.ExportContext) {
+        //sourceFile为全局声明模块(非扩大声明模块), 且存在顶层namspace声明
+        let sourceFile = declaration.getSourceFile();
+        if (module && (sourceFile.flags & ts.NodeFlags.ExportContext) === ts.NodeFlags.ExportContext) {
             return module;
         }
-        return declaration.getSourceFile().fileName;
+        return sourceFile.fileName;
     }
+    //#endregion
 }
 
 /**访问修饰符: public/private/protected */
 type AccessModifier = ts.SyntaxKind.PublicKeyword | ts.SyntaxKind.PrivateKeyword | ts.SyntaxKind.ProtectedKeyword;
+
+type ClassDefine = {
+    guid?: string;
+    route?: string;
+}
 
 const util = new class {
     public getAccessModifier(modifiers: ReadonlyArray<ts.ModifierLike>): AccessModifier {

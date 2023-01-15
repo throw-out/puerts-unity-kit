@@ -1,28 +1,26 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-class TsComponentImpl extends xor.TsBehaviour {
+class TsComponentConstructor extends xor.TsBehaviour {
 }
-(function (TsComponentImpl) {
-    function guid(guid) {
-        return (target) => {
-        };
-    }
-    TsComponentImpl.guid = guid;
-    function route(path) {
-        return (target) => {
-        };
-    }
-    TsComponentImpl.route = route;
-    function fieldType() {
-        return (target, key) => {
-        };
-    }
-    TsComponentImpl.fieldType = fieldType;
-})(TsComponentImpl || (TsComponentImpl = {}));
+function guid(guid) {
+    return (target) => {
+    };
+}
+function route(path) {
+    return (target) => {
+    };
+}
+function field() {
+    return (target, key) => {
+    };
+}
 function register() {
     let _g = (global ?? globalThis ?? this);
     _g.xor = _g.xor || {};
-    _g.xor.TsComponent = TsComponentImpl;
+    _g.xor.TsComponent = TsComponentConstructor;
+    _g.xor.guid = guid;
+    _g.xor.route = route;
+    _g.xor.field = field;
 }
 register();
 //# sourceMappingURL=component.js.map

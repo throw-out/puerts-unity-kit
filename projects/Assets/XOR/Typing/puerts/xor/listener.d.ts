@@ -6,8 +6,12 @@ declare class Listener {
     invoke(...args: any[]): void;
 }
 export {};
+/**
+ * 接口声明
+ */
 declare global {
     namespace xor {
+        /**全局监听器 */
         const globalListener: {
             readonly quit: Listener;
         };

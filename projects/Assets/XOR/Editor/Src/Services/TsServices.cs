@@ -28,6 +28,8 @@ namespace XOR.Services
         public int scripts;
         /// <summary>当前状态  </summary>
         public ProgramState state;
+        /// <summary>状态值  </summary>
+        public string stateMessage;
         public Dictionary<string, Statement> Statements { get; private set; }
 
         public Program()
@@ -56,6 +58,7 @@ namespace XOR.Services
         {
             this.errors = 0;
             this.state = ProgramState.Pending;
+            this.stateMessage = string.Empty;
             this.Statements.Clear();
         }
     }
@@ -63,9 +66,12 @@ namespace XOR.Services
     public enum ProgramState
     {
         Pending,
-        Error,
+        Scanning,
         Compiling,
-        Compiled,
+        Analyzing,
+        Allocating,
+        Completed,
+        Error,
     }
 
     public abstract class Statement

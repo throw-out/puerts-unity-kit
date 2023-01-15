@@ -13,7 +13,7 @@ const CLOSE_EVENT = "__e_close__",
 /**
  * 跨JsEnv实例交互封装
  */
-class ThreadWorkerImpl {
+class ThreadWorkerConstructor {
     private readonly mainThread: boolean;
     private readonly worker: csharp.XOR.ThreadWorker;
     private readonly events: Map<string, Function[]>;
@@ -508,7 +508,7 @@ enum PackValidate {
 function register() {
     let _g = (global ?? globalThis ?? this);
     _g.xor = _g.xor || {};
-    _g.xor.ThreadWorker = ThreadWorkerImpl;
+    _g.xor.ThreadWorker = ThreadWorkerConstructor;
     _g.xor.globalWorker = undefined;
 }
 register();
@@ -516,11 +516,10 @@ register();
 /**接口声明 */
 declare global {
     namespace xor {
-        class ThreadWorker extends ThreadWorkerImpl { }
-
+        class ThreadWorker extends ThreadWorkerConstructor { }
         /**
          * 只能在JsWorker内部访问, 与主线程交互的对象
          */
-        const globalWorker: ThreadWorkerImpl;
+        const globalWorker: ThreadWorker;
     }
 }

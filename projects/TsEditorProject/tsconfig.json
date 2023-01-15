@@ -39,7 +39,7 @@
         "outDir": "./output",
         "incremental": true,
         "sourceMap": true,
-        "removeComments": true,
+        "removeComments": false,
         "declaration": true,
     }
 }

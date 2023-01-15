@@ -42,6 +42,17 @@ namespace XOR
             style.fontStyle = FontStyle.Bold;
             return style;
         });
+        public static readonly Accessor<GUIStyle> labelClear = new Accessor<GUIStyle>(() =>
+        {
+            GUIStyle style = new GUIStyle(GUI.skin.label);
+            style.alignment = TextAnchor.MiddleLeft;
+            style.richText = true;
+            style.fontStyle = FontStyle.Bold;
+            style.normal.textColor = Color.clear;
+            style.hover = style.focused = style.active =
+            style.onNormal = style.onHover = style.onActive = style.onFocused = style.normal;
+            return style;
+        });
 
         public static readonly Accessor<GUIStyle> labelGreen = new Accessor<GUIStyle>(() =>
         {
@@ -82,27 +93,6 @@ namespace XOR
         {
             //Wizard Error
             return null;
-        });
-
-        /// <summary>红色圆 </summary>
-        public static readonly Accessor<GUIStyle> WinBtnCloseMac = new Accessor<GUIStyle>(() =>
-        {
-            return "WinBtnCloseMac";
-        });
-        /// <summary>灰色圆 </summary>
-        public static readonly Accessor<GUIStyle> WinBtnInactiveMac = new Accessor<GUIStyle>(() =>
-        {
-            return "WinBtnInactiveMac";
-        });
-        /// <summary>绿色圆 </summary>
-        public static readonly Accessor<GUIStyle> WinBtnMaxMac = new Accessor<GUIStyle>(() =>
-        {
-            return "WinBtnMaxMac";
-        });
-        /// <summary>黄色圆 </summary>
-        public static readonly Accessor<GUIStyle> WinBtnMinMac = new Accessor<GUIStyle>(() =>
-        {
-            return "WinBtnMinMac";
         });
 
 
