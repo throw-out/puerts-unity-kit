@@ -139,11 +139,8 @@ export class Program {
         }
     }
     private async resolveClassDeclaration(node: ts.ClassDeclaration) {
-        this.classes.set(
-            util.getAbsoluteName(node, this.checker),
-            node
-        );
-        if (this.classes.size % 10 === 0) {
+        this.classes.set(this.getAbsoluteName(node), node);
+        if (this.classes.size % 100 === 0) {
             await new Promise<void>(resolve => setTimeout(resolve, 1));
         }
         if (!util.hasExport(node) || util.isAbstract(node))
@@ -163,9 +160,23 @@ export class Program {
         }
     }
 
-    public isInheritFromTsComponent(node: ts.ClassDeclaration) {
-        if (util.getFullName(node, this.checker) === "xor.TsComponent" &&
-            util.getModuleFromNode(node, this.checker) === "global"
+    private test() {
+        for (let [absoluteName, cd] of this.classes) {
+            if (absoluteName.includes("System.Object")) {
+                let d = this.getModuleFromNode(cd);
+            }
+            if (absoluteName.includes("xor.TsComponent")) {
+                let d = this.getModuleFromNode(cd);
+
+                let a = this.isInheritFromTsComponent(cd);
+                console.log(a);
+            }
+        }
+    }
+
+    private isInheritFromTsComponent(node: ts.ClassDeclaration) {
+        if (this.getFullName(node) === "xor.TsComponent" &&
+            this.getModuleFromNode(node) === "global"
         ) {
             return true;
         }
@@ -173,31 +184,107 @@ export class Program {
         if (node.heritageClauses) {
             for (let clause of node.heritageClauses ?? []) {
                 for (let ewta of clause.types) {
-                    let cd = this.classes.get(util.getAbsoluteName(ewta.expression, this.checker));
+                    let cd = this.classes.get(this.getAbsoluteName(ewta.expression));
                     if (cd) {
                         if (this.isInheritFromTsComponent(cd))
                             return true;
                     } else {
-                        console.warn(`无效的继承对象:${util.getAbsoluteName(ewta.expression, this.checker)}`);
+                        console.warn(`无效的继承对象:${this.getAbsoluteName(ewta.expression)}`);
                     }
                 }
             }
         }
         return false;
     }
-
-    private test() {
-        for (let [absoluteName, cd] of this.classes) {
-            if (absoluteName.includes("System.Object")) {
-                let d = util.getModuleFromNode(cd, this.checker);
-            }
-            if (absoluteName.includes("xor.TsComponent")) {
-                let d = util.getModuleFromNode(cd, this.checker);
-
-                let a = this.isInheritFromTsComponent(cd);
-                console.log(a);
+    /**以`moduleName + namespaceName +typeName`组合绝对名称
+     * @param node 
+     * @returns 
+     */
+    private getAbsoluteName(node: ts.Node) {
+        let module = this.getModuleFromNode(node), fullName = this.getFullName(node);
+        return `${module}|${fullName}`;
+    }
+    /**获取类型全名称(包含namespace, 不包含module前缀)
+     * @param node 
+     * @returns 
+     */
+    private getFullName(node: ts.Node) {
+        const type = this.checker.getTypeAtLocation(node);
+        const symbol = type.getSymbol();
+        if (symbol) {
+            /*
+            const flags = ts.SymbolFlags.Class |
+                ts.SymbolFlags.Interface |
+                ts.SymbolFlags.Enum |
+                ts.SymbolFlags.Type |
+                ts.SymbolFlags.Namespace |
+                ts.SymbolFlags.Module |
+                ts.SymbolFlags.PropertyOrAccessor |
+                ts.SymbolFlags.ClassMember;//*/
+            const formatFlags = ts.SymbolFormatFlags.WriteTypeParametersOrArguments |
+                ts.SymbolFormatFlags.UseOnlyExternalAliasing |
+                ts.SymbolFormatFlags.AllowAnyNodeKind |
+                ts.SymbolFormatFlags.UseAliasDefinedOutsideCurrentScope;
+            return this.checker.symbolToString(
+                symbol,
+                node,
+                0xffffffff,
+                formatFlags
+            );
+        }
+        else {
+            return this.checker.typeToString(
+                type,
+                node,
+                ts.TypeFormatFlags.NodeBuilderFlagsMask
+            )
+        }
+    }
+    /**获取类型声明所在的模块
+     * @param node 
+     * @returns 
+     */
+    private getModuleFromNode(node: ts.Node) {
+        const type = this.checker.getTypeAtLocation(node);
+        const symbol = type.getSymbol();
+        if (symbol) {
+            let declarations = symbol.getDeclarations();
+            if (declarations && declarations.length > 0) {
+                return this.getModuleFromDeclaration(
+                    declarations.find(d => d.kind === ts.SyntaxKind.ClassDeclaration) ||
+                    declarations.find(d => d.kind === ts.SyntaxKind.InterfaceDeclaration) ||
+                    declarations[0]
+                );
             }
         }
+        return "global";
+    }
+    /**获取类型声明所在的模块
+     * @param declaration 
+     * @returns 
+     */
+    private getModuleFromDeclaration(declaration: ts.Declaration) {
+        let module: string;
+
+        let node: ts.Node = declaration, flags: ts.NodeFlags;
+        while (node) {
+            if (node.kind === ts.SyntaxKind.ModuleDeclaration) {
+                flags = node.flags;
+                module = (<ts.ModuleDeclaration>node).name.text;
+                //如果是global声明或module声明(非namespace), 直接返回模块名
+                if ((flags & ts.NodeFlags.Namespace) !== ts.NodeFlags.Namespace &&
+                    (flags & ts.NodeFlags.NestedNamespace) !== ts.NodeFlags.NestedNamespace
+                ) {
+                    return module;
+                }
+            }
+            node = node.parent;
+        }
+        //sourceFile为全局声明模块, 且存在顶层namspace声明
+        if (module && (declaration.getSourceFile().flags & ts.NodeFlags.ExportContext) !== ts.NodeFlags.ExportContext) {
+            return module;
+        }
+        return declaration.getSourceFile().fileName;
     }
 }
 
@@ -217,9 +304,6 @@ const util = new class {
         return ts.SyntaxKind.PublicKeyword;
     }
 
-    public isGlobal(node: ts.Node) {
-
-    }
     public hasDeclare(node: ts.Node) {
         if (!ts.canHaveModifiers(node))
             return false;
@@ -280,84 +364,5 @@ const util = new class {
     }
     public isPrivateOrProtected(node: ts.Node, defaultValue: boolean = true) {
         return !this.isPublic(node, defaultValue);
-    }
-
-    public getAbsoluteName(node: ts.Node, checker: ts.TypeChecker) {
-        let module = util.getModuleFromNode(node, checker),
-            fullName = util.getFullName(node, checker);
-        return `${module}|${fullName}`;
-    }
-    public getFullName(node: ts.Node, checker: ts.TypeChecker) {
-        const type = checker.getTypeAtLocation(node);
-        const symbol = type.getSymbol();
-        if (symbol) {
-            /*
-            const flags = ts.SymbolFlags.Class |
-                ts.SymbolFlags.Interface |
-                ts.SymbolFlags.Enum |
-                ts.SymbolFlags.Type |
-                ts.SymbolFlags.Namespace |
-                ts.SymbolFlags.Module |
-                ts.SymbolFlags.PropertyOrAccessor |
-                ts.SymbolFlags.ClassMember;//*/
-            const formatFlags = ts.SymbolFormatFlags.WriteTypeParametersOrArguments |
-                ts.SymbolFormatFlags.UseOnlyExternalAliasing |
-                ts.SymbolFormatFlags.AllowAnyNodeKind |
-                ts.SymbolFormatFlags.UseAliasDefinedOutsideCurrentScope;
-            return checker.symbolToString(
-                symbol,
-                node,
-                0xffffffff,
-                formatFlags
-            );
-        }
-        else {
-            return checker.typeToString(
-                type,
-                node,
-                ts.TypeFormatFlags.NodeBuilderFlagsMask
-            )
-        }
-    }
-    public getModuleFromNode(node: ts.Node, checker: ts.TypeChecker) {
-        const type = checker.getTypeAtLocation(node);
-        const symbol = type.getSymbol();
-        if (symbol) {
-            let declarations = symbol.getDeclarations();
-            if (declarations && declarations.length > 0) {
-                return this.getModuleFromDeclaration(
-                    declarations.find(d => d.kind === ts.SyntaxKind.ClassDeclaration) ||
-                    declarations.find(d => d.kind === ts.SyntaxKind.InterfaceDeclaration) ||
-                    declarations[0]
-                );
-            }
-        }
-        return "global";
-    }
-    public getModuleFromDeclaration(declaration: ts.Declaration) {
-        let module: string;
-
-        let node: ts.Node = declaration, flags: ts.NodeFlags, sourceFile: ts.SourceFile;
-        while (node) {
-            switch (node.kind) {
-                case ts.SyntaxKind.ModuleDeclaration:
-                    flags = node.flags;
-                    module = (<ts.ModuleDeclaration>node).name.text;
-                    if ((flags & ts.NodeFlags.Namespace) !== ts.NodeFlags.Namespace &&
-                        (flags & ts.NodeFlags.NestedNamespace) !== ts.NodeFlags.NestedNamespace
-                    ) {
-                        return module;
-                    }
-                    break;
-                case ts.SyntaxKind.SourceFile:
-                    sourceFile = <ts.SourceFile>node;
-                    break;
-            }
-            node = node.parent;
-        }
-        if (module && sourceFile && (sourceFile.flags & ts.NodeFlags.ExportContext) !== ts.NodeFlags.ExportContext) {
-            return module;
-        }
-        return declaration.getSourceFile().fileName;
     }
 }
