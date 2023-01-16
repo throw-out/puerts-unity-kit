@@ -6,9 +6,9 @@ using UnityEngine;
 
 namespace XOR
 {
-    [CustomEditor(typeof(TsBehaviour))]
     //[CanEditMultipleObjects]
-    internal class TsBehaviour_GUI : Editor
+    [CustomEditor(typeof(TsBehaviour))]
+    internal class TsBehaviourEditor : Editor
     {
         public override void OnInspectorGUI()
         {

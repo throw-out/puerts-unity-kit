@@ -5,7 +5,7 @@ using XOR.Services;
 namespace XOR
 {
     [CustomEditor(typeof(TsComponent))]
-    internal class TsComponent_GUI : Editor
+    internal class TsComponentEditor : Editor
     {
         private TsComponent component;
         private Statement statement;
@@ -110,7 +110,10 @@ namespace XOR
 
         void _RenderModuleSelector()
         {
-            GUILayout.Button("选择模块");
+            if (GUILayout.Button("选择模块"))
+            {
+                ModuleSelector.GetWindow();
+            }
         }
         void _RenderModuleInfo()
         {

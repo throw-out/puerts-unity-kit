@@ -38,7 +38,7 @@ namespace XOR
             if (__instance != null && __instance != this)
             {
                 DestroyImmediate(this);
-                Debug.LogWarning($"Repeated instantiation of {nameof(Application)}");
+                Debug.LogWarning($"Multiple instantiation of {nameof(Application)}");
                 return;
             }
             __instance = this;

@@ -256,7 +256,6 @@ export class Program {
 
             let guid = csharp.System.Guid.NewGuid().ToString();
 
-            /*
             let sourceFile = this.allocDecorator(td, `@xor.guid("${guid}")`);
             if (sourceFile) {
                 this.sourceHash.delete(sourceFile.fileName);
@@ -268,7 +267,6 @@ export class Program {
                 this.pushType(type);
                 File.WriteAllText(sourceFile.fileName, sourceFile.text);
             }
-            //*/
         }
     }
     //#endregion
@@ -317,22 +315,22 @@ export class Program {
             let curChar = content[preIndex];
             if (EmptyCharacters.includes(curChar)) {
                 stringBuilder.unshift(curChar);
-                start--;
+                preIndex--;
             } else {
                 hasEnter = EnterCharacters.includes(curChar);
                 break;
             }
         }
         if (!hasEnter) stringBuilder.unshift("\n");
+        start = preIndex + 1;
 
         //新的ts脚本内容
         let insert = stringBuilder.join("");
         let newContent = `${content.slice(0, start)}${insert}${content.slice(start)}`;
-        console.log('alloc: ' + (<ts.ClassDeclaration>node).name?.getText() + "\n" + newContent);
 
         return ts.updateSourceFile(sourceFile, newContent, {
             span: {
-                start: 0,
+                start: preIndex,
                 length: 0
             },
             newLength: insert.length,

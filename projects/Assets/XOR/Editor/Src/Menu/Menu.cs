@@ -61,7 +61,7 @@ namespace XOR
             HashSet<ThreadWorker> activeWorkers = new HashSet<ThreadWorker>(workers.Where(w => w.IsAlive));
 
             StringBuilder builder = new StringBuilder();
-            builder.Append($"{nameof(ThreadWorker)} total {workers.Length}, active {activeWorkers.Count}, undecided {ThreadWorker.RealThread - workers.Length}");
+            builder.Append($"{nameof(ThreadWorker)} Status: total {workers.Length}, active {activeWorkers.Count}, undecided {ThreadWorker.RealThread - workers.Length}");
             for (int i = 0; i < workers.Length; i++)
             {
                 builder.AppendLine();

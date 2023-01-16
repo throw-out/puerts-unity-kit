@@ -8,7 +8,7 @@ namespace XOR
 {
     [CustomEditor(typeof(Settings))]
     //[CanEditMultipleObjects]
-    internal class Settings_GUI : Editor
+    internal class SettingsEditor : Editor
     {
         const float HeaderWidth = 100f;
         const float HeightSpace = 10f;
