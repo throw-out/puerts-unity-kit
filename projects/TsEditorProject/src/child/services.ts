@@ -105,8 +105,8 @@ export class Program {
     private readonly program: ts.Program;
     private readonly checker: ts.TypeChecker;
 
-    private readonly classes: Map<string, ts.ClassDeclaration>;
-    private readonly classDecorator: Map<string, ClassDefine>;
+    private readonly types: Map<string, ts.ClassDeclaration>;
+    private readonly typeDefinitions: Map<string, TypeDefinition>;
 
     constructor(cp: csharp.XOR.Services.Program, rootNames: string[], options: ts.CompilerOptions) {
         cp.state = csharp.XOR.Services.ProgramState.Compiling;
@@ -122,8 +122,8 @@ export class Program {
             }
         });
         this.checker = this.program.getTypeChecker();
-        this.classes = new Map();
-        this.classDecorator = new Map();
+        this.types = new Map();
+        this.typeDefinitions = new Map();
 
         this.resolves();
     }
@@ -161,11 +161,11 @@ export class Program {
         }
     }
     private async resolveClassDeclaration(node: ts.ClassDeclaration) {
-        this.classes.set(this.getAbsoluteName(node), node);
-        if (this.classes.size % 100 === 0) {
+        this.types.set(this.getAbsoluteName(node), node);
+        if (this.types.size % 100 === 0) {
             await new Promise<void>(resolve => setTimeout(resolve, 1));
         }
-        if (!util.hasExport(node) || util.isAbstract(node))
+        if (!util.isExport(node) || util.isAbstract(node))
             return;
     }
     private async resolveModuleDeclaration(node: ts.ModuleDeclaration) {
@@ -189,20 +189,24 @@ export class Program {
         this.cp.state = csharp.XOR.Services.ProgramState.Analyzing;
         this.cp.stateMessage = 'component';
 
-        for (let [absoluteName, cd] of this.classes) {
-            if (!this.isInheritFromTsComponent(cd) || this.isTsComponent(cd))
-                continue;
-            console.log(absoluteName);
+        for (let [absoluteName, cd] of this.types) {
+            let definition: TypeDefinition = {
+                isExport: util.isExport(cd),
+                isDeclare: util.isDeclare(cd, true),
+                isAbstract: util.isAbstract(cd),
+                isComponent: this.isInheritFromTsComponent(cd) && !this.isTsComponent(cd)
+            };
+            this.resolveComponentDecorator(cd, definition);
+            this.typeDefinitions.set(absoluteName, definition);
 
-            let define: ClassDefine = {};
-            this.resolveComponentDecorator(cd, define);
-            if (!define.guid) {
+            if (definition.isComponent) {
 
             }
-            this.classDecorator.set(absoluteName, define);
         }
     }
-    private resolveComponentDecorator(node: ts.ClassDeclaration, define: ClassDefine) {
+    private resolveComponentDecorator(node: ts.ClassDeclaration, define: TypeDefinition) {
+        if (!node.modifiers)
+            return;
         for (let modifier of node.modifiers) {
             if (modifier.kind !== ts.SyntaxKind.Decorator)
                 continue;
@@ -239,7 +243,7 @@ export class Program {
         if (node.heritageClauses) {
             for (let clause of node.heritageClauses ?? []) {
                 for (let ewta of clause.types) {
-                    let cd = this.classes.get(this.getAbsoluteName(ewta.expression));
+                    let cd = this.types.get(this.getAbsoluteName(ewta.expression));
                     if (cd) {
                         if (this.isInheritFromTsComponent(cd))
                             return true;
@@ -366,9 +370,24 @@ export class Program {
 /**访问修饰符: public/private/protected */
 type AccessModifier = ts.SyntaxKind.PublicKeyword | ts.SyntaxKind.PrivateKeyword | ts.SyntaxKind.ProtectedKeyword;
 
-type ClassDefine = {
+type TypeDefinition = {
+    /**为xor Component类型分配的GUID */
     guid?: string;
+    /**为xor Component类型分配的唯一路由 */
     route?: string;
+    /**文件版本(以lastWriteTime) */
+    version?: string;
+    /**文件哈希 */
+    hash?: string;
+
+    /**是否为xor Component类型 */
+    readonly isComponent: boolean;
+    /**是否有export标识符 */
+    readonly isExport: boolean;
+    /**是否有declare标识符(包括父节点) */
+    readonly isDeclare: boolean;
+    /**是否有abstract标识符 */
+    readonly isAbstract: boolean;
 }
 
 const util = new class {
@@ -384,20 +403,22 @@ const util = new class {
         return ts.SyntaxKind.PublicKeyword;
     }
 
-    public hasDeclare(node: ts.Node) {
-        if (!ts.canHaveModifiers(node))
+    public isDeclare(node: ts.Node, inherit?: boolean) {
+        if (!node)
             return false;
-        let modifiers = ts.getModifiers(node);
-        if (modifiers) {
-            for (let modifier of modifiers) {
-                if (modifier.kind === ts.SyntaxKind.DeclareKeyword) {
-                    return true;
+        if (ts.canHaveModifiers(node)) {
+            let modifiers = ts.getModifiers(node);
+            if (modifiers) {
+                for (let modifier of modifiers) {
+                    if (modifier.kind === ts.SyntaxKind.DeclareKeyword) {
+                        return true;
+                    }
                 }
             }
         }
-        return false;
+        return this.isDeclare(node.parent, inherit);
     }
-    public hasExport(node: ts.Node) {
+    public isExport(node: ts.Node) {
         if (!ts.canHaveModifiers(node))
             return false;
         let modifiers = ts.getModifiers(node);

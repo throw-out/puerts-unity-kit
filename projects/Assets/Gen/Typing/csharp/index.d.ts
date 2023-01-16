@@ -26428,6 +26428,29 @@ declare namespace CS {
             public static Create($size: number): System.Array$1<number>
             public static Connect($first: System.Array$1<number>, $second: System.Array$1<number>): System.Array$1<number>
         }
+        class HashUtil extends System.Object {
+            protected [__keep_incompatibility]: never;
+            public static MD5($data: string, $lower?: boolean): string
+            public static SHA1($data: string, $lower?: boolean): string
+            public static SHA256($data: string, $lower?: boolean): string
+            public static SHA384($data: string, $lower?: boolean): string
+            public static SHA512($data: string, $lower?: boolean): string
+            public static MD5File($path: string, $lower?: boolean, $exclusive?: boolean): string
+            public static SHA1File($path: string, $lower?: boolean, $exclusive?: boolean): string
+            public static SHA256File($path: string, $lower?: boolean, $exclusive?: boolean): string
+            public static SHA384File($path: string, $lower?: boolean, $exclusive?: boolean): string
+            public static SHA512File($path: string, $lower?: boolean, $exclusive?: boolean): string
+            public static MD5($data: System.Array$1<number>, $lower?: boolean): string
+            public static SHA1($data: System.Array$1<number>, $lower?: boolean): string
+            public static SHA256($data: System.Array$1<number>, $lower?: boolean): string
+            public static SHA384($data: System.Array$1<number>, $lower?: boolean): string
+            public static SHA512($data: System.Array$1<number>, $lower?: boolean): string
+            public static MD5($inputStream: System.IO.Stream, $lower?: boolean): string
+            public static SHA1($inputStream: System.IO.Stream, $lower?: boolean): string
+            public static SHA256($inputStream: System.IO.Stream, $lower?: boolean): string
+            public static SHA384($inputStream: System.IO.Stream, $lower?: boolean): string
+            public static SHA512($inputStream: System.IO.Stream, $lower?: boolean): string
+        }
         class IEnumeratorUtil extends System.Object {
             protected [__keep_incompatibility]: never;
             public static Generator($next: System.Func$1<any>, $isDone: System.Func$1<boolean>): System.Collections.IEnumerator

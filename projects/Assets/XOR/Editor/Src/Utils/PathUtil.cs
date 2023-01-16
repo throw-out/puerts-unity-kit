@@ -16,7 +16,7 @@ namespace XOR
             return Path.GetFullPath(Path.Combine(UnityEngine.Application.dataPath, localpath));
         }
         /// <summary>
-        /// 转换绝对路径至相对与UnityEngine.Application.dataPath的路径
+        /// 转换绝对路径至基于UnityEngine.Application.dataPath的相对路径
         /// </summary>
         /// <param name="fullpath"></param>
         /// <returns></returns>
@@ -39,17 +39,9 @@ namespace XOR
                 {
                     buidler.Add(fullpathArray[i]);
                 }
-                else if (!fork)
+                else if (fork || !fullpathArray[i].ToLower().Equals(datapathArray[i].ToLower()))
                 {
-                    if (!fullpathArray[i].ToLower().Equals(datapathArray[i].ToLower()))
-                    {
-                        fork = true;
-                        buidler.Insert(0, "..");
-                        buidler.Add(fullpathArray[i]);
-                    }
-                }
-                else
-                {
+                    fork = true;
                     buidler.Insert(0, "..");
                     buidler.Add(fullpathArray[i]);
                 }

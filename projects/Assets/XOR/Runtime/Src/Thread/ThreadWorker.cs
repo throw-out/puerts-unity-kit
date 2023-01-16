@@ -187,7 +187,13 @@ namespace XOR
                 //此处仅通知线程抛出异常自行结束(使用Abort将导致crash<puerts>)
                 _thread.Interrupt();
                 //等待线程结束
-                while (_thread.IsAlive) { }
+                //while (_thread.IsAlive) { }
+                DateTime timeout = DateTime.Now + TimeSpan.FromMilliseconds(THREAD_LOCK_TIMEOUT);
+                while (_thread.IsAlive && DateTime.Now < timeout) { }
+                if (_thread.IsAlive)
+                {
+                    Logger.LogError($"<b>XOR.{nameof(ThreadWorker)}({ThreadId}): <color=red>Interrupt Timeout</color></b>\nIt is still alive!");
+                }
                 //GC
                 //System.GC.Collect();
                 //System.GC.WaitForPendingFinalizers();
