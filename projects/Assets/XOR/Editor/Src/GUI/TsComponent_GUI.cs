@@ -36,9 +36,9 @@ namespace XOR
             }
             EditorGUILayout.BeginVertical();
 
-            RenderServicesStatus();
             RenderModule();
             RenderMembers();
+            RenderServicesStatus();
 
             EditorGUILayout.EndVertical();
         }

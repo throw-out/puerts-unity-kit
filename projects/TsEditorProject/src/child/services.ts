@@ -2,6 +2,8 @@ import * as csharp from "csharp";
 import * as ts from "typescript";
 
 import Type = csharp.System.Type;
+const { Guid } = csharp.System;
+const { HashUtil } = csharp.XOR;
 const { File, Directory, Path } = csharp.System.IO;
 
 type ConfigFile = {
@@ -11,6 +13,8 @@ type ConfigFile = {
     readonly references?: string[];
     readonly compilerOptions: ts.CompilerOptions;
 };
+
+const EmptyCharacters = [" ", "\t"], EnterCharacters = ["\n", "\r"];
 
 /**读取tsconfig.json文件并反序化成对象
  * @param path 
@@ -108,6 +112,10 @@ export class Program {
     private readonly types: Map<string, ts.ClassDeclaration>;
     private readonly typeDefinitions: Map<string, TypeDefinition>;
 
+    private readonly sourceHash: Map<string, string>;
+
+    private readonly throttler: Throttler;
+
     constructor(cp: csharp.XOR.Services.Program, rootNames: string[], options: ts.CompilerOptions) {
         cp.state = csharp.XOR.Services.ProgramState.Compiling;
         cp.stateMessage = '';
@@ -124,12 +132,20 @@ export class Program {
         this.checker = this.program.getTypeChecker();
         this.types = new Map();
         this.typeDefinitions = new Map();
+        this.sourceHash = new Map();
+
+        this.throttler = new Throttler(100, 1);
 
         this.resolves();
     }
     private async resolves() {
         await this.resolveSources();
         await this.resolveComponents();
+
+        await this.resolveUnknownGuid();
+
+        this.cp.state = csharp.XOR.Services.ProgramState.Completed;
+        this.cp.stateMessage = '';
     }
 
     //#region SourceFile 处理流程
@@ -144,7 +160,6 @@ export class Program {
         for (const source of sourceFiles) {
             if (!source.statements)
                 continue;
-            await new Promise<void>(resolve => setTimeout(resolve, 10));
             await this.resolveStatements(source.statements);
         }
     }
@@ -161,16 +176,10 @@ export class Program {
         }
     }
     private async resolveClassDeclaration(node: ts.ClassDeclaration) {
+        await this.throttler.complete();
         this.types.set(this.getAbsoluteName(node), node);
-        if (this.types.size % 100 === 0) {
-            await new Promise<void>(resolve => setTimeout(resolve, 1));
-        }
-        if (!util.isExport(node) || util.isAbstract(node))
-            return;
     }
     private async resolveModuleDeclaration(node: ts.ModuleDeclaration) {
-        let sourceFile = node.getSourceFile().fileName;
-        let childrens = node.getChildren();
         for (let childNode of node.getChildren()) {
             switch (childNode.kind) {
                 case ts.SyntaxKind.ModuleBlock:
@@ -190,18 +199,20 @@ export class Program {
         this.cp.stateMessage = 'component';
 
         for (let [absoluteName, cd] of this.types) {
+            await this.throttler.complete();
+
             let definition: TypeDefinition = {
+                absoluteName,
+                hash: this.getHash(cd.getSourceFile()),
+                version: `${new Date().valueOf()}`,
                 isExport: util.isExport(cd),
                 isDeclare: util.isDeclare(cd, true),
                 isAbstract: util.isAbstract(cd),
                 isComponent: this.isInheritFromTsComponent(cd) && !this.isTsComponent(cd)
             };
-            this.resolveComponentDecorator(cd, definition);
             this.typeDefinitions.set(absoluteName, definition);
-
-            if (definition.isComponent) {
-
-            }
+            this.resolveComponentDecorator(cd, definition);
+            this.pushType(definition);
         }
     }
     private resolveComponentDecorator(node: ts.ClassDeclaration, define: TypeDefinition) {
@@ -215,10 +226,9 @@ export class Program {
                 continue;
 
             let { expression: target, arguments: args } = <ts.CallExpression>callExpression;
-            let fullName = this.getFullName(target), module = this.getModuleFromNode(target);
-            if (module !== "global")
+            if (this.getModuleFromNode(target) !== "global")
                 continue;
-            switch (fullName) {
+            switch (this.getFullName(target)) {
                 case "xor.guid":
                     define.guid = (<ts.StringLiteral>args[0]).text;
                     break;
@@ -228,8 +238,115 @@ export class Program {
             }
         }
     }
+
+    private async resolveUnknownGuid() {
+        this.cp.state = csharp.XOR.Services.ProgramState.Allocating;
+        this.cp.stateMessage = '';
+
+        for (let [, type] of this.typeDefinitions) {
+            if (type.guid || !this.isExportTsCompoent(type)) {
+                continue;
+            }
+            let td = this.types.get(type.absoluteName);
+            if (!td) {
+                console.warn(`节点数据缺失: ${type.absoluteName}`);
+                return;
+            }
+            await this.throttler.complete();
+
+            let guid = csharp.System.Guid.NewGuid().ToString();
+
+            /*
+            let sourceFile = this.allocDecorator(td, `@xor.guid("${guid}")`);
+            if (sourceFile) {
+                this.sourceHash.delete(sourceFile.fileName);
+
+                type.guid = guid;
+                type.hash = this.getHash(sourceFile);
+                type.version = `${new Date().valueOf()}`;
+
+                this.pushType(type);
+                File.WriteAllText(sourceFile.fileName, sourceFile.text);
+            }
+            //*/
+        }
+    }
     //#endregion
 
+
+    private pushType(type: TypeDefinition) {
+        if (!type.guid || !this.isExportTsCompoent(type)) {
+            return;
+        }
+
+        let node = this.types.get(type.absoluteName);
+        if (!node) {
+            console.warn(`节点数据缺失: ${type.absoluteName}`);
+            return;
+        }
+        let [module, name] = type.absoluteName.split("|");
+
+        //创建type声明
+        let ctd = new csharp.XOR.Services.TypeDeclaration();
+        ctd.guid = type.guid;
+        ctd.name = name;
+        ctd.module = module;
+        //成员声明
+        let members = this.getProperties(node);
+        if (members) {
+            for (let [name, type] of members) {
+                let cpd = new csharp.XOR.Services.PropertyDeclaration();
+                cpd.name = name;
+                cpd.valueType = this.toCSharpType(type);
+                ctd.AddProperty(cpd);
+            }
+        }
+
+        this.cp.AddStatement(ctd);
+    }
+    private allocDecorator(node: ts.Node, decoratorContent: string) {
+        let sourceFile = node.getSourceFile();
+
+        let content = sourceFile.getFullText();
+        let start = node.getStart(), end = node.getEnd();
+
+        let stringBuilder = [decoratorContent, "\n"];
+        //检查语句前面的空格字符, 检查前一句是否有换行
+        let preIndex = start - 1, hasEnter = false;
+        while (preIndex > 0) {
+            let curChar = content[preIndex];
+            if (EmptyCharacters.includes(curChar)) {
+                stringBuilder.unshift(curChar);
+                start--;
+            } else {
+                hasEnter = EnterCharacters.includes(curChar);
+                break;
+            }
+        }
+        if (!hasEnter) stringBuilder.unshift("\n");
+
+        //新的ts脚本内容
+        let insert = stringBuilder.join("");
+        let newContent = `${content.slice(0, start)}${insert}${content.slice(start)}`;
+        console.log('alloc: ' + (<ts.ClassDeclaration>node).name?.getText() + "\n" + newContent);
+
+        return ts.updateSourceFile(sourceFile, newContent, {
+            span: {
+                start: 0,
+                length: 0
+            },
+            newLength: insert.length,
+        }, false);;
+    }
+
+    private isExportTsCompoent(type: TypeDefinition) {
+        return !(
+            !type.isComponent ||
+            !type.isExport ||
+            type.isDeclare ||
+            type.isAbstract
+        );
+    }
 
     private isTsComponent(node: ts.ClassDeclaration) {
         return this.getFullName(node) === "xor.TsComponent" &&
@@ -241,21 +358,67 @@ export class Program {
         }
         //检测继承类
         if (node.heritageClauses) {
-            for (let clause of node.heritageClauses ?? []) {
-                for (let ewta of clause.types) {
-                    let cd = this.types.get(this.getAbsoluteName(ewta.expression));
-                    if (cd) {
-                        if (this.isInheritFromTsComponent(cd))
-                            return true;
-                    } else {
-                        //console.warn(`无效的继承对象:${this.getAbsoluteName(ewta.expression)}`);
-                    }
+            let ewtaList = node.heritageClauses.map(clause => clause.types).flat();
+            for (let ewta of ewtaList) {
+                let cd = this.types.get(this.getAbsoluteName(ewta.expression));
+                if (!cd) {
+                    //console.warn(`无效的继承对象:${this.getAbsoluteName(ewta.expression)}`);
+                    continue;
+                }
+                if (this.isInheritFromTsComponent(cd)) {
+                    return true;
                 }
             }
         }
         return false;
     }
-    private getCharpType(node: ts.Node, underlyingType?: Type) {
+    private getProperties(node: ts.ClassDeclaration, inherit?: boolean) {
+        if (this.isTsComponent(node)) {
+            return null;
+        }
+        const members = new Map<string, ts.TypeNode>();
+        if (node.members) {
+            for (let m of node.members) {
+                if (m.kind !== ts.SyntaxKind.PropertyDeclaration)
+                    continue;
+                let { name, type } = <ts.PropertyDeclaration>m;
+                if (name.kind !== ts.SyntaxKind.StringLiteral)
+                    continue;
+                members.set(name.text, type);
+            }
+        }
+        if (inherit && node.heritageClauses) {
+            let ewtaList = node.heritageClauses.map(clause => clause.types).flat();
+            for (let ewta of ewtaList) {
+                let cd = this.types.get(this.getAbsoluteName(ewta.expression));
+                if (!cd) {
+                    //console.warn(`无效的继承对象:${this.getAbsoluteName(ewta.expression)}`);
+                    continue;
+                }
+                const _members = this.getProperties(cd, true);
+                if (!_members) {
+                    continue;
+                }
+                for (let [name, type] of _members) {
+                    if (members.has(name))
+                        continue;
+                    members.set(name, type);
+                }
+            }
+        }
+        return members;
+    }
+    private getHash(node: ts.Node) {
+        let path = node.getSourceFile().fileName;
+        let hash = this.sourceHash.get(path);
+        if (!hash) {
+            hash = HashUtil.SHA256(node.getSourceFile().text);
+            this.sourceHash.set(path, hash);
+        }
+        return hash;
+    }
+
+    private toCSharpType(node: ts.TypeNode) {
         let module = this.getModuleFromNode(node),
             fullName = this.getFullName(node);
         if (module === "global") {
@@ -265,11 +428,7 @@ export class Program {
         } else if (module !== "csharp") {
             return null;
         }
-        let type = Type.GetType(fullName, false);
-        if (type && underlyingType && underlyingType.IsAssignableFrom(type)) {
-            type = underlyingType;
-        }
-        return type;
+        return Type.GetType(fullName, false);
     }
 
     //#region 类型方法
@@ -380,6 +539,7 @@ type TypeDefinition = {
     /**文件哈希 */
     hash?: string;
 
+    readonly absoluteName: string;
     /**是否为xor Component类型 */
     readonly isComponent: boolean;
     /**是否有export标识符 */
@@ -465,5 +625,22 @@ const util = new class {
     }
     public isPrivateOrProtected(node: ts.Node, defaultValue: boolean = true) {
         return !this.isPublic(node, defaultValue);
+    }
+}
+
+class Throttler {
+    private tick: number;
+    private readonly frequency: number;
+    private readonly duration: number;
+    public constructor(frequency: number = 1, duration: number = 1) {
+        this.tick = 0;
+        this.duration = duration;
+        this.frequency = frequency > 0 ? frequency : 1;
+    }
+
+    public async complete() {
+        if ((++this.tick) % this.frequency === 0) {
+            await new Promise<void>(resolve => setTimeout(resolve, this.duration));
+        }
     }
 }

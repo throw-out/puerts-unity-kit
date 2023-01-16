@@ -8,7 +8,7 @@ const CLOSE_EVENT = "__e_close__", REMOTE_EVENT = "__e_remote__", RESULT_EVENT =
 /**
  * 跨JsEnv实例交互封装
  */
-class ThreadWorkerImpl {
+class ThreadWorkerConstructor {
     /**线程是否正在工作 */
     get isAlive() { return this.worker.IsAlive; }
     /**线程是否已初始化完成 */
@@ -506,7 +506,7 @@ var PackValidate;
 function register() {
     let _g = (global ?? globalThis ?? this);
     _g.xor = _g.xor || {};
-    _g.xor.ThreadWorker = ThreadWorkerImpl;
+    _g.xor.ThreadWorker = ThreadWorkerConstructor;
     _g.xor.globalWorker = undefined;
 }
 register();

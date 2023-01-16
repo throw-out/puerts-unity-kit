@@ -14,14 +14,12 @@ xor.globalWorker.on(WorkerEvent.StartProgream, (data: { project: string, program
     const timer = new Timer();
 
     let pcl = services.parseConfigFile(data.project);
-    let compilerOptions = pcl.options;
     let rootNames = (pcl.fileNames ?? []).filter(p => !p.includes("node_modules"));
-    console.log(`scanning files duration ${timer.duration()}ms, total ${rootNames.length} files:\n${rootNames.join("\n")}`);
+    //console.log(`scanning files duration ${timer.duration()}ms, total ${rootNames.length} files:\n${rootNames.join("\n")}`);
 
     timer.reset();
-    program = new services.Program(data.program, rootNames, compilerOptions);
-    console.log(`program parse duration ${timer.duration()}ms`);
-    //program.print();
+    program = new services.Program(data.program, rootNames, pcl.options);
+    //console.log(`program parse duration ${timer.duration()}ms`);
 });
 xor.globalWorker.on(WorkerEvent.FileChanged, (path: string) => {
 

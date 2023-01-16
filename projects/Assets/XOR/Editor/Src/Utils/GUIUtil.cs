@@ -92,6 +92,12 @@ namespace XOR
 
             return click;
         }
+        public static void RenderGroup<T>(Action<T> action, T args)
+        {
+            GUILayout.BeginVertical(Skin.groupBox);
+            action(args);
+            GUILayout.EndVertical();
+        }
         public static void RenderGroup(Action firstAction, params Action[] actions)
         {
             GUILayout.BeginVertical(Skin.groupBox);

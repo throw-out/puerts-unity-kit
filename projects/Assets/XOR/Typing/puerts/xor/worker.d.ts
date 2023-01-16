@@ -3,7 +3,7 @@ declare const CLOSE_EVENT = "__e_close__";
 /**
  * 跨JsEnv实例交互封装
  */
-declare class ThreadWorkerImpl {
+declare class ThreadWorkerConstructor {
     private readonly mainThread;
     private readonly worker;
     private readonly events;
@@ -77,12 +77,12 @@ declare class ThreadWorkerImpl {
 /**接口声明 */
 declare global {
     namespace xor {
-        class ThreadWorker extends ThreadWorkerImpl {
+        class ThreadWorker extends ThreadWorkerConstructor {
         }
         /**
          * 只能在JsWorker内部访问, 与主线程交互的对象
          */
-        const globalWorker: ThreadWorkerImpl;
+        const globalWorker: ThreadWorker;
     }
 }
 export {};

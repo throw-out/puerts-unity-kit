@@ -646,20 +646,43 @@ declare namespace CS {
             (obj: T): boolean;
             Invoke?: (obj: T) => boolean;
         }
+        class Guid extends System.ValueType implements System.IComparable, System.IComparable$1<System.Guid>, System.IEquatable$1<System.Guid>, System.IFormattable {
+            protected [__keep_incompatibility]: never;
+            public static Empty: System.Guid
+            public static Parse($input: string): System.Guid
+            public static TryParse($input: string, $result: $Ref<System.Guid>): boolean
+            public static ParseExact($input: string, $format: string): System.Guid
+            public static TryParseExact($input: string, $format: string, $result: $Ref<System.Guid>): boolean
+            public ToByteArray(): System.Array$1<number>
+            public ToString(): string
+            public Equals($o: any): boolean
+            public Equals($g: System.Guid): boolean
+            public CompareTo($value: any): number
+            public CompareTo($value: System.Guid): number
+            public static op_Equality($a: System.Guid, $b: System.Guid): boolean
+            public static op_Inequality($a: System.Guid, $b: System.Guid): boolean
+            public ToString($format: string): string
+            public ToString($format: string, $provider: System.IFormatProvider): string
+            public static NewGuid(): System.Guid
+            public constructor($b: System.Array$1<number>)
+            public constructor($a: number, $b: number, $c: number, $d: number, $e: number, $f: number, $g: number, $h: number, $i: number, $j: number, $k: number)
+            public constructor($a: number, $b: number, $c: number, $d: System.Array$1<number>)
+            public constructor($g: string)
+            public Equals($obj: any): boolean
+            public static Equals($objA: any, $objB: any): boolean
+            public constructor()
+        }
+        interface IFormatProvider {
+        }
         class TimeSpan extends System.ValueType implements System.IComparable, System.IComparable$1<System.TimeSpan>, System.IEquatable$1<System.TimeSpan>, System.IFormattable {
             protected [__keep_incompatibility]: never;
         }
         enum DateTimeKind { Unspecified = 0, Utc = 1, Local = 2 }
         enum DayOfWeek { Sunday = 0, Monday = 1, Tuesday = 2, Wednesday = 3, Thursday = 4, Friday = 5, Saturday = 6 }
-        interface IFormatProvider {
-        }
         enum TypeCode { Empty = 0, Object = 1, DBNull = 2, Boolean = 3, Char = 4, SByte = 5, Byte = 6, Int16 = 7, UInt16 = 8, Int32 = 9, UInt32 = 10, Int64 = 11, UInt64 = 12, Single = 13, Double = 14, Decimal = 15, DateTime = 16, String = 18 }
         interface Func$4<T1, T2, T3, TResult> {
             (arg1: T1, arg2: T2, arg3: T3): TResult;
             Invoke?: (arg1: T1, arg2: T2, arg3: T3) => TResult;
-        }
-        class Guid extends System.ValueType implements System.IComparable, System.IComparable$1<System.Guid>, System.IEquatable$1<System.Guid>, System.IFormattable {
-            protected [__keep_incompatibility]: never;
         }
         class RuntimeTypeHandle extends System.ValueType implements System.Runtime.Serialization.ISerializable {
             protected [__keep_incompatibility]: never;
@@ -30353,7 +30376,7 @@ declare namespace CS {
             public source: string
             public version: string
             public name: string
-            public fullName: string
+            public module: string
         }
         class EnumDeclaration extends XOR.Services.Statement {
             protected [__keep_incompatibility]: never;

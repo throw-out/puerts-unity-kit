@@ -62,6 +62,7 @@ public class PuertsConfig
                 typeof(UnityAction<int,int,int>),
                 //C# System
                 typeof(Array),
+                typeof(Guid),
                 typeof(Hashtable),
                 typeof(Delegate),
                 typeof(DateTime),

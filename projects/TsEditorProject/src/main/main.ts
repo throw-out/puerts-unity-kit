@@ -23,7 +23,7 @@ class Workflow {
         const program = new csharp.XOR.Services.Program();
         program.Reset();
         //请求子线程, 开始解析工程
-        worker.post<boolean>(WorkerEvent.StartProgream, { project, program }, true);
+        worker.post<boolean>(WorkerEvent.StartProgream, { project, program });
 
         this.worker = worker;
         this.ci.SetWorker.Invoke(worker.source);
@@ -42,8 +42,8 @@ class Workflow {
 
     public bind(): csharp.XOR.Services.TSInterfaces {
         let ti = new csharp.XOR.Services.TSInterfaces();
-        ti.Start = (ep, p) => this.start(ep, p);
         ti.Stop = () => this.stop();
+        ti.Start = (ep, p) => this.start(ep, p);
         ti.FileChanged = (path) => this.change(path);
         return ti;
     }

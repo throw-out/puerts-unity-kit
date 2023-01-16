@@ -17,6 +17,10 @@ namespace XOR
         /// <summary>Unity主线程ID </summary>
         private static readonly int MAIN_THREAD_ID = Thread.CurrentThread.ManagedThreadId;
 
+        /// <summary>实际存活的线程(仅用于Editor环境统计)  </summary>
+        private static int realThread = 0;
+        public static int RealThread => realThread;
+
         //消息接口
         public Func<string, EventData, EventData> MainThreadHandler;
         public Func<string, EventData, EventData> ChildThreadHandler;
@@ -192,7 +196,7 @@ namespace XOR
                 while (_thread.IsAlive && DateTime.Now < timeout) { }
                 if (_thread.IsAlive)
                 {
-                    Logger.LogError($"<b>XOR.{nameof(ThreadWorker)}({ThreadId}): <color=red>Interrupt Timeout</color></b>\nIt is still alive!");
+                    Logger.LogError($"<b>XOR.{nameof(ThreadWorker)}({ThreadId}): <color=red>Stop Timeout</color></b>");
                 }
                 //GC
                 //System.GC.Collect();
@@ -220,6 +224,9 @@ namespace XOR
             JsEnv env = null;
             try
             {
+#if UNITY_EDITOR
+                Interlocked.Increment(ref realThread);
+#endif
                 // JsEnv内置脚本放在Resource目录下并使用DefaultLoader(Resolutions.Load)加载, 仅允许在主线程调用
                 // 子线程ThreadLoader接口会阻塞线程, 直到主线程调用ThreadLoader.Process后才会继续执行
                 // JsEnv初始化时将调用ThreadLoader接口
@@ -263,6 +270,9 @@ namespace XOR
                     env.Dispose();
                 }
                 Logger.Log($"<b>XOR.{nameof(ThreadWorker)}({ThreadId}): <color=red>Stoped</color></b>");
+#if UNITY_EDITOR
+                Interlocked.Decrement(ref realThread);
+#endif
             }
         }
         void ThreadExecuteRun(JsEnv env, string filepath, bool catchException)
