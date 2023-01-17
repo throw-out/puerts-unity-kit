@@ -112,8 +112,7 @@ namespace XOR
         {
             if (GUILayout.Button("选择模块"))
             {
-                ModuleSelector selector = ModuleSelector.GetWindow();
-                selector.SetProgram(EditorApplicationUtil.GetProgram());
+                ModuleSelector.GetWindow(EditorApplicationUtil.GetProgram());
             }
         }
         void _RenderModuleInfo()

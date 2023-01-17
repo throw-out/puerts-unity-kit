@@ -1,4 +1,6 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
+using System.IO;
 using UnityEditor;
 using UnityEngine;
 using XOR.Services;
@@ -7,19 +9,35 @@ namespace XOR
 {
     internal class ModuleSelector : PopupWindowContent
     {
-        internal static ModuleSelector GetWindow()
+        internal static void GetWindow(Program program)
         {
             ModuleSelector selector = new ModuleSelector();
+            selector.SetProgram(program);
             PopupWindow.Show(GUILayoutUtility.GetLastRect(), selector);
-            return selector;
         }
 
         private string searchText = string.Empty;
         private Program program;
+        private StatementPath root;
+        private StatementPath current;
 
         public void SetProgram(Program program)
         {
             this.program = program;
+            if (program != null)
+            {
+                this.current = this.root = new StatementPath();
+                this.root.path = Path.GetDirectoryName(UnityEngine.Application.dataPath).Replace("\\", "/");
+                foreach (var statement in program.Statements)
+                {
+                    this.root.AddStatement(statement.Value);
+                }
+            }
+            else
+            {
+                this.root = null;
+                this.current = null;
+            }
         }
 
         public override void OnGUI(Rect rect)
@@ -33,7 +51,7 @@ namespace XOR
             GUILayout.BeginVertical();
             if (string.IsNullOrEmpty(searchText))
             {
-                RenderStructured();
+                RenderStatementPath();
             }
             else
             {
@@ -49,33 +67,74 @@ namespace XOR
                 return;
             }
         }
-        void ss()
-        {
-
-        }
 
         void RenderSearch()
         {
             GUILayout.Label("Search", "HeaderButton", GUILayout.Height(20f));
         }
-        void RenderStructured()
+        void RenderStatementPath()
         {
-            GUILayout.Label("Component", "HeaderButton", GUILayout.Height(20f));
+            if (RenderHeader(this.current != null && string.IsNullOrEmpty(this.current.path) ? "Component" : this.current.path, this.current != null && this.current.parent != null) &&
+                this.current != null && this.current.parent != null
+            )
+            {
+                this.current = this.current.parent;
+            }
+
+            if (this.current == null)
+            {
+                return;
+            }
+
+
+            foreach (var child in this.current.childs)
+            {
+                if (RenderColumn(child.Key, true))
+                {
+                    this.current = child.Value;
+                }
+            }
+            foreach (var member in this.current.members)
+            {
+                if (RenderColumn(member.Key, false))
+                {
+
+                }
+            }
         }
 
-        class Path
+        bool RenderHeader(string text, bool prefix)
+        {
+            bool click = false;
+            GUILayout.BeginHorizontal("HeaderButton", GUILayout.Height(20f));
+            click |= GUILayout.Button(prefix ? "〈" : string.Empty, Skin.label, GUILayout.Width(10f));
+            click |= GUILayout.Button(text, Skin.label);
+            GUILayout.EndHorizontal();
+            return click;
+        }
+        bool RenderColumn(string text, bool suffix)
+        {
+            bool click = false;
+            GUILayout.BeginHorizontal("SearchModeFilter", GUILayout.Height(20f));
+            click |= GUILayout.Button(text, Skin.label);
+            click |= GUILayout.Button(suffix ? "〉" : string.Empty, Skin.label, GUILayout.Width(10f));
+            GUILayout.EndHorizontal();
+            return click;
+        }
+
+        class StatementPath
         {
             public string name;
             public string path;
-            public Path parent;
-            public Dictionary<string, Path> childs;
+            public StatementPath parent;
+            public Dictionary<string, StatementPath> childs;
             public Dictionary<string, Statement> members;
 
-            public Path()
+            public StatementPath()
             {
                 this.name = string.Empty;
                 this.path = string.Empty;
-                this.childs = new Dictionary<string, Path>();
+                this.childs = new Dictionary<string, StatementPath>();
                 this.members = new Dictionary<string, Statement>();
             }
 
@@ -88,20 +147,27 @@ namespace XOR
                 }
                 else
                 {
-                    string name = statement.module.Substring(this.path.Length).Split('/')[0];
-                    string path = this.path + "/" + name;
-
-                    Path child;
-                    if (!childs.TryGetValue(name, out child))
+                    try
                     {
-                        child = new Path();
-                        child.parent = this;
-                        child.name = name;
-                        child.path = path;
-                        childs.Add(name, child);
-                    }
+                        string name = statement.module.Substring(this.path.Length).Split('/')[0];
+                        string path = string.IsNullOrEmpty(this.path) ? name : (this.path + "/" + name);
 
-                    child.AddStatement(statement);
+                        StatementPath child;
+                        if (!childs.TryGetValue(name, out child))
+                        {
+                            child = new StatementPath();
+                            child.parent = this;
+                            child.name = name;
+                            child.path = path;
+                            childs.Add(name, child);
+                        }
+
+                        child.AddStatement(statement);
+                    }
+                    catch (Exception e)
+                    {
+                        Debug.Log(e);
+                    }
                 }
             }
         }
