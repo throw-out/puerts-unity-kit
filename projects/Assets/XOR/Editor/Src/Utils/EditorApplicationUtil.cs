@@ -49,6 +49,13 @@ namespace XOR
                 return "UNKNOWN";
             return $"{app.Program.Statements.Count}";
         }
+        public static Program GetProgram()
+        {
+            EditorApplication app = EditorApplication.Instance;
+            if (app == null || app.Program == null)
+                return null;
+            return app.Program;
+        }
 
         public static void Start()
         {
