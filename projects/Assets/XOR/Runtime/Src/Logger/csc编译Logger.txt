@@ -1,3 +1,0 @@
-将Logger.cs编译为dll, 此时Unity将不会显示Logger本身的堆栈
-
-D:\WindowsApps\Unity\2019.4.28f1c1\Editor\Data\Tools\Roslyn\csc.exe -reference:D:\WindowsApps\Unity\2019.4.28f1c1\Editor\Data\Managed\UnityEngine\UnityEngine.dll -target:library -out:Logger.dll  ./Logger.cs
