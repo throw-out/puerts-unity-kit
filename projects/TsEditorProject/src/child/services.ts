@@ -452,9 +452,18 @@ export class Program {
         return hash;
     }
 
-    private toCSharpType(node: ts.TypeNode) {
-        let module = this.getModuleFromNode(node),
-            fullName = this.getFullName(node);
+    private toCSharpType(node: ts.TypeNode, depth: number = 0) {
+        if (depth > 3) {
+            return null;
+        }
+        if (node.kind === ts.SyntaxKind.ArrayType) {
+            let type = this.toCSharpType((<ts.ArrayTypeNode>node).elementType, depth + 1);
+            if (!type) {
+                return null;
+            }
+            return csharp.System.Array.CreateInstance(type, 0).GetType();
+        }
+        let module = this.getModuleFromNode(node), fullName = this.getFullName(node);
         if (module === ModuleFlags.Global || module === ModuleFlags.CS) {
             if (!fullName.startsWith("CS."))
                 return null;

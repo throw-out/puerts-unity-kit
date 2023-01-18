@@ -1,7 +1,7 @@
 ﻿using System;
 using UnityEngine;
 
-namespace XOR
+namespace XOR.Serializables
 {
     public class ResultPair
     {
