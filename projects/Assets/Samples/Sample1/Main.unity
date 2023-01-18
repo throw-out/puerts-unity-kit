@@ -242,7 +242,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ebff9227b67714d4bbab6c48f78b48c5, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  guid: 
+  guid: 40ffc146-79d8-429e-8bfd-8b6108634c5c
   route: 
   version: 
 --- !u!4 &1984910302

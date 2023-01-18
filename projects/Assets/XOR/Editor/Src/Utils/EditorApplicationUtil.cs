@@ -56,6 +56,18 @@ namespace XOR
                 return null;
             return app.Program;
         }
+        public static Statement GetStatement(string guid)
+        {
+            EditorApplication app = EditorApplication.Instance;
+            if (app == null || app.Program == null)
+                return null;
+            Statement statement = null;
+            if (guid != null)
+            {
+                app.Program.Statements.TryGetValue(guid, out statement);
+            }
+            return statement;
+        }
 
         public static void Start()
         {

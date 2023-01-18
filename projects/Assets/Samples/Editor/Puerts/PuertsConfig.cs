@@ -97,6 +97,7 @@ public class PuertsConfig
                 typeof(XOR.Services.TypeDeclaration),
                 typeof(XOR.Services.PropertyDeclaration),
                 typeof(XOR.Services.EnumPropertyDeclaration),
+                typeof(XOR.ReflectionUtil),
                 //Puerts
                 typeof(JsEnv),
                 typeof(ILoader),

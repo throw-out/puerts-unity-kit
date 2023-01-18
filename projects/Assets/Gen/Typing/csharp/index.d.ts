@@ -26076,6 +26076,7 @@ declare namespace CS {
             protected [__keep_incompatibility]: never;
             public MainThreadHandler: System.Func$3<string, XOR.ThreadWorker.EventData, XOR.ThreadWorker.EventData>
             public ChildThreadHandler: System.Func$3<string, XOR.ThreadWorker.EventData, XOR.ThreadWorker.EventData>
+            public static get RealThread(): number;
             public get IsAlive(): boolean;
             public get IsInitialized(): boolean;
             public get Syncr(): XOR.ThreadSyncr;
@@ -26479,6 +26480,11 @@ declare namespace CS {
             public static Generator($next: System.Func$1<any>, $isDone: System.Func$1<boolean>): System.Collections.IEnumerator
             public static Generator($next: System.Func$1<XOR.IEnumeratorUtil.Tick>): System.Collections.IEnumerator
             public static UsingTick($jsEnv: Puerts.JsEnv): void
+        }
+        class ReflectionUtil extends System.Object {
+            protected [__keep_incompatibility]: never;
+            public static GetType($fullName: string): System.Type
+            public GetType(): System.Type
         }
     }
     namespace PuertsConfig {

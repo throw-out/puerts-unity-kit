@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using UnityEditor;
 using UnityEngine;
 using XOR.Services;
@@ -9,36 +10,27 @@ namespace XOR
 {
     internal class ModuleSelector : PopupWindowContent
     {
-        internal static void GetWindow(Program program)
+        const int IconWidth = 14;
+        const int HeaderHeight = 20;
+
+        internal static void Show(Program program, Action<string> callback)
+        {
+            Show(program, callback, GUILayoutUtility.GetLastRect());
+        }
+        internal static void Show(Program program, Action<string> callback, Rect activatorRect)
         {
             ModuleSelector selector = new ModuleSelector();
+            selector.SetCallback(callback);
             selector.SetProgram(program);
-            PopupWindow.Show(GUILayoutUtility.GetLastRect(), selector);
+            PopupWindow.Show(activatorRect, selector);
         }
-
-        private string searchText = string.Empty;
-        private Program program;
         private StatementPath root;
         private StatementPath current;
 
-        public void SetProgram(Program program)
-        {
-            this.program = program;
-            if (program != null)
-            {
-                this.current = this.root = new StatementPath();
-                this.root.path = Path.GetDirectoryName(UnityEngine.Application.dataPath).Replace("\\", "/");
-                foreach (var statement in program.Statements)
-                {
-                    this.root.AddStatement(statement.Value);
-                }
-            }
-            else
-            {
-                this.root = null;
-                this.current = null;
-            }
-        }
+        private string searchText = string.Empty;
+        private List<Statement> searchReuslts;
+
+        private Action<string> callback;
 
         public override void OnGUI(Rect rect)
         {
@@ -46,7 +38,7 @@ namespace XOR
             if (!searchText.Equals(newContent))
             {
                 searchText = newContent;
-                SearchData();
+                SearchStatements();
             }
             GUILayout.BeginVertical();
             if (string.IsNullOrEmpty(searchText))
@@ -60,23 +52,24 @@ namespace XOR
             GUILayout.EndVertical();
         }
 
-        void SearchData()
-        {
-            if (program == null || string.IsNullOrEmpty(searchText))
-            {
-                return;
-            }
-        }
-
         void RenderSearch()
         {
             GUILayout.Label("Search", "HeaderButton", GUILayout.Height(20f));
+            if (this.searchReuslts != null)
+            {
+                foreach (Statement memeber in this.searchReuslts)
+                {
+                    if (RenderColumn(memeber.name, true, false, memeber.module))
+                    {
+                        Complete(memeber);
+                    }
+                }
+            }
         }
         void RenderStatementPath()
         {
-            if (RenderHeader(this.current != null && string.IsNullOrEmpty(this.current.path) ? "Component" : this.current.path, this.current != null && this.current.parent != null) &&
-                this.current != null && this.current.parent != null
-            )
+            bool toUpper = this.current != null && this.current.parent != null;
+            if (RenderHeader(this.current != null && string.IsNullOrEmpty(this.current.path) ? "root" : this.current.name, toUpper, this.current?.path) && toUpper)
             {
                 this.current = this.current.parent;
             }
@@ -86,40 +79,96 @@ namespace XOR
                 return;
             }
 
-
-            foreach (var child in this.current.childs)
+            foreach (var child in this.current.childs.Values)
             {
-                if (RenderColumn(child.Key, true))
+                if (RenderColumn(child.name, false, true, child.path))
                 {
-                    this.current = child.Value;
+                    this.current = child;
                 }
             }
-            foreach (var member in this.current.members)
+            foreach (var member in this.current.members.Values)
             {
-                if (RenderColumn(member.Key, false))
+                if (RenderColumn(member.name, true, false, member.module))
                 {
-
+                    Complete(member);
                 }
             }
         }
-
-        bool RenderHeader(string text, bool prefix)
+        bool RenderHeader(string text, bool prefix, string tooltip = null)
         {
             bool click = false;
-            GUILayout.BeginHorizontal("HeaderButton", GUILayout.Height(20f));
-            click |= GUILayout.Button(prefix ? "〈" : string.Empty, Skin.label, GUILayout.Width(10f));
-            click |= GUILayout.Button(text, Skin.label);
+            GUILayout.BeginHorizontal("HeaderButton", GUILayout.Height(HeaderHeight));
+            click |= GUILayout.Button(prefix ? "◀" : string.Empty, Skin.label, GUILayout.Width(IconWidth));
+            if (tooltip != null)
+            {
+                click |= GUILayout.Button(new GUIContent(text, tooltip), Skin.label);
+            }
+            else
+            {
+                click |= GUILayout.Button(text, Skin.label);
+            }
             GUILayout.EndHorizontal();
             return click;
         }
-        bool RenderColumn(string text, bool suffix)
+        bool RenderColumn(string text, bool prefix, bool suffix, string tooltip = null)
         {
             bool click = false;
-            GUILayout.BeginHorizontal("SearchModeFilter", GUILayout.Height(20f));
-            click |= GUILayout.Button(text, Skin.label);
-            click |= GUILayout.Button(suffix ? "〉" : string.Empty, Skin.label, GUILayout.Width(10f));
+            GUILayout.BeginHorizontal("SearchModeFilter", GUILayout.Height(HeaderHeight));
+            click |= GUILayout.Button(prefix ? "#" : string.Empty, Skin.label, GUILayout.Width(IconWidth));
+            if (tooltip != null)
+            {
+                click |= GUILayout.Button(new GUIContent(text, tooltip), Skin.label);
+            }
+            else
+            {
+                click |= GUILayout.Button(text, Skin.label);
+            }
+            click |= GUILayout.Button(suffix ? "▶" : string.Empty, Skin.label, GUILayout.Width(IconWidth));
             GUILayout.EndHorizontal();
             return click;
+        }
+
+        void SetCallback(Action<string> callback)
+        {
+            this.callback = callback;
+        }
+        void SetProgram(Program program)
+        {
+            if (program != null)
+            {
+                this.current = this.root = new StatementPath();
+                foreach (var statement in program.Statements)
+                {
+                    string path = statement.Value.module;
+                    if (path.Contains("/") || path.Contains("\\"))
+                    {
+                        path = PathUtil.GetLocalPath(path);
+                    }
+                    this.root.AddStatement(path.Replace("\\", "/"), statement.Value);
+                }
+                this.root.ShortestPath();
+            }
+            else
+            {
+                this.root = null;
+                this.current = null;
+            }
+        }
+        void Complete(Statement statement)
+        {
+            if (callback != null) callback(statement.guid);
+            EditorWindow.focusedWindow?.Close();
+        }
+        void SearchStatements()
+        {
+            this.current = this.root;
+            if (string.IsNullOrEmpty(searchText) || this.root == null)
+            {
+                this.searchReuslts = null;
+                return;
+            }
+            this.searchReuslts = new List<Statement>();
+            this.root.Search((o) => o.name.Contains(this.searchText) /**|| o.module.Contains(this.searchText)*/, this.searchReuslts);
         }
 
         class StatementPath
@@ -138,9 +187,52 @@ namespace XOR
                 this.members = new Dictionary<string, Statement>();
             }
 
-            public void AddStatement(Statement statement)
+            public void Search(Func<Statement, bool> match, List<Statement> results)
             {
-                if (string.IsNullOrEmpty(statement.module) || statement.module.Equals(this.path))
+                foreach (Statement member in this.members.Values)
+                {
+                    if (match(member))
+                    {
+                        results.Add(member);
+                    }
+                }
+                foreach (StatementPath child in this.childs.Values)
+                {
+                    child.Search(match, results);
+                }
+            }
+            public void ShortestPath()
+            {
+                while (childs.Count == 1 && members.Count == 0)
+                {
+                    StatementPath node = childs.Values.First();
+                    this.name += $"/{node.name}";
+                    this.path = node.path;
+                    childs.Clear();
+                    foreach (var nchild in node.childs)
+                    {
+                        nchild.Value.parent = this;
+                        childs.Add(nchild.Key, nchild.Value);
+                    }
+                    foreach (var nmember in node.members)
+                    {
+                        members.Add(nmember.Key, nmember.Value);
+                    }
+                }
+                foreach (var child in childs.Values.ToArray())
+                {
+                    string oldName = child.name;
+                    child.ShortestPath();
+                    if (!oldName.Equals(child.name))
+                    {
+                        childs.Remove(oldName);
+                        childs.Add(child.name, child);
+                    }
+                }
+            }
+            public void AddStatement(string path, Statement statement)
+            {
+                if (string.IsNullOrEmpty(path) || this.path.Equals(path))
                 {
                     this.members.Remove(statement.name);
                     this.members.Add(statement.name, statement);
@@ -149,8 +241,7 @@ namespace XOR
                 {
                     try
                     {
-                        string name = statement.module.Substring(this.path.Length).Split('/')[0];
-                        string path = string.IsNullOrEmpty(this.path) ? name : (this.path + "/" + name);
+                        string name = path.Substring(this.path.Length).Split('/').First(str => str.Length > 0);
 
                         StatementPath child;
                         if (!childs.TryGetValue(name, out child))
@@ -158,11 +249,11 @@ namespace XOR
                             child = new StatementPath();
                             child.parent = this;
                             child.name = name;
-                            child.path = path;
+                            child.path = string.IsNullOrEmpty(this.path) ? name : (this.path + "/" + name);
                             childs.Add(name, child);
                         }
 
-                        child.AddStatement(statement);
+                        child.AddStatement(path, statement);
                     }
                     catch (Exception e)
                     {

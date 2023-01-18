@@ -16,6 +16,19 @@ type ConfigFile = {
 
 const EmptyCharacters = [" ", "\t"], EnterCharacters = ["\n", "\r"];
 
+enum ModuleFlags {
+    Global = "global",
+    CS = "CS",
+}
+enum ClassesFlags {
+    TsComponent = "xor.TsComponent",
+}
+enum DecoratorFlags {
+    GUID = "xor.guid",
+    Route = "xor.route",
+    Field = "xor.field",
+}
+
 /**读取tsconfig.json文件并反序化成对象
  * @param path 
  * @returns 
@@ -203,7 +216,7 @@ export class Program {
 
             let definition: TypeDefinition = {
                 absoluteName,
-                hash: this.getHash(cd.getSourceFile()),
+                hash: this.getSourceFileHash(cd.getSourceFile()),
                 version: `${new Date().valueOf()}`,
                 isExport: util.isExport(cd),
                 isDeclare: util.isDeclare(cd, true),
@@ -226,19 +239,18 @@ export class Program {
                 continue;
 
             let { expression: target, arguments: args } = <ts.CallExpression>callExpression;
-            if (this.getModuleFromNode(target) !== "global")
+            if (this.getModuleFromNode(target) !== ModuleFlags.Global)
                 continue;
             switch (this.getFullName(target)) {
-                case "xor.guid":
+                case DecoratorFlags.GUID:
                     define.guid = (<ts.StringLiteral>args[0]).text;
                     break;
-                case "xor.route":
+                case DecoratorFlags.Route:
                     define.route = (<ts.StringLiteral>args[0]).text;
                     break;
             }
         }
     }
-
     private async resolveUnknownGuid() {
         this.cp.state = csharp.XOR.Services.ProgramState.Allocating;
         this.cp.stateMessage = '';
@@ -261,7 +273,7 @@ export class Program {
                 this.sourceHash.delete(sourceFile.fileName);
 
                 type.guid = guid;
-                type.hash = this.getHash(sourceFile);
+                type.hash = this.getSourceFileHash(sourceFile);
                 type.version = `${new Date().valueOf()}`;
 
                 this.pushType(type);
@@ -290,7 +302,7 @@ export class Program {
         ctd.name = name;
         ctd.module = module;
         //成员声明
-        let members = this.getProperties(node);
+        let members = this.getClassProperties(node, true);
         if (members) {
             for (let [name, type] of members) {
                 let cpd = new csharp.XOR.Services.PropertyDeclaration();
@@ -346,10 +358,12 @@ export class Program {
         );
     }
 
+    //当前类型声明是否为xor.TsComponent
     private isTsComponent(node: ts.ClassDeclaration) {
-        return this.getFullName(node) === "xor.TsComponent" &&
-            this.getModuleFromNode(node) === "global";
+        return this.getFullName(node) === ClassesFlags.TsComponent &&
+            this.getModuleFromNode(node) === ModuleFlags.Global;
     }
+    //当前类型是否为xor.TsComponent或其派生类
     private isInheritFromTsComponent(node: ts.ClassDeclaration) {
         if (this.isTsComponent(node)) {
             return true;
@@ -370,7 +384,27 @@ export class Program {
         }
         return false;
     }
-    private getProperties(node: ts.ClassDeclaration, inherit?: boolean) {
+    //是否显式声明为C# Properties, 用于非公开属性或指定RawType
+    private getFieldDecorator(node: ts.PropertyDeclaration) {
+        if (!node.modifiers)
+            return null;
+        for (let modifier of node.modifiers) {
+            if (modifier.kind !== ts.SyntaxKind.Decorator)
+                continue;
+            let callExpression = (<ts.Decorator>modifier).expression;
+            if (callExpression.kind !== ts.SyntaxKind.CallExpression)
+                continue;
+
+            let { expression: target, arguments: args } = <ts.CallExpression>callExpression;
+            if (this.getModuleFromNode(target) !== ModuleFlags.Global ||
+                this.getFullName(target) !== DecoratorFlags.Field)
+                continue;
+            return { ok: true, args: args[0] };
+        }
+        return null;
+    }
+    //获取Class中声明为C# Properties的成员
+    private getClassProperties(node: ts.ClassDeclaration, inherit?: boolean) {
         if (this.isTsComponent(node)) {
             return null;
         }
@@ -380,9 +414,11 @@ export class Program {
                 if (m.kind !== ts.SyntaxKind.PropertyDeclaration)
                     continue;
                 let { name, type } = <ts.PropertyDeclaration>m;
-                if (name.kind !== ts.SyntaxKind.StringLiteral)
-                    continue;
-                members.set(name.text, type);
+                if (name.kind === ts.SyntaxKind.StringLiteral ||
+                    name.kind === ts.SyntaxKind.Identifier
+                ) {
+                    members.set(name.text, type);
+                }
             }
         }
         if (inherit && node.heritageClauses) {
@@ -393,7 +429,7 @@ export class Program {
                     //console.warn(`无效的继承对象:${this.getAbsoluteName(ewta.expression)}`);
                     continue;
                 }
-                const _members = this.getProperties(cd, true);
+                const _members = this.getClassProperties(cd, true);
                 if (!_members) {
                     continue;
                 }
@@ -406,7 +442,7 @@ export class Program {
         }
         return members;
     }
-    private getHash(node: ts.Node) {
+    private getSourceFileHash(node: ts.Node) {
         let path = node.getSourceFile().fileName;
         let hash = this.sourceHash.get(path);
         if (!hash) {
@@ -419,14 +455,14 @@ export class Program {
     private toCSharpType(node: ts.TypeNode) {
         let module = this.getModuleFromNode(node),
             fullName = this.getFullName(node);
-        if (module === "global") {
+        if (module === ModuleFlags.Global || module === ModuleFlags.CS) {
             if (!fullName.startsWith("CS."))
                 return null;
             fullName = fullName.substring(3);
         } else if (module !== "csharp") {
             return null;
         }
-        return Type.GetType(fullName, false);
+        return csharp.XOR.ReflectionUtil.GetType(fullName);
     }
 
     //#region 类型方法
@@ -491,7 +527,7 @@ export class Program {
                 );
             }
         }
-        return "global";
+        return ModuleFlags.Global;
     }
     /**获取类型声明所在的模块
      * @param declaration 
@@ -625,7 +661,6 @@ const util = new class {
         return !this.isPublic(node, defaultValue);
     }
 }
-
 class Throttler {
     private tick: number;
     private readonly frequency: number;
@@ -635,7 +670,6 @@ class Throttler {
         this.duration = duration;
         this.frequency = frequency > 0 ? frequency : 1;
     }
-
     public async complete() {
         if ((++this.tick) % this.frequency === 0) {
             await new Promise<void>(resolve => setTimeout(resolve, this.duration));

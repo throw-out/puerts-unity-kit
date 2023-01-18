@@ -7,17 +7,20 @@ namespace XOR
     [CustomEditor(typeof(TsComponent))]
     internal class TsComponentEditor : Editor
     {
+        private const int ModuleHeaderWidth = 60;
+
+        private static bool servicesStatusFoldout = true;
+        private static bool moduleFoldout = true;
+        private static bool memberFoldout = true;
+
         private TsComponent component;
         private Statement statement;
 
-        private static bool servicesStatusFoldout = true;
-        private static bool componentFoldout = true;
-        private static bool memberFoldout = true;
+        private Rect selectorRect;
 
         void OnEnable()
         {
             component = target as TsComponent;
-            statement = null;
             if (!EditorApplicationUtil.IsRunning())
             {
                 servicesStatusFoldout = true;
@@ -26,7 +29,6 @@ namespace XOR
         void OnDisable()
         {
             component = null;
-            statement = null;
         }
         public override void OnInspectorGUI()
         {
@@ -34,11 +36,13 @@ namespace XOR
             {
                 return;
             }
+            statement = EditorApplicationUtil.GetStatement(ComponentUtil.GetGuid(component));
+
             EditorGUILayout.BeginVertical();
 
+            RenderServicesStatus();
             RenderModule();
             RenderMembers();
-            RenderServicesStatus();
 
             EditorGUILayout.EndVertical();
         }
@@ -63,25 +67,16 @@ namespace XOR
         {
             if (GUIUtil.RenderHeader("模块"))
             {
-                componentFoldout = !componentFoldout;
+                moduleFoldout = !moduleFoldout;
             }
-            if (componentFoldout)
+            if (moduleFoldout)
             {
                 using (new EditorGUI.DisabledScope(!EditorApplicationUtil.IsAvailable()))
                 {
-                    if (string.IsNullOrEmpty(ComponentUtil.GetGuid(component)))
-                    {
-                        GUIUtil.RenderGroup(
-                            _RenderModuleSelector
-                        );
-                    }
-                    else
-                    {
-                        GUIUtil.RenderGroup(
-                            _RenderModuleInfo,
-                            _RenderModuleSelector
-                        );
-                    }
+                    GUIUtil.RenderGroup(
+                        _RenderModule,
+                        _RenderModuleSelector
+                    );
                 }
             }
             else
@@ -108,20 +103,70 @@ namespace XOR
             }
         }
 
-        void _RenderModuleSelector()
+        void _RenderModule()
         {
-            if (GUILayout.Button("选择模块"))
+            string guid = component != null ? ComponentUtil.GetGuid(component) : string.Empty;
+            string route = component != null ? ComponentUtil.GetRoute(component) : string.Empty;
+            string version = component != null ? ComponentUtil.GetVersion(component) : string.Empty;
+
+            using (new EditorGUI.DisabledScope(true))
             {
-                ModuleSelector.GetWindow(EditorApplicationUtil.GetProgram());
+                GUILayout.BeginHorizontal();
+                GUILayout.Label("GUID:", GUILayout.Width(ModuleHeaderWidth));
+                GUILayout.Label(guid, Skin.label);
+                GUILayout.EndHorizontal();
+
+                GUILayout.BeginHorizontal();
+                GUILayout.Label("Type:", GUILayout.Width(ModuleHeaderWidth));
+                if (statement != null) GUILayout.Label(new GUIContent(statement.name, statement.name), Skin.label);
+                else GUILayout.Label("module missing", Skin.label);
+                GUILayout.EndHorizontal();
+
+                GUILayout.BeginHorizontal();
+                GUILayout.Label("Module:", GUILayout.Width(ModuleHeaderWidth));
+                if (statement != null) GUILayout.Label(new GUIContent(statement.module, statement.module), Skin.label);
+                else GUILayout.Label("module missing", Skin.label);
+                GUILayout.EndHorizontal();
             }
         }
-        void _RenderModuleInfo()
+        void _RenderModuleSelector()
         {
-            GUILayout.Label("SELECT");
+            GUILayout.BeginHorizontal();
+            using (new EditorGUI.DisabledScope(statement == null))
+            {
+                if (GUILayout.Button("打开脚本"))
+                {
+
+                }
+            }
+            if (GUILayout.Button("选择模块"))
+            {
+                ModuleSelector.Show(EditorApplicationUtil.GetProgram(), OnSelectorCallback, selectorRect);
+            }
+            if (Event.current.type == EventType.Repaint)
+            {
+                selectorRect = GUILayoutUtility.GetLastRect();
+            }
+            GUILayout.EndHorizontal();
         }
+
         void _RenderMembers()
         {
             GUILayout.Label("Empty");
+        }
+
+        void OnSelectorCallback(string guid)
+        {
+            if (component == null)
+                return;
+            ComponentUtil.SetGuid(component, guid);
+            SetDirty();
+        }
+        new void SetDirty()
+        {
+            if (component == null)
+                return;
+            EditorUtility.SetDirty(component);
         }
     }
 }

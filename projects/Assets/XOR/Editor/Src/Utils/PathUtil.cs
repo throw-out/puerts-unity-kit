@@ -9,27 +9,35 @@ namespace XOR
         /// <summary>
         /// 转换本地路径至绝对路径
         /// </summary>
-        /// <param name="localpath">基于UnityEngine.Application.dataPath的相对路径</param>
+        /// <param name="localPath">基于UnityEngine.Application.dataPath的相对路径</param>
+        /// <param name="rootPath"></param>
         /// <returns></returns>
-        public static string GetFullPath(string localpath)
+        public static string GetFullPath(string localPath, string rootPath = null)
         {
-            return Path.GetFullPath(Path.Combine(UnityEngine.Application.dataPath, localpath));
+            if (string.IsNullOrEmpty(rootPath))
+            {
+                rootPath = UnityEngine.Application.dataPath;
+            }
+            return Path.GetFullPath(Path.Combine(rootPath, localPath));
         }
         /// <summary>
         /// 转换绝对路径至基于UnityEngine.Application.dataPath的相对路径
         /// </summary>
-        /// <param name="fullpath"></param>
+        /// <param name="fullPath"></param>
         /// <returns></returns>
-        public static string GetLocalPath(string fullpath)
+        public static string GetLocalPath(string fullPath, string rootPath = null)
         {
-            if (string.IsNullOrEmpty(fullpath))
+            if (string.IsNullOrEmpty(fullPath))
                 return null;
-            string datapath = UnityEngine.Application.dataPath;
-            if (!IsSameDriver(datapath, fullpath))
+            if (string.IsNullOrEmpty(rootPath))
+            {
+                rootPath = UnityEngine.Application.dataPath;
+            }
+            if (!IsSameDriver(rootPath, fullPath))
                 return null;
 
-            string[] fullpathArray = fullpath.Replace("\\", "/").Split('/');
-            string[] datapathArray = datapath.Replace("\\", "/").Split('/');
+            string[] fullpathArray = fullPath.Replace("\\", "/").Split('/');
+            string[] datapathArray = rootPath.Replace("\\", "/").Split('/');
 
             bool fork = false;
             List<string> buidler = new List<string>();
