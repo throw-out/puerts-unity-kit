@@ -7,8 +7,6 @@ using UnityEngine;
 
 namespace XOR.Serializables
 {
-
-
     internal class NodeWrap
     {
         public SerializedProperty Node { get; private set; }
@@ -110,70 +108,180 @@ namespace XOR.Serializables
         }
     }
 
-    internal abstract class Renderer
+    internal class SerializedObjectWrap
     {
-        protected const float HEIGHT_SPACING_HALF = 2f;
-        protected const float HEIGHT_SPACING = HEIGHT_SPACING_HALF * 2;
-        public NodeWrap Node { get; set; }
-        public virtual void Render(Rect position)
+        public SerializedObject Root { get; private set; }
+        public Dictionary<string, Type> TypeMapping { get; private set; }
+
+        public SerializedProperty GetProperty(string propertyName)
         {
-            //创建一个属性包装器，用于将常规GUI控件与SerializedProperty一起使用
-            using (new EditorGUI.PropertyScope(position, GUIContent.none, Node.ArrayParent))
+            return Root != null ? Root.FindProperty(propertyName) : null;
+        }
+
+        public static SerializedObjectWrap Create(SerializedObject componentRoot, Type componentType)
+        {
+            Dictionary<string, Type> typeMapping = new Dictionary<string, Type>();
+
+            FieldInfo[] fields = componentType.GetFields(BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public);
+            foreach (FieldInfo field in fields)
             {
-                //设置属性名宽度 Name HP
-                EditorGUIUtility.labelWidth = 0;
-                //输入框高度，默认一行的高度
-                position.height = this.GetLineHeight();
-
-                float normalizeWidth = position.width, normalizeHalf = normalizeWidth / 2f;
-
-                //输入框的位置
-                Rect keyRect = new Rect(position)
+                Type valueElementType = field.FieldType.IsArray ? field.FieldType.GetElementType() : null;
+                if (
+                    valueElementType == null ||
+                    componentRoot.FindProperty(field.Name) == null ||
+                    !IsVaildField(valueElementType)
+                )
                 {
-                    width = normalizeHalf,
-                    height = position.height - HEIGHT_SPACING,
-                    y = position.y + HEIGHT_SPACING_HALF
-                };
-                Rect valueRect = new Rect(keyRect)
-                {
-                    x = keyRect.x + keyRect.width + 2,
-                    width = normalizeHalf,
-                };
-                Rect optionsRect = new Rect(valueRect)
-                {
-                    x = valueRect.x + valueRect.width + 2,
-                };
+                    continue;
+                }
+                typeMapping.Add(field.Name, valueElementType);
+            }
 
-                Node.Key = EditorGUI.TextField(keyRect, string.Empty, Node.Key);
-                RenderValue(position, valueRect);
+            return new SerializedObjectWrap()
+            {
+                Root = componentRoot,
+                TypeMapping = typeMapping,
+            };
+        }
+        private static bool IsVaildField(Type type)
+        {
+            FieldInfo index, key;
+            return typeof(XOR.Serializables.IPair).IsAssignableFrom(type)
+                && (index = type.GetField("index")) != null && index.FieldType == typeof(int)
+                && (key = type.GetField("key")) != null && key.FieldType == typeof(string)
+                && type.GetField("value") != null;
+        }
+    }
+}
+namespace XOR.Serializables.TsComponent
+{
+    internal class Display
+    {
+        private Dictionary<Type, Renderer> renderers;
+        public Display()
+        {
+            this.renderers = new Dictionary<Type, Renderer>();
+        }
+        public void AddRenderer<TRenderer>(Type valueType)
+            where TRenderer : Renderer, new()
+        {
+            var renderer = new TRenderer();
+            this.renderers.Add(valueType, renderer);
+        }
+        public void Render(NodeWrap node)
+        {
+            Renderer renderer = null;
+            this.renderers.TryGetValue(node.PairType, out renderer);
+            if (renderer != null)
+            {
+                renderer.Node = node;
+                renderer.Render();
             }
         }
-        protected virtual void RenderValue(Rect position, Rect valueRect)
+
+        public static Display Create()
         {
+            var display = new Display();
+            display.AddRenderer<StringRenderer>(typeof(XOR.Serializables.String));
+            display.AddRenderer<NumberRenderer>(typeof(XOR.Serializables.Number));
+            display.AddRenderer<BooleanRenderer>(typeof(XOR.Serializables.Boolean));
+            display.AddRenderer<Vector2Renderer>(typeof(XOR.Serializables.Vector2));
+            display.AddRenderer<Vector3Renderer>(typeof(XOR.Serializables.Vector3));
+            display.AddRenderer<ObjectRenderer>(typeof(XOR.Serializables.Object));
+            return display;
         }
-        public virtual float GetLineHeight()
+    }
+
+    internal abstract class Renderer
+    {
+        public NodeWrap Node { get; set; }
+        public virtual void Render()
         {
-            return EditorGUIUtility.singleLineHeight + HEIGHT_SPACING;
+            EditorGUILayout.BeginHorizontal();
+            Node.Key = EditorGUILayout.TextField(Node.Key);
+            RenderValue();
+            EditorGUILayout.EndHorizontal();
         }
-        public virtual float GetHeight()
+        protected abstract void RenderValue();
+    }
+    internal abstract class ArrayRenderer : Renderer
+    {
+        public override void Render()
         {
-            return this.GetLineHeight();
+            var arrayParent = Node.ValueNode;
+            var arrayTypeName = Node.ValueType.Name;
+            if (arrayTypeName.EndsWith("[]"))
+            {
+                arrayTypeName = arrayTypeName.Replace("[]", $"[{arrayParent.arraySize}]");
+            }
+
+            EditorGUILayout.BeginHorizontal();
+            Node.Key = EditorGUILayout.TextField(Node.Key);
+            arrayParent.isExpanded = EditorGUILayout.Foldout(arrayParent.isExpanded, arrayTypeName);
+            EditorGUILayout.EndHorizontal();
+
+            if (arrayParent.isExpanded)
+            {
+                RenderValue();
+                RenderMenu();
+            }
+        }
+        protected override void RenderValue()
+        {
+            var arrayParent = Node.ValueNode;
+            for (int i = 0; i < arrayParent.arraySize; i++)
+            {
+
+            }
+        }
+        protected abstract void RenderElemnetValue(SerializedProperty node, Type type);
+
+        private void RenderMenu()
+        {
+
         }
     }
 
     internal class NumberRenderer : Renderer
     {
-        protected override void RenderValue(Rect position, Rect valueRect)
+        protected override void RenderValue()
         {
-            Node.ValueNode.doubleValue = EditorGUI.DoubleField(valueRect, string.Empty, Node.ValueNode.doubleValue);
+            Node.ValueNode.doubleValue = EditorGUILayout.DoubleField(Node.ValueNode.doubleValue);
         }
     }
     internal class StringRenderer : Renderer
     {
-        protected override void RenderValue(Rect position, Rect valueRect)
+        protected override void RenderValue()
         {
-            Node.ValueNode.stringValue = EditorGUI.TextField(valueRect, string.Empty, Node.ValueNode.stringValue);
+            Node.ValueNode.stringValue = EditorGUILayout.TextField(Node.ValueNode.stringValue);
         }
     }
-
+    internal class BooleanRenderer : Renderer
+    {
+        protected override void RenderValue()
+        {
+            Node.ValueNode.boolValue = EditorGUILayout.Toggle(Node.ValueNode.boolValue);
+        }
+    }
+    internal class Vector2Renderer : Renderer
+    {
+        protected override void RenderValue()
+        {
+            Node.ValueNode.vector2Value = EditorGUILayout.Vector2Field(string.Empty, Node.ValueNode.vector2Value);
+        }
+    }
+    internal class Vector3Renderer : Renderer
+    {
+        protected override void RenderValue()
+        {
+            Node.ValueNode.vector3Value = EditorGUILayout.Vector3Field(string.Empty, Node.ValueNode.vector3Value);
+        }
+    }
+    internal class ObjectRenderer : Renderer
+    {
+        protected override void RenderValue()
+        {
+            Node.ValueNode.objectReferenceValue = EditorGUILayout.ObjectField(string.Empty, Node.ValueNode.objectReferenceValue, typeof(Object), true);
+        }
+    }
 }

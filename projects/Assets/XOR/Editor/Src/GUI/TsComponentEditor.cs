@@ -1,5 +1,9 @@
-﻿using UnityEditor;
+﻿using System;
+using System.Collections.Generic;
+using System.Reflection;
+using UnityEditor;
 using UnityEngine;
+using XOR.Serializables;
 using XOR.Services;
 
 namespace XOR
@@ -16,7 +20,11 @@ namespace XOR
         private TsComponent component;
         private Statement statement;
 
-        private Rect selectorRect;
+        private Rect moduleSelectorRect;
+
+        private SerializedObjectWrap root;
+        private List<NodeWrap> nodes;
+        private XOR.Serializables.TsComponent.Display display;
 
         void OnEnable()
         {
@@ -25,11 +33,35 @@ namespace XOR
             {
                 servicesStatusFoldout = true;
             }
+            //初始化节点信息
+            root = SerializedObjectWrap.Create(serializedObject, typeof(TsComponent));
+            RebuildNodes();
         }
         void OnDisable()
         {
             component = null;
         }
+
+        void RebuildNodes()
+        {
+            //创建当前需要渲染的节点信息
+            nodes = new List<NodeWrap>();
+            foreach (var map in root.TypeMapping)
+            {
+                SerializedProperty arrayParent = root.GetProperty(map.Key);
+                for (int i = 0; i < arrayParent.arraySize; i++)
+                {
+                    nodes.Add(new NodeWrap(arrayParent.GetArrayElementAtIndex(i), map.Value, i, arrayParent));
+                }
+            }
+        }
+        void RebuildVersion()
+        {
+            if (statement == null || !(statement is TypeDeclaration))
+                return;
+            TypeDeclaration type = (TypeDeclaration)statement;
+        }
+
         public override void OnInspectorGUI()
         {
             if (component == null)
@@ -37,6 +69,12 @@ namespace XOR
                 return;
             }
             statement = EditorApplicationUtil.GetStatement(ComponentUtil.GetGuid(component));
+            if (statement != null && statement.version != ComponentUtil.GetVersion(component))
+            {
+                ComponentUtil.SetVersion(component, statement.version);
+                RebuildVersion();
+                RebuildNodes();
+            }
 
             EditorGUILayout.BeginVertical();
 
@@ -141,11 +179,11 @@ namespace XOR
             }
             if (GUILayout.Button("选择模块"))
             {
-                ModuleSelector.Show(EditorApplicationUtil.GetProgram(), OnSelectorCallback, selectorRect);
+                ModuleSelector.Show(EditorApplicationUtil.GetProgram(), OnSelectorCallback, moduleSelectorRect);
             }
             if (Event.current.type == EventType.Repaint)
             {
-                selectorRect = GUILayoutUtility.GetLastRect();
+                moduleSelectorRect = GUILayoutUtility.GetLastRect();
             }
             GUILayout.EndHorizontal();
         }
@@ -168,5 +206,7 @@ namespace XOR
                 return;
             EditorUtility.SetDirty(component);
         }
+
+
     }
 }
