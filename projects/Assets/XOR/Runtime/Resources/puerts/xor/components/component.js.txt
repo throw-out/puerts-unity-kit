@@ -10,7 +10,7 @@ function route(path) {
     return (target) => {
     };
 }
-function field() {
+function field(options) {
     return (target, key) => {
     };
 }

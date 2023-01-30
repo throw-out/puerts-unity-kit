@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
 using UnityEditor;
 using UnityEngine;
@@ -23,7 +24,7 @@ namespace XOR
         private Rect moduleSelectorRect;
 
         private SerializedObjectWrap root;
-        private List<NodeWrap> nodes;
+        private List<NodeWrap> properties;
         private XOR.Serializables.TsComponent.Display display;
 
         void OnEnable()
@@ -35,31 +36,12 @@ namespace XOR
             }
             //初始化节点信息
             root = SerializedObjectWrap.Create(serializedObject, typeof(TsComponent));
-            RebuildNodes();
+            properties = new List<NodeWrap>();
+            display = XOR.Serializables.TsComponent.Display.Create();
         }
         void OnDisable()
         {
             component = null;
-        }
-
-        void RebuildNodes()
-        {
-            //创建当前需要渲染的节点信息
-            nodes = new List<NodeWrap>();
-            foreach (var map in root.TypeMapping)
-            {
-                SerializedProperty arrayParent = root.GetProperty(map.Key);
-                for (int i = 0; i < arrayParent.arraySize; i++)
-                {
-                    nodes.Add(new NodeWrap(arrayParent.GetArrayElementAtIndex(i), map.Value, i, arrayParent));
-                }
-            }
-        }
-        void RebuildVersion()
-        {
-            if (statement == null || !(statement is TypeDeclaration))
-                return;
-            TypeDeclaration type = (TypeDeclaration)statement;
         }
 
         public override void OnInspectorGUI()
@@ -71,10 +53,9 @@ namespace XOR
             statement = EditorApplicationUtil.GetStatement(ComponentUtil.GetGuid(component));
             if (statement != null && statement.version != ComponentUtil.GetVersion(component))
             {
-                ComponentUtil.SetVersion(component, statement.version);
-                RebuildVersion();
-                RebuildNodes();
+                Helper.RebuildVersion(component, statement);
             }
+            Helper.RebuildPropertiesNodes(root, properties, statement);
 
             EditorGUILayout.BeginVertical();
 
@@ -130,9 +111,9 @@ namespace XOR
             }
             if (memberFoldout)
             {
-                using (new EditorGUI.DisabledScope(!EditorApplicationUtil.IsAvailable()))
+                using (new EditorGUI.DisabledScope(statement == null))
                 {
-                    GUIUtil.RenderGroup(_RenderMembers);
+                    GUIUtil.RenderGroup(_RenderPropertiesNodes);
                 }
             }
             else
@@ -188,9 +169,24 @@ namespace XOR
             GUILayout.EndHorizontal();
         }
 
-        void _RenderMembers()
+        void _RenderPropertiesNodes()
         {
-            GUILayout.Label("Empty");
+            if (display == null || properties == null || properties.Count == 0)
+            {
+                GUILayout.Label("Empty");
+                return;
+            }
+            bool dirty = false;
+            foreach (var node in properties)
+            {
+                dirty |= display.Render(node);
+            }
+            if (dirty)
+            {
+                serializedObject.ApplyModifiedProperties();
+                serializedObject.Update();
+                Helper.SetDirty(component);
+            }
         }
 
         void OnSelectorCallback(string guid)
@@ -198,15 +194,78 @@ namespace XOR
             if (component == null)
                 return;
             ComponentUtil.SetGuid(component, guid);
-            SetDirty();
+            ComponentUtil.SetVersion(component, default);
+            Helper.SetDirty(component);
         }
-        new void SetDirty()
+
+        static class Helper
         {
-            if (component == null)
-                return;
-            EditorUtility.SetDirty(component);
+            public static void RebuildPropertiesNodes(SerializedObjectWrap root, List<NodeWrap> outputNodes, Statement statement)
+            {
+                if (outputNodes == null)
+                    return;
+                outputNodes.Clear();
+                //创建当前需要渲染的节点信息
+                foreach (var info in root.FieldMapping)
+                {
+                    SerializedProperty arrayParent = root.GetProperty(info.Key);
+                    for (int i = 0; i < arrayParent.arraySize; i++)
+                    {
+                        var nw = new NodeWrap(arrayParent.GetArrayElementAtIndex(i), info.Value.Element.Type, i, arrayParent);
+                        if (statement != null && statement is TypeDeclaration type && type.Properties.TryGetValue(nw.Key, out var property))
+                        {
+                            nw.ExplicitValueType = property.valueType;
+                            nw.ExplicitValueRange = property.valueRange;
+                        }
+                        outputNodes.Add(nw);
+                    }
+                }
+                outputNodes.Sort((n1, n2) => n1.Index < n2.Index ? -1 : n1.Index < n2.Index ? 1 : 0);
+            }
+            public static void RebuildVersion(TsComponent component, Statement statement)
+            {
+                if (statement == null || !(statement is TypeDeclaration))
+                    return;
+                TypeDeclaration type = (TypeDeclaration)statement;
+
+                ComponentWrap<TsComponent> cw = ComponentWrap<TsComponent>.Create();
+                //移除无效的节点
+                Dictionary<string, IPair> properties = cw.GetProperties(component)?.ToDictionary(pair => pair.Key);
+                if (properties != null)
+                {
+                    string[] obsoleteKeys = properties.Where(pair => !type.Properties.ContainsKey(pair.Key)).Select(pair => pair.Key).ToArray();
+                    cw.RemoveProperty(component, obsoleteKeys);
+                    foreach (string key in obsoleteKeys)
+                    {
+                        properties.Remove(key);
+                    }
+                }
+                //添加未序列化的节点
+                int index = 0;
+                foreach (var property in type.Properties.Values)
+                {
+                    IPair current = null;
+                    properties?.TryGetValue(property.name, out current);
+                    if (current == null)
+                    {
+                        cw.AddProperty(component, property.valueType, property.name, index);
+                    }
+                    else
+                    {
+                        cw.SetPropertyIndex(component, property.name, index);
+                    }
+                    index++;
+                }
+
+                ComponentUtil.SetVersion(component, statement.version);
+                SetDirty(component);
+            }
+            public static void SetDirty(UnityEngine.Object obj)
+            {
+                if (obj == null)
+                    return;
+                EditorUtility.SetDirty(obj);
+            }
         }
-
-
     }
 }

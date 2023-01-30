@@ -16,30 +16,32 @@ namespace XOR
 
         #region 序列化字段
         [SerializeField]
-        private String[] StringPairs;
+        private XOR.Serializables.String[] StringPairs;
         [SerializeField]
-        private Number[] NumberPairs;
+        private XOR.Serializables.Number[] NumberPairs;
         [SerializeField]
-        private Boolean[] BooleanPairs;
+        private XOR.Serializables.Bigint[] BigintPairs;
         [SerializeField]
-        private Vector2[] Vector2Pairs;
+        private XOR.Serializables.Boolean[] BooleanPairs;
         [SerializeField]
-        private Vector3[] Vector3Pairs;
+        private XOR.Serializables.Vector2[] Vector2Pairs;
         [SerializeField]
-        private Object[] ObjectPairs;
+        private XOR.Serializables.Vector3[] Vector3Pairs;
+        [SerializeField]
+        private XOR.Serializables.Object[] ObjectPairs;
 
         [SerializeField]
-        private StringArray[] StringArrayPairs;
+        private XOR.Serializables.StringArray[] StringArrayPairs;
         [SerializeField]
-        private DoubleArray[] DoubleArrayPairs;
+        private XOR.Serializables.DoubleArray[] DoubleArrayPairs;
         [SerializeField]
-        private BooleanArray[] BooleanArrayPairs;
+        private XOR.Serializables.BooleanArray[] BooleanArrayPairs;
         [SerializeField]
-        private Vector2Array[] Vector2ArrayPairs;
+        private XOR.Serializables.Vector2Array[] Vector2ArrayPairs;
         [SerializeField]
-        private Vector3Array[] Vector3ArrayPairs;
+        private XOR.Serializables.Vector3Array[] Vector3ArrayPairs;
         [SerializeField]
-        private ObjectArray[] ObjectArrayPairs;
+        private XOR.Serializables.ObjectArray[] ObjectArrayPairs;
         #endregion
     }
 }

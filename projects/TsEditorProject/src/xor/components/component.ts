@@ -1,6 +1,25 @@
 import * as csharp from "csharp";
 import { $typeof } from "puerts";
 
+
+type NumberConstructor = {
+    new(): csharp.System.Byte;
+    new(): csharp.System.SByte;
+    new(): csharp.System.Char;
+    new(): csharp.System.Int16;
+    new(): csharp.System.UInt16;
+    new(): csharp.System.Int32;
+    new(): csharp.System.UInt32;
+    new(): csharp.System.Int64;
+    new(): csharp.System.UInt64;
+};
+type FieldOptions = NumberConstructor | Partial<{
+    /**指定RawType(原始类型: System.Int16/System.Int32等类型都对应number) */
+    type: NumberConstructor;
+    /**指定数值范围 */
+    range: [min: number, max: number],
+}>;
+
 class TsComponentConstructor extends xor.TsBehaviour {
 
 }
@@ -14,11 +33,11 @@ function route(path: string): ClassDecorator {
 
     };
 }
-function field(): PropertyDecorator {
+function field(options?: FieldOptions): PropertyDecorator {
     return (target, key) => {
-
     };
 }
+
 function register() {
     let _g = (global ?? globalThis ?? this);
     _g.xor = _g.xor || {};
@@ -57,6 +76,9 @@ declare global {
          * ```
          */
         function route(path: string): ClassDecorator;
-        function field(): PropertyDecorator;
+        /**定义序列化字段
+         * @param options 
+         */
+        function field(options?: FieldOptions): PropertyDecorator;
     }
 }

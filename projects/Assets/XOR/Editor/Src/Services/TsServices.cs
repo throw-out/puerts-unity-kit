@@ -166,6 +166,32 @@ namespace XOR.Services
         public Type valueType;
         /// <summary>字段默认值  </summary>
         public object defaultValue;
+
+        /// <summary>
+        /// 数字类型时, 此字段作为数字范围选项
+        /// </summary>
+        public Tuple<float, float> valueRange;
+        /// <summary>
+        /// 为enum类型时, 此字段作为所有可选值(实际类型为int或string)
+        /// </summary>
+        public Dictionary<string, object> valueEnum;
+
+        public void SetRange(float left, float right)
+        {
+            this.valueRange = new Tuple<float, float>(left, right);
+        }
+        public void AddEnum(string key, object value)
+        {
+            if (this.valueEnum == null)
+            {
+                this.valueEnum = new Dictionary<string, object>();
+            }
+            else
+            {
+                this.valueEnum.Remove(key);
+            }
+            this.valueEnum.Add(key, value);
+        }
     }
     public class EnumPropertyDeclaration
     {

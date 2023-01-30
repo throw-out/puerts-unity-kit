@@ -1,4 +1,5 @@
 import * as csharp from "csharp";
+import { $typeof } from "puerts";
 import * as ts from "typescript";
 
 import Type = csharp.System.Type;
@@ -19,6 +20,7 @@ const EmptyCharacters = [" ", "\t"], EnterCharacters = ["\n", "\r"];
 enum ModuleFlags {
     Global = "global",
     CS = "CS",
+    CSharp = "csharp",
 }
 enum ClassesFlags {
     TsComponent = "xor.TsComponent",
@@ -298,9 +300,10 @@ export class Program {
 
         //创建type声明
         let ctd = new csharp.XOR.Services.TypeDeclaration();
-        ctd.guid = type.guid;
         ctd.name = name;
         ctd.module = module;
+        ctd.guid = type.guid;
+        ctd.version = `${new Date().valueOf()}`;
         //成员声明
         let members = this.getClassProperties(node, true);
         if (members) {
@@ -358,13 +361,13 @@ export class Program {
         );
     }
 
-    //当前类型声明是否为xor.TsComponent
-    private isTsComponent(node: ts.ClassDeclaration) {
+    /**当前类型声明是否为xor.TsComponent */
+    private isTsComponent(node: ts.ClassDeclaration): boolean {
         return this.getFullName(node) === ClassesFlags.TsComponent &&
             this.getModuleFromNode(node) === ModuleFlags.Global;
     }
-    //当前类型是否为xor.TsComponent或其派生类
-    private isInheritFromTsComponent(node: ts.ClassDeclaration) {
+    /**当前类型是否为xor.TsComponent或其派生类 */
+    private isInheritFromTsComponent(node: ts.ClassDeclaration): boolean {
         if (this.isTsComponent(node)) {
             return true;
         }
@@ -384,8 +387,21 @@ export class Program {
         }
         return false;
     }
+    /**是否为字段声明(public丶declare或xor.field装饰器) */
+    private isTsComponentField(node: ts.PropertyDeclaration): boolean {
+        if (util.isDeclare(node, false) || util.isPublic(node))
+            return true;
+        if (!node.modifiers)
+            return false;
+        let decoratorArgs = this.getTsComponentFieldDecorator(node);
+        if (decoratorArgs) {
+            return true;
+        }
+
+        return false;
+    }
     //是否显式声明为C# Properties, 用于非公开属性或指定RawType
-    private getFieldDecorator(node: ts.PropertyDeclaration) {
+    private getTsComponentFieldDecorator(node: ts.PropertyDeclaration): ts.NodeArray<ts.Expression> {
         if (!node.modifiers)
             return null;
         for (let modifier of node.modifiers) {
@@ -396,27 +412,24 @@ export class Program {
                 continue;
 
             let { expression: target, arguments: args } = <ts.CallExpression>callExpression;
-            if (this.getModuleFromNode(target) !== ModuleFlags.Global ||
-                this.getFullName(target) !== DecoratorFlags.Field)
+            if (this.getModuleFromNode(target) !== ModuleFlags.Global || this.getFullName(target) !== DecoratorFlags.Field)
                 continue;
-            return { ok: true, args: args[0] };
+            return args;
         }
         return null;
     }
     //获取Class中声明为C# Properties的成员
-    private getClassProperties(node: ts.ClassDeclaration, inherit?: boolean) {
+    private getClassProperties(node: ts.ClassDeclaration, inherit?: boolean): Map<string, ts.TypeNode> {
         if (this.isTsComponent(node)) {
             return null;
         }
         const members = new Map<string, ts.TypeNode>();
         if (node.members) {
             for (let m of node.members) {
-                if (m.kind !== ts.SyntaxKind.PropertyDeclaration)
+                if (m.kind !== ts.SyntaxKind.PropertyDeclaration || !this.isTsComponentField(<ts.PropertyDeclaration>m))
                     continue;
                 let { name, type } = <ts.PropertyDeclaration>m;
-                if (name.kind === ts.SyntaxKind.StringLiteral ||
-                    name.kind === ts.SyntaxKind.Identifier
-                ) {
+                if (name.kind === ts.SyntaxKind.StringLiteral || name.kind === ts.SyntaxKind.Identifier) {
                     members.set(name.text, type);
                 }
             }
@@ -434,8 +447,7 @@ export class Program {
                     continue;
                 }
                 for (let [name, type] of _members) {
-                    if (members.has(name))
-                        continue;
+                    if (members.has(name)) continue;
                     members.set(name, type);
                 }
             }
@@ -452,7 +464,13 @@ export class Program {
         return hash;
     }
 
-    private toCSharpType(node: ts.TypeNode, depth: number = 0) {
+    private _baseTypes: { [t: string]: Type } = {
+        ["string"]: $typeof(csharp.System.String),
+        ["number"]: $typeof(csharp.System.Double),
+        ["boolean"]: $typeof(csharp.System.Boolean),
+        ["bigint"]: $typeof(csharp.System.Int64),
+    };
+    private toCSharpType(node: ts.TypeNode, depth: number = 0): Type {
         if (depth > 3) {
             return null;
         }
@@ -464,14 +482,20 @@ export class Program {
             return csharp.System.Array.CreateInstance(type, 0).GetType();
         }
         let module = this.getModuleFromNode(node), fullName = this.getFullName(node);
-        if (module === ModuleFlags.Global || module === ModuleFlags.CS) {
-            if (!fullName.startsWith("CS."))
-                return null;
-            fullName = fullName.substring(3);
-        } else if (module !== "csharp") {
-            return null;
+
+        if (module === ModuleFlags.Global && fullName in this._baseTypes) {
+            return this._baseTypes[fullName];
         }
-        return csharp.XOR.ReflectionUtil.GetType(fullName);
+        else if (
+            module === ModuleFlags.CSharp ||
+            (module === ModuleFlags.Global || module === ModuleFlags.CS) && fullName.startsWith("CS.")
+        ) {
+            if (fullName.startsWith("CS.")) {
+                fullName = fullName.substring(3);
+            }
+            return csharp.XOR.ReflectionUtil.GetType(fullName);
+        }
+        return null;
     }
 
     //#region 类型方法
@@ -606,7 +630,7 @@ const util = new class {
         return ts.SyntaxKind.PublicKeyword;
     }
 
-    public isDeclare(node: ts.Node, inherit?: boolean) {
+    public isDeclare(node: ts.Node, inherit?: boolean): boolean {
         if (!node)
             return false;
         if (ts.canHaveModifiers(node)) {
@@ -621,7 +645,7 @@ const util = new class {
         }
         return this.isDeclare(node.parent, inherit);
     }
-    public isExport(node: ts.Node) {
+    public isExport(node: ts.Node): boolean {
         if (!ts.canHaveModifiers(node))
             return false;
         let modifiers = ts.getModifiers(node);
@@ -634,7 +658,7 @@ const util = new class {
         }
         return false;
     }
-    public isAbstract(node: ts.Node) {
+    public isAbstract(node: ts.Node): boolean {
         if (!ts.canHaveModifiers(node))
             return false;
         let modifiers = ts.getModifiers(node);
@@ -647,7 +671,7 @@ const util = new class {
         }
         return false;
     }
-    public isPublic(node: ts.Node, defaultValue: boolean = true) {
+    public isPublic(node: ts.Node, defaultValue: boolean = true): boolean {
         if (!ts.canHaveModifiers(node))
             return false;
         let modifiers = ts.getModifiers(node);
@@ -666,7 +690,7 @@ const util = new class {
         }
         return defaultValue;
     }
-    public isPrivateOrProtected(node: ts.Node, defaultValue: boolean = true) {
+    public isPrivateOrProtected(node: ts.Node, defaultValue: boolean = true): boolean {
         return !this.isPublic(node, defaultValue);
     }
 }

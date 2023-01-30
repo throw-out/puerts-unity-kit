@@ -78,7 +78,7 @@ namespace XOR
         {
             public static string GuidField => nameof(guid);
             public static string RouteField => nameof(route);
-            public static string VersionField => nameof(route);
+            public static string VersionField => nameof(version);
         }
     }
 }

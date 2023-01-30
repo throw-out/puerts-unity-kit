@@ -704,6 +704,11 @@ declare namespace CS {
             public MoveNext(): boolean
             public Reset(): void
         }
+        class Tuple$2<T1, T2> extends System.Object implements System.Runtime.CompilerServices.ITuple, System.ITupleInternal, System.IComparable, System.Collections.IStructuralComparable, System.Collections.IStructuralEquatable {
+            protected [__keep_incompatibility]: never;
+        }
+        interface ITupleInternal extends System.Runtime.CompilerServices.ITuple {
+        }
     }
     namespace UnityEngine {
         /** Interface into functionality unique to handheld devices.
@@ -26308,114 +26313,6 @@ declare namespace CS {
             public static DisposeAll(): void
             public constructor()
         }
-        class ResultPair extends System.Object {
-            protected [__keep_incompatibility]: never;
-            public key: string
-            public value: any
-            public constructor($pair: XOR.IPair)
-            public constructor()
-        }
-        interface IPair {
-            Index: number
-            Key: string
-            Value: any
-        }
-        class Pair$1<T> extends System.Object implements XOR.IPair {
-            protected [__keep_incompatibility]: never;
-            public get Index(): number;
-            public get Key(): string;
-            public get Value(): any;
-        }
-        class String extends XOR.Pair$1<string> implements XOR.IPair {
-            protected [__keep_incompatibility]: never;
-            public get Index(): number;
-            public get Key(): string;
-            public get Value(): any;
-            public constructor()
-        }
-        class Number extends XOR.Pair$1<number> implements XOR.IPair {
-            protected [__keep_incompatibility]: never;
-            public get Index(): number;
-            public get Key(): string;
-            public get Value(): any;
-            public constructor()
-        }
-        class Boolean extends XOR.Pair$1<boolean> implements XOR.IPair {
-            protected [__keep_incompatibility]: never;
-            public get Index(): number;
-            public get Key(): string;
-            public get Value(): any;
-            public constructor()
-        }
-        class Vector2 extends XOR.Pair$1<UnityEngine.Vector2> implements XOR.IPair {
-            protected [__keep_incompatibility]: never;
-            public get Index(): number;
-            public get Key(): string;
-            public get Value(): any;
-            public constructor()
-        }
-        class Vector3 extends XOR.Pair$1<UnityEngine.Vector3> implements XOR.IPair {
-            protected [__keep_incompatibility]: never;
-            public get Index(): number;
-            public get Key(): string;
-            public get Value(): any;
-            public constructor()
-        }
-        class Object extends XOR.Pair$1<UnityEngine.Object> implements XOR.IPair {
-            protected [__keep_incompatibility]: never;
-            public get Index(): number;
-            public get Key(): string;
-            public get Value(): any;
-            public constructor()
-        }
-        class StringArray extends XOR.Pair$1<System.Array$1<string>> implements XOR.IPair {
-            protected [__keep_incompatibility]: never;
-            public get Index(): number;
-            public get Key(): string;
-            public get Value(): any;
-            public constructor()
-        }
-        class DoubleArray extends XOR.Pair$1<System.Array$1<number>> implements XOR.IPair {
-            protected [__keep_incompatibility]: never;
-            public get Index(): number;
-            public get Key(): string;
-            public get Value(): any;
-            public constructor()
-        }
-        class BooleanArray extends XOR.Pair$1<System.Array$1<boolean>> implements XOR.IPair {
-            protected [__keep_incompatibility]: never;
-            public get Index(): number;
-            public get Key(): string;
-            public get Value(): any;
-            public constructor()
-        }
-        class Vector2Array extends XOR.Pair$1<System.Array$1<UnityEngine.Vector2>> implements XOR.IPair {
-            protected [__keep_incompatibility]: never;
-            public get Index(): number;
-            public get Key(): string;
-            public get Value(): any;
-            public constructor()
-        }
-        class Vector3Array extends XOR.Pair$1<System.Array$1<UnityEngine.Vector3>> implements XOR.IPair {
-            protected [__keep_incompatibility]: never;
-            public get Index(): number;
-            public get Key(): string;
-            public get Value(): any;
-            public constructor()
-        }
-        class ObjectArray extends XOR.Pair$1<System.Array$1<UnityEngine.Object>> implements XOR.IPair {
-            protected [__keep_incompatibility]: never;
-            public get Index(): number;
-            public get Key(): string;
-            public get Value(): any;
-            public constructor()
-        }
-        class MenuPathAttribute extends System.Attribute implements System.Runtime.InteropServices._Attribute {
-            protected [__keep_incompatibility]: never;
-            public get path(): string;
-            public constructor($path: string)
-            public constructor()
-        }
         class TsComponent extends UnityEngine.MonoBehaviour {
             protected [__keep_incompatibility]: never;
             public constructor()
@@ -30419,7 +30316,15 @@ declare namespace CS {
             public name: string
             public valueType: System.Type
             public defaultValue: any
+            public valueRange: System.Tuple$2<number, number>
+            public valueEnum: System.Collections.Generic.Dictionary$2<string, any>
+            public SetRange($left: number, $right: number): void
+            public AddEnum($key: string, $value: any): void
             public constructor()
+        }
+    }
+    namespace System.Runtime.CompilerServices {
+        interface ITuple {
         }
     }
 }

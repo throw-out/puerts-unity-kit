@@ -19,6 +19,10 @@ namespace XOR.Serializables
         public Type PairType { get; private set; }
         public Type ValueType { get; private set; }
 
+        public Type ExplicitValueType { get; set; }
+        public Tuple<float, float> ExplicitValueRange { get; set; }
+        public Dictionary<string, object> ExplicitValueEnum { get; set; }
+
         public SerializedProperty KeyNode
         {
             get
@@ -61,7 +65,7 @@ namespace XOR.Serializables
             this.ArrayParent = arrayParent;
             this.ArrayIndex = arrayIndex;
             this.PairType = pairType;
-            this.ValueType = pairType.GetField("value").FieldType;
+            this.ValueType = pairType.GetField("value", Helper.Flags).FieldType;
         }
 
         /// <summary>从(数组)父节点上移除当前节点 </summary>
@@ -107,49 +111,265 @@ namespace XOR.Serializables
             return Enum.GetName(typeof(SerializedPropertyType), type);
         }
     }
-
     internal class SerializedObjectWrap
     {
         public SerializedObject Root { get; private set; }
-        public Dictionary<string, Type> TypeMapping { get; private set; }
+        public Type Type { get; private set; }
+        public Dictionary<string, FieldWrap> FieldMapping { get; private set; }
 
         public SerializedProperty GetProperty(string propertyName)
         {
             return Root != null ? Root.FindProperty(propertyName) : null;
         }
-
-        public static SerializedObjectWrap Create(SerializedObject componentRoot, Type componentType)
+        public static SerializedObjectWrap Create(SerializedObject root, Type type)
         {
-            Dictionary<string, Type> typeMapping = new Dictionary<string, Type>();
-
-            FieldInfo[] fields = componentType.GetFields(BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public);
-            foreach (FieldInfo field in fields)
-            {
-                Type valueElementType = field.FieldType.IsArray ? field.FieldType.GetElementType() : null;
-                if (
-                    valueElementType == null ||
-                    componentRoot.FindProperty(field.Name) == null ||
-                    !IsVaildField(valueElementType)
-                )
-                {
-                    continue;
-                }
-                typeMapping.Add(field.Name, valueElementType);
-            }
-
             return new SerializedObjectWrap()
             {
-                Root = componentRoot,
-                TypeMapping = typeMapping,
+                Root = root,
+                Type = type,
+                FieldMapping = Helper.GetFieldMapping(type),
             };
         }
-        private static bool IsVaildField(Type type)
+    }
+
+    internal class ElementWrap
+    {
+        public Type Type { get; private set; }
+        public Type ValueType { get { return ValueField.FieldType; } }
+        public FieldInfo IndexField { get; private set; }
+        public FieldInfo KeyField { get; private set; }
+        public FieldInfo ValueField { get; private set; }
+
+        public int GetIndex(object obj)
         {
-            FieldInfo index, key;
-            return typeof(XOR.Serializables.IPair).IsAssignableFrom(type)
-                && (index = type.GetField("index")) != null && index.FieldType == typeof(int)
-                && (key = type.GetField("key")) != null && key.FieldType == typeof(string)
-                && type.GetField("value") != null;
+            return (int)IndexField.GetValue(obj);
+        }
+        public void SetIndex(object obj, int value)
+        {
+            IndexField.SetValue(obj, value);
+        }
+        public string GetKey(object obj)
+        {
+            return (string)KeyField.GetValue(obj);
+        }
+        public void SetKey(object obj, string value)
+        {
+            KeyField.SetValue(obj, value);
+        }
+        public object GetValue(object obj)
+        {
+            return KeyField.GetValue(obj);
+        }
+        public void SetValue(object obj, object value)
+        {
+            KeyField.SetValue(obj, value);
+        }
+        public object CreateInstance()
+        {
+            return System.Activator.CreateInstance(Type);
+        }
+        public static ElementWrap From(Type type)
+        {
+            if (!typeof(XOR.Serializables.IPair).IsAssignableFrom(type))
+                return null;
+            FieldInfo indexField = type.GetField("index");
+            if (indexField == null || indexField.FieldType != typeof(int))
+                return null;
+            FieldInfo keyField = type.GetField("key");
+            if (keyField == null || keyField.FieldType != typeof(string))
+                return null;
+            FieldInfo valueField = type.GetField("value");
+            if (valueField == null)
+                return null;
+            return new ElementWrap()
+            {
+                Type = type,
+                IndexField = indexField,
+                KeyField = keyField,
+                ValueField = valueField,
+            };
+        }
+    }
+    internal class FieldWrap
+    {
+        public FieldInfo Field { get; private set; }
+        public Type FieldType { get; private set; }
+        public ElementWrap Element { get; private set; }
+
+        public IEnumerable<IPair> GetValue(object component)
+        {
+            return Field.GetValue(component) as IEnumerable<IPair>;
+        }
+        public void SetValue(object component, IEnumerable<IPair> values)
+        {
+            if (FieldType.IsArray)
+            {
+                Array array = values.ToArray();
+                if (!FieldType.IsAssignableFrom(array.GetType()))
+                {
+                    Array newArray = Array.CreateInstance(Element.Type, array.Length);
+                    Array.Copy(array, newArray, array.Length);
+                    array = newArray;
+                }
+                Field.SetValue(component, array);
+            }
+            else
+            {
+                Debug.LogWarning($"Unsupport FieldType: ${Field.DeclaringType.FullName}.{Field.Name}");
+            }
+        }
+        public void AppendElement(object component, object elementObj)
+        {
+            var values = this.GetValue(component);
+            var length = values != null ? values.Count() : 0;
+
+            Array newValues = Array.CreateInstance(Element.Type, length + 1);
+            newValues.SetValue(elementObj, newValues.Length - 1);
+            if (length > 0)
+            {
+                Array.Copy(values.ToArray(), newValues, length);
+            }
+
+            this.SetValue(component, newValues as IEnumerable<IPair>);
+        }
+        public static FieldWrap From(FieldInfo field)
+        {
+            Type elementType = field.FieldType.IsArray ? field.FieldType.GetElementType() : null;
+            if (elementType == null)
+                return null;
+            ElementWrap element = ElementWrap.From(elementType);
+            if (element == null)
+                return null;
+            return new FieldWrap()
+            {
+                Field = field,
+                FieldType = field.FieldType,
+                Element = element
+            };
+        }
+    }
+    internal class ComponentWrap<TComponent>
+        where TComponent : UnityEngine.Component
+    {
+        public Type Type { get; private set; }
+        public Dictionary<string, FieldWrap> FieldMapping { get; private set; }
+
+        public IPair[] GetProperties(TComponent component)
+        {
+            List<IPair> results = new List<IPair>();
+            foreach (FieldWrap fw in FieldMapping.Values)
+            {
+                var fv = fw.GetValue(component);
+                if (fv == null)
+                    continue;
+                results.AddRange(fv);
+            }
+            return results.ToArray();
+        }
+        public IPair GetProperty(TComponent component, string key)
+        {
+            FindProperty(component, key, out var value);
+            return value;
+        }
+        public bool AddProperty(TComponent component, Type valueType, string key, int index)
+        {
+            foreach (var fw in FieldMapping.Values)
+            {
+                if (fw.Element.ValueType.IsAssignableFrom(valueType))
+                {
+                    object elementObj = fw.Element.CreateInstance();
+                    fw.Element.SetIndex(elementObj, index);
+                    fw.Element.SetKey(elementObj, key);
+                    fw.AppendElement(component, elementObj);
+                    return true;
+                }
+            }
+            return false;
+        }
+        public bool RemoveProperty(TComponent component, params string[] keys)
+        {
+            foreach (string key in keys)
+            {
+                FindProperty(component, key, out var value, out var field, out var values);
+                if (field == null || values == null)
+                    continue;
+                field.SetValue(component, values.Where(v => v != value).ToArray());
+            }
+            return false;
+        }
+        public bool SetPropertyIndex(TComponent component, string key, int newIndex)
+        {
+            FindProperty(component, key, out var value, out var field, out var values);
+            if (value == null || field == null || values == null)
+                return false;
+            field.Element.SetIndex(value, newIndex);
+            return true;
+        }
+        public bool SetPropertyKey(TComponent component, string key, string newKey)
+        {
+            FindProperty(component, key, out var value, out var field, out var values);
+            if (value == null || field == null || values == null)
+                return false;
+            field.Element.SetKey(value, newKey);
+            return true;
+        }
+
+        void FindProperty(TComponent component, string key, out IPair value)
+        {
+            FindProperty(component, key, out value, out var field, out var values);
+        }
+        void FindProperty(TComponent component, string key,
+            out IPair value,
+            out FieldWrap field,
+            out IEnumerable<IPair> values
+        )
+        {
+            foreach (var fw in FieldMapping.Values)
+            {
+                values = fw.GetValue(component);
+                if (values == null)
+                    continue;
+                value = values.FirstOrDefault(v => v.Key == key);
+                if (value != null)
+                {
+                    field = fw;
+                    return;
+                }
+            }
+            value = null;
+            field = null;
+            values = null;
+        }
+
+        public static ComponentWrap<TComponent> Create()
+        {
+            return new ComponentWrap<TComponent>()
+            {
+                Type = typeof(TComponent),
+                FieldMapping = Helper.GetFieldMapping(typeof(TComponent)),
+            };
+        }
+
+    }
+
+
+    static class Helper
+    {
+        public const BindingFlags Flags = BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public;
+
+        public static Dictionary<string, FieldWrap> GetFieldMapping(Type type)
+        {
+            Dictionary<string, FieldWrap> fieldMapping = new Dictionary<string, FieldWrap>();
+
+            FieldInfo[] fields = type.GetFields(Flags);
+            foreach (FieldInfo field in fields)
+            {
+                FieldWrap fw = FieldWrap.From(field);
+                if (fw == null)
+                    continue;
+                fieldMapping.Add(field.Name, fw);
+            }
+            return fieldMapping;
         }
     }
 }
@@ -157,7 +377,8 @@ namespace XOR.Serializables.TsComponent
 {
     internal class Display
     {
-        private Dictionary<Type, Renderer> renderers;
+        private readonly Dictionary<Type, Renderer> renderers;
+        private Renderer unknown;
         public Display()
         {
             this.renderers = new Dictionary<Type, Renderer>();
@@ -168,37 +389,55 @@ namespace XOR.Serializables.TsComponent
             var renderer = new TRenderer();
             this.renderers.Add(valueType, renderer);
         }
-        public void Render(NodeWrap node)
+        public bool Render(NodeWrap node)
         {
             Renderer renderer = null;
-            this.renderers.TryGetValue(node.PairType, out renderer);
+            if (!this.renderers.TryGetValue(node.PairType, out renderer))
+            {
+                renderer = unknown;
+            }
             if (renderer != null)
             {
+                renderer.Dirty = false;
                 renderer.Node = node;
                 renderer.Render();
+                return renderer.Dirty;
             }
+            return false;
         }
 
         public static Display Create()
         {
-            var display = new Display();
-            display.AddRenderer<StringRenderer>(typeof(XOR.Serializables.String));
-            display.AddRenderer<NumberRenderer>(typeof(XOR.Serializables.Number));
-            display.AddRenderer<BooleanRenderer>(typeof(XOR.Serializables.Boolean));
-            display.AddRenderer<Vector2Renderer>(typeof(XOR.Serializables.Vector2));
-            display.AddRenderer<Vector3Renderer>(typeof(XOR.Serializables.Vector3));
-            display.AddRenderer<ObjectRenderer>(typeof(XOR.Serializables.Object));
+            Assembly assembly = typeof(Display).Assembly;
+            Type[] rendererTypes = (from type in assembly.GetTypes()
+                                    where !type.IsAbstract && typeof(Renderer).IsAssignableFrom(type)
+                                    select type).ToArray();
+            Display display = new Display();
+            display.unknown = new UnknownRenderer();
+            foreach (var type in rendererTypes)
+            {
+                var target = type.GetCustomAttribute<RenderTargetAttribute>(false);
+                if (target == null)
+                    continue;
+                var renderer = System.Activator.CreateInstance(type) as Renderer;
+                display.renderers.Add(target.Type, renderer);
+            }
             return display;
         }
     }
 
     internal abstract class Renderer
     {
+        /// <summary>
+        /// 节点值是否被修改
+        /// </summary>
+        public bool Dirty { get; set; }
         public NodeWrap Node { get; set; }
         public virtual void Render()
         {
             EditorGUILayout.BeginHorizontal();
-            Node.Key = EditorGUILayout.TextField(Node.Key);
+            //Node.Key = EditorGUILayout.TextField(Node.Key);
+            GUILayout.Label(new GUIContent(Node.Key, Node.Key), GUILayout.Width(100f));
             RenderValue();
             EditorGUILayout.EndHorizontal();
         }
@@ -242,46 +481,210 @@ namespace XOR.Serializables.TsComponent
         }
     }
 
-    internal class NumberRenderer : Renderer
+    internal class UnknownRenderer : Renderer
     {
         protected override void RenderValue()
         {
-            Node.ValueNode.doubleValue = EditorGUILayout.DoubleField(Node.ValueNode.doubleValue);
+            using (new EditorGUI.DisabledScope(true))
+            {
+                if (Node.ExplicitValueType != null)
+                {
+                    GUILayout.Label(new GUIContent(Node.ExplicitValueType.FullName, $"不受支持的类型: {Node.ExplicitValueType.FullName}"), GUI.skin.textField);
+                }
+                else
+                {
+                    GUILayout.Label(new GUIContent("UNKNOWN", "不受支持的类型"), GUI.skin.textField);
+                }
+            }
         }
     }
+
+    [RenderTarget(typeof(XOR.Serializables.Number))]
+    internal class NumberRenderer : Renderer
+    {
+        readonly HashSet<Type> IntegerTypes = new HashSet<Type>()
+        {
+            typeof(byte),
+            typeof(sbyte),
+            typeof(System.Char),
+            typeof(System.Int16),
+            typeof(System.UInt16),
+            typeof(System.Int32),
+            typeof(System.UInt32),
+        };
+
+        protected override void RenderValue()
+        {
+            if (Node.ExplicitValueEnum != null)
+            {
+                RendererEnumValue();
+            }
+            else if (Node.ExplicitValueType != null && IntegerTypes.Contains(Node.ExplicitValueType))
+            {
+                RenderIntValue();
+            }
+            else
+            {
+                RenderFloatValue();
+            }
+        }
+        protected virtual void RenderIntValue()
+        {
+            var value = (int)Node.ValueNode.doubleValue;
+            var newValue = Node.ExplicitValueRange != null ?
+                EditorGUILayout.IntSlider(value, (int)Node.ExplicitValueRange.Item1, (int)Node.ExplicitValueRange.Item2) :
+                EditorGUILayout.IntField(value);
+            if (newValue != value || Math.Abs(newValue - Node.ValueNode.doubleValue) > float.Epsilon)
+            {
+                Node.ValueNode.doubleValue = newValue;
+                Dirty |= true;
+            }
+        }
+        protected virtual void RenderFloatValue()
+        {
+            var value = (float)Node.ValueNode.doubleValue;
+            var newValue = Node.ExplicitValueRange != null ?
+                EditorGUILayout.Slider(value, Node.ExplicitValueRange.Item1, Node.ExplicitValueRange.Item2) :
+                EditorGUILayout.DoubleField(value);
+            if (newValue != value || Math.Abs(newValue - Node.ValueNode.doubleValue) > float.Epsilon)
+            {
+                Node.ValueNode.doubleValue = newValue;
+                Dirty |= true;
+            }
+        }
+        protected virtual void RendererEnumValue()
+        {
+            var value = (int)Node.ValueNode.doubleValue;
+            var newValue = EditorGUILayout.IntPopup(value, Node.ExplicitValueEnum.Keys.ToArray(), Node.ExplicitValueEnum.Values.Cast<int>().ToArray());
+            if (newValue != value || Math.Abs(newValue - Node.ValueNode.doubleValue) > float.Epsilon)
+            {
+                Node.ValueNode.doubleValue = newValue;
+                Dirty |= true;
+            }
+        }
+    }
+
+    [RenderTarget(typeof(XOR.Serializables.Bigint))]
+    internal class BigintRenderer : Renderer
+    {
+        protected override void RenderValue()
+        {
+            var value = Node.ValueNode.longValue;
+            var newValue = Node.ExplicitValueRange != null ?
+                EditorGUILayout.IntSlider((int)value, (int)Node.ExplicitValueRange.Item1, (int)Node.ExplicitValueRange.Item2) :
+                EditorGUILayout.LongField(value);
+            if (newValue != value)
+            {
+                Node.ValueNode.longValue = newValue;
+                Dirty |= true;
+            }
+        }
+    }
+
+    [RenderTarget(typeof(XOR.Serializables.String))]
     internal class StringRenderer : Renderer
     {
         protected override void RenderValue()
         {
-            Node.ValueNode.stringValue = EditorGUILayout.TextField(Node.ValueNode.stringValue);
+            if (Node.ExplicitValueEnum != null)
+            {
+                RendererEnumValue();
+            }
+            else
+            {
+                RendererStringValue();
+            }
+        }
+        protected virtual void RendererStringValue()
+        {
+            var value = Node.ValueNode.stringValue;
+            var newValue = EditorGUILayout.TextField(value);
+            if (newValue != value)
+            {
+                Node.ValueNode.stringValue = newValue;
+                Dirty |= true;
+            }
+        }
+        protected virtual void RendererEnumValue()
+        {
+            var value = Node.ValueNode.stringValue;
+            var enumOptions = Node.ExplicitValueEnum.Keys.ToArray();
+            var valueIndex = Array.IndexOf(enumOptions, value);
+            var newIndex = EditorGUILayout.Popup(valueIndex, enumOptions);
+            if (newIndex != valueIndex)
+            {
+                Node.ValueNode.stringValue = Node.ExplicitValueEnum.Values.ToArray()[newIndex] as string;
+                Dirty |= true;
+            }
         }
     }
+
+    [RenderTarget(typeof(XOR.Serializables.Boolean))]
     internal class BooleanRenderer : Renderer
     {
         protected override void RenderValue()
         {
-            Node.ValueNode.boolValue = EditorGUILayout.Toggle(Node.ValueNode.boolValue);
+            var newValue = EditorGUILayout.Toggle(Node.ValueNode.boolValue);
+            if (newValue != Node.ValueNode.boolValue)
+            {
+                Node.ValueNode.boolValue = newValue;
+                Dirty |= true;
+            }
         }
     }
+
+    [RenderTarget(typeof(XOR.Serializables.Vector2))]
     internal class Vector2Renderer : Renderer
     {
         protected override void RenderValue()
         {
-            Node.ValueNode.vector2Value = EditorGUILayout.Vector2Field(string.Empty, Node.ValueNode.vector2Value);
+            var newValue = EditorGUILayout.Vector2Field(string.Empty, Node.ValueNode.vector2Value);
+            if (newValue != Node.ValueNode.vector2Value)
+            {
+                Node.ValueNode.vector2Value = newValue;
+                Dirty |= true;
+            }
         }
     }
+
+    [RenderTarget(typeof(XOR.Serializables.Vector3))]
     internal class Vector3Renderer : Renderer
     {
         protected override void RenderValue()
         {
-            Node.ValueNode.vector3Value = EditorGUILayout.Vector3Field(string.Empty, Node.ValueNode.vector3Value);
+            var newValue = EditorGUILayout.Vector3Field(string.Empty, Node.ValueNode.vector3Value);
+            if (newValue != Node.ValueNode.vector3Value)
+            {
+                Node.ValueNode.vector3Value = newValue;
+                Dirty |= true;
+            }
         }
     }
+
+    [RenderTarget(typeof(XOR.Serializables.Object))]
     internal class ObjectRenderer : Renderer
     {
         protected override void RenderValue()
         {
-            Node.ValueNode.objectReferenceValue = EditorGUILayout.ObjectField(string.Empty, Node.ValueNode.objectReferenceValue, typeof(Object), true);
+            var newValue = EditorGUILayout.ObjectField(string.Empty, Node.ValueNode.objectReferenceValue, Node.ExplicitValueType ?? typeof(UnityEngine.Object), true);
+            if (newValue != Node.ValueNode.objectReferenceValue)
+            {
+                Node.ValueNode.objectReferenceValue = newValue;
+                Dirty |= true;
+            }
+        }
+    }
+
+    /// <summary>
+    /// 定义为目标数据的的渲染器
+    /// </summary>
+    [AttributeUsageAttribute(AttributeTargets.Class, Inherited = false, AllowMultiple = true)]
+    internal class RenderTargetAttribute : Attribute
+    {
+        public Type Type { get; private set; }
+        public RenderTargetAttribute(Type type)
+        {
+            this.Type = type;
         }
     }
 }
