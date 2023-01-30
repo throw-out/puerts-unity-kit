@@ -11,7 +11,17 @@ import GameObjectAlias = csharp.UnityEngine.GameObject;
 @xor.guid("201fcfb8-f0e4-43d4-827f-034f8c48ed34")
 export class AnalyzeTest111 extends xor.TsComponent {
     declare private _prop100: string;
-    declare private _prop101: number;
+
+    @xor.field(csharp.System.Byte)
+    private _prop101: number;
+    private _prop102: number;
+
+    @xor.field({
+        type: csharp.System.Int32,
+        range: [0, 15]
+    })
+    private _prop103: number;
+
     declare private _prop1021111110opll: bigint;
 
     declare private _prop2: Transform;

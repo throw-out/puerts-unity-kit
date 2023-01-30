@@ -502,7 +502,7 @@ namespace XOR.Serializables.TsComponent
     [RenderTarget(typeof(XOR.Serializables.Number))]
     internal class NumberRenderer : Renderer
     {
-        readonly HashSet<Type> IntegerTypes = new HashSet<Type>()
+        static readonly HashSet<Type> IntegerTypes = new HashSet<Type>()
         {
             typeof(byte),
             typeof(sbyte),
@@ -511,6 +511,16 @@ namespace XOR.Serializables.TsComponent
             typeof(System.UInt16),
             typeof(System.Int32),
             typeof(System.UInt32),
+        };
+        static readonly Dictionary<Type, Tuple<long, long>> IntegerRanges = new Dictionary<Type, Tuple<long, long>>()
+        {
+            { typeof(byte), new Tuple<long, long>(byte.MinValue, byte.MaxValue) },
+            { typeof(sbyte), new Tuple<long, long>(sbyte.MinValue, sbyte.MaxValue) },
+            { typeof(System.Char), new Tuple<long, long>(System.Char.MinValue, System.Char.MaxValue) },
+            { typeof(System.Int16), new Tuple<long, long>(System.Int16.MinValue, System.Int16.MaxValue) },
+            { typeof(System.UInt16), new Tuple<long, long>(System.UInt16.MinValue, System.UInt16.MaxValue) },
+            { typeof(System.Int32), new Tuple<long, long>(System.Int32.MinValue, System.Int32.MaxValue) },
+            { typeof(System.UInt32), new Tuple<long, long>(System.UInt32.MinValue, System.UInt32.MaxValue) },
         };
 
         protected override void RenderValue()
@@ -521,19 +531,34 @@ namespace XOR.Serializables.TsComponent
             }
             else if (Node.ExplicitValueType != null && IntegerTypes.Contains(Node.ExplicitValueType))
             {
-                RenderIntValue();
+                RenderIntegerValue();
             }
             else
             {
                 RenderFloatValue();
             }
         }
-        protected virtual void RenderIntValue()
+        protected virtual void RendererEnumValue()
+        {
+            var value = (int)Node.ValueNode.doubleValue;
+            var newValue = EditorGUILayout.IntPopup(value, Node.ExplicitValueEnum.Keys.ToArray(), Node.ExplicitValueEnum.Values.Cast<int>().ToArray());
+            if (newValue != value || Math.Abs(newValue - Node.ValueNode.doubleValue) > float.Epsilon)
+            {
+                Node.ValueNode.doubleValue = newValue;
+                Dirty |= true;
+            }
+        }
+        protected virtual void RenderIntegerValue()
         {
             var value = (int)Node.ValueNode.doubleValue;
             var newValue = Node.ExplicitValueRange != null ?
                 EditorGUILayout.IntSlider(value, (int)Node.ExplicitValueRange.Item1, (int)Node.ExplicitValueRange.Item2) :
                 EditorGUILayout.IntField(value);
+            if (IntegerRanges.TryGetValue(Node.ExplicitValueType, out Tuple<long, long> range))
+            {
+                if (newValue < range.Item1) newValue = (int)range.Item1;
+                else if (newValue > range.Item1) newValue = (int)range.Item2;
+            }
             if (newValue != value || Math.Abs(newValue - Node.ValueNode.doubleValue) > float.Epsilon)
             {
                 Node.ValueNode.doubleValue = newValue;
@@ -546,16 +571,6 @@ namespace XOR.Serializables.TsComponent
             var newValue = Node.ExplicitValueRange != null ?
                 EditorGUILayout.Slider(value, Node.ExplicitValueRange.Item1, Node.ExplicitValueRange.Item2) :
                 EditorGUILayout.DoubleField(value);
-            if (newValue != value || Math.Abs(newValue - Node.ValueNode.doubleValue) > float.Epsilon)
-            {
-                Node.ValueNode.doubleValue = newValue;
-                Dirty |= true;
-            }
-        }
-        protected virtual void RendererEnumValue()
-        {
-            var value = (int)Node.ValueNode.doubleValue;
-            var newValue = EditorGUILayout.IntPopup(value, Node.ExplicitValueEnum.Keys.ToArray(), Node.ExplicitValueEnum.Values.Cast<int>().ToArray());
             if (newValue != value || Math.Abs(newValue - Node.ValueNode.doubleValue) > float.Epsilon)
             {
                 Node.ValueNode.doubleValue = newValue;

@@ -1,20 +1,12 @@
 import * as csharp from "csharp";
-type NumberConstructor = {
-    new (): csharp.System.Byte;
-    new (): csharp.System.SByte;
-    new (): csharp.System.Char;
-    new (): csharp.System.Int16;
-    new (): csharp.System.UInt16;
-    new (): csharp.System.Int32;
-    new (): csharp.System.UInt32;
-    new (): csharp.System.Int64;
-    new (): csharp.System.UInt64;
-};
+type NumberConstructor = typeof csharp.System.Byte | typeof csharp.System.SByte | typeof csharp.System.Char | typeof csharp.System.Int16 | typeof csharp.System.UInt16 | typeof csharp.System.Int32 | typeof csharp.System.UInt32 | typeof csharp.System.Int64 | typeof csharp.System.UInt64;
 type FieldOptions = NumberConstructor | Partial<{
     /**指定RawType(原始类型: System.Int16/System.Int32等类型都对应number) */
     type: NumberConstructor;
     /**指定数值范围 */
     range: [min: number, max: number];
+    /**默认值 */
+    value: any;
 }>;
 declare class TsComponentConstructor extends xor.TsBehaviour {
 }

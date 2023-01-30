@@ -305,12 +305,14 @@ export class Program {
         ctd.guid = type.guid;
         ctd.version = `${new Date().valueOf()}`;
         //成员声明
-        let members = this.getClassProperties(node, true);
+        let members = this.getFields(node, true);
         if (members) {
-            for (let [name, type] of members) {
+            for (let [name, property] of members) {
+                let r = this.getFieldDecoratorArguments(property);
+
                 let cpd = new csharp.XOR.Services.PropertyDeclaration();
                 cpd.name = name;
-                cpd.valueType = this.toCSharpType(type);
+                cpd.valueType = this.convertToCSharpType(property.type);
                 ctd.AddProperty(cpd);
             }
         }
@@ -387,21 +389,20 @@ export class Program {
         }
         return false;
     }
-    /**是否为字段声明(public丶declare或xor.field装饰器) */
-    private isTsComponentField(node: ts.PropertyDeclaration): boolean {
+    /**是否为序列化字段声明(public丶declare或xor.field装饰器) */
+    private isField(node: ts.PropertyDeclaration): boolean {
         if (util.isDeclare(node, false) || util.isPublic(node))
             return true;
         if (!node.modifiers)
             return false;
-        let decoratorArgs = this.getTsComponentFieldDecorator(node);
+        let decoratorArgs = this.getFieldDecorator(node);
         if (decoratorArgs) {
             return true;
         }
-
         return false;
     }
-    //是否显式声明为C# Properties, 用于非公开属性或指定RawType
-    private getTsComponentFieldDecorator(node: ts.PropertyDeclaration): ts.NodeArray<ts.Expression> {
+    /**是否显式声明为序列化字段, 用于非公开属性或指定RawType */
+    private getFieldDecorator(node: ts.PropertyDeclaration): ts.NodeArray<ts.Expression> {
         if (!node.modifiers)
             return null;
         for (let modifier of node.modifiers) {
@@ -418,19 +419,40 @@ export class Program {
         }
         return null;
     }
-    //获取Class中声明为C# Properties的成员
-    private getClassProperties(node: ts.ClassDeclaration, inherit?: boolean): Map<string, ts.TypeNode> {
+    /**获取序列化字段参数声明(解析xor.field参数)
+     * @param decoratorArgsExpressions 
+     */
+    private getFieldDecoratorArguments(node: ts.PropertyDeclaration) {
+        let args: ts.NodeArray<ts.Expression> = this.getFieldDecorator(node);
+        if (!args || args.length === 0)
+            return null;
+        let type: ts.PropertyAccessExpression, range: [min: number, max: number], value: any;
+
+        let first = args[0];
+        switch (first.kind) {
+            case ts.SyntaxKind.ObjectLiteralExpression:
+                console.log(first);
+                break;
+            case ts.SyntaxKind.PropertyAccessExpression:
+                console.log(first);
+                type = <ts.PropertyAccessExpression>first;
+                break;
+        }
+        return { type, range, value };
+    }
+    /**获取Class中所有序列化字段 */
+    private getFields(node: ts.ClassDeclaration, inherit?: boolean): Map<string, ts.PropertyDeclaration> {
         if (this.isTsComponent(node)) {
             return null;
         }
-        const members = new Map<string, ts.TypeNode>();
+        const members = new Map<string, ts.PropertyDeclaration>();
         if (node.members) {
             for (let m of node.members) {
-                if (m.kind !== ts.SyntaxKind.PropertyDeclaration || !this.isTsComponentField(<ts.PropertyDeclaration>m))
+                if (m.kind !== ts.SyntaxKind.PropertyDeclaration || !this.isField(<ts.PropertyDeclaration>m))
                     continue;
-                let { name, type } = <ts.PropertyDeclaration>m;
+                let name = (<ts.PropertyDeclaration>m).name;
                 if (name.kind === ts.SyntaxKind.StringLiteral || name.kind === ts.SyntaxKind.Identifier) {
-                    members.set(name.text, type);
+                    members.set(name.text, <ts.PropertyDeclaration>m);
                 }
             }
         }
@@ -442,7 +464,7 @@ export class Program {
                     //console.warn(`无效的继承对象:${this.getAbsoluteName(ewta.expression)}`);
                     continue;
                 }
-                const _members = this.getClassProperties(cd, true);
+                const _members = this.getFields(cd, true);
                 if (!_members) {
                     continue;
                 }
@@ -462,40 +484,6 @@ export class Program {
             this.sourceHash.set(path, hash);
         }
         return hash;
-    }
-
-    private _baseTypes: { [t: string]: Type } = {
-        ["string"]: $typeof(csharp.System.String),
-        ["number"]: $typeof(csharp.System.Double),
-        ["boolean"]: $typeof(csharp.System.Boolean),
-        ["bigint"]: $typeof(csharp.System.Int64),
-    };
-    private toCSharpType(node: ts.TypeNode, depth: number = 0): Type {
-        if (depth > 3) {
-            return null;
-        }
-        if (node.kind === ts.SyntaxKind.ArrayType) {
-            let type = this.toCSharpType((<ts.ArrayTypeNode>node).elementType, depth + 1);
-            if (!type) {
-                return null;
-            }
-            return csharp.System.Array.CreateInstance(type, 0).GetType();
-        }
-        let module = this.getModuleFromNode(node), fullName = this.getFullName(node);
-
-        if (module === ModuleFlags.Global && fullName in this._baseTypes) {
-            return this._baseTypes[fullName];
-        }
-        else if (
-            module === ModuleFlags.CSharp ||
-            (module === ModuleFlags.Global || module === ModuleFlags.CS) && fullName.startsWith("CS.")
-        ) {
-            if (fullName.startsWith("CS.")) {
-                fullName = fullName.substring(3);
-            }
-            return csharp.XOR.ReflectionUtil.GetType(fullName);
-        }
-        return null;
     }
 
     //#region 类型方法
@@ -589,6 +577,41 @@ export class Program {
             return module;
         }
         return sourceFile.fileName;
+    }
+
+    private _baseTypes: { [t: string]: Type } = {
+        ["string"]: $typeof(csharp.System.String),
+        ["number"]: $typeof(csharp.System.Double),
+        ["boolean"]: $typeof(csharp.System.Boolean),
+        ["bigint"]: $typeof(csharp.System.Int64),
+    };
+    /**转换为C#类型 */
+    private convertToCSharpType(node: ts.TypeNode, depth: number = 0): Type {
+        if (depth > 3) {
+            return null;
+        }
+        if (node.kind === ts.SyntaxKind.ArrayType) {
+            let type = this.convertToCSharpType((<ts.ArrayTypeNode>node).elementType, depth + 1);
+            if (!type) {
+                return null;
+            }
+            return csharp.System.Array.CreateInstance(type, 0).GetType();
+        }
+        let module = this.getModuleFromNode(node), fullName = this.getFullName(node);
+
+        if (module === ModuleFlags.Global && fullName in this._baseTypes) {
+            return this._baseTypes[fullName];
+        }
+        else if (
+            module === ModuleFlags.CSharp ||
+            (module === ModuleFlags.Global || module === ModuleFlags.CS) && fullName.startsWith("CS.")
+        ) {
+            if (fullName.startsWith("CS.")) {
+                fullName = fullName.substring(3);
+            }
+            return csharp.XOR.ReflectionUtil.GetType(fullName);
+        }
+        return null;
     }
     //#endregion
 }
