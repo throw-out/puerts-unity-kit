@@ -36,15 +36,9 @@ namespace XOR.Serializables
     public class String : Pair<System.String> { }
 
     [Implicit(
-        typeof(byte),
-        typeof(sbyte),
-        typeof(char),
-        typeof(short),
-        typeof(ushort),
-        typeof(int),
-        typeof(uint),
-        typeof(float),
-        typeof(double)
+        typeof(byte), typeof(sbyte), typeof(char),
+        typeof(short), typeof(ushort), typeof(int),
+        typeof(uint), typeof(float), typeof(double)
     )]
     [System.Serializable]
     public class Number : Pair<System.Double> { }
@@ -64,6 +58,12 @@ namespace XOR.Serializables
     [MenuPath("Array/String")]
     [System.Serializable]
     public class StringArray : Pair<System.String[]> { }
+
+    [Implicit(
+        typeof(byte), typeof(sbyte), typeof(char),
+        typeof(short), typeof(ushort), typeof(int),
+        typeof(uint), typeof(float), typeof(double)
+    )]
     [MenuPath("Array/Double")]
     [System.Serializable]
     public class DoubleArray : Pair<System.Double[]> { }
@@ -96,12 +96,12 @@ namespace XOR.Serializables
     /// 定义隐式转换类型
     /// </summary>
     [AttributeUsageAttribute(AttributeTargets.Class, Inherited = false, AllowMultiple = false)]
-    internal class ImplicitAttribute : Attribute
+    public class ImplicitAttribute : Attribute
     {
         public Type[] Types { get; private set; }
         public ImplicitAttribute(Type firstType, params Type[] types)
         {
-            this.Types = types.Concat(new[] { firstType }).ToArray();
+            this.Types = types.Concat(new[] { firstType }).Distinct().ToArray();
         }
     }
 }

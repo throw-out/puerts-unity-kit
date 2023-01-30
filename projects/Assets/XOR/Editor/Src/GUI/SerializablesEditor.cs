@@ -266,6 +266,13 @@ namespace XOR.Serializables
             }
             return results.ToArray();
         }
+        public void ClearProperties(TComponent component)
+        {
+            foreach (FieldWrap fw in FieldMapping.Values)
+            {
+                fw.SetValue(component, new IPair[0]);
+            }
+        }
         public IPair GetProperty(TComponent component, string key)
         {
             FindProperty(component, key, out var value);
@@ -277,11 +284,15 @@ namespace XOR.Serializables
             {
                 if (fw.Element.ValueType.IsAssignableFrom(valueType))
                 {
-                    object elementObj = fw.Element.CreateInstance();
-                    fw.Element.SetIndex(elementObj, index);
-                    fw.Element.SetKey(elementObj, key);
-                    fw.AppendElement(component, elementObj);
+                    AddProperty(fw, component, key, index);
                     return true;
+                }
+            }
+            foreach (var fw in FieldMapping.Values)
+            {
+                if (Helper.IsImplicitAssignable(fw.Element, valueType))
+                {
+                    AddProperty(fw, component, key, index);
                 }
             }
             return false;
@@ -340,7 +351,13 @@ namespace XOR.Serializables
             field = null;
             values = null;
         }
-
+        void AddProperty(FieldWrap fieldWrap, TComponent component, string key, int index)
+        {
+            object elementObj = fieldWrap.Element.CreateInstance();
+            fieldWrap.Element.SetIndex(elementObj, index);
+            fieldWrap.Element.SetKey(elementObj, key);
+            fieldWrap.AppendElement(component, elementObj);
+        }
         public static ComponentWrap<TComponent> Create()
         {
             return new ComponentWrap<TComponent>()
@@ -349,7 +366,6 @@ namespace XOR.Serializables
                 FieldMapping = Helper.GetFieldMapping(typeof(TComponent)),
             };
         }
-
     }
 
 
@@ -370,6 +386,27 @@ namespace XOR.Serializables
                 fieldMapping.Add(field.Name, fw);
             }
             return fieldMapping;
+        }
+
+        /// <summary>
+        /// 是否允许隐式分配
+        /// </summary>
+        /// <param name="elementType"></param>
+        /// <param name="valueType"></param>
+        /// <returns></returns>
+        public static bool IsImplicitAssignable(ElementWrap element, Type valueType)
+        {
+            ImplicitAttribute implicitTypes = element.Type.GetCustomAttribute<ImplicitAttribute>(false);
+            if (implicitTypes != null && implicitTypes.Types.Contains(valueType))
+            {
+                return true;
+            }
+            if (element.ValueType.IsArray && valueType.IsArray)
+            {
+                return element.ValueType.GetElementType().IsAssignableFrom(valueType.GetElementType()) ||
+                    implicitTypes != null && implicitTypes.Types.Contains(valueType.GetElementType());
+            }
+            return false;
         }
     }
 }
@@ -437,7 +474,14 @@ namespace XOR.Serializables.TsComponent
         {
             EditorGUILayout.BeginHorizontal();
             //Node.Key = EditorGUILayout.TextField(Node.Key);
-            GUILayout.Label(new GUIContent(Node.Key, Node.Key), GUILayout.Width(100f));
+            if (Node.ExplicitValueType != null)
+            {
+                GUILayout.Label(new GUIContent(Node.Key, $"{Node.Key}: {Node.ExplicitValueType.FullName}"), GUILayout.Width(100f));
+            }
+            else
+            {
+                GUILayout.Label(new GUIContent(Node.Key, Node.Key), GUILayout.Width(100f));
+            }
             RenderValue();
             EditorGUILayout.EndHorizontal();
         }
@@ -557,7 +601,7 @@ namespace XOR.Serializables.TsComponent
             if (IntegerRanges.TryGetValue(Node.ExplicitValueType, out Tuple<long, long> range))
             {
                 if (newValue < range.Item1) newValue = (int)range.Item1;
-                else if (newValue > range.Item1) newValue = (int)range.Item2;
+                else if (newValue > range.Item2) newValue = (int)range.Item2;
             }
             if (newValue != value || Math.Abs(newValue - Node.ValueNode.doubleValue) > float.Epsilon)
             {

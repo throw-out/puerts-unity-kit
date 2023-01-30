@@ -14,11 +14,13 @@ export class AnalyzeTest111 extends xor.TsComponent {
 
     @xor.field(csharp.System.Byte)
     private _prop101: number;
-    private _prop102: number;
+    @xor.field(csharp.System.Byte)
+    private _prop102: number[];
 
     @xor.field({
         type: csharp.System.Int32,
-        range: [0, 15]
+        range: [0, 50],
+        value: 0
     })
     private _prop103: number;
 

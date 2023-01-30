@@ -53,7 +53,7 @@ namespace XOR
             statement = EditorApplicationUtil.GetStatement(ComponentUtil.GetGuid(component));
             if (statement != null && statement.version != ComponentUtil.GetVersion(component))
             {
-                Helper.RebuildVersion(component, statement);
+                Helper.RebuildProperties(component, statement);
             }
             Helper.RebuildPropertiesNodes(root, properties, statement);
 
@@ -195,6 +195,7 @@ namespace XOR
                 return;
             ComponentUtil.SetGuid(component, guid);
             ComponentUtil.SetVersion(component, default);
+            Helper.ClearProperties(component);
             Helper.SetDirty(component);
         }
 
@@ -222,7 +223,7 @@ namespace XOR
                 }
                 outputNodes.Sort((n1, n2) => n1.Index < n2.Index ? -1 : n1.Index < n2.Index ? 1 : 0);
             }
-            public static void RebuildVersion(TsComponent component, Statement statement)
+            public static void RebuildProperties(TsComponent component, Statement statement)
             {
                 if (statement == null || !(statement is TypeDeclaration))
                     return;
@@ -259,6 +260,11 @@ namespace XOR
 
                 ComponentUtil.SetVersion(component, statement.version);
                 SetDirty(component);
+            }
+            public static void ClearProperties(TsComponent component)
+            {
+                ComponentWrap<TsComponent> cw = ComponentWrap<TsComponent>.Create();
+                cw.ClearProperties(component);
             }
             public static void SetDirty(UnityEngine.Object obj)
             {

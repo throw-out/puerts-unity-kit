@@ -308,15 +308,21 @@ export class Program {
         let members = this.getFields(node, true);
         if (members) {
             for (let [name, property] of members) {
-                let r = this.getFieldDecoratorArguments(property);
+                let dargs = this.getFieldDecoratorArguments(property);
 
                 let cpd = new csharp.XOR.Services.PropertyDeclaration();
                 cpd.name = name;
-                cpd.valueType = this.convertToCSharpType(property.type);
+                cpd.valueType = this.convertToCSharpType([property.type, dargs?.type]);
                 ctd.AddProperty(cpd);
+
+                if (dargs && dargs.range) {
+                    cpd.SetRange(dargs.range[0], dargs.range[1]);
+                }
+                if (dargs && dargs.value !== undefined) {
+                    cpd.defaultValue = dargs.value;
+                }
             }
         }
-
         this.cp.AddStatement(ctd);
     }
     private allocDecorator(node: ts.Node, decoratorContent: string) {
@@ -431,10 +437,30 @@ export class Program {
         let first = args[0];
         switch (first.kind) {
             case ts.SyntaxKind.ObjectLiteralExpression:
-                console.log(first);
+                for (let property of (<ts.ObjectLiteralExpression>first).properties) {
+                    if (property.kind !== ts.SyntaxKind.PropertyAssignment)
+                        continue;
+                    let { name, initializer } = <ts.PropertyAssignment>property;
+                    if (initializer.kind === ts.SyntaxKind.NullKeyword || initializer.kind === ts.SyntaxKind.UndefinedKeyword)
+                        continue;
+                    switch (name.getText()) {
+                        case "type":
+                            type = <ts.PropertyAccessExpression>initializer;
+                            break;
+                        case "range":
+                            let [min, max] = (<ts.ArrayLiteralExpression>initializer).elements;
+                            if (min && min.kind === ts.SyntaxKind.NumericLiteral &&
+                                max && max.kind === ts.SyntaxKind.NumericLiteral) {
+                                range = [util.getExpressionValue(min), util.getExpressionValue(max)];
+                            }
+                            break;
+                        case "value":
+                            value = util.getExpressionValue(initializer);
+                            break;
+                    }
+                }
                 break;
             case ts.SyntaxKind.PropertyAccessExpression:
-                console.log(first);
                 type = <ts.PropertyAccessExpression>first;
                 break;
         }
@@ -586,19 +612,27 @@ export class Program {
         ["bigint"]: $typeof(csharp.System.Int64),
     };
     /**转换为C#类型 */
-    private convertToCSharpType(node: ts.TypeNode, depth: number = 0): Type {
+    private convertToCSharpType(node: ts.TypeNode | [type: ts.TypeNode, explicitType: ts.Node], depth: number = 0): Type {
         if (depth > 3) {
             return null;
         }
-        if (node.kind === ts.SyntaxKind.ArrayType) {
-            let type = this.convertToCSharpType((<ts.ArrayTypeNode>node).elementType, depth + 1);
-            if (!type) {
+        let type: ts.TypeNode, explicitType: ts.Node;
+        if (Array.isArray(node)) {
+            type = node[0];
+            explicitType = node[1];
+        } else {
+            type = node;
+        }
+
+        if (type.kind === ts.SyntaxKind.ArrayType) {
+            let cstype = this.convertToCSharpType([(<ts.ArrayTypeNode>type).elementType, explicitType], depth + 1);
+            if (!cstype) {
                 return null;
             }
-            return csharp.System.Array.CreateInstance(type, 0).GetType();
+            return csharp.System.Array.CreateInstance(cstype, 0).GetType();
         }
-        let module = this.getModuleFromNode(node), fullName = this.getFullName(node);
-
+        let module = this.getModuleFromNode(explicitType ?? type),
+            fullName = this.getFullName(explicitType ?? type);
         if (module === ModuleFlags.Global && fullName in this._baseTypes) {
             return this._baseTypes[fullName];
         }
@@ -715,6 +749,35 @@ const util = new class {
     }
     public isPrivateOrProtected(node: ts.Node, defaultValue: boolean = true): boolean {
         return !this.isPublic(node, defaultValue);
+    }
+
+    public getExpressionValue(expression: ts.Expression) {
+        let result: any;
+        switch (expression.kind) {
+            case ts.SyntaxKind.StringLiteral:
+                result = (<ts.StringLiteral>expression).text;
+                break;
+            case ts.SyntaxKind.NumericLiteral:
+                result = Number((<ts.NumericLiteral>expression).text);
+                break;
+            case ts.SyntaxKind.BigIntLiteral:
+                result = BigInt((<ts.BigIntLiteral>expression).text);
+                break;
+            case ts.SyntaxKind.TrueKeyword:
+                result = true;
+                break;
+            case ts.SyntaxKind.FalseKeyword:
+                result = false;
+                break;
+            case ts.SyntaxKind.PropertyAccessExpression:
+                //TODO 访问静态属性
+                break;
+            case ts.SyntaxKind.NewExpression:
+                //TODO 构造对象
+                //(<ts.NewExpression>expression);
+                break;
+        }
+        return result;
     }
 }
 class Throttler {
