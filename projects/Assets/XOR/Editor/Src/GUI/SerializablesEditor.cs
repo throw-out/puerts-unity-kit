@@ -16,7 +16,7 @@ namespace XOR.Serializables
         private SerializedProperty _indexNode;
         private SerializedProperty _valueNode;
 
-        public Type PairType { get; private set; }
+        public Type ElementType { get; private set; }
         public Type ValueType { get; private set; }
 
         public Type ExplicitValueType { get; set; }
@@ -58,14 +58,14 @@ namespace XOR.Serializables
             set { this.IndexNode.intValue = value; }
         }
 
-        public NodeWrap(SerializedProperty node, Type pairType) : this(node, pairType, 0, null) { }
-        public NodeWrap(SerializedProperty node, Type pairType, int arrayIndex, SerializedProperty arrayParent)
+        public NodeWrap(SerializedProperty node, Type elementType) : this(node, elementType, 0, null) { }
+        public NodeWrap(SerializedProperty node, Type elementType, int arrayIndex, SerializedProperty arrayParent)
         {
             this.Node = node;
             this.ArrayParent = arrayParent;
             this.ArrayIndex = arrayIndex;
-            this.PairType = pairType;
-            this.ValueType = pairType.GetField("value", Helper.Flags).FieldType;
+            this.ElementType = elementType;
+            this.ValueType = elementType.GetField("value", Helper.Flags).FieldType;
         }
 
         /// <summary>从(数组)父节点上移除当前节点 </summary>
@@ -158,11 +158,11 @@ namespace XOR.Serializables
         }
         public object GetValue(object obj)
         {
-            return KeyField.GetValue(obj);
+            return ValueField.GetValue(obj);
         }
         public void SetValue(object obj, object value)
         {
-            KeyField.SetValue(obj, value);
+            ValueField.SetValue(obj, value);
         }
         public object CreateInstance()
         {
@@ -204,7 +204,15 @@ namespace XOR.Serializables
         {
             if (FieldType.IsArray)
             {
-                Array array = values.ToArray();
+                Array array;
+                if (values != null)
+                {
+                    array = values.ToArray();
+                }
+                else
+                {
+                    array = Array.CreateInstance(Element.Type, 0);
+                }
                 if (!FieldType.IsAssignableFrom(array.GetType()))
                 {
                     Array newArray = Array.CreateInstance(Element.Type, array.Length);
@@ -259,12 +267,12 @@ namespace XOR.Serializables
             List<IPair> results = new List<IPair>();
             foreach (FieldWrap fw in FieldMapping.Values)
             {
-                var fv = fw.GetValue(component);
-                if (fv == null)
+                var fvs = fw.GetValue(component);
+                if (fvs == null)
                     continue;
-                results.AddRange(fv);
+                results.AddRange(fvs);
             }
-            return results.ToArray();
+            return results.Distinct().ToArray();
         }
         public void ClearProperties(TComponent component)
         {
@@ -282,7 +290,7 @@ namespace XOR.Serializables
         {
             foreach (var fw in FieldMapping.Values)
             {
-                if (fw.Element.ValueType.IsAssignableFrom(valueType))
+                if (Helper.IsAssignable(fw.Element, valueType))
                 {
                     AddProperty(fw, component, key, index);
                     return true;
@@ -293,45 +301,99 @@ namespace XOR.Serializables
                 if (Helper.IsImplicitAssignable(fw.Element, valueType))
                 {
                     AddProperty(fw, component, key, index);
+                    return true;
                 }
             }
             return false;
         }
-        public bool RemoveProperty(TComponent component, params string[] keys)
+        public bool RemoveProperty(TComponent component, string key)
         {
-            foreach (string key in keys)
-            {
-                FindProperty(component, key, out var value, out var field, out var values);
-                if (field == null || values == null)
-                    continue;
-                field.SetValue(component, values.Where(v => v != value).ToArray());
-            }
-            return false;
+            FindProperty(component, key, out var value, out var fw, out var values);
+            if (fw == null || values == null)
+                return false;
+            fw.SetValue(component, values.Where(v => v != value).ToArray());
+            return true;
         }
+        /// <summary>当前键是否可分配至目标类型 </summary>
+        public bool IsExplicitPropertyValue(TComponent component, string key, Type valueType)
+        {
+            FindProperty(component, key, out IPair value, out var fw, out var values);
+            if (fw == null || values == null || !Helper.IsAssignable(fw.Element, valueType) && !Helper.IsImplicitAssignable(fw.Element, valueType))
+                return false;
+            var _value = value.Value;
+            if (_value != null && Helper.IsAssignable(fw.Element, valueType))
+            {
+                var _vt = _value.GetType();
+                if (valueType.IsArray && _vt.IsArray)
+                {
+                    var memberType = valueType.GetElementType();
+                    var array = (Array)_value;
+                    var newArray = Array.CreateInstance(fw.Element.ValueType.GetElementType(), array.Length);
+                    for (int i = 0; i < array.Length; i++)
+                    {
+                        var m = array.GetValue(i);
+                        if (m == null || m is UnityEngine.Object && ((UnityEngine.Object)m) == null || !memberType.IsAssignableFrom(m.GetType()))
+                            continue;
+                        newArray.SetValue(m, i);
+                    }
+                    fw.Element.SetValue(value, newArray);
+                }
+                else if (!valueType.IsAssignableFrom(_vt))
+                {
+                    fw.Element.SetValue(value, default);
+                }
+            }
+            return true;
+        }
+
         public bool SetPropertyIndex(TComponent component, string key, int newIndex)
         {
-            FindProperty(component, key, out var value, out var field, out var values);
-            if (value == null || field == null || values == null)
+            FindProperty(component, key, out var value, out var fw, out var values);
+            if (value == null || fw == null || values == null)
                 return false;
-            field.Element.SetIndex(value, newIndex);
+            fw.Element.SetIndex(value, newIndex);
             return true;
         }
         public bool SetPropertyKey(TComponent component, string key, string newKey)
         {
-            FindProperty(component, key, out var value, out var field, out var values);
-            if (value == null || field == null || values == null)
+            FindProperty(component, key, out var value, out var fw, out var values);
+            if (value == null || fw == null || values == null)
                 return false;
-            field.Element.SetKey(value, newKey);
+            fw.Element.SetKey(value, newKey);
+            return true;
+        }
+        public bool SetPropertyValue(TComponent component, string key, object newValue)
+        {
+            FindProperty(component, key, out var value, out var fw, out var values);
+            if (value == null || fw == null || values == null)
+                return false;
+            if (newValue == null)
+            {
+                fw.Element.SetValue(value, default);
+            }
+            else if (Helper.IsAssignable(fw.Element, newValue.GetType()))
+            {
+                fw.Element.SetValue(value, newValue);
+            }
+            else if (Helper.IsImplicitAssignable(fw.Element, newValue.GetType()))
+            {
+                fw.Element.SetValue(value, Helper.GetImplicitAssignableValue(fw.Element, newValue));
+            }
+            else
+            {
+                Debug.LogWarning($"Wrong Type Assignment: The target type require {fw.Element.ValueType.FullName}, but actual type is {newValue.GetType().FullName}");
+                return false;
+            }
             return true;
         }
 
         void FindProperty(TComponent component, string key, out IPair value)
         {
-            FindProperty(component, key, out value, out var field, out var values);
+            FindProperty(component, key, out value, out var fw, out var values);
         }
         void FindProperty(TComponent component, string key,
             out IPair value,
-            out FieldWrap field,
+            out FieldWrap fieldWrap,
             out IEnumerable<IPair> values
         )
         {
@@ -343,12 +405,12 @@ namespace XOR.Serializables
                 value = values.FirstOrDefault(v => v.Key == key);
                 if (value != null)
                 {
-                    field = fw;
+                    fieldWrap = fw;
                     return;
                 }
             }
             value = null;
-            field = null;
+            fieldWrap = null;
             values = null;
         }
         void AddProperty(FieldWrap fieldWrap, TComponent component, string key, int index)
@@ -358,6 +420,7 @@ namespace XOR.Serializables
             fieldWrap.Element.SetKey(elementObj, key);
             fieldWrap.AppendElement(component, elementObj);
         }
+
         public static ComponentWrap<TComponent> Create()
         {
             return new ComponentWrap<TComponent>()
@@ -389,6 +452,16 @@ namespace XOR.Serializables
         }
 
         /// <summary>
+        /// 是否允许分配至指定类型
+        /// </summary>
+        /// <param name="element"></param>
+        /// <param name="valueType"></param>
+        /// <returns></returns>
+        public static bool IsAssignable(ElementWrap element, Type valueType)
+        {
+            return element.ValueType.IsAssignableFrom(valueType);
+        }
+        /// <summary>
         /// 是否允许隐式分配
         /// </summary>
         /// <param name="elementType"></param>
@@ -396,17 +469,107 @@ namespace XOR.Serializables
         /// <returns></returns>
         public static bool IsImplicitAssignable(ElementWrap element, Type valueType)
         {
-            ImplicitAttribute implicitTypes = element.Type.GetCustomAttribute<ImplicitAttribute>(false);
-            if (implicitTypes != null && implicitTypes.Types.Contains(valueType))
+            if (element.ValueType.IsArray != valueType.IsArray)
+                return false;
+
+            Type[] implicitTypes = GetImplicitAssignableTypes(element.Type);
+            if (implicitTypes != null && implicitTypes.Contains(valueType))
             {
                 return true;
             }
-            if (element.ValueType.IsArray && valueType.IsArray)
+            if (element.ValueType.IsArray)      //数组类型隐式分配
             {
                 return element.ValueType.GetElementType().IsAssignableFrom(valueType.GetElementType()) ||
-                    implicitTypes != null && implicitTypes.Types.Contains(valueType.GetElementType());
+                    implicitTypes != null && implicitTypes.Contains(valueType.GetElementType());
             }
             return false;
+        }
+
+        static Dictionary<Type, Func<object, object>> typeConvertFuncs = new Dictionary<Type, Func<object, object>>()
+        {
+            { typeof(double), v => System.Convert.ToDouble(v)},
+        };
+        /// <summary>
+        /// 进行类型强转
+        /// </summary>
+        /// <param name="element"></param>
+        /// <param name="value"></param>
+        /// <returns></returns>
+        public static object GetImplicitAssignableValue(ElementWrap element, object value)
+        {
+            if (value == null || element.ValueType.IsArray != value.GetType().IsArray)
+            {
+                return default;
+            }
+            Type valueType = element.ValueType;
+            //获取转化方法
+            Func<object, object> convertFunc;
+            typeConvertFuncs.TryGetValue(valueType.IsArray ? valueType.GetElementType() : valueType, out convertFunc);
+            if (convertFunc == null)
+            {
+                return default;
+            }
+            if (valueType.IsArray)
+            {
+                Array array = (Array)value;
+                Array newArray = Array.CreateInstance(valueType.GetElementType(), array.Length);
+                for (int i = 0; i < array.Length; i++)
+                {
+                    var am = array.GetValue(i);
+                    if (am == null) continue;
+                    newArray.SetValue(convertFunc(am), i);
+                }
+                return newArray;
+            }
+            else
+            {
+                return convertFunc(value);
+            }
+        }
+
+        static Dictionary<Type, Type[]> cacheImplicitAssignableTypes = new Dictionary<Type, Type[]>();
+        static Type[] GetImplicitAssignableTypes(Type type)
+        {
+            Type[] implicitTypes;
+            if (!cacheImplicitAssignableTypes.TryGetValue(type, out implicitTypes))
+            {
+                ImplicitAttribute implicitDefine = type.GetCustomAttribute<ImplicitAttribute>(false);
+                if (implicitDefine != null)
+                {
+                    implicitTypes = implicitDefine.Types;
+                }
+                cacheImplicitAssignableTypes.Add(type, implicitTypes);
+            }
+            return implicitTypes;
+        }
+
+        static readonly HashSet<Type> IntegerTypes = new HashSet<Type>()
+        {
+            typeof(byte),
+            typeof(sbyte),
+            typeof(System.Char),
+            typeof(System.Int16),
+            typeof(System.UInt16),
+            typeof(System.Int32),
+            typeof(System.UInt32),
+        };
+        static readonly Dictionary<Type, Tuple<long, long>> IntegerRanges = new Dictionary<Type, Tuple<long, long>>()
+        {
+            { typeof(byte), new Tuple<long, long>(byte.MinValue, byte.MaxValue) },
+            { typeof(sbyte), new Tuple<long, long>(sbyte.MinValue, sbyte.MaxValue) },
+            { typeof(System.Char), new Tuple<long, long>(System.Char.MinValue, System.Char.MaxValue) },
+            { typeof(System.Int16), new Tuple<long, long>(System.Int16.MinValue, System.Int16.MaxValue) },
+            { typeof(System.UInt16), new Tuple<long, long>(System.UInt16.MinValue, System.UInt16.MaxValue) },
+            { typeof(System.Int32), new Tuple<long, long>(System.Int32.MinValue, System.Int32.MaxValue) },
+            { typeof(System.UInt32), new Tuple<long, long>(System.UInt32.MinValue, System.UInt32.MaxValue) },
+        };
+        public static bool IsIntegerType(Type type)
+        {
+            return IntegerTypes.Contains(type);
+        }
+        public static bool GetIntegerRange(Type type, out Tuple<long, long> range)
+        {
+            return IntegerRanges.TryGetValue(type, out range);
         }
     }
 }
@@ -429,7 +592,7 @@ namespace XOR.Serializables.TsComponent
         public bool Render(NodeWrap node)
         {
             Renderer renderer = null;
-            if (!this.renderers.TryGetValue(node.PairType, out renderer))
+            if (!this.renderers.TryGetValue(node.ElementType, out renderer))
             {
                 renderer = unknown;
             }
@@ -465,6 +628,11 @@ namespace XOR.Serializables.TsComponent
 
     internal abstract class Renderer
     {
+        protected const float PropertyNameWidth = 100f;
+        protected const float ArrayMemberIndent = 100f;
+        protected const float ArrayMenuButtonWidth = 20f;
+        protected const float VerticalSpacing = 2f;
+
         /// <summary>
         /// 节点值是否被修改
         /// </summary>
@@ -473,14 +641,13 @@ namespace XOR.Serializables.TsComponent
         public virtual void Render()
         {
             EditorGUILayout.BeginHorizontal();
-            //Node.Key = EditorGUILayout.TextField(Node.Key);
             if (Node.ExplicitValueType != null)
             {
-                GUILayout.Label(new GUIContent(Node.Key, $"{Node.Key}: {Node.ExplicitValueType.FullName}"), GUILayout.Width(100f));
+                GUILayout.Label(new GUIContent(Node.Key, $"{Node.Key}\n{Node.ExplicitValueType.FullName}"), GUILayout.Width(PropertyNameWidth));
             }
             else
             {
-                GUILayout.Label(new GUIContent(Node.Key, Node.Key), GUILayout.Width(100f));
+                GUILayout.Label(new GUIContent(Node.Key, Node.Key), GUILayout.Width(PropertyNameWidth));
             }
             RenderValue();
             EditorGUILayout.EndHorizontal();
@@ -491,38 +658,78 @@ namespace XOR.Serializables.TsComponent
     {
         public override void Render()
         {
-            var arrayParent = Node.ValueNode;
-            var arrayTypeName = Node.ValueType.Name;
-            if (arrayTypeName.EndsWith("[]"))
-            {
-                arrayTypeName = arrayTypeName.Replace("[]", $"[{arrayParent.arraySize}]");
-            }
+            base.Render();
 
-            EditorGUILayout.BeginHorizontal();
-            Node.Key = EditorGUILayout.TextField(Node.Key);
-            arrayParent.isExpanded = EditorGUILayout.Foldout(arrayParent.isExpanded, arrayTypeName);
-            EditorGUILayout.EndHorizontal();
-
-            if (arrayParent.isExpanded)
+            if (Node.ValueNode.isExpanded)
             {
-                RenderValue();
+                EditorGUILayout.BeginHorizontal();
+                GUILayout.Space(ArrayMemberIndent);
+
+                GUILayout.BeginVertical("HelpBox");
+                GUILayout.Space(VerticalSpacing);
                 RenderMenu();
+                GUILayout.Space(VerticalSpacing);
+                RenderMembers();
+                GUILayout.Space(VerticalSpacing);
+                GUILayout.EndVertical();
+
+                EditorGUILayout.EndHorizontal();
             }
         }
         protected override void RenderValue()
         {
             var arrayParent = Node.ValueNode;
-            for (int i = 0; i < arrayParent.arraySize; i++)
+            var arrayTypeName = (Node.ExplicitValueType != null ? Node.ExplicitValueType : Node.ValueType).FullName;
+            if (arrayTypeName.EndsWith("[]"))
             {
-
+                arrayTypeName = arrayTypeName.Replace("[]", $"[{arrayParent.arraySize}]");
             }
+            arrayParent.isExpanded = EditorGUILayout.Foldout(arrayParent.isExpanded, arrayTypeName);
         }
-        protected abstract void RenderElemnetValue(SerializedProperty node, Type type);
 
         private void RenderMenu()
         {
-
+            EditorGUILayout.BeginHorizontal();
+            int size = Node.ValueNode.arraySize;
+            int newSize = Mathf.Clamp(EditorGUILayout.IntField(size), 0, ushort.MaxValue);
+            if (GUILayout.Button(string.Empty, "OL Minus", GUILayout.Width(ArrayMenuButtonWidth)) && size > 0)
+            {
+                newSize = size - 1;
+            }
+            if (GUILayout.Button(string.Empty, "OL Plus", GUILayout.Width(ArrayMenuButtonWidth)) && size < ushort.MaxValue)
+            {
+                newSize = size + 1;
+            }
+            if (newSize != size)
+            {
+                Node.ValueNode.arraySize = newSize;
+                Dirty |= true;
+            }
+            EditorGUILayout.EndHorizontal();
         }
+        protected virtual void RenderMembers()
+        {
+            var arrayParent = Node.ValueNode;
+            var memberType = (Node.ExplicitValueType != null ? Node.ExplicitValueType : Node.ValueType).GetElementType();
+            var deleteMemberIndex = -1;
+
+            for (int i = 0; i < arrayParent.arraySize; i++)
+            {
+                EditorGUILayout.BeginHorizontal();
+                RenderMemberValue(arrayParent.GetArrayElementAtIndex(i), memberType);
+                if (GUILayout.Button(string.Empty, "WinBtnClose"))
+                {
+                    deleteMemberIndex = i;
+                }
+                EditorGUILayout.EndHorizontal();
+            }
+            if (deleteMemberIndex >= 0)
+            {
+                arrayParent.DeleteArrayElementAtIndex(deleteMemberIndex);
+                Dirty |= true;
+            }
+        }
+        protected abstract void RenderMemberValue(SerializedProperty node, Type type);
     }
 
     internal class UnknownRenderer : Renderer
@@ -531,55 +738,29 @@ namespace XOR.Serializables.TsComponent
         {
             using (new EditorGUI.DisabledScope(true))
             {
-                if (Node.ExplicitValueType != null)
-                {
-                    GUILayout.Label(new GUIContent(Node.ExplicitValueType.FullName, $"不受支持的类型: {Node.ExplicitValueType.FullName}"), GUI.skin.textField);
-                }
-                else
-                {
-                    GUILayout.Label(new GUIContent("UNKNOWN", "不受支持的类型"), GUI.skin.textField);
-                }
+                string typeName = (Node.ExplicitValueType != null ? Node.ExplicitValueType : Node.ValueType).FullName;
+                GUILayout.Label(new GUIContent(typeName, $"不受支持的类型: {typeName}"), GUI.skin.textField);
             }
         }
     }
 
+
     [RenderTarget(typeof(XOR.Serializables.Number))]
     internal class NumberRenderer : Renderer
     {
-        static readonly HashSet<Type> IntegerTypes = new HashSet<Type>()
-        {
-            typeof(byte),
-            typeof(sbyte),
-            typeof(System.Char),
-            typeof(System.Int16),
-            typeof(System.UInt16),
-            typeof(System.Int32),
-            typeof(System.UInt32),
-        };
-        static readonly Dictionary<Type, Tuple<long, long>> IntegerRanges = new Dictionary<Type, Tuple<long, long>>()
-        {
-            { typeof(byte), new Tuple<long, long>(byte.MinValue, byte.MaxValue) },
-            { typeof(sbyte), new Tuple<long, long>(sbyte.MinValue, sbyte.MaxValue) },
-            { typeof(System.Char), new Tuple<long, long>(System.Char.MinValue, System.Char.MaxValue) },
-            { typeof(System.Int16), new Tuple<long, long>(System.Int16.MinValue, System.Int16.MaxValue) },
-            { typeof(System.UInt16), new Tuple<long, long>(System.UInt16.MinValue, System.UInt16.MaxValue) },
-            { typeof(System.Int32), new Tuple<long, long>(System.Int32.MinValue, System.Int32.MaxValue) },
-            { typeof(System.UInt32), new Tuple<long, long>(System.UInt32.MinValue, System.UInt32.MaxValue) },
-        };
-
         protected override void RenderValue()
         {
             if (Node.ExplicitValueEnum != null)
             {
                 RendererEnumValue();
             }
-            else if (Node.ExplicitValueType != null && IntegerTypes.Contains(Node.ExplicitValueType))
+            else if (Node.ExplicitValueType != null && Helper.IsIntegerType(Node.ExplicitValueType))
             {
                 RenderIntegerValue();
             }
             else
             {
-                RenderFloatValue();
+                RenderSingleValue();
             }
         }
         protected virtual void RendererEnumValue()
@@ -598,7 +779,7 @@ namespace XOR.Serializables.TsComponent
             var newValue = Node.ExplicitValueRange != null ?
                 EditorGUILayout.IntSlider(value, (int)Node.ExplicitValueRange.Item1, (int)Node.ExplicitValueRange.Item2) :
                 EditorGUILayout.IntField(value);
-            if (IntegerRanges.TryGetValue(Node.ExplicitValueType, out Tuple<long, long> range))
+            if (Helper.GetIntegerRange(Node.ExplicitValueType, out Tuple<long, long> range))
             {
                 if (newValue < range.Item1) newValue = (int)range.Item1;
                 else if (newValue > range.Item2) newValue = (int)range.Item2;
@@ -609,11 +790,11 @@ namespace XOR.Serializables.TsComponent
                 Dirty |= true;
             }
         }
-        protected virtual void RenderFloatValue()
+        protected virtual void RenderSingleValue()
         {
-            var value = (float)Node.ValueNode.doubleValue;
+            var value = Node.ValueNode.doubleValue;
             var newValue = Node.ExplicitValueRange != null ?
-                EditorGUILayout.Slider(value, Node.ExplicitValueRange.Item1, Node.ExplicitValueRange.Item2) :
+                EditorGUILayout.Slider((float)value, Node.ExplicitValueRange.Item1, Node.ExplicitValueRange.Item2) :
                 EditorGUILayout.DoubleField(value);
             if (newValue != value || Math.Abs(newValue - Node.ValueNode.doubleValue) > float.Epsilon)
             {
@@ -622,7 +803,6 @@ namespace XOR.Serializables.TsComponent
             }
         }
     }
-
     [RenderTarget(typeof(XOR.Serializables.Bigint))]
     internal class BigintRenderer : Renderer
     {
@@ -639,7 +819,6 @@ namespace XOR.Serializables.TsComponent
             }
         }
     }
-
     [RenderTarget(typeof(XOR.Serializables.String))]
     internal class StringRenderer : Renderer
     {
@@ -677,7 +856,6 @@ namespace XOR.Serializables.TsComponent
             }
         }
     }
-
     [RenderTarget(typeof(XOR.Serializables.Boolean))]
     internal class BooleanRenderer : Renderer
     {
@@ -691,7 +869,6 @@ namespace XOR.Serializables.TsComponent
             }
         }
     }
-
     [RenderTarget(typeof(XOR.Serializables.Vector2))]
     internal class Vector2Renderer : Renderer
     {
@@ -705,7 +882,6 @@ namespace XOR.Serializables.TsComponent
             }
         }
     }
-
     [RenderTarget(typeof(XOR.Serializables.Vector3))]
     internal class Vector3Renderer : Renderer
     {
@@ -719,7 +895,6 @@ namespace XOR.Serializables.TsComponent
             }
         }
     }
-
     [RenderTarget(typeof(XOR.Serializables.Object))]
     internal class ObjectRenderer : Renderer
     {
@@ -733,6 +908,136 @@ namespace XOR.Serializables.TsComponent
             }
         }
     }
+
+
+    [RenderTarget(typeof(XOR.Serializables.NumberArray))]
+    internal class NumberArrayRenderer : ArrayRenderer
+    {
+        protected override void RenderMemberValue(SerializedProperty node, Type type)
+        {
+            if (Helper.IsIntegerType(type))
+            {
+                RenderMemberIntValue(node, type);
+            }
+            else
+            {
+                RenderMemberSingleValue(node, type);
+            }
+        }
+
+        protected virtual void RenderMemberIntValue(SerializedProperty node, Type type)
+        {
+            var value = (int)node.doubleValue;
+            var newValue = Node.ExplicitValueRange != null ?
+                EditorGUILayout.IntSlider(value, (int)Node.ExplicitValueRange.Item1, (int)Node.ExplicitValueRange.Item2) :
+                EditorGUILayout.IntField(value);
+            if (Helper.GetIntegerRange(type, out Tuple<long, long> range))
+            {
+                if (newValue < range.Item1) newValue = (int)range.Item1;
+                else if (newValue > range.Item2) newValue = (int)range.Item2;
+            }
+            if (newValue != value || Math.Abs(newValue - node.doubleValue) > float.Epsilon)
+            {
+                node.doubleValue = newValue;
+                Dirty |= true;
+            }
+        }
+        protected virtual void RenderMemberSingleValue(SerializedProperty node, Type type)
+        {
+            var value = node.doubleValue;
+            var newValue = Node.ExplicitValueRange != null ?
+                EditorGUILayout.Slider((float)value, Node.ExplicitValueRange.Item1, Node.ExplicitValueRange.Item2) :
+                EditorGUILayout.DoubleField(value);
+            if (newValue != value || Math.Abs(newValue - node.doubleValue) > float.Epsilon)
+            {
+                node.doubleValue = newValue;
+                Dirty |= true;
+            }
+        }
+    }
+    [RenderTarget(typeof(XOR.Serializables.BigintArray))]
+    internal class BigintArrayRenderer : ArrayRenderer
+    {
+        protected override void RenderMemberValue(SerializedProperty node, Type type)
+        {
+            var value = node.longValue;
+            var newValue = Node.ExplicitValueRange != null ?
+                EditorGUILayout.IntSlider((int)value, (int)Node.ExplicitValueRange.Item1, (int)Node.ExplicitValueRange.Item2) :
+                EditorGUILayout.LongField(value);
+            if (newValue != value)
+            {
+                node.longValue = newValue;
+                Dirty |= true;
+            }
+        }
+    }
+    [RenderTarget(typeof(XOR.Serializables.StringArray))]
+    internal class StringArrayRenderer : ArrayRenderer
+    {
+        protected override void RenderMemberValue(SerializedProperty node, Type type)
+        {
+            var value = node.stringValue;
+            var newValue = EditorGUILayout.TextField(value);
+            if (newValue != value)
+            {
+                node.stringValue = newValue;
+                Dirty |= true;
+            }
+        }
+    }
+    [RenderTarget(typeof(XOR.Serializables.BooleanArray))]
+    internal class BooleanArrayRenderer : ArrayRenderer
+    {
+        protected override void RenderMemberValue(SerializedProperty node, Type type)
+        {
+            var newValue = EditorGUILayout.Toggle(node.boolValue);
+            if (newValue != node.boolValue)
+            {
+                node.boolValue = newValue;
+                Dirty |= true;
+            }
+        }
+    }
+    [RenderTarget(typeof(XOR.Serializables.Vector2Array))]
+    internal class Vector2ArrayRenderer : ArrayRenderer
+    {
+        protected override void RenderMemberValue(SerializedProperty node, Type type)
+        {
+            var newValue = EditorGUILayout.Vector2Field(string.Empty, node.vector2Value);
+            if (newValue != node.vector2Value)
+            {
+                node.vector2Value = newValue;
+                Dirty |= true;
+            }
+        }
+    }
+    [RenderTarget(typeof(XOR.Serializables.Vector3Array))]
+    internal class Vector3ArrayRenderer : ArrayRenderer
+    {
+        protected override void RenderMemberValue(SerializedProperty node, Type type)
+        {
+            var newValue = EditorGUILayout.Vector3Field(string.Empty, node.vector3Value);
+            if (newValue != node.vector3Value)
+            {
+                node.vector3Value = newValue;
+                Dirty |= true;
+            }
+        }
+    }
+    [RenderTarget(typeof(XOR.Serializables.ObjectArray))]
+    internal class ObjectArrayRenderer : ArrayRenderer
+    {
+        protected override void RenderMemberValue(SerializedProperty node, Type type)
+        {
+            var newValue = EditorGUILayout.ObjectField(string.Empty, node.objectReferenceValue, type, true);
+            if (newValue != node.objectReferenceValue)
+            {
+                node.objectReferenceValue = newValue;
+                Dirty |= true;
+            }
+        }
+    }
+
 
     /// <summary>
     /// 定义为目标数据的的渲染器

@@ -45,7 +45,6 @@ namespace XOR.Serializables
     [Implicit(typeof(long), typeof(ulong))]
     [System.Serializable]
     public class Bigint : Pair<System.Int64> { }
-
     [System.Serializable]
     public class Boolean : Pair<System.Boolean> { }
     [System.Serializable]
@@ -66,7 +65,9 @@ namespace XOR.Serializables
     )]
     [MenuPath("Array/Double")]
     [System.Serializable]
-    public class DoubleArray : Pair<System.Double[]> { }
+    public class NumberArray : Pair<System.Double[]> { }
+    [System.Serializable]
+    public class BigintArray : Pair<System.Int64[]> { }
     [MenuPath("Array/Boolean")]
     [System.Serializable]
     public class BooleanArray : Pair<System.Boolean[]> { }

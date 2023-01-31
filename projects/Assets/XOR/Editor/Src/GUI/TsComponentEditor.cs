@@ -50,12 +50,12 @@ namespace XOR
             {
                 return;
             }
-            statement = EditorApplicationUtil.GetStatement(ComponentUtil.GetGuid(component));
-            if (statement != null && statement.version != ComponentUtil.GetVersion(component))
+            statement = EditorApplicationUtil.GetStatement(Helper.GetGuid(component));
+            if (statement != null && statement.version != Helper.GetVersion(component))
             {
                 Helper.RebuildProperties(component, statement);
             }
-            Helper.RebuildPropertiesNodes(root, properties, statement);
+            Helper.RebuildNodes(root, properties, statement);
 
             EditorGUILayout.BeginVertical();
 
@@ -81,7 +81,6 @@ namespace XOR
                 GUILayout.Space(Skin.LineSpace);
             }
         }
-
         void RenderModule()
         {
             if (GUIUtil.RenderHeader("模块"))
@@ -124,9 +123,9 @@ namespace XOR
 
         void _RenderModule()
         {
-            string guid = component != null ? ComponentUtil.GetGuid(component) : string.Empty;
-            string route = component != null ? ComponentUtil.GetRoute(component) : string.Empty;
-            string version = component != null ? ComponentUtil.GetVersion(component) : string.Empty;
+            string guid = component != null ? Helper.GetGuid(component) : string.Empty;
+            string route = component != null ? Helper.GetRoute(component) : string.Empty;
+            string version = component != null ? Helper.GetVersion(component) : string.Empty;
 
             using (new EditorGUI.DisabledScope(true))
             {
@@ -151,14 +150,7 @@ namespace XOR
         void _RenderModuleSelector()
         {
             GUILayout.BeginHorizontal();
-            using (new EditorGUI.DisabledScope(statement == null))
-            {
-                if (GUILayout.Button("打开脚本"))
-                {
-
-                }
-            }
-            if (GUILayout.Button("选择模块"))
+            if (GUILayout.Button("模块"))
             {
                 ModuleSelector.Show(EditorApplicationUtil.GetProgram(), OnSelectorCallback, moduleSelectorRect);
             }
@@ -166,9 +158,20 @@ namespace XOR
             {
                 moduleSelectorRect = GUILayoutUtility.GetLastRect();
             }
+            using (new EditorGUI.DisabledScope(statement == null))
+            {
+                if (GUILayout.Button("重置"))
+                {
+                    Helper.ClearProperties(component);
+                    Helper.RebuildNodes(root, properties, statement);
+                }
+                if (GUILayout.Button("编辑"))
+                {
+
+                }
+            }
             GUILayout.EndHorizontal();
         }
-
         void _RenderPropertiesNodes()
         {
             if (display == null || properties == null || properties.Count == 0)
@@ -193,15 +196,68 @@ namespace XOR
         {
             if (component == null)
                 return;
-            ComponentUtil.SetGuid(component, guid);
-            ComponentUtil.SetVersion(component, default);
             Helper.ClearProperties(component);
+            Helper.SetGuid(component, guid);
             Helper.SetDirty(component);
         }
 
         static class Helper
         {
-            public static void RebuildPropertiesNodes(SerializedObjectWrap root, List<NodeWrap> outputNodes, Statement statement)
+            const BindingFlags Flags = BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic;
+            static FieldInfo _guidField;
+            static FieldInfo _routeField;
+            static FieldInfo _versionField;
+            static FieldInfo guidField
+            {
+                get
+                {
+                    if (_guidField == null) _guidField = typeof(TsComponent).GetField("guid", Flags);
+                    return _guidField;
+                }
+            }
+            static FieldInfo routeField
+            {
+                get
+                {
+                    if (_routeField == null) _routeField = typeof(TsComponent).GetField("route", Flags);
+                    return _routeField;
+                }
+            }
+            static FieldInfo versionField
+            {
+                get
+                {
+                    if (_versionField == null) _versionField = typeof(TsComponent).GetField("version", Flags);
+                    return _versionField;
+                }
+            }
+
+            public static string GetGuid(TsComponent component)
+            {
+                return guidField.GetValue(component) as string;
+            }
+            public static string GetRoute(TsComponent component)
+            {
+                return routeField.GetValue(component) as string;
+            }
+            public static string GetVersion(TsComponent component)
+            {
+                return versionField.GetValue(component) as string;
+            }
+            public static void SetGuid(TsComponent component, string value)
+            {
+                guidField.SetValue(component, value);
+            }
+            public static void SetRoute(TsComponent component, string value)
+            {
+                routeField.SetValue(component, value);
+            }
+            public static void SetVersion(TsComponent component, string value)
+            {
+                versionField.SetValue(component, value);
+            }
+
+            public static void RebuildNodes(SerializedObjectWrap root, List<NodeWrap> outputNodes, Statement statement)
             {
                 if (outputNodes == null)
                     return;
@@ -234,11 +290,15 @@ namespace XOR
                 Dictionary<string, IPair> properties = cw.GetProperties(component)?.ToDictionary(pair => pair.Key);
                 if (properties != null)
                 {
-                    string[] obsoleteKeys = properties.Where(pair => !type.Properties.ContainsKey(pair.Key)).Select(pair => pair.Key).ToArray();
-                    cw.RemoveProperty(component, obsoleteKeys);
-                    foreach (string key in obsoleteKeys)
+                    foreach (string key in properties.Keys.ToArray())
                     {
-                        properties.Remove(key);
+                        if (!type.Properties.ContainsKey(key) ||
+                            !cw.IsExplicitPropertyValue(component, key, type.Properties[key].valueType)    //检测当前值兼容性
+                        )
+                        {
+                            properties.Remove(key);
+                            cw.RemoveProperty(component, key);
+                        }
                     }
                 }
                 //添加未序列化的节点
@@ -249,23 +309,34 @@ namespace XOR
                     properties?.TryGetValue(property.name, out current);
                     if (current == null)
                     {
-                        cw.AddProperty(component, property.valueType, property.name, index);
+                        if (cw.AddProperty(component, property.valueType, property.name, index))
+                        {
+                            if (property.defaultValue != null) cw.SetPropertyValue(component, property.name, property.defaultValue);
+                        }
+                        else
+                        {
+                            Debug.LogWarning($"{nameof(XOR.TsComponent)} unsupport type: {property.valueType.FullName}");
+                        }
                     }
-                    else
+                    else if (current.Index != index)
                     {
                         cw.SetPropertyIndex(component, property.name, index);
                     }
                     index++;
                 }
 
-                ComponentUtil.SetVersion(component, statement.version);
-                SetDirty(component);
+                Helper.SetVersion(component, statement.version);
+                Helper.SetDirty(component);
             }
             public static void ClearProperties(TsComponent component)
             {
                 ComponentWrap<TsComponent> cw = ComponentWrap<TsComponent>.Create();
                 cw.ClearProperties(component);
+
+                Helper.SetVersion(component, default);
+                Helper.SetDirty(component);
             }
+
             public static void SetDirty(UnityEngine.Object obj)
             {
                 if (obj == null)

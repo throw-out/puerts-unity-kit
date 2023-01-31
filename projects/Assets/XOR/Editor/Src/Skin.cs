@@ -27,7 +27,7 @@ namespace XOR
             style.margin = new RectOffset();
             return style;
         });
-       
+
         public static readonly Accessor<GUIStyle> label = new Accessor<GUIStyle>(() =>
         {
             GUIStyle style = new GUIStyle(GUI.skin.label);
@@ -54,7 +54,7 @@ namespace XOR
             style.onNormal = style.onHover = style.onActive = style.onFocused = style.normal;
             return style;
         });
-        
+
         public static readonly Accessor<GUIStyle> labelGreen = new Accessor<GUIStyle>(() =>
         {
             GUIStyle style = new GUIStyle(GUI.skin.label);
@@ -90,15 +90,23 @@ namespace XOR
         });
 
 
-        public static readonly Accessor<GUIStyle> InfoIcon = new Accessor<GUIStyle>(() =>
+        public static readonly Accessor<GUIStyle> arrawLeft = new Accessor<GUIStyle>(() =>
+        {
+            return "ArrowNavigationLeft";
+        });
+        public static readonly Accessor<GUIStyle> arrawRight = new Accessor<GUIStyle>(() =>
+        {
+            return "ArrowNavigationRight";
+        });
+        public static readonly Accessor<GUIStyle> infoIcon = new Accessor<GUIStyle>(() =>
         {
             return "CN EntryInfoIconSmall";
         });
-        public static readonly Accessor<GUIStyle> WarnIcon = new Accessor<GUIStyle>(() =>
+        public static readonly Accessor<GUIStyle> warnIcon = new Accessor<GUIStyle>(() =>
         {
             return "CN EntryWarnIconSmall";
         });
-        public static readonly Accessor<GUIStyle> ErrorIcon = new Accessor<GUIStyle>(() =>
+        public static readonly Accessor<GUIStyle> errorIcon = new Accessor<GUIStyle>(() =>
         {
             return "CN EntryErrorIconSmall";
         });

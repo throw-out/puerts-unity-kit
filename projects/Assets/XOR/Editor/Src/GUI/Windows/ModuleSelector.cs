@@ -98,7 +98,8 @@ namespace XOR
         {
             bool click = false;
             GUILayout.BeginHorizontal("HeaderButton", GUILayout.Height(HeaderHeight));
-            click |= GUILayout.Button(prefix ? "◀" : string.Empty, Skin.label, GUILayout.Width(IconWidth));
+            //click |= GUILayout.Button(prefix ? "◀" : string.Empty, Skin.label, GUILayout.Width(IconWidth));
+            click |= GUILayout.Button(string.Empty, prefix ? Skin.arrawLeft : Skin.label, GUILayout.Width(IconWidth));
             if (tooltip != null)
             {
                 click |= GUILayout.Button(new GUIContent(text, tooltip), Skin.label);
@@ -123,7 +124,8 @@ namespace XOR
             {
                 click |= GUILayout.Button(text, Skin.label);
             }
-            click |= GUILayout.Button(suffix ? "▶" : string.Empty, Skin.label, GUILayout.Width(IconWidth));
+            //click |= GUILayout.Button(suffix ? "▶" : string.Empty, Skin.label, GUILayout.Width(IconWidth));
+            click |= GUILayout.Button(string.Empty, suffix ? Skin.arrawRight : Skin.label, GUILayout.Width(IconWidth));
             GUILayout.EndHorizontal();
             return click;
         }
@@ -167,8 +169,9 @@ namespace XOR
                 this.searchReuslts = null;
                 return;
             }
+            string content = searchText.ToLower();
             this.searchReuslts = new List<Statement>();
-            this.root.Search((o) => o.name.Contains(this.searchText) /**|| o.module.Contains(this.searchText)*/, this.searchReuslts);
+            this.root.Search((o) => o.name.ToLower().Contains(content) /**|| o.module.Contains(content)*/, this.searchReuslts);
         }
 
         class StatementPath

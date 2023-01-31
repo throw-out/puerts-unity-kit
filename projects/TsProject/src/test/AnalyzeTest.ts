@@ -1,5 +1,5 @@
 import * as csharp from "csharp";
-import { GameObject, Transform } from "csharp.UnityEngine";
+import { Component, GameObject, Transform } from "csharp.UnityEngine";
 import { ButtonAlias } from "./types";
 
 type TransformAlias = Transform;
@@ -12,7 +12,7 @@ import GameObjectAlias = csharp.UnityEngine.GameObject;
 export class AnalyzeTest111 extends xor.TsComponent {
     declare private _prop100: string;
 
-    @xor.field(csharp.System.Byte)
+    @xor.field({ type: csharp.System.Byte, value: 123 })
     private _prop101: number;
     @xor.field(csharp.System.Byte)
     private _prop102: number[];
@@ -28,7 +28,7 @@ export class AnalyzeTest111 extends xor.TsComponent {
 
     declare private _prop2: Transform;
     declare private _prop3: GameObject;
-    declare private _prop4: GameObject[];
+    declare private _prop4: Transform[];
     protected _prop5: GameObject[];
 }
 

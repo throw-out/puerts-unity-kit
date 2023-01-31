@@ -33,7 +33,9 @@ namespace XOR
         [SerializeField]
         private XOR.Serializables.StringArray[] StringArrayPairs;
         [SerializeField]
-        private XOR.Serializables.DoubleArray[] DoubleArrayPairs;
+        private XOR.Serializables.NumberArray[] NumberArrayPairs;
+        [SerializeField]
+        private XOR.Serializables.BigintArray[] BigintArrayPairs;
         [SerializeField]
         private XOR.Serializables.BooleanArray[] BooleanArrayPairs;
         [SerializeField]
