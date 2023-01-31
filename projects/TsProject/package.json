@@ -6,7 +6,7 @@
         "tsc:watch": "tsc -watch -p tsconfig.json",
         "webpack:debug": "webpack --config webpack.config.debug.js --watch",
         "webpack:publish": "webpack --config webpack.config.release.js",
-        "javascript:obfuscator": "javascript-obfuscator ./dist --output ./dist-obfuscated --options-preset medium-obfuscation --compact false"
+        "javascript:obfuscator": "javascript-obfuscator ./output --output ./output-obfuscated --options-preset medium-obfuscation --compact false"
     },
     "dependencies": {},
     "devDependencies": {

@@ -308,7 +308,7 @@ export class Program {
         let members = this.getFields(node, true);
         if (members) {
             for (let [name, property] of members) {
-                let dargs = this.getFieldDecoratorArguments(property);
+                let dargs = this.getFieldArguments(property);
 
                 let cpd = new csharp.XOR.Services.PropertyDeclaration();
                 cpd.name = name;
@@ -407,6 +407,42 @@ export class Program {
         }
         return false;
     }
+    /**获取Class中所有序列化字段 */
+    private getFields(node: ts.ClassDeclaration, inherit?: boolean): Map<string, ts.PropertyDeclaration> {
+        if (this.isTsComponent(node)) {
+            return null;
+        }
+        const members = new Map<string, ts.PropertyDeclaration>();
+        if (node.members) {
+            for (let m of node.members) {
+                if (m.kind !== ts.SyntaxKind.PropertyDeclaration || !this.isField(<ts.PropertyDeclaration>m))
+                    continue;
+                let name = (<ts.PropertyDeclaration>m).name;
+                if (name.kind === ts.SyntaxKind.StringLiteral || name.kind === ts.SyntaxKind.Identifier) {
+                    members.set(name.text, <ts.PropertyDeclaration>m);
+                }
+            }
+        }
+        if (inherit && node.heritageClauses) {
+            let ewtaList = node.heritageClauses.map(clause => clause.types).flat();
+            for (let ewta of ewtaList) {
+                let cd = this.types.get(this.getAbsoluteName(ewta.expression));
+                if (!cd) {
+                    //console.warn(`无效的继承对象:${this.getAbsoluteName(ewta.expression)}`);
+                    continue;
+                }
+                const _members = this.getFields(cd, true);
+                if (!_members) {
+                    continue;
+                }
+                for (let [name, type] of _members) {
+                    if (members.has(name)) continue;
+                    members.set(name, type);
+                }
+            }
+        }
+        return members;
+    }
     /**是否显式声明为序列化字段, 用于非公开属性或指定RawType */
     private getFieldDecorator(node: ts.PropertyDeclaration): ts.NodeArray<ts.Expression> {
         if (!node.modifiers)
@@ -428,7 +464,7 @@ export class Program {
     /**获取序列化字段参数声明(解析xor.field参数)
      * @param decoratorArgsExpressions 
      */
-    private getFieldDecoratorArguments(node: ts.PropertyDeclaration) {
+    private getFieldArguments(node: ts.PropertyDeclaration) {
         let args: ts.NodeArray<ts.Expression> = this.getFieldDecorator(node);
         if (!args || args.length === 0)
             return null;
@@ -466,42 +502,7 @@ export class Program {
         }
         return { type, range, value };
     }
-    /**获取Class中所有序列化字段 */
-    private getFields(node: ts.ClassDeclaration, inherit?: boolean): Map<string, ts.PropertyDeclaration> {
-        if (this.isTsComponent(node)) {
-            return null;
-        }
-        const members = new Map<string, ts.PropertyDeclaration>();
-        if (node.members) {
-            for (let m of node.members) {
-                if (m.kind !== ts.SyntaxKind.PropertyDeclaration || !this.isField(<ts.PropertyDeclaration>m))
-                    continue;
-                let name = (<ts.PropertyDeclaration>m).name;
-                if (name.kind === ts.SyntaxKind.StringLiteral || name.kind === ts.SyntaxKind.Identifier) {
-                    members.set(name.text, <ts.PropertyDeclaration>m);
-                }
-            }
-        }
-        if (inherit && node.heritageClauses) {
-            let ewtaList = node.heritageClauses.map(clause => clause.types).flat();
-            for (let ewta of ewtaList) {
-                let cd = this.types.get(this.getAbsoluteName(ewta.expression));
-                if (!cd) {
-                    //console.warn(`无效的继承对象:${this.getAbsoluteName(ewta.expression)}`);
-                    continue;
-                }
-                const _members = this.getFields(cd, true);
-                if (!_members) {
-                    continue;
-                }
-                for (let [name, type] of _members) {
-                    if (members.has(name)) continue;
-                    members.set(name, type);
-                }
-            }
-        }
-        return members;
-    }
+
     private getSourceFileHash(node: ts.Node) {
         let path = node.getSourceFile().fileName;
         let hash = this.sourceHash.get(path);
