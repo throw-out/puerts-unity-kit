@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using XOR.Services;
 
@@ -105,22 +106,27 @@ namespace XOR
 
                 Logger.Log($"<b>XOR.{nameof(EditorApplication)}: <color=green>Executing</color></b> \neditorRoot: {editorRoot}\neditorOutput: {editorOutput}");
 
+                //创建EditorApplication实例
                 EditorApplication app = EditorApplication.GetInstance();
                 app.Loader.AddLoader(new FileLoader(editorOutput, editorRoot));
-
                 //create interfaces
                 CSharpInterfaces ci = new CSharpInterfaces();
                 ci.SetWorker = app.SetWorker;
                 ci.SetProgram = app.SetProgram;
                 //init application
-                Func<CSharpInterfaces, TSInterfaces> Init = app.Env.Eval<Func<CSharpInterfaces, TSInterfaces>>(@"
-var m = require('./main/main');
-m.init;
-");
+                Func<CSharpInterfaces, TSInterfaces> Init = app.Env.Eval<Func<CSharpInterfaces, TSInterfaces>>(@"var m = require('./main/main'); m.init; ");
                 TSInterfaces ti = Init(ci);
                 app.SetInterfaces(ti);
 
                 ti.Start(editorOutput, projectConfig);
+
+                //监听文件修改
+                string dirpath = Path.GetDirectoryName(projectConfig);
+                Logger.Log($"<b>XOR.{nameof(EditorFileWatcher)}:</b> {dirpath}");
+                EditorFileWatcher watcher = EditorFileWatcher.GetInstance();
+                watcher.AddWatcher(dirpath, "*.ts");
+                watcher.AddWatcher(dirpath, "*.tsx");
+                watcher.OnChanged((path, type) => ti.FileChanged(path));
 
                 Logger.Log($"<b>XOR.{nameof(EditorApplication)}: <color=green>Started</color>.</b>");
             }
@@ -128,6 +134,7 @@ m.init;
             {
                 Prefs.Enable.SetValue(false);
                 EditorApplication.ReleaseInstance();
+                EditorFileWatcher.ReleaseInstance();
                 Logger.Log($"<b>XOR.{nameof(EditorApplication)}: <color=red>Exception</color>:</b>\n{e}");
             }
         }
@@ -135,6 +142,7 @@ m.init;
         {
             Prefs.Enable.SetValue(false);
             EditorApplication.ReleaseInstance();
+            EditorFileWatcher.ReleaseInstance();
             if (!UnityEngine.Application.isPlaying)
             {
                 ThreadWorker.ReleaseAllInstances();

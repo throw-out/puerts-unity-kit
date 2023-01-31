@@ -37,6 +37,10 @@ class Workflow {
         this.ci.SetProgram.Invoke(null);
     }
     public change(path: string) {
+        console.log("file change: " + path);
+        console.log(!!this.worker, this.worker?.isAlive, this.worker?.isInitialized);
+        if (!this.worker || !this.worker.isAlive || !this.worker.isInitialized)
+            return;
         this.worker.post<boolean>(WorkerEvent.FileChanged, path, true);
     }
 

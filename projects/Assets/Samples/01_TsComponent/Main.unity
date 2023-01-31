@@ -152,7 +152,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   guid: e1cb6fde-b4dd-4fba-b08d-aed2f2bea1f2
   route: 
-  version: 1675153329240
+  version: 1675160537034
   StringPairs:
   - index: 0
     key: _prop1
@@ -328,7 +328,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   guid: d2ea683a-0e55-41a2-b837-b7e7c2a1fee4
   route: 
-  version: 1675153107558
+  version: 1675161536022
   StringPairs:
   - index: 3
     key: _prop4
@@ -353,9 +353,13 @@ MonoBehaviour:
   - index: 4
     key: _prop5
     value:
-    - 0
-    - 0
-    - 0
+    - 101
+    - 102
+  - index: 5
+    key: _prop6
+    value:
+    - 17.200000762939453
+    - 67.4000015258789
   BigintArrayPairs: []
   BooleanArrayPairs: []
   Vector2ArrayPairs: []
@@ -406,7 +410,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   guid: 70292285-10d5-44e0-9031-e12b14a05d15
   route: 
-  version: 1675153107562
+  version: 1675161600981
   StringPairs: []
   NumberPairs: []
   BigintPairs: []
@@ -466,7 +470,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   guid: a071b597-ff11-420a-b7d5-cd586ee4b1a1
   route: 
-  version: 1675153107555
+  version: 1675156984592
   StringPairs: []
   NumberPairs: []
   BigintPairs: []

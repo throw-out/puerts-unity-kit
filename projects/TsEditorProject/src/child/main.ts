@@ -22,7 +22,7 @@ xor.globalWorker.on(WorkerEvent.StartProgream, (data: { project: string, program
     //console.log(`program parse duration ${timer.duration()}ms`);
 });
 xor.globalWorker.on(WorkerEvent.FileChanged, (path: string) => {
-
+    program?.change(path);
 });
 
 class Timer {

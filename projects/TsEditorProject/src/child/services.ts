@@ -162,6 +162,19 @@ export class Program {
         this.cp.state = csharp.XOR.Services.ProgramState.Completed;
         this.cp.stateMessage = '';
     }
+    /**文件修改状态 */
+    public change(path: string) {
+        console.log("file change: " + path);
+        //文件已删除
+        if (!File.Exists(path)) {
+
+            return;
+        }
+        //文件已同步(被Program内部修改)
+        if (this.sourceHash.get(path) === HashUtil.SHA256File(path))
+            return;
+        //文件新增或更新
+    }
 
     //#region SourceFile 处理流程
     private async resolveSources() {
