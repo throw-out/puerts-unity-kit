@@ -74,21 +74,33 @@ namespace XOR
         public override void Release()
         {
             base.Release();
-            this.Dispose();
+
+            foreach (var watcher in watchers)
+            {
+                watcher.EnableRaisingEvents = false;
+            }
+            Dispose(false);
         }
         public void Dispose()
         {
+            Dispose(true);
+        }
+        protected void Dispose(bool disposing)
+        {
             this.UnregisterHandlers();
             this.onChanged = null;
-            foreach (var watcher in watchers)
+            if (disposing)
             {
-                //watcher.EndInit();
-                watcher.EnableRaisingEvents = false;
-                watcher.Dispose();
-                //GC.SuppressFinalize(watcher);
+                foreach (var watcher in watchers)
+                {
+                    //watcher.EndInit();
+                    watcher.EnableRaisingEvents = false;
+                    watcher.Dispose();
+                    //GC.SuppressFinalize(watcher);
+                }
+                this.watchers.Clear();
+                this.changedEvents.Clear();
             }
-            watchers.Clear();
-            changedEvents.Clear();
         }
         void RegisterHandlers()
         {
