@@ -90,13 +90,13 @@ namespace XOR
 
         void RegisterHandlers()
         {
-            EditorApplicationHandler.Update += Tick;
-            EditorApplicationHandler.Dispose += Dispose;
+            EditorApplicationHandler.update += Tick;
+            EditorApplicationHandler.dispose += Dispose;
         }
         void UnregisterHandlers()
         {
-            EditorApplicationHandler.Update -= Tick;
-            EditorApplicationHandler.Dispose -= Dispose;
+            EditorApplicationHandler.update -= Tick;
+            EditorApplicationHandler.dispose -= Dispose;
         }
     }
 
@@ -146,21 +146,21 @@ namespace XOR
         }
 #endif
 
-        public static event Action Update;
-        public static event Action DelayCall;
-        public static event Action Dispose;
+        public static event Action update;
+        public static event Action delayCall;
+        public static event Action dispose;
 
         static void UpdateHandler()
         {
-            Update?.Invoke();
+            update?.Invoke();
         }
         static void DelayCallHandler()
         {
-            DelayCall?.Invoke();
+            delayCall?.Invoke();
         }
         static void DisposeHandler(object sender, EventArgs e)
         {
-            Dispose?.Invoke();
+            dispose?.Invoke();
         }
     }
 }

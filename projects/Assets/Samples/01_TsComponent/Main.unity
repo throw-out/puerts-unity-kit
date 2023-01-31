@@ -38,7 +38,7 @@ RenderSettings:
   m_ReflectionIntensity: 1
   m_CustomReflection: {fileID: 0}
   m_Sun: {fileID: 0}
-  m_IndirectSpecularColor: {r: 0.44657874, g: 0.49641258, b: 0.5748172, a: 1}
+  m_IndirectSpecularColor: {r: 0.44657898, g: 0.4964133, b: 0.5748178, a: 1}
   m_UseRadianceAmbientProbe: 0
 --- !u!157 &3
 LightmapSettings:
@@ -152,7 +152,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   guid: e1cb6fde-b4dd-4fba-b08d-aed2f2bea1f2
   route: 
-  version: 1675160537034
+  version: 1675165472767
   StringPairs:
   - index: 0
     key: _prop1
@@ -328,7 +328,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   guid: d2ea683a-0e55-41a2-b837-b7e7c2a1fee4
   route: 
-  version: 1675161536022
+  version: 1675165472776
   StringPairs:
   - index: 3
     key: _prop4
@@ -352,14 +352,10 @@ MonoBehaviour:
   NumberArrayPairs:
   - index: 4
     key: _prop5
-    value:
-    - 101
-    - 102
+    value: []
   - index: 5
     key: _prop6
-    value:
-    - 17.200000762939453
-    - 67.4000015258789
+    value: []
   BigintArrayPairs: []
   BooleanArrayPairs: []
   Vector2ArrayPairs: []
@@ -410,7 +406,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   guid: 70292285-10d5-44e0-9031-e12b14a05d15
   route: 
-  version: 1675161600981
+  version: 1675168641610
   StringPairs: []
   NumberPairs: []
   BigintPairs: []
@@ -470,7 +466,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   guid: a071b597-ff11-420a-b7d5-cd586ee4b1a1
   route: 
-  version: 1675156984592
+  version: 1675168165042
   StringPairs: []
   NumberPairs: []
   BigintPairs: []

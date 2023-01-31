@@ -1,27 +1,30 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 
 namespace XOR
 {
     internal class EditorFileWatcher : Singleton<EditorFileWatcher>, IDisposable
     {
         private readonly List<FileSystemWatcher> watchers = new List<FileSystemWatcher>();
+        private readonly Queue<FileSystemEventArgs> changedEvents = new Queue<FileSystemEventArgs>();
         private Action<string, WatcherChangeTypes> onChanged;
 
         public void AddWatcher(string path, string filter = null)
         {
             FileSystemWatcher watcher = new FileSystemWatcher(path);
             if (filter != null) watcher.Filter = filter;
-            watcher.NotifyFilter = NotifyFilters.FileName | NotifyFilters.Size | NotifyFilters.LastWrite;
-            watcher.EnableRaisingEvents = true;
-            watcher.IncludeSubdirectories = true;
-            watcher.Deleted += OnDeleted;
-            watcher.Created += OnCreated;
-            watcher.Changed += OnChanged;
-            watcher.Renamed += OnRenamed;
 
-            watcher.BeginInit();
+            watcher.Deleted += (sender, e) => this.Enqueue(e);
+            watcher.Created += (sender, e) => this.Enqueue(e);
+            watcher.Changed += (sender, e) => this.Enqueue(e);
+            watcher.Renamed += (sender, e) => this.Enqueue(e);
+            watcher.NotifyFilter = NotifyFilters.FileName | NotifyFilters.Size | NotifyFilters.LastWrite;
+            watcher.IncludeSubdirectories = true;
+            //watcher.BeginInit();
+
+            watcher.EnableRaisingEvents = true;
             watchers.Add(watcher);
         }
         public void OnChanged(Action<string, WatcherChangeTypes> changed)
@@ -29,26 +32,44 @@ namespace XOR
             onChanged += changed;
         }
 
-        void OnDeleted(object sender, FileSystemEventArgs e)
+        void Enqueue(FileSystemEventArgs e)
         {
-            onChanged?.Invoke(e.FullPath, WatcherChangeTypes.Deleted);
+            UnityEngine.Debug.Log($"Change({System.Threading.Thread.CurrentThread.ManagedThreadId}): {e.FullPath}");
+            lock (changedEvents)
+            {
+                changedEvents.Enqueue(e);
+            }
+            UnityEngine.Debug.Log($"Change Events: {changedEvents.Count}| {this.GetHashCode()}| {this.IsDestroyed}| {string.Join(",", this.watchers.Select(o => o.EnableRaisingEvents))}");
         }
-        void OnCreated(object sender, FileSystemEventArgs e)
+        void Enqueue(RenamedEventArgs e)
         {
-            onChanged?.Invoke(e.FullPath, WatcherChangeTypes.Created);
+            lock (changedEvents)
+            {
+                changedEvents.Enqueue(new FileSystemEventArgs(WatcherChangeTypes.Deleted, Path.GetDirectoryName(e.OldFullPath), e.OldName));
+                changedEvents.Enqueue(new FileSystemEventArgs(WatcherChangeTypes.Created, Path.GetDirectoryName(e.FullPath), e.Name));
+            }
         }
-        void OnChanged(object sender, FileSystemEventArgs e)
+        void Tick()
         {
-            onChanged?.Invoke(e.FullPath, WatcherChangeTypes.Changed);
-        }
-        void OnRenamed(object sender, RenamedEventArgs e)
-        {
-            onChanged?.Invoke(e.OldFullPath, WatcherChangeTypes.Deleted);
-            onChanged?.Invoke(e.FullPath, WatcherChangeTypes.Created);
+            if (changedEvents.Count == 0)
+                return;
+            List<FileSystemEventArgs> events = new List<FileSystemEventArgs>();
+            lock (changedEvents)
+            {
+                while (changedEvents.Count > 0 && events.Count < 5)
+                {
+                    events.Add(changedEvents.Dequeue());
+                }
+            }
+            foreach (var e in events)
+            {
+                onChanged?.Invoke(e.FullPath, e.ChangeType);
+            }
         }
         public override void Init()
         {
             base.Init();
+            this.RegisterHandlers();
         }
         public override void Release()
         {
@@ -57,12 +78,27 @@ namespace XOR
         }
         public void Dispose()
         {
+            this.UnregisterHandlers();
             this.onChanged = null;
             foreach (var watcher in watchers)
             {
-                watcher.EndInit();
+                //watcher.EndInit();
+                watcher.EnableRaisingEvents = false;
+                watcher.Dispose();
+                //GC.SuppressFinalize(watcher);
             }
             watchers.Clear();
+            changedEvents.Clear();
+        }
+        void RegisterHandlers()
+        {
+            EditorApplicationHandler.update += Tick;
+            EditorApplicationHandler.dispose += Dispose;
+        }
+        void UnregisterHandlers()
+        {
+            EditorApplicationHandler.update -= Tick;
+            EditorApplicationHandler.dispose -= Dispose;
         }
     }
 }

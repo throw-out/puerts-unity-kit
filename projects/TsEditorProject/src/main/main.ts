@@ -23,7 +23,7 @@ class Workflow {
         const program = new csharp.XOR.Services.Program();
         program.Reset();
         //请求子线程, 开始解析工程
-        worker.post<boolean>(WorkerEvent.StartProgream, { project, program });
+        worker.post(WorkerEvent.StartProgream, { project, program }, true);
 
         this.worker = worker;
         this.ci.SetWorker.Invoke(worker.source);
@@ -37,11 +37,11 @@ class Workflow {
         this.ci.SetProgram.Invoke(null);
     }
     public change(path: string) {
-        console.log("file change: " + path);
-        console.log(!!this.worker, this.worker?.isAlive, this.worker?.isInitialized);
-        if (!this.worker || !this.worker.isAlive || !this.worker.isInitialized)
+        if (!this.worker || !this.worker.isAlive || !this.worker.isInitialized) {
+            console.warn(`worker is not alive or initializing:`);
             return;
-        this.worker.post<boolean>(WorkerEvent.FileChanged, path, true);
+        }
+        this.worker.post(WorkerEvent.FileChanged, path, true);
     }
 
     public bind(): csharp.XOR.Services.TSInterfaces {

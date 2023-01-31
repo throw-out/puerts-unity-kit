@@ -32,9 +32,22 @@ namespace XOR
             this.logMessageReceivedThreaded = null;
         }
 
-        public static void Log(object firstMessage, params object[] messages)
+        public static void Info(object firstMessage, params object[] messages)
         {
             if (!IsEnable(Settings.LOGGER.INFO))
+                return;
+            if (messages.Length > 0)
+            {
+                UnityEngine.Debug.Log(string.Join(", ", firstMessage, string.Join(", ", messages)));
+            }
+            else
+            {
+                UnityEngine.Debug.Log(firstMessage);
+            }
+        }
+        public static void Log(object firstMessage, params object[] messages)
+        {
+            if (!IsEnable(Settings.LOGGER.LOG))
                 return;
             if (messages.Length > 0)
             {

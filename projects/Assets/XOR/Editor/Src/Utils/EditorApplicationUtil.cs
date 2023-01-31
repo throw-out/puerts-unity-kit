@@ -123,10 +123,12 @@ namespace XOR
                 //监听文件修改
                 string dirpath = Path.GetDirectoryName(projectConfig);
                 Logger.Log($"<b>XOR.{nameof(EditorFileWatcher)}:</b> {dirpath}");
+                EditorFileWatcher.ReleaseInstance();
                 EditorFileWatcher watcher = EditorFileWatcher.GetInstance();
                 watcher.AddWatcher(dirpath, "*.ts");
                 watcher.AddWatcher(dirpath, "*.tsx");
                 watcher.OnChanged((path, type) => ti.FileChanged(path));
+                UnityEngine.Debug.Log("Watcher: " + watcher.GetHashCode());
 
                 Logger.Log($"<b>XOR.{nameof(EditorApplication)}: <color=green>Started</color>.</b>");
             }

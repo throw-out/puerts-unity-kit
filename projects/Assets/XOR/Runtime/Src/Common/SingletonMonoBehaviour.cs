@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using System;
+using UnityEngine;
 namespace XOR
 {
     public abstract class SingletonMonoBehaviour<T> : MonoBehaviour
@@ -42,21 +43,24 @@ namespace XOR
                 __instance = null;
             }
         }
-        
-        private bool __is_null_ = false;
+
+        private bool __isDestroyed = false;
+        public bool IsDestroyed => __isDestroyed;
         public virtual void Release()
         {
-            this.__is_null_ = true;
+            this.__isDestroyed = true;
         }
         public virtual void Init()
         {
+            if (this.__isDestroyed)
+                throw new InvalidOperationException();
         }
 
         public override bool Equals(object obj)
         {
             if (obj is null)
             {
-                return this.__is_null_;
+                return this.__isDestroyed;
             }
             return base.Equals(obj);
         }

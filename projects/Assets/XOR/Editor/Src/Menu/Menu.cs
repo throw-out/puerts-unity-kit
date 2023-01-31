@@ -12,12 +12,12 @@ namespace XOR
     {
         static Menu()
         {
-            EditorApplicationHandler.DelayCall += InitializeStart;
+            EditorApplicationHandler.delayCall += InitializeStart;
         }
 
         static void InitializeStart()
         {
-            EditorApplicationHandler.DelayCall -= InitializeStart;
+            EditorApplicationHandler.delayCall -= InitializeStart;
             if (Prefs.Enable && !EditorApplicationUtil.IsRunning())
             {
                 EditorApplicationUtil.Start();

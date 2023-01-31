@@ -123,6 +123,7 @@ namespace XOR
         public void PostToMainThread(string eventName, EventData data, string resultEventName = null)
         {
             VerifyThread(false, true);
+            Logger.Info($"XOR.{nameof(ThreadWorker)}({ThreadId}->Main) Enqueue: {eventName}");
             lock (mainThreadMessages)
             {
                 mainThreadMessages.Enqueue(new Event()
@@ -141,6 +142,7 @@ namespace XOR
         public void PostToChildThread(string eventName, EventData data, string resultEventName = null)
         {
             VerifyThread(true, true);
+            Logger.Info($"XOR.{nameof(ThreadWorker)}(Main->{ThreadId}) Enqueue: {eventName}");
             lock (childThreadMessages)
             {
                 childThreadMessages.Enqueue(new Event()
@@ -341,6 +343,7 @@ namespace XOR
                     Event _event = events[i];
                     try
                     {
+                        Logger.Info($"XOR.{nameof(ThreadWorker)}(Main<-{ThreadId}) Resolve: {_event.eventName}");
                         result = func(_event.eventName, _event.data);
                         if (!string.IsNullOrEmpty(_event.resultEventName))
                         {
@@ -396,6 +399,7 @@ namespace XOR
                     Event _event = events[i];
                     try
                     {
+                        Logger.Info($"XOR.{nameof(ThreadWorker)}({ThreadId}<-Main) Resolve: {_event.eventName}");
                         result = func(_event.eventName, _event.data);
                         if (!string.IsNullOrEmpty(_event.resultEventName))
                         {
