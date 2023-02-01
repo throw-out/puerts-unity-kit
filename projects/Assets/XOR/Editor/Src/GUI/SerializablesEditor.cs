@@ -629,7 +629,8 @@ namespace XOR.Serializables.TsComponent
     internal abstract class Renderer
     {
         protected const float PropertyNameWidth = 100f;
-        protected const float ArrayMemberIndent = 100f;
+        protected const float ArrayMemberIndent = 30f;
+        protected const float ArrayMemberTitleWidth = PropertyNameWidth - ArrayMemberIndent;
         protected const float ArrayMenuButtonWidth = 20f;
         protected const float VerticalSpacing = 2f;
 
@@ -691,6 +692,7 @@ namespace XOR.Serializables.TsComponent
         {
             EditorGUILayout.BeginHorizontal();
             int size = Node.ValueNode.arraySize;
+            GUILayout.Label("Length", GUILayout.Width(ArrayMemberTitleWidth));
             int newSize = Mathf.Clamp(EditorGUILayout.IntField(size), 0, ushort.MaxValue);
             if (GUILayout.Button(string.Empty, "OL Minus", GUILayout.Width(ArrayMenuButtonWidth)) && size > 0)
             {
@@ -716,6 +718,7 @@ namespace XOR.Serializables.TsComponent
             for (int i = 0; i < arrayParent.arraySize; i++)
             {
                 EditorGUILayout.BeginHorizontal();
+                GUILayout.Label($"Element {i}", GUILayout.Width(ArrayMemberTitleWidth));
                 RenderMemberValue(arrayParent.GetArrayElementAtIndex(i), memberType);
                 if (GUILayout.Button(string.Empty, "WinBtnClose"))
                 {

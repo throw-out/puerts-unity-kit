@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace XOR
 {
@@ -10,6 +11,7 @@ namespace XOR
         private readonly List<FileSystemWatcher> watchers = new List<FileSystemWatcher>();
         private readonly Queue<FileSystemEventArgs> changedEvents = new Queue<FileSystemEventArgs>();
         private Action<string, WatcherChangeTypes> onChanged;
+        private bool started = false;
 
         public void AddWatcher(string path, string filter = null)
         {
@@ -25,12 +27,59 @@ namespace XOR
             watcher.Renamed += (sender, e) => this.Enqueue(e);
             watcher.EndInit();
 
-            watcher.EnableRaisingEvents = true;
-            watchers.Add(watcher);
+            lock (watcher)
+            {
+                watchers.Add(watcher);
+            }
+            if (this.started) this.StartWatchers();
         }
         public void OnChanged(Action<string, WatcherChangeTypes> changed)
         {
             onChanged += changed;
+        }
+        public void Start(bool runInTask = false)
+        {
+            if (this.IsDestroyed)
+                throw new InvalidOperationException();
+            if (this.started)
+                return;
+            this.started = true;
+            if (runInTask)
+            {
+                Task.Run(this.StartWatchers);
+            }
+            else
+            {
+                this.StartWatchers();
+            }
+        }
+        public void Stop()
+        {
+            if (!this.started)
+                return;
+            this.started = false;
+            this.StopWatchers();
+        }
+        void StartWatchers()
+        {
+            lock (watchers)
+            {
+                foreach (var watcher in watchers)
+                {
+                    if (this.IsDestroyed) break;
+                    watcher.EnableRaisingEvents = true;
+                }
+            }
+        }
+        void StopWatchers()
+        {
+            lock (watchers)
+            {
+                foreach (var watcher in watchers)
+                {
+                    watcher.EnableRaisingEvents = false;
+                }
+            }
         }
         void Enqueue(FileSystemEventArgs e)
         {
@@ -89,13 +138,16 @@ Event: {Enum.GetName(typeof(WatcherChangeTypes), e.ChangeType)} - {e.FullPath}
         }
         public void Dispose()
         {
+            this.Stop();
             this.onChanged = null;
-            foreach (var watcher in watchers)
+            lock (watchers)
             {
-                watcher.EnableRaisingEvents = false;
-                watcher.Dispose();
+                foreach (var watcher in watchers)
+                {
+                    watcher.Dispose();
+                }
+                this.watchers.Clear();
             }
-            this.watchers.Clear();
             this.changedEvents.Clear();
             GC.SuppressFinalize(this);
         }
