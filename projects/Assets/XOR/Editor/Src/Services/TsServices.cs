@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 using UnityEngine;
 
 namespace XOR.Services
@@ -191,6 +192,54 @@ namespace XOR.Services
                 this.valueEnum.Remove(key);
             }
             this.valueEnum.Add(key, value);
+        }
+
+        private string _tooltip;
+        public string BuildTooltip(bool force = false)
+        {
+            if (force || this._tooltip == null)
+            {
+                StringBuilder builder = new StringBuilder();
+                builder.AppendFormat("Name:\t{0}", this.name);
+                builder.AppendLine();
+                builder.AppendFormat("Type:\t{0}", this.valueType?.FullName ?? "NULL");
+                if (this.valueRange != null)
+                {
+                    builder.AppendLine();
+                    builder.AppendFormat("Range:\t{0} - {1}", this.valueRange.Item1, this.valueRange.Item2);
+                }
+                if (this.valueEnum != null && this.valueEnum.Count > 0)
+                {
+                    builder.AppendLine();
+                    builder.Append("Enum:");
+                    foreach (var e in this.valueEnum)
+                    {
+                        builder.AppendLine();
+                        builder.AppendFormat("  -{0} \t {1}", e.Key, e.Value);
+                    }
+                }
+                if (this.defaultValue != null)
+                {
+                    builder.AppendLine();
+                    if (this.defaultValue is Array)
+                    {
+                        builder.Append("Default:\t[");
+                        Array array = (Array)this.defaultValue;
+                        for (int i = 0; i < array.Length; i++)
+                        {
+                            if (i > 0) builder.Append(", ");
+                            builder.Append(array.GetValue(i));
+                        }
+                        builder.Append("]");
+                    }
+                    else
+                    {
+                        builder.AppendFormat("Default:\t{0}", this.defaultValue);
+                    }
+                }
+                this._tooltip = builder.ToString();
+            }
+            return this._tooltip;
         }
     }
     public class EnumPropertyDeclaration

@@ -500,11 +500,14 @@ export class Program {
                             let [min, max] = (<ts.ArrayLiteralExpression>initializer).elements;
                             if (min && min.kind === ts.SyntaxKind.NumericLiteral &&
                                 max && max.kind === ts.SyntaxKind.NumericLiteral) {
-                                range = [util.getExpressionValue(min), util.getExpressionValue(max)];
+                                range = [
+                                    util.getExpressionValue(this.checker, min),
+                                    util.getExpressionValue(this.checker, max)
+                                ];
                             }
                             break;
                         case "value":
-                            value = util.getExpressionValue(initializer);
+                            value = util.getExpressionValue(this.checker, initializer);
                             break;
                     }
                 }
@@ -765,7 +768,9 @@ const util = new class {
         return !this.isPublic(node, defaultValue);
     }
 
-    public getExpressionValue(expression: ts.Expression) {
+    public getExpressionValue(checker: ts.TypeChecker, expression: ts.Expression, depth: number = 0) {
+        if (depth > 1)
+            return null;
         let result: any;
         switch (expression.kind) {
             case ts.SyntaxKind.StringLiteral:
@@ -783,15 +788,52 @@ const util = new class {
             case ts.SyntaxKind.FalseKeyword:
                 result = false;
                 break;
-            case ts.SyntaxKind.PropertyAccessExpression:
-                //TODO 访问静态属性
+            case ts.SyntaxKind.ArrayLiteralExpression:
+                result = this.toCSharpArray(
+                    (<ts.ArrayLiteralExpression>expression).elements.map(e => this.getExpressionValue(checker, e, depth + 1))
+                );
                 break;
             case ts.SyntaxKind.NewExpression:
                 //TODO 构造对象
                 //(<ts.NewExpression>expression);
                 break;
+            case ts.SyntaxKind.PropertyAccessExpression:
+                //TODO 访问静态属性
+                break;
         }
         return result;
+    }
+    public toCSharpArray(array: Array<any>) {
+        let firstIndex = array?.findIndex(e => e !== undefined && e !== null && e !== void 0) ?? -1;
+        if (firstIndex >= 0) {
+            let result: csharp.System.Array, firstObj = array[firstIndex];
+            switch (typeof (firstObj)) {
+                case "string":
+                    result = csharp.System.Array.CreateInstance($typeof(csharp.System.String), array.length);
+                    break;
+                case "number":
+                    result = csharp.System.Array.CreateInstance($typeof(csharp.System.Double), array.length);
+                    break;
+                case "boolean":
+                    result = csharp.System.Array.CreateInstance($typeof(csharp.System.Boolean), array.length);
+                    break;
+                case "bigint":
+                    result = csharp.System.Array.CreateInstance($typeof(csharp.System.Int64), array.length);
+                    break;
+                case "object":
+                    if (firstObj instanceof csharp.System.Object) {
+                        result = csharp.System.Array.CreateInstance(firstObj.GetType(), array.length);
+                    }
+                    break;
+            }
+            if (result) {
+                for (let i = 0; i < array.length; i++) {
+                    result.SetValue(array[i], i);
+                }
+            }
+            return result;
+        }
+        return null;
     }
 }
 class Throttler {

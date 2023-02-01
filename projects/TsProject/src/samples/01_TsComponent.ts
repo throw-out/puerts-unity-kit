@@ -41,12 +41,12 @@ export class Sample03 extends xor.TsComponent {
 
     @xor.field({ range: [0, 100], value: 50 })
     declare private _prop3: number;
-    @xor.field({ value: "test default value" })
+    @xor.field({ value: "string default value" })
     declare private _prop4: string;
 
-    @xor.field(csharp.System.Int16)
+    @xor.field({ type: csharp.System.Int16, value: [1, 15] })
     declare private _prop5: number[];
-    @xor.field({ range: [0, 100] })
+    @xor.field({ range: [0, 100], value: [1, 33.333, 67.67] })
     declare private _prop6: number[];
 }
 @xor.guid("70292285-10d5-44e0-9031-e12b14a05d15")

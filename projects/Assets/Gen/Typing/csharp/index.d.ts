@@ -30320,6 +30320,7 @@ declare namespace CS {
             public valueEnum: System.Collections.Generic.Dictionary$2<string, any>
             public SetRange($left: number, $right: number): void
             public AddEnum($key: string, $value: any): void
+            public BuildTooltip($force: boolean): string
             public constructor()
         }
     }

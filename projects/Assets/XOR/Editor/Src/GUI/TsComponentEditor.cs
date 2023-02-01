@@ -163,7 +163,7 @@ namespace XOR
                 if (GUILayout.Button("重置"))
                 {
                     Helper.ClearProperties(component);
-                    Helper.RebuildNodes(root, properties, statement);
+                    //Helper.RebuildNodes(root, properties, statement);
                 }
                 if (GUILayout.Button("编辑"))
                 {
@@ -273,6 +273,7 @@ namespace XOR
                         {
                             nw.ExplicitValueType = property.valueType;
                             nw.ExplicitValueRange = property.valueRange;
+                            nw.Tooltip = property.BuildTooltip();
                         }
                         outputNodes.Add(nw);
                     }

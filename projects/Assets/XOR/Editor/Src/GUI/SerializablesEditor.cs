@@ -22,6 +22,7 @@ namespace XOR.Serializables
         public Type ExplicitValueType { get; set; }
         public Tuple<float, float> ExplicitValueRange { get; set; }
         public Dictionary<string, object> ExplicitValueEnum { get; set; }
+        public string Tooltip { get; set; }
 
         public SerializedProperty KeyNode
         {
@@ -642,13 +643,13 @@ namespace XOR.Serializables.TsComponent
         public virtual void Render()
         {
             EditorGUILayout.BeginHorizontal();
-            if (Node.ExplicitValueType != null)
+            if (Node.Tooltip != null)
             {
-                GUILayout.Label(new GUIContent(Node.Key, $"{Node.Key}\n{Node.ExplicitValueType.FullName}"), GUILayout.Width(PropertyNameWidth));
+                GUILayout.Label(new GUIContent(Node.Key, Node.Tooltip), GUILayout.Width(PropertyNameWidth));
             }
             else
             {
-                GUILayout.Label(new GUIContent(Node.Key, Node.Key), GUILayout.Width(PropertyNameWidth));
+                GUILayout.Label(Node.Key, GUILayout.Width(PropertyNameWidth));
             }
             RenderValue();
             EditorGUILayout.EndHorizontal();
