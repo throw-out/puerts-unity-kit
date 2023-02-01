@@ -11,11 +11,6 @@ namespace XOR
         private readonly Queue<FileSystemEventArgs> changedEvents = new Queue<FileSystemEventArgs>();
         private Action<string, WatcherChangeTypes> onChanged;
 
-        /// <summary>
-        /// ⚠⚠⚠System.IO.FileSystemWatcher在某些Unity版本中实现有Bug, 无法停止FileSystemWatcher实例:
-        /// 已验证的Unity版本(正常使用):
-        /// 2021.3.6f1
-        /// </summary>
         public void AddWatcher(string path, string filter = null)
         {
             FileSystemWatcher watcher = new FileSystemWatcher();
@@ -39,6 +34,7 @@ namespace XOR
         }
         void Enqueue(FileSystemEventArgs e)
         {
+            PrintWarningIfDestroyed(e);
             lock (changedEvents)
             {
                 changedEvents.Enqueue(e);
@@ -46,11 +42,23 @@ namespace XOR
         }
         void Enqueue(RenamedEventArgs e)
         {
+            PrintWarningIfDestroyed(e);
             lock (changedEvents)
             {
                 changedEvents.Enqueue(new FileSystemEventArgs(WatcherChangeTypes.Deleted, Path.GetDirectoryName(e.OldFullPath), e.OldName));
                 changedEvents.Enqueue(new FileSystemEventArgs(WatcherChangeTypes.Created, Path.GetDirectoryName(e.FullPath), e.Name));
             }
+        }
+        void PrintWarningIfDestroyed(FileSystemEventArgs e)
+        {
+            if (!this.IsDestroyed)
+                return;
+            Logger.LogWarning(
+$@"⚠⚠⚠ System.IO.FileSystemWatcher instance not closed, {nameof(EditorFileWatcher)} may not work. This seems to be the bug of unity, please try using the latest version of LTS.
+Unity: {UnityEngine.Application.version}
+Thread: {System.Threading.Thread.CurrentThread.ManagedThreadId}
+Event: {Enum.GetName(typeof(WatcherChangeTypes), e.ChangeType)} - {e.FullPath}
+");
         }
         void Tick()
         {
