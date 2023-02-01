@@ -231,8 +231,6 @@ export class Program {
 
             let definition: TypeDefinition = {
                 absoluteName,
-                hash: this.getSourceFileHash(cd.getSourceFile()),
-                version: `${new Date().valueOf()}`,
                 isExport: util.isExport(cd),
                 isDeclare: util.isDeclare(cd, true),
                 isAbstract: util.isAbstract(cd),
@@ -286,10 +284,7 @@ export class Program {
             let sourceFile = this.allocDecorator(td, `@xor.guid("${guid}")`);
             if (sourceFile) {
                 this.sourceHash.delete(sourceFile.fileName);
-
                 type.guid = guid;
-                type.hash = this.getSourceFileHash(sourceFile);
-                type.version = `${new Date().valueOf()}`;
 
                 this.pushType(type);
                 File.WriteAllText(sourceFile.fileName, sourceFile.text);
@@ -297,7 +292,6 @@ export class Program {
         }
     }
     //#endregion
-
 
     private pushType(type: TypeDefinition) {
         if (!type.guid || !this.isExportTsCompoent(type)) {
@@ -316,7 +310,7 @@ export class Program {
         ctd.name = name;
         ctd.module = module;
         ctd.guid = type.guid;
-        ctd.version = `${new Date().valueOf()}`;
+        ctd.version = this.getSourceFileHash(node);
         //成员声明
         let members = this.getFields(node, true);
         if (members) {
@@ -766,10 +760,6 @@ type TypeDefinition = {
     guid?: string;
     /**为xor Component类型分配的唯一路由 */
     route?: string;
-    /**文件版本(以lastWriteTime) */
-    version?: string;
-    /**文件哈希 */
-    hash?: string;
 
     readonly absoluteName: string;
     /**是否为xor Component类型 */

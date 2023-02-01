@@ -36,6 +36,17 @@ public class PuertsConfig
                 //System.Action
                 typeof(Action),
                 typeof(Action<int, int>),
+                //XOR
+                typeof(XOR.Services.CSharpInterfaces),
+                typeof(XOR.Services.TSInterfaces),
+                typeof(XOR.Services.Program),
+                typeof(XOR.Services.ProgramState),
+                typeof(XOR.Services.Statement),
+                typeof(XOR.Services.EnumDeclaration),
+                typeof(XOR.Services.TypeDeclaration),
+                typeof(XOR.Services.PropertyDeclaration),
+                typeof(XOR.Services.EnumPropertyDeclaration),
+                typeof(XOR.ReflectionUtil),
             };
         }
     }
@@ -87,17 +98,6 @@ public class PuertsConfig
                 typeof(string),
                 //C# System.Text
                 typeof(System.Text.Encoding),
-                //XOR
-                typeof(XOR.Services.CSharpInterfaces),
-                typeof(XOR.Services.TSInterfaces),
-                typeof(XOR.Services.Program),
-                typeof(XOR.Services.ProgramState),
-                typeof(XOR.Services.Statement),
-                typeof(XOR.Services.EnumDeclaration),
-                typeof(XOR.Services.TypeDeclaration),
-                typeof(XOR.Services.PropertyDeclaration),
-                typeof(XOR.Services.EnumPropertyDeclaration),
-                typeof(XOR.ReflectionUtil),
                 //Puerts
                 typeof(JsEnv),
                 typeof(ILoader),

@@ -206,7 +206,7 @@ namespace XOR.Services
                 if (this.valueRange != null)
                 {
                     builder.AppendLine();
-                    builder.AppendFormat("Range:\t{0} - {1}", this.valueRange.Item1, this.valueRange.Item2);
+                    builder.AppendFormat("Range:\t[{0}, {1}]", this.valueRange.Item1, this.valueRange.Item2);
                 }
                 if (this.valueEnum != null && this.valueEnum.Count > 0)
                 {
