@@ -7,6 +7,11 @@ const { Guid } = csharp.System;
 const { HashUtil } = csharp.XOR;
 const { File, Directory, Path } = csharp.System.IO;
 
+const UTF8 = csharp.System.Text.Encoding.UTF8;
+Object.setPrototypeOf(UTF8, csharp.System.Text.Encoding.prototype);
+
+const EmptyCharacters = [" ", "\t"], EnterCharacters = ["\n", "\r"];
+
 type ConfigFile = {
     readonly files?: string[];
     readonly include?: string[];
@@ -14,8 +19,6 @@ type ConfigFile = {
     readonly references?: string[];
     readonly compilerOptions: ts.CompilerOptions;
 };
-
-const EmptyCharacters = [" ", "\t"], EnterCharacters = ["\n", "\r"];
 
 enum ModuleFlags {
     Global = "global",
@@ -121,21 +124,27 @@ export function parseConfigFile(tsconfigFile: string, options?: {
 
 export class Program {
     private readonly cp: csharp.XOR.Services.Program;
+    private readonly options: ts.CompilerOptions;
     private readonly program: ts.Program;
     private readonly checker: ts.TypeChecker;
 
     private readonly types: Map<string, ts.ClassDeclaration>;
-    private readonly typeDefinitions: Map<string, TypeDefinition>;
 
     private readonly sourceHash: Map<string, string>;
+    private readonly sourceDefinitions: Map<string, TypeDefinition[]>;
 
     private readonly throttler: Throttler;
+
+    //是否正在进行解析中
+    private resolving: boolean;
+    private pending: Map<string, string>;
 
     constructor(cp: csharp.XOR.Services.Program, rootNames: string[], options: ts.CompilerOptions) {
         cp.state = csharp.XOR.Services.ProgramState.Compiling;
         cp.stateMessage = '';
 
         this.cp = cp;
+        this.options = options;
         this.program = ts.createProgram({
             rootNames,
             options: {
@@ -146,34 +155,39 @@ export class Program {
         });
         this.checker = this.program.getTypeChecker();
         this.types = new Map();
-        this.typeDefinitions = new Map();
         this.sourceHash = new Map();
+        this.sourceDefinitions = new Map();
 
         this.throttler = new Throttler(100, 1);
 
         this.resolves();
     }
     private async resolves() {
+        this.resolving = true;
         await this.resolveSources();
         await this.resolveComponents();
 
-        await this.resolveUnknownGuid();
+        await this.resolveDefinitions();
+        this.resolving = false;
 
         this.cp.state = csharp.XOR.Services.ProgramState.Completed;
         this.cp.stateMessage = '';
+
+        this.resolvePending();
     }
     /**文件修改状态 */
     public change(path: string) {
         console.log("file change: " + path);
-        //文件已删除
-        if (!File.Exists(path)) {
+        path = Path.GetFullPath(path).replace(/\\/g, "/");
+        //文件已同步(被Program修改, 则取消此次操作)
+        let hash = File.Exists(path) ? HashUtil.SHA256File(path) : null;
+        if (hash && this.sourceHash.get(path) === hash)
+            return;
+        //文件新增丶更新或删除
+        if (!this.pending) this.pending = new Map();
+        this.pending.set(path, hash);
 
-            return;
-        }
-        //文件已同步(被Program内部修改)
-        if (this.sourceHash.get(path) === HashUtil.SHA256File(path))
-            return;
-        //文件新增或更新
+        this.resolvePending();
     }
 
     //#region SourceFile 处理流程
@@ -192,53 +206,63 @@ export class Program {
         }
     }
     private async resolveStatements(statements: ts.NodeArray<ts.Statement>) {
+        let absoluteNames = new Array<string>();
+
         for (let statement of statements) {
             switch (statement.kind) {
                 case ts.SyntaxKind.ClassDeclaration:
-                    await this.resolveClassDeclaration(<ts.ClassDeclaration>statement);
+                    absoluteNames.push(
+                        await this.resolveClassDeclaration(<ts.ClassDeclaration>statement)
+                    );
                     break;
                 case ts.SyntaxKind.ModuleDeclaration:
-                    await this.resolveModuleDeclaration(<ts.ModuleDeclaration>statement);
+                    absoluteNames.push(...
+                        await this.resolveModuleDeclaration(<ts.ModuleDeclaration>statement)
+                    );
                     break;
             }
         }
+        return absoluteNames;
     }
     private async resolveClassDeclaration(node: ts.ClassDeclaration) {
         await this.throttler.complete();
-        this.types.set(this.getAbsoluteName(node), node);
+
+        let absoluteName = this.getAbsoluteName(node);
+        this.types.set(absoluteName, node);
+        return absoluteName;
     }
     private async resolveModuleDeclaration(node: ts.ModuleDeclaration) {
+        let absoluteNames = new Array<string>();
         for (let childNode of node.getChildren()) {
             switch (childNode.kind) {
                 case ts.SyntaxKind.ModuleBlock:
-                    await this.resolveStatements((<ts.ModuleBlock>childNode).statements);
+                    absoluteNames.push(...
+                        await this.resolveStatements((<ts.ModuleBlock>childNode).statements)
+                    );
                     break;
                 case ts.SyntaxKind.Identifier:
                     break;
             }
         }
+        return absoluteNames;
     }
     //#endregion
 
 
-    //#region   Decorator定义处理流程
+    //#region Component-Decorator定义处理流程
     private async resolveComponents() {
-        this.cp.state = csharp.XOR.Services.ProgramState.Analyzing;
-        this.cp.stateMessage = 'component';
-
-        for (let [absoluteName, cd] of this.types) {
+        for (let [absoluteName, node] of this.types) {
             await this.throttler.complete();
 
             let definition: TypeDefinition = {
                 absoluteName,
-                isExport: util.isExport(cd),
-                isDeclare: util.isDeclare(cd, true),
-                isAbstract: util.isAbstract(cd),
-                isComponent: this.isInheritFromTsComponent(cd) && !this.isTsComponent(cd)
+                isExport: util.isExport(node),
+                isDeclare: util.isDeclare(node, true),
+                isAbstract: util.isAbstract(node),
+                isComponent: this.isInheritFromTsComponent(node) && !this.isTsComponent(node)
             };
-            this.typeDefinitions.set(absoluteName, definition);
-            this.resolveComponentDecorator(cd, definition);
-            this.pushType(definition);
+            this.resolveComponentDecorator(node, definition);
+            this.resolveSourceDefinition(node, definition);
         }
     }
     private resolveComponentDecorator(node: ts.ClassDeclaration, define: TypeDefinition) {
@@ -256,60 +280,166 @@ export class Program {
                 continue;
             switch (this.getFullName(target)) {
                 case DecoratorFlags.GUID:
-                    define.guid = (<ts.StringLiteral>args[0]).text;
+                    define.guid = util.getExpressionValue<string>(this.checker, args[0]);
                     break;
                 case DecoratorFlags.Route:
-                    define.route = (<ts.StringLiteral>args[0]).text;
+                    define.route = util.getExpressionValue<string>(this.checker, args[0]);
                     break;
             }
         }
     }
-    private async resolveUnknownGuid() {
-        this.cp.state = csharp.XOR.Services.ProgramState.Allocating;
-        this.cp.stateMessage = '';
-
-        for (let [, type] of this.typeDefinitions) {
-            if (type.guid || !this.isExportTsCompoent(type)) {
-                continue;
-            }
-            let td = this.types.get(type.absoluteName);
-            if (!td) {
-                console.warn(`节点数据缺失: ${type.absoluteName}`);
-                return;
-            }
-            await this.throttler.complete();
-
-            let guid = csharp.System.Guid.NewGuid().ToString();
-
-            let sourceFile = this.allocDecorator(td, `@xor.guid("${guid}")`);
-            if (sourceFile) {
-                this.sourceHash.delete(sourceFile.fileName);
-                type.guid = guid;
-
-                this.pushType(type);
-                File.WriteAllText(sourceFile.fileName, sourceFile.text);
-            }
+    private resolveSourceDefinition(node: ts.Declaration, definition: TypeDefinition) {
+        let fileName = node.getSourceFile().fileName;
+        let definitions = this.sourceDefinitions.get(fileName);
+        if (!definitions) {
+            definitions = [];
+            this.sourceDefinitions.set(fileName, definitions);
         }
+        definitions.push(definition);
     }
     //#endregion
 
-    private pushType(type: TypeDefinition) {
-        if (!type.guid || !this.isExportTsCompoent(type)) {
+    private async resolvePending() {
+        if (this.resolving)
+            return;
+        if (!this.pending || this.pending.size === 0)
+            return;
+
+        this.resolving = true;
+        let next = () => {
+            this.resolving = false;
+            this.resolvePending();
+        };
+
+        let path = util.at(this.pending.keys(), 0), hash = this.pending.get(path),
+            declarations = this.sourceDefinitions.get(path);
+        this.pending.delete(path);
+
+        let sourceFile = this.program.getSourceFile(path);
+        //如果文件已删除
+        if (!File.Exists(path)) {
+            this.removeDeclarations(path, true);
+            //重新解析关系
+            await this.resolveComponents();
+
+            next();
+        }
+        //锁定文件并验证hash
+        else {
+            let stream: csharp.System.IO.FileStream;
+            try {
+                stream = File.OpenRead(path);
+                let cHash = csharp.XOR.HashUtil.SHA256(stream);
+                //如果文件与初始hash不同或已与SourceFile同步, 则取消接下来的执行
+                if (cHash !== hash || cHash === this.sourceHash.get(path)) {
+                    return;
+                }
+                let newContent = UTF8.GetString(util.readSteam(stream, Number(stream.Length)));
+                //更新文件声明
+                if (sourceFile) {
+                    this.removeDeclarations(path, false);
+                    //更新SourceFile内容
+                    sourceFile = ts.updateSourceFile(sourceFile, newContent, {
+                        span: {
+                            start: 0,
+                            length: newContent.length
+                        },
+                        newLength: newContent.length,
+                    }, false);
+                }
+                //新增SourceFile文件
+                else {
+                    let program = ts.createProgram({
+                        rootNames: [...this.program.getRootFileNames(), path],
+                        options: this.options,
+                        oldProgram: this.program
+                    });
+                    //@ts-ignore
+                    this.program = program;
+                    //@ts-ignore
+                    this.checker = this.program.getTypeChecker();
+
+                    sourceFile = program.getSourceFile(path);
+                }
+                //重新生成此SourceFile文件的声明
+                if (!sourceFile.statements)
+                    return;
+                let newAbsoluteNames = await this.resolveStatements(sourceFile.statements);
+                if (!newAbsoluteNames || newAbsoluteNames.length === 0)
+                    return;
+                //重新解析关系
+                await this.resolveComponents();
+
+                declarations = this.sourceDefinitions.get(path);
+                if (declarations && declarations.length > 0) {
+                    this.pushDefinitions(declarations);
+                }
+            } catch (e) {
+                console.warn(e);
+            } finally {
+                stream?.Close();
+                next();
+            }
+        }
+    }
+    private async resolveDefinitions() {
+        this.cp.state = csharp.XOR.Services.ProgramState.Allocating;
+        this.cp.stateMessage = '';
+
+        for (let [fileName, declarations] of this.sourceDefinitions) {
+            await this.throttler.complete();
+            this.pushDefinitions(declarations);
+        }
+    }
+    private pushDefinitions(declarations: TypeDefinition[]) {
+        let updateSourceFile: ts.SourceFile;
+        //分配新的guid
+        for (let declaration of declarations) {
+            if (declaration.guid || !this.isExportTsCompoent(declaration)) {
+                continue;
+            }
+            let td = this.types.get(declaration.absoluteName);
+            if (!td) {
+                console.warn(`节点数据缺失: ${declaration.absoluteName}`);
+                continue;
+            }
+            let guid = Guid.NewGuid().ToString();
+            let sourceFile = this.allocDecorator(td, `@xor.guid("${guid}")`);
+            if (sourceFile) {
+                declaration.guid = guid;
+                updateSourceFile = sourceFile;
+            }
+        }
+        //保存SourceFile文件
+        if (updateSourceFile) {
+            this.sourceHash.delete(updateSourceFile.fileName);
+            File.WriteAllText(updateSourceFile.fileName, updateSourceFile.text);
+        }
+        //推送定义到C#
+        for (let declaration of declarations) {
+            if (!declaration.guid || !this.isExportTsCompoent(declaration)) {
+                continue;
+            }
+            this.pushDefinition(declaration);
+        }
+    }
+    private pushDefinition(declaration: TypeDefinition) {
+        if (!declaration.guid || !this.isExportTsCompoent(declaration)) {
             return;
         }
 
-        let node = this.types.get(type.absoluteName);
+        let node = this.types.get(declaration.absoluteName);
         if (!node) {
-            console.warn(`节点数据缺失: ${type.absoluteName}`);
+            console.warn(`节点数据缺失: ${declaration.absoluteName}`);
             return;
         }
-        let [module, name] = type.absoluteName.split("|");
+        let [module, name] = declaration.absoluteName.split("|");
 
         //创建type声明
         let ctd = new csharp.XOR.Services.TypeDeclaration();
         ctd.name = name;
         ctd.module = module;
-        ctd.guid = type.guid;
+        ctd.guid = declaration.guid;
         ctd.version = this.getSourceFileHash(node);
         //成员声明
         let members = this.getFields(node, true);
@@ -340,6 +470,7 @@ export class Program {
         }
         this.cp.AddStatement(ctd);
     }
+    /**为目标类分配指定内容 */
     private allocDecorator(node: ts.Node, decoratorContent: string) {
         let sourceFile = node.getSourceFile();
 
@@ -372,7 +503,29 @@ export class Program {
                 length: 0
             },
             newLength: insert.length,
-        }, false);;
+        }, false);
+    }
+    /**移除定义文件 */
+    private removeDeclarations(path: string, removeSourceFile?: boolean) {
+        let declarations = this.sourceDefinitions.get(path);
+        //移除文件声明
+        declarations?.forEach(declaration => {
+            this.types.delete(declaration.absoluteName);
+            this.cp.RemoveStatement(declaration.guid);
+        });
+        this.sourceHash.delete(path);
+        this.sourceDefinitions.delete(path);
+        //将sourceFile内容置为null
+        let sourceFile: ts.SourceFile;
+        if (removeSourceFile && (sourceFile = this.program.getSourceFile(path))) {
+            ts.updateSourceFile(sourceFile, "", {
+                span: {
+                    start: 0,
+                    length: 0
+                },
+                newLength: 0,
+            }, false);
+        }
     }
 
     private isExportTsCompoent(type: TypeDefinition) {
@@ -510,6 +663,8 @@ export class Program {
                             break;
                         case "value":
                             value = util.getExpressionValue(this.checker, initializer);
+                            break;
+                        case "mask":
                             break;
                     }
                 }
@@ -849,7 +1004,7 @@ const util = new class {
         return !this.isPublic(node, defaultValue);
     }
 
-    public getExpressionValue(checker: ts.TypeChecker, expression: ts.Expression, depth: number = 0) {
+    public getExpressionValue<T = any>(checker: ts.TypeChecker, expression: ts.Expression, depth: number = 0): T {
         if (depth > 1)
             return null;
         let result: any;
@@ -929,6 +1084,29 @@ const util = new class {
             members.forEach((({ name, value }) => enumerable.set(name, `${value}`)));
         }
         return { type, enumerable };
+    }
+
+    public readSteam(stream: csharp.System.IO.Stream, length: number): csharp.System.Array$1<number>;
+    public readSteam(stream: csharp.System.IO.Stream, length: number, toBuffer: true): ArrayBuffer;
+    public readSteam() {
+        let stream: csharp.System.IO.Stream = arguments[0], length: number = arguments[1], toBuffer: boolean = arguments[2];
+        let bytes = csharp.System.Array.CreateInstance($typeof(csharp.System.Byte), length) as csharp.System.Array$1<number>;
+        stream.Read(bytes, 0, length);
+        if (toBuffer) {
+            return csharp.XOR.BufferUtil.ToBuffer(bytes);
+        }
+        return bytes;
+    }
+    public at<T>(iterator: IterableIterator<T>, index: number) {
+        if (!iterator)
+            return null;
+        let i = 0;
+        for (let value of iterator) {
+            if (i === index)
+                return value;
+            i++;
+        }
+        return null;
     }
 }
 class Throttler {

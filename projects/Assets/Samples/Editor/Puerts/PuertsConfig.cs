@@ -95,8 +95,9 @@ public class PuertsConfig
                 typeof(FileInfo),
                 typeof(DirectoryInfo),
                 typeof(Path),
-                typeof(string),
+                typeof(Stream),
                 //C# System.Text
+                typeof(string),
                 typeof(System.Text.Encoding),
                 //Puerts
                 typeof(JsEnv),

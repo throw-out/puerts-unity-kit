@@ -15,6 +15,7 @@ export class Sample01 extends xor.TsComponent {
     declare private _prop6: Vector3;
     declare private _prop7: GameObject;
     declare private _prop8: Transform;
+    //declare private _prop9: Transform;
 }
 /**
  * 数组类型演示
