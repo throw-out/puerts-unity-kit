@@ -92,7 +92,6 @@ Event: {Enum.GetName(typeof(WatcherChangeTypes), e.ChangeType)} - {e.FullPath}
             this.onChanged = null;
             foreach (var watcher in watchers)
             {
-                watcher.BeginInit();
                 watcher.EnableRaisingEvents = false;
                 watcher.Dispose();
             }
