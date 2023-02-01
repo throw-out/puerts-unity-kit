@@ -128,7 +128,6 @@ namespace XOR
                 watcher.AddWatcher(dirpath, "*.ts");
                 watcher.AddWatcher(dirpath, "*.tsx");
                 watcher.OnChanged((path, type) => ti.FileChanged(path));
-                UnityEngine.Debug.Log("Watcher: " + watcher.GetHashCode());
 
                 Logger.Log($"<b>XOR.{nameof(EditorApplication)}: <color=green>Started</color>.</b>");
             }

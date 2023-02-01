@@ -13,16 +13,17 @@ namespace XOR
 
         public void AddWatcher(string path, string filter = null)
         {
-            FileSystemWatcher watcher = new FileSystemWatcher(path);
+            FileSystemWatcher watcher = new FileSystemWatcher();
+            watcher.BeginInit();
+            watcher.Path = path;
+            watcher.NotifyFilter = NotifyFilters.FileName | NotifyFilters.Size | NotifyFilters.LastWrite;
+            watcher.IncludeSubdirectories = true;
             if (filter != null) watcher.Filter = filter;
-
             watcher.Deleted += (sender, e) => this.Enqueue(e);
             watcher.Created += (sender, e) => this.Enqueue(e);
             watcher.Changed += (sender, e) => this.Enqueue(e);
             watcher.Renamed += (sender, e) => this.Enqueue(e);
-            watcher.NotifyFilter = NotifyFilters.FileName | NotifyFilters.Size | NotifyFilters.LastWrite;
-            watcher.IncludeSubdirectories = true;
-            //watcher.BeginInit();
+            watcher.EndInit();
 
             watcher.EnableRaisingEvents = true;
             watchers.Add(watcher);
@@ -34,12 +35,11 @@ namespace XOR
 
         void Enqueue(FileSystemEventArgs e)
         {
-            UnityEngine.Debug.Log($"Change({System.Threading.Thread.CurrentThread.ManagedThreadId}): {e.FullPath}");
+            UnityEngine.Debug.Log($"Change Events: {changedEvents.Count}| {string.Join(",", this.watchers.Select(o => o.EnableRaisingEvents))}\nChange({System.Threading.Thread.CurrentThread.ManagedThreadId}): {e.FullPath}");
             lock (changedEvents)
             {
                 changedEvents.Enqueue(e);
             }
-            UnityEngine.Debug.Log($"Change Events: {changedEvents.Count}| {this.GetHashCode()}| {this.IsDestroyed}| {string.Join(",", this.watchers.Select(o => o.EnableRaisingEvents))}");
         }
         void Enqueue(RenamedEventArgs e)
         {
@@ -74,33 +74,20 @@ namespace XOR
         public override void Release()
         {
             base.Release();
-
-            foreach (var watcher in watchers)
-            {
-                watcher.EnableRaisingEvents = false;
-            }
-            Dispose(false);
+            this.Dispose();
         }
         public void Dispose()
         {
-            Dispose(true);
-        }
-        protected void Dispose(bool disposing)
-        {
-            this.UnregisterHandlers();
             this.onChanged = null;
-            if (disposing)
+            foreach (var watcher in watchers)
             {
-                foreach (var watcher in watchers)
-                {
-                    //watcher.EndInit();
-                    watcher.EnableRaisingEvents = false;
-                    watcher.Dispose();
-                    //GC.SuppressFinalize(watcher);
-                }
-                this.watchers.Clear();
-                this.changedEvents.Clear();
+                watcher.EnableRaisingEvents = false;
+                watcher.Dispose();
             }
+            this.watchers.Clear();
+            this.changedEvents.Clear();
+
+            GC.SuppressFinalize(this);
         }
         void RegisterHandlers()
         {
