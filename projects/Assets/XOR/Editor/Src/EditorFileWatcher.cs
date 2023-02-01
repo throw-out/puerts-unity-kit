@@ -11,6 +11,11 @@ namespace XOR
         private readonly Queue<FileSystemEventArgs> changedEvents = new Queue<FileSystemEventArgs>();
         private Action<string, WatcherChangeTypes> onChanged;
 
+        /// <summary>
+        /// ⚠⚠⚠System.IO.FileSystemWatcher在某些Unity版本中实现有Bug, 无法停止FileSystemWatcher实例:
+        /// 已验证的Unity版本(正常使用):
+        /// 2021.3.6f1
+        /// </summary>
         public void AddWatcher(string path, string filter = null)
         {
             FileSystemWatcher watcher = new FileSystemWatcher();
@@ -32,11 +37,8 @@ namespace XOR
         {
             onChanged += changed;
         }
-
         void Enqueue(FileSystemEventArgs e)
         {
-            UnityEngine.Debug.Log($"Change Events: {changedEvents.Count}| {string.Join(",", this.watchers.Select(o => o.EnableRaisingEvents))}\nChange({System.Threading.Thread.CurrentThread.ManagedThreadId}): {e.FullPath}");
-            UnityEngine.Debug.Log($"Change Events({System.Threading.Thread.CurrentThread.ManagedThreadId}): {changedEvents.Count}| {this.IsDestroyed}| {string.Join(",", this.watchers.Select(o => o.EnableRaisingEvents))}\nChange({System.Threading.Thread.CurrentThread.ManagedThreadId}): {e.FullPath}");
             lock (changedEvents)
             {
                 changedEvents.Enqueue(e);
