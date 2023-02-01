@@ -756,7 +756,7 @@ namespace XOR.Serializables.TsComponent
         {
             if (Node.ExplicitValueEnum != null)
             {
-                RendererEnumValue();
+                RenderEnumValue();
             }
             else if (Node.ExplicitValueType != null && Helper.IsIntegerType(Node.ExplicitValueType))
             {
@@ -767,10 +767,12 @@ namespace XOR.Serializables.TsComponent
                 RenderSingleValue();
             }
         }
-        protected virtual void RendererEnumValue()
+        protected virtual void RenderEnumValue()
         {
+            string[] keyOptions = Node.ExplicitValueEnum.Keys.ToArray();
+            int[] valueOptions = Node.ExplicitValueEnum.Values.Cast<int>().ToArray();
             var value = (int)Node.ValueNode.doubleValue;
-            var newValue = EditorGUILayout.IntPopup(value, Node.ExplicitValueEnum.Keys.ToArray(), Node.ExplicitValueEnum.Values.Cast<int>().ToArray());
+            var newValue = EditorGUILayout.IntPopup(value, keyOptions, valueOptions);
             if (newValue != value || Math.Abs(newValue - Node.ValueNode.doubleValue) > float.Epsilon)
             {
                 Node.ValueNode.doubleValue = newValue;
@@ -830,14 +832,14 @@ namespace XOR.Serializables.TsComponent
         {
             if (Node.ExplicitValueEnum != null)
             {
-                RendererEnumValue();
+                RenderEnumValue();
             }
             else
             {
-                RendererStringValue();
+                RenderStringValue();
             }
         }
-        protected virtual void RendererStringValue()
+        protected virtual void RenderStringValue()
         {
             var value = Node.ValueNode.stringValue;
             var newValue = EditorGUILayout.TextField(value);
@@ -847,7 +849,7 @@ namespace XOR.Serializables.TsComponent
                 Dirty |= true;
             }
         }
-        protected virtual void RendererEnumValue()
+        protected virtual void RenderEnumValue()
         {
             string[] keyOptions = Node.ExplicitValueEnum.Keys.ToArray(),
                valueOptions = Node.ExplicitValueEnum.Values.Cast<string>().ToArray();
@@ -921,7 +923,7 @@ namespace XOR.Serializables.TsComponent
         {
             if (Node.ExplicitValueEnum != null)
             {
-                RendererMemberEnumValue(node, type);
+                RenderMemberEnumValue(node, type);
             }
             else if (Helper.IsIntegerType(type))
             {
@@ -933,10 +935,12 @@ namespace XOR.Serializables.TsComponent
             }
         }
 
-        protected virtual void RendererMemberEnumValue(SerializedProperty node, Type type)
+        protected virtual void RenderMemberEnumValue(SerializedProperty node, Type type)
         {
+            string[] keyOptions = Node.ExplicitValueEnum.Keys.ToArray();
+            int[] valueOptions = Node.ExplicitValueEnum.Values.Cast<int>().ToArray();
             var value = (int)node.doubleValue;
-            var newValue = EditorGUILayout.IntPopup(value, Node.ExplicitValueEnum.Keys.ToArray(), Node.ExplicitValueEnum.Values.Cast<int>().ToArray());
+            var newValue = EditorGUILayout.IntPopup(value, keyOptions, valueOptions);
             if (newValue != value || Math.Abs(newValue - node.doubleValue) > float.Epsilon)
             {
                 node.doubleValue = newValue;
@@ -996,14 +1000,14 @@ namespace XOR.Serializables.TsComponent
         {
             if (Node.ExplicitValueEnum != null)
             {
-                RendererMemberEnumValue(node, type);
+                RenderMemberEnumValue(node, type);
             }
             else
             {
-                RendererMemberStringValue(node, type);
+                RenderMemberStringValue(node, type);
             }
         }
-        protected virtual void RendererMemberStringValue(SerializedProperty node, Type type)
+        protected virtual void RenderMemberStringValue(SerializedProperty node, Type type)
         {
             var value = node.stringValue;
             var newValue = EditorGUILayout.TextField(value);
@@ -1014,7 +1018,7 @@ namespace XOR.Serializables.TsComponent
             }
 
         }
-        protected virtual void RendererMemberEnumValue(SerializedProperty node, Type type)
+        protected virtual void RenderMemberEnumValue(SerializedProperty node, Type type)
         {
             string[] keyOptions = Node.ExplicitValueEnum.Keys.ToArray(),
                 valueOptions = Node.ExplicitValueEnum.Values.Cast<string>().ToArray();
