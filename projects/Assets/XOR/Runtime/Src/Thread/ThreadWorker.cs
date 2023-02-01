@@ -209,6 +209,7 @@ namespace XOR
 #if UNITY_EDITOR
             ThreadWorkerEditorCaller.Unregister(this);
 #endif
+            GC.SuppressFinalize(this);
         }
 
         void ThreadExecute(bool isESM, string filepath)

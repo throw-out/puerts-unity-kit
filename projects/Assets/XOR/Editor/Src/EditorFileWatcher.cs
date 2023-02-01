@@ -36,6 +36,7 @@ namespace XOR
         void Enqueue(FileSystemEventArgs e)
         {
             UnityEngine.Debug.Log($"Change Events: {changedEvents.Count}| {string.Join(",", this.watchers.Select(o => o.EnableRaisingEvents))}\nChange({System.Threading.Thread.CurrentThread.ManagedThreadId}): {e.FullPath}");
+            UnityEngine.Debug.Log($"Change Events({System.Threading.Thread.CurrentThread.ManagedThreadId}): {changedEvents.Count}| {this.IsDestroyed}| {string.Join(",", this.watchers.Select(o => o.EnableRaisingEvents))}\nChange({System.Threading.Thread.CurrentThread.ManagedThreadId}): {e.FullPath}");
             lock (changedEvents)
             {
                 changedEvents.Enqueue(e);
@@ -81,12 +82,12 @@ namespace XOR
             this.onChanged = null;
             foreach (var watcher in watchers)
             {
+                watcher.BeginInit();
                 watcher.EnableRaisingEvents = false;
                 watcher.Dispose();
             }
             this.watchers.Clear();
             this.changedEvents.Clear();
-
             GC.SuppressFinalize(this);
         }
         void RegisterHandlers()

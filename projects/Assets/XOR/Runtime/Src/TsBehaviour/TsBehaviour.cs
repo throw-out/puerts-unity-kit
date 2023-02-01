@@ -386,6 +386,7 @@ namespace XOR
                 proxies.Clear();
             }
             proxies = null;
+            GC.SuppressFinalize(this);
         }
 
         public static void DisposeAll()

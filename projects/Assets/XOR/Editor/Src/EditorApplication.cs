@@ -66,6 +66,7 @@ namespace XOR
                 Loader.Dispose();
                 Loader = null;
             }
+            GC.SuppressFinalize(this);
         }
         public void SetWorker(ThreadWorker worker)
         {
