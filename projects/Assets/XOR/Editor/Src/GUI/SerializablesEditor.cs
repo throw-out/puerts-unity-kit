@@ -849,13 +849,13 @@ namespace XOR.Serializables.TsComponent
         }
         protected virtual void RendererEnumValue()
         {
-            var value = Node.ValueNode.stringValue;
-            var enumOptions = Node.ExplicitValueEnum.Keys.ToArray();
-            var valueIndex = Array.IndexOf(enumOptions, value);
-            var newIndex = EditorGUILayout.Popup(valueIndex, enumOptions);
+            string[] keyOptions = Node.ExplicitValueEnum.Keys.ToArray(),
+               valueOptions = Node.ExplicitValueEnum.Values.Cast<string>().ToArray();
+            var valueIndex = Array.IndexOf(valueOptions, Node.ValueNode.stringValue);
+            var newIndex = EditorGUILayout.Popup(valueIndex, keyOptions);
             if (newIndex != valueIndex)
             {
-                Node.ValueNode.stringValue = Node.ExplicitValueEnum.Values.ToArray()[newIndex] as string;
+                Node.ValueNode.stringValue = valueOptions[newIndex];
                 Dirty |= true;
             }
         }
@@ -919,7 +919,11 @@ namespace XOR.Serializables.TsComponent
     {
         protected override void RenderMemberValue(SerializedProperty node, Type type)
         {
-            if (Helper.IsIntegerType(type))
+            if (Node.ExplicitValueEnum != null)
+            {
+                RendererMemberEnumValue(node, type);
+            }
+            else if (Helper.IsIntegerType(type))
             {
                 RenderMemberIntValue(node, type);
             }
@@ -929,6 +933,16 @@ namespace XOR.Serializables.TsComponent
             }
         }
 
+        protected virtual void RendererMemberEnumValue(SerializedProperty node, Type type)
+        {
+            var value = (int)node.doubleValue;
+            var newValue = EditorGUILayout.IntPopup(value, Node.ExplicitValueEnum.Keys.ToArray(), Node.ExplicitValueEnum.Values.Cast<int>().ToArray());
+            if (newValue != value || Math.Abs(newValue - node.doubleValue) > float.Epsilon)
+            {
+                node.doubleValue = newValue;
+                Dirty |= true;
+            }
+        }
         protected virtual void RenderMemberIntValue(SerializedProperty node, Type type)
         {
             var value = (int)node.doubleValue;
@@ -980,11 +994,35 @@ namespace XOR.Serializables.TsComponent
     {
         protected override void RenderMemberValue(SerializedProperty node, Type type)
         {
+            if (Node.ExplicitValueEnum != null)
+            {
+                RendererMemberEnumValue(node, type);
+            }
+            else
+            {
+                RendererMemberStringValue(node, type);
+            }
+        }
+        protected virtual void RendererMemberStringValue(SerializedProperty node, Type type)
+        {
             var value = node.stringValue;
             var newValue = EditorGUILayout.TextField(value);
             if (newValue != value)
             {
                 node.stringValue = newValue;
+                Dirty |= true;
+            }
+
+        }
+        protected virtual void RendererMemberEnumValue(SerializedProperty node, Type type)
+        {
+            string[] keyOptions = Node.ExplicitValueEnum.Keys.ToArray(),
+                valueOptions = Node.ExplicitValueEnum.Values.Cast<string>().ToArray();
+            var valueIndex = Array.IndexOf(valueOptions, node.stringValue);
+            var newIndex = EditorGUILayout.Popup(valueIndex, keyOptions);
+            if (newIndex != valueIndex)
+            {
+                node.stringValue = valueOptions[newIndex];
                 Dirty |= true;
             }
         }

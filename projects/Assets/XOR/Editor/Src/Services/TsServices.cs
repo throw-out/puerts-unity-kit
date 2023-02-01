@@ -212,10 +212,22 @@ namespace XOR.Services
                 {
                     builder.AppendLine();
                     builder.Append("Enum:");
-                    foreach (var e in this.valueEnum)
+                    bool isValueEnum = this.valueEnum.Keys.FirstOrDefault(k => k != this.valueEnum[k]?.ToString()) == null;
+                    if (isValueEnum)
                     {
-                        builder.AppendLine();
-                        builder.AppendFormat("  -{0} \t {1}", e.Key, e.Value);
+                        foreach (var e in this.valueEnum)
+                        {
+                            builder.AppendLine();
+                            builder.AppendFormat("\t{0}", e.Key);
+                        }
+                    }
+                    else
+                    {
+                        foreach (var e in this.valueEnum)
+                        {
+                            builder.AppendLine();
+                            builder.AppendFormat("\t{0} \t {1}", e.Key, e.Value);
+                        }
                     }
                 }
                 if (this.defaultValue != null)

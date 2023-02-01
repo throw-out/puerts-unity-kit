@@ -321,18 +321,26 @@ export class Program {
         let members = this.getFields(node, true);
         if (members) {
             for (let [name, property] of members) {
-                let dargs = this.getFieldArguments(property);
-
+                let fieldArgs = this.getFieldArguments(property),
+                    fieldType = this.convertToCSharpType([property.type, fieldArgs?.type]);
+                if (!fieldType || !fieldType.type) {
+                    continue;
+                }
                 let cpd = new csharp.XOR.Services.PropertyDeclaration();
                 cpd.name = name;
-                cpd.valueType = this.convertToCSharpType([property.type, dargs?.type]);
+                cpd.valueType = fieldType.type;
                 ctd.AddProperty(cpd);
 
-                if (dargs && dargs.range) {
-                    cpd.SetRange(dargs.range[0], dargs.range[1]);
+                if (fieldType.enumerable) {
+                    for (let [name, value] of fieldType.enumerable) {
+                        cpd.AddEnum(name, value);
+                    }
                 }
-                if (dargs && dargs.value !== undefined) {
-                    cpd.defaultValue = dargs.value;
+                else if (fieldArgs && fieldArgs.range) {
+                    cpd.SetRange(fieldArgs.range[0], fieldArgs.range[1]);
+                }
+                if (fieldArgs && fieldArgs.value !== undefined) {
+                    cpd.defaultValue = fieldArgs.value;
                 }
             }
         }
@@ -621,6 +629,23 @@ export class Program {
         }
         return sourceFile.fileName;
     }
+    /**获取类型声明信息
+     * @param node 
+     * @returns 
+     */
+    private getDeclarationByReference(node: ts.TypeReferenceNode) {
+        const type = this.checker.getTypeAtLocation(node);
+        const symbol = type.getSymbol();
+        if (symbol) {
+            let declarations = symbol.getDeclarations();
+            if (declarations && declarations.length > 0) {
+                return declarations.find(d => d.kind === ts.SyntaxKind.ClassDeclaration) ||
+                    declarations.find(d => d.kind === ts.SyntaxKind.InterfaceDeclaration) ||
+                    declarations[0];
+            }
+        }
+        return null;
+    }
 
     private _baseTypes: { [t: string]: Type } = {
         ["string"]: $typeof(csharp.System.String),
@@ -628,41 +653,107 @@ export class Program {
         ["boolean"]: $typeof(csharp.System.Boolean),
         ["bigint"]: $typeof(csharp.System.Int64),
     };
-    /**转换为C#类型 */
-    private convertToCSharpType(node: ts.TypeNode | [type: ts.TypeNode, explicitType: ts.Node], depth: number = 0): Type {
+    /**获取ts.NodeType其对应的C#类型:
+     * 如果是UnionTypes或enum声明, 则额外获取其enumerable信息
+     * @param node 
+     * @param depth 
+     * @returns 
+     */
+    private convertToCSharpType(node: ts.Node | [type: ts.Node, explicitType: ts.Node], depth: number = 0): { type: Type, enumerable?: Map<string, string | number> } {
         if (depth > 3) {
             return null;
         }
-        let type: ts.TypeNode, explicitType: ts.Node;
+        let typeNode: ts.Node, explicitTypeNode: ts.Node;
         if (Array.isArray(node)) {
-            type = node[0];
-            explicitType = node[1];
+            typeNode = node[0];
+            explicitTypeNode = node[1];
         } else {
-            type = node;
+            typeNode = node;
         }
 
-        if (type.kind === ts.SyntaxKind.ArrayType) {
-            let cstype = this.convertToCSharpType([(<ts.ArrayTypeNode>type).elementType, explicitType], depth + 1);
-            if (!cstype) {
-                return null;
-            }
-            return csharp.System.Array.CreateInstance(cstype, 0).GetType();
+        let type: Type, enumerable: Map<string, string | number>;
+        switch (typeNode.kind) {
+            case ts.SyntaxKind.ParenthesizedType:
+                {
+                    return this.convertToCSharpType([(<ts.ParenthesizedTypeNode>typeNode).type, explicitTypeNode], depth + 1);
+                }
+                break;
+            case ts.SyntaxKind.ArrayType:
+                {
+                    let element = this.convertToCSharpType([(<ts.ArrayTypeNode>typeNode).elementType, explicitTypeNode], depth + 1);
+                    if (element && element.type) {
+                        type = csharp.System.Array.CreateInstance(element.type, 0).GetType();
+                        enumerable = element.enumerable;
+                    }
+                }
+                break;
+            case ts.SyntaxKind.UnionType:
+                {
+                    let types: Array<number | string> = (<ts.UnionTypeNode>typeNode).types.map(t => {
+                        if (t.kind === ts.SyntaxKind.LiteralType) {
+                            return util.getExpressionValue(this.checker, (<ts.LiteralTypeNode>t).literal);
+                        }
+                        return null;
+                    });
+                    let ce = util.toCSharpEnumerable(types.map(value => ({ name: `${value}`, value })));
+                    if (ce) {
+                        enumerable = ce.enumerable;
+                        type = ce.type;
+                    }
+                }
+                break;
+            case ts.SyntaxKind.EnumDeclaration:
+                {
+                    let initializerValue = 0;
+                    let members = (<ts.EnumDeclaration>typeNode).members.map(m => {
+                        let value = m.initializer ? util.getExpressionValue(this.checker, m.initializer) : initializerValue;
+                        if (typeof (value) === "number") {
+                            initializerValue = value + 1;
+                        }
+                        return {
+                            name: m.name.getText(),
+                            value: value
+                        };
+                    });
+                    let ce = util.toCSharpEnumerable(members);
+                    if (ce) {
+                        enumerable = ce.enumerable;
+                        type = ce.type;
+                    }
+                }
+                break;
+            default:
+                {
+                    let module = this.getModuleFromNode(explicitTypeNode ?? typeNode),
+                        fullName = this.getFullName(explicitTypeNode ?? typeNode);
+                    if (module === ModuleFlags.Global && fullName in this._baseTypes) {
+                        type = this._baseTypes[fullName];
+                    }
+                    else if (module === ModuleFlags.CSharp || (module === ModuleFlags.Global || module === ModuleFlags.CS) && fullName.startsWith("CS.")) {
+                        if (fullName.startsWith("CS.")) {
+                            fullName = fullName.substring(3);
+                        }
+                        type = csharp.XOR.ReflectionUtil.GetType(fullName);
+                    }
+                    else if (typeNode.kind === ts.SyntaxKind.TypeReference) {
+                        let declaration = this.getDeclarationByReference(<ts.TypeReferenceNode>typeNode);
+                        if (declaration) {
+                            return this.convertToCSharpType(declaration, depth + 1);
+                        }
+                        let trNode = <ts.TypeReferenceNode>typeNode;
+                        if (trNode.typeName.getText() === "Array" && trNode.typeArguments.length === 1) {
+                            let element = this.convertToCSharpType([(<ts.TypeReferenceNode>typeNode).typeArguments[0], explicitTypeNode], depth + 1);
+                            if (element && element.type) {
+                                type = csharp.System.Array.CreateInstance(element.type, 0).GetType();
+                                enumerable = element.enumerable;
+                            }
+                            return { type, enumerable };
+                        }
+                    }
+                }
+                break;
         }
-        let module = this.getModuleFromNode(explicitType ?? type),
-            fullName = this.getFullName(explicitType ?? type);
-        if (module === ModuleFlags.Global && fullName in this._baseTypes) {
-            return this._baseTypes[fullName];
-        }
-        else if (
-            module === ModuleFlags.CSharp ||
-            (module === ModuleFlags.Global || module === ModuleFlags.CS) && fullName.startsWith("CS.")
-        ) {
-            if (fullName.startsWith("CS.")) {
-                fullName = fullName.substring(3);
-            }
-            return csharp.XOR.ReflectionUtil.GetType(fullName);
-        }
-        return null;
+        return { type, enumerable };
     }
     //#endregion
 }
@@ -834,6 +925,20 @@ const util = new class {
             return result;
         }
         return null;
+    }
+    public toCSharpEnumerable(members: Array<{ name: string, value: string | number }>) {
+        if (!members || members.length === 0 || !members.every(({ value: v }) => typeof (v) === "string" || typeof (v) === "number" || typeof (v) === "bigint")) {
+            return null;
+        }
+        let type: Type, enumerable = new Map<string, string | number>();
+        if (members.every(m => typeof (m.value) === "number")) {
+            type = $typeof(csharp.System.Int32);
+            members.forEach((({ name, value }) => enumerable.set(name, value)));
+        } else {
+            type = $typeof(csharp.System.String);
+            members.forEach((({ name, value }) => enumerable.set(name, `${value}`)));
+        }
+        return { type, enumerable };
     }
 }
 class Throttler {
