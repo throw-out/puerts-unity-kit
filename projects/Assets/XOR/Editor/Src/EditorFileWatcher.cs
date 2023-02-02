@@ -104,7 +104,7 @@ namespace XOR
                 return;
             Logger.LogWarning(
 $@"⚠⚠⚠ System.IO.FileSystemWatcher instance not closed, {nameof(EditorFileWatcher)} may not work. This seems to be the bug of unity, please try using the latest version of LTS.
-Unity: {UnityEngine.Application.version}
+Unity: {UnityEngine.Application.unityVersion}
 Thread: {System.Threading.Thread.CurrentThread.ManagedThreadId}
 Event: {Enum.GetName(typeof(WatcherChangeTypes), e.ChangeType)} - {e.FullPath}
 ");

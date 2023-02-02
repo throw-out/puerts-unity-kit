@@ -255,7 +255,7 @@ namespace XOR
             }
             catch (ThreadInterruptedException /** e */)
             {
-                //线程在休眠期间, 调用thread.Interrupt()抛出此异常, 此处不处理, 不影响运行
+                //线程在休眠期间, 调用thread.Interrupt()抛出此异常, 无须处理, 不影响运行
                 Logger.Log($"<b>XOR.{nameof(ThreadWorker)}({ThreadId}): <color=red>Abort</color></b>");
             }
             catch (Exception e)
