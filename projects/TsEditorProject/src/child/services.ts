@@ -125,7 +125,6 @@ export function parseConfigFile(tsconfigFile: string, options?: {
 export class Program {
     private readonly cp: csharp.XOR.Services.Program;
 
-    private readonly options: ts.CompilerOptions;
     private readonly watch: ts.Watch<ts.BuilderProgram>;
     private readonly program: ts.Program;
     private readonly checker: ts.TypeChecker;
@@ -146,39 +145,14 @@ export class Program {
         cp.stateMessage = '';
 
         this.cp = cp;
-        this.options = options;
-
-        const formatHost: ts.FormatDiagnosticsHost = {
-            getCanonicalFileName: path => path,
-            getCurrentDirectory: ts.sys.getCurrentDirectory,
-            getNewLine: () => ts.sys.newLine
-        };
-        function reportWatchStatusChanged(diagnostic: ts.Diagnostic) {
-            console.info(ts.formatDiagnostic(diagnostic, formatHost));
-        }
-        function reportDiagnostic(diagnostic: ts.Diagnostic) {
-            console.error("Error", diagnostic.code, ":", ts.flattenDiagnosticMessageText(diagnostic.messageText, formatHost.getNewLine()));
-        }
-
-        let host = ts.createWatchCompilerHost(
+        this.program = ts.createProgram({
             rootNames,
-            {
+            options: {
                 ...options,
                 incremental: true,
                 noEmit: true,
-            },
-            ts.sys,
-            ts.createSemanticDiagnosticsBuilderProgram,
-            void 0/**reportDiagnostic */,
-            reportWatchStatusChanged,
-            void 0,
-            {
-                watchFile: ts.WatchFileKind.UseFsEventsOnParentDirectory
             }
-        );
-
-        this.watch = ts.createWatchProgram(host);
-        this.program = this.watch.getProgram().getProgram();
+        });
         this.checker = this.program.getTypeChecker();
         this.types = new Map();
         this.sourceHash = new Map();
@@ -203,8 +177,7 @@ export class Program {
     }
     /**文件修改状态 */
     public change(path: string) {
-        return;
-        console.log("file change: " + path);
+        //console.log("file change: " + path);
         path = Path.GetFullPath(path).replace(/\\/g, "/");
         //文件已同步(被Program修改, 则取消此次操作)
         let hash = File.Exists(path) ? HashUtil.SHA256File(path) : null;
@@ -218,7 +191,32 @@ export class Program {
     }
 
     //#region SourceFile 处理流程
+    /**
+     * 更新了SourceFile文件, 重建Program对象
+     */
+    private rebuildProgram(...newFiles: string[]) {
+        //@ts-ignore
+        this.program = ts.createProgram({
+            rootNames: [...this.program.getRootFileNames(), ...newFiles],
+            options: this.program.getCompilerOptions(),
+            oldProgram: this.program
+        });
+        //@ts-ignore
+        this.checker = this.program.getTypeChecker();
+        //重新解析文件
+        this.resolveSources(true);
+
+        this.cp.state = csharp.XOR.Services.ProgramState.Completed;
+        this.cp.stateMessage = '';
+    }
+    /**
+     * 解析SourceFiles
+     */
+    private resolveSources(): Promise<void>;
+    private resolveSources(sync: true): void;
     private async resolveSources() {
+        let sync: boolean = arguments[0];
+
         let sourceFiles = this.program.getSourceFiles();
         this.cp.errors = 0;
         this.cp.scripts = sourceFiles.length;
@@ -226,10 +224,19 @@ export class Program {
         this.cp.state = csharp.XOR.Services.ProgramState.Analyzing;
         this.cp.stateMessage = 'file';
         //开始解析文件
-        for (const source of sourceFiles) {
-            if (!source.statements)
-                continue;
-            await this.resolveStatements(source.statements);
+        this.types.clear();
+        if (sync) {
+            for (const source of sourceFiles) {
+                if (!source.statements)
+                    continue;
+                this.resolveStatements(source.statements, true);
+            }
+        } else {
+            for (const source of sourceFiles) {
+                if (!source.statements)
+                    continue;
+                await this.resolveStatements(source.statements);
+            }
         }
     }
     private resolveStatements(statements: ts.NodeArray<ts.Statement>): Promise<string[]>;
@@ -406,32 +413,13 @@ export class Program {
         let insert = stringBuilder.join("");
         let newContent = `${content.slice(0, start)}${insert}${content.slice(start)}`;
 
-        File.WriteAllText(sourceFile.fileName, newContent);
-        //this.watch.updateRootFileNames([sourceFile.fileName]);
-        //*
         let newSourceFile = ts.updateSourceFile(
             sourceFile,
             newContent,
             util.getTextChangeRange(sourceFile.text, newContent, true),
             false
-        );//*/
-        let n2 = ts.factory.updateSourceFile(
-            sourceFile,
-            newSourceFile.statements,
-            newSourceFile.isDeclarationFile,
-            newSourceFile.referencedFiles,
-            void 0,
-            newSourceFile.hasNoDefaultLib,
-            void 0,
         );
-        console.log("====================================");
-        console.log(newSourceFile === sourceFile);
-        console.log(n2 === sourceFile);
-        console.log(newSourceFile === n2);
-        if (newSourceFile.statements) {
-            this.resolveStatements(newSourceFile.statements, true);
-        }
-        return null;
+        return newSourceFile;
     }
     /**移除SourceFile所有定义 */
     private removeDeclarations(path: string, removeSourceFile?: boolean) {
@@ -476,7 +464,11 @@ export class Program {
         let sourceFile = this.program.getSourceFile(path);
         //如果文件已删除
         if (!File.Exists(path)) {
-            this.removeDeclarations(path, true);
+            this.removeDeclarations(path, !!sourceFile);
+            if (sourceFile) {
+                this.rebuildProgram();
+            }
+
             //重新解析关系
             await this.resolveComponents();
 
@@ -493,38 +485,26 @@ export class Program {
                 return;
             }
             let newContent = UTF8.GetString(util.readStream(stream, Number(stream.Length)));
+            stream.Close();
+            stream = null;
             //更新文件声明
             if (sourceFile) {
                 this.removeDeclarations(path, false);
                 //更新SourceFile内容
-                sourceFile = ts.updateSourceFile(sourceFile, newContent, {
-                    span: {
-                        start: 0,
-                        length: newContent.length
-                    },
-                    newLength: newContent.length,
-                }, false);
+                sourceFile = ts.updateSourceFile(
+                    sourceFile,
+                    newContent,
+                    util.getTextChangeRange(sourceFile.text, newContent),
+                    false
+                );
+                this.rebuildProgram();
             }
             //新增SourceFile文件
             else {
-                let program = ts.createProgram({
-                    rootNames: [...this.program.getRootFileNames(), path],
-                    options: this.options,
-                    oldProgram: this.program
-                });
-                //@ts-ignore
-                this.program = program;
-                //@ts-ignore
-                this.checker = this.program.getTypeChecker();
+                this.rebuildProgram(path);
 
-                sourceFile = program.getSourceFile(path);
+                sourceFile = this.program.getSourceFile(path);
             }
-            //重新生成此SourceFile文件的声明
-            if (!sourceFile.statements)
-                return;
-            let newAbsoluteNames = await this.resolveStatements(sourceFile.statements);
-            if (!newAbsoluteNames || newAbsoluteNames.length === 0)
-                return;
             //重新解析关系
             await this.resolveComponents();
 
@@ -549,7 +529,7 @@ export class Program {
         }
     }
     private pushDefinitions(declarations: TypeDefinition[]) {
-        let updateSourceFile: ts.SourceFile;
+        let newSourceFile: ts.SourceFile;
         //分配新的guid
         for (let declaration of declarations) {
             if (declaration.guid || !this.isExportTsComponent(declaration)) {
@@ -561,16 +541,17 @@ export class Program {
                 continue;
             }
             let guid = Guid.NewGuid().ToString();
-            let sourceFile = this.allocDecorator(td, `@xor.guid("${guid}")`);
-            if (sourceFile) {
+            let _newSourceFile = this.allocDecorator(td, `@xor.guid("${guid}")`);
+            if (_newSourceFile) {
                 declaration.guid = guid;
-                updateSourceFile = sourceFile;
+                newSourceFile = _newSourceFile;
             }
         }
         //保存SourceFile文件
-        if (updateSourceFile) {
-            this.sourceHash.delete(updateSourceFile.fileName);
-            File.WriteAllText(updateSourceFile.fileName, updateSourceFile.text);
+        if (newSourceFile) {
+            this.sourceHash.delete(newSourceFile.fileName);
+            File.WriteAllText(newSourceFile.fileName, newSourceFile.text);
+            this.rebuildProgram();
         }
         //推送定义到C#
         for (let declaration of declarations) {
@@ -761,8 +742,6 @@ export class Program {
                             break;
                         case "value":
                             value = this.getExpressionValue(initializer);
-                            break;
-                        case "mask":
                             break;
                     }
                 }

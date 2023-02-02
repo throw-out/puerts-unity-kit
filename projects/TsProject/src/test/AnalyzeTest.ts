@@ -8,7 +8,7 @@ import GameObjectAlias = csharp.UnityEngine.GameObject;
 /**
  * TestInfo
  */
-@xor.guid("201fcfb8-f0e4-43d4-827f-034f8c48ed34")
+@xor.guid("82a04714-b73f-48cb-b608-3818d8539791")
 export class AnalyzeTest111 extends xor.TsComponent {
     declare private _prop100: string;
 
@@ -31,9 +31,7 @@ export class AnalyzeTest111 extends xor.TsComponent {
     declare private _prop4: Transform[];
     protected _prop5: GameObject[];
 }
-
-//
-@xor.guid("3f967054-4762-45c4-b34a-c2e4f4ba77cb")
+@xor.guid("ada747b2-5e4d-48a9-909a-c261b56d54bf")
 export class AnalyzeTest222 extends xor.TsComponent {
     protected _prop3: GameObject;
     protected _prop4: GameObject[];
@@ -43,8 +41,7 @@ export enum AnalyzeTest8 {
 
 }
 export namespace T1 {
-    //
-    @xor.guid("99533289-af50-4610-892a-12da37dd8e6d")
+    @xor.guid("51499546-407d-430d-a80d-9bc789eb6408")
     export class AnalyzeTest333 extends xor.TsComponent {
         protected _prop999: GameObject;
     }
