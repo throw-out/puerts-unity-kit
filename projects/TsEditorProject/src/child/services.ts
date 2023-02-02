@@ -124,7 +124,9 @@ export function parseConfigFile(tsconfigFile: string, options?: {
 
 export class Program {
     private readonly cp: csharp.XOR.Services.Program;
+
     private readonly options: ts.CompilerOptions;
+    private readonly watch: ts.Watch<ts.BuilderProgram>;
     private readonly program: ts.Program;
     private readonly checker: ts.TypeChecker;
 
@@ -145,14 +147,38 @@ export class Program {
 
         this.cp = cp;
         this.options = options;
-        this.program = ts.createProgram({
+
+        const formatHost: ts.FormatDiagnosticsHost = {
+            getCanonicalFileName: path => path,
+            getCurrentDirectory: ts.sys.getCurrentDirectory,
+            getNewLine: () => ts.sys.newLine
+        };
+        function reportWatchStatusChanged(diagnostic: ts.Diagnostic) {
+            console.info(ts.formatDiagnostic(diagnostic, formatHost));
+        }
+        function reportDiagnostic(diagnostic: ts.Diagnostic) {
+            console.error("Error", diagnostic.code, ":", ts.flattenDiagnosticMessageText(diagnostic.messageText, formatHost.getNewLine()));
+        }
+
+        let host = ts.createWatchCompilerHost(
             rootNames,
-            options: {
-                target: options.target,
-                module: options.module,
+            {
+                ...options,
+                incremental: true,
                 noEmit: true,
+            },
+            ts.sys,
+            ts.createSemanticDiagnosticsBuilderProgram,
+            void 0/**reportDiagnostic */,
+            reportWatchStatusChanged,
+            void 0,
+            {
+                watchFile: ts.WatchFileKind.UseFsEventsOnParentDirectory
             }
-        });
+        );
+
+        this.watch = ts.createWatchProgram(host);
+        this.program = this.watch.getProgram().getProgram();
         this.checker = this.program.getTypeChecker();
         this.types = new Map();
         this.sourceHash = new Map();
@@ -177,6 +203,7 @@ export class Program {
     }
     /**文件修改状态 */
     public change(path: string) {
+        return;
         console.log("file change: " + path);
         path = Path.GetFullPath(path).replace(/\\/g, "/");
         //文件已同步(被Program修改, 则取消此次操作)
@@ -205,46 +232,101 @@ export class Program {
             await this.resolveStatements(source.statements);
         }
     }
-    private async resolveStatements(statements: ts.NodeArray<ts.Statement>) {
-        let absoluteNames = new Array<string>();
-
-        for (let statement of statements) {
-            switch (statement.kind) {
-                case ts.SyntaxKind.ClassDeclaration:
-                    absoluteNames.push(
-                        await this.resolveClassDeclaration(<ts.ClassDeclaration>statement)
-                    );
-                    break;
-                case ts.SyntaxKind.ModuleDeclaration:
-                    absoluteNames.push(...
-                        await this.resolveModuleDeclaration(<ts.ModuleDeclaration>statement)
-                    );
-                    break;
+    private resolveStatements(statements: ts.NodeArray<ts.Statement>): Promise<string[]>;
+    private resolveStatements(statements: ts.NodeArray<ts.Statement>, sync: true): string[];
+    private resolveStatements() {
+        let statements: ts.NodeArray<ts.Statement> = arguments[0],
+            sync: boolean = arguments[1];
+        if (sync) {
+            let absoluteNames = new Array<string>();
+            for (let statement of statements) {
+                switch (statement.kind) {
+                    case ts.SyntaxKind.ClassDeclaration:
+                        absoluteNames.push(
+                            this.resolveClassDeclaration(<ts.ClassDeclaration>statement, true)
+                        );
+                        break;
+                    case ts.SyntaxKind.ModuleDeclaration:
+                        absoluteNames.push(...
+                            this.resolveModuleDeclaration(<ts.ModuleDeclaration>statement, true)
+                        );
+                        break;
+                }
             }
+            return absoluteNames;
+        } else {
+            return new Promise<string[]>(async (resolve) => {
+                let absoluteNames = new Array<string>();
+                for (let statement of statements) {
+                    switch (statement.kind) {
+                        case ts.SyntaxKind.ClassDeclaration:
+                            absoluteNames.push(
+                                await this.resolveClassDeclaration(<ts.ClassDeclaration>statement)
+                            );
+                            break;
+                        case ts.SyntaxKind.ModuleDeclaration:
+                            absoluteNames.push(...
+                                await this.resolveModuleDeclaration(<ts.ModuleDeclaration>statement)
+                            );
+                            break;
+                    }
+                }
+                resolve(absoluteNames);
+            });
         }
-        return absoluteNames;
     }
-    private async resolveClassDeclaration(node: ts.ClassDeclaration) {
-        await this.throttler.complete();
+    private resolveClassDeclaration(node: ts.ClassDeclaration): Promise<string>;
+    private resolveClassDeclaration(node: ts.ClassDeclaration, sync: true): string;
+    private resolveClassDeclaration() {
+        let node: ts.ClassDeclaration = arguments[0],
+            sync: boolean = arguments[1];
 
         let absoluteName = this.getAbsoluteName(node);
         this.types.set(absoluteName, node);
-        return absoluteName;
-    }
-    private async resolveModuleDeclaration(node: ts.ModuleDeclaration) {
-        let absoluteNames = new Array<string>();
-        for (let childNode of node.getChildren()) {
-            switch (childNode.kind) {
-                case ts.SyntaxKind.ModuleBlock:
-                    absoluteNames.push(...
-                        await this.resolveStatements((<ts.ModuleBlock>childNode).statements)
-                    );
-                    break;
-                case ts.SyntaxKind.Identifier:
-                    break;
-            }
+        if (sync) {
+            return absoluteName;
+        } else {
+            return new Promise<string>(async (resolve) => {
+                await this.throttler.complete();
+                resolve(absoluteName);
+            });
         }
-        return absoluteNames;
+    }
+    private resolveModuleDeclaration(node: ts.ModuleDeclaration): Promise<string[]>;
+    private resolveModuleDeclaration(node: ts.ModuleDeclaration, sync: true): string[];
+    private resolveModuleDeclaration() {
+        let node: ts.ModuleDeclaration = arguments[0],
+            sync: boolean = arguments[1];
+
+        if (sync) {
+            let absoluteNames: string[];
+            for (let childNode of node.getChildren()) {
+                switch (childNode.kind) {
+                    case ts.SyntaxKind.ModuleBlock:
+                        absoluteNames = this.resolveStatements((<ts.ModuleBlock>childNode).statements, true);
+                        break;
+                    case ts.SyntaxKind.Identifier:
+                        break;
+                }
+            }
+            return absoluteNames ?? [];
+        } else {
+            return new Promise<string[]>(async (resolve) => {
+                let absoluteNames = new Array<string>();
+                for (let childNode of node.getChildren()) {
+                    switch (childNode.kind) {
+                        case ts.SyntaxKind.ModuleBlock:
+                            absoluteNames.push(...
+                                await this.resolveStatements((<ts.ModuleBlock>childNode).statements)
+                            );
+                            break;
+                        case ts.SyntaxKind.Identifier:
+                            break;
+                    }
+                }
+                resolve(absoluteNames);
+            });
+        }
     }
     //#endregion
 
@@ -301,7 +383,7 @@ export class Program {
     private allocDecorator(node: ts.Node, decoratorContent: string) {
         let sourceFile = node.getSourceFile();
 
-        let content = sourceFile.getFullText();
+        let content = sourceFile.text;
         let start = node.getStart(), end = node.getEnd();
 
         let stringBuilder = [decoratorContent, "\n"];
@@ -323,23 +405,33 @@ export class Program {
         //新的ts脚本内容
         let insert = stringBuilder.join("");
         let newContent = `${content.slice(0, start)}${insert}${content.slice(start)}`;
-        /*
-        return ts.updateSourceFile(sourceFile, newContent, {
-            span: {
-                start: preIndex,
-                length: 0
-            },
-            newLength: insert.length,
-        }, true);
-        //*/
-        //return ts.updateSourceFile(sourceFile, newContent, util.getTextChangeRange(sourceFile.text, newContent, true), true);
-        return ts.updateSourceFile(sourceFile, newContent, {
-            span: {
-                start: 0,
-                length: sourceFile.text.length
-            },
-            newLength: newContent.length
-        }, false);
+
+        File.WriteAllText(sourceFile.fileName, newContent);
+        //this.watch.updateRootFileNames([sourceFile.fileName]);
+        //*
+        let newSourceFile = ts.updateSourceFile(
+            sourceFile,
+            newContent,
+            util.getTextChangeRange(sourceFile.text, newContent, true),
+            false
+        );//*/
+        let n2 = ts.factory.updateSourceFile(
+            sourceFile,
+            newSourceFile.statements,
+            newSourceFile.isDeclarationFile,
+            newSourceFile.referencedFiles,
+            void 0,
+            newSourceFile.hasNoDefaultLib,
+            void 0,
+        );
+        console.log("====================================");
+        console.log(newSourceFile === sourceFile);
+        console.log(n2 === sourceFile);
+        console.log(newSourceFile === n2);
+        if (newSourceFile.statements) {
+            this.resolveStatements(newSourceFile.statements, true);
+        }
+        return null;
     }
     /**移除SourceFile所有定义 */
     private removeDeclarations(path: string, removeSourceFile?: boolean) {
@@ -400,7 +492,7 @@ export class Program {
             if (_hash !== hash || _hash === this.sourceHash.get(path)) {
                 return;
             }
-            let newContent = UTF8.GetString(util.readSteam(stream, Number(stream.Length)));
+            let newContent = UTF8.GetString(util.readStream(stream, Number(stream.Length)));
             //更新文件声明
             if (sourceFile) {
                 this.removeDeclarations(path, false);
@@ -1279,9 +1371,9 @@ const util = new class {
      * @param stream 
      * @param length 
      */
-    public readSteam(stream: csharp.System.IO.Stream, length: number): csharp.System.Array$1<number>;
-    public readSteam(stream: csharp.System.IO.Stream, length: number, toBuffer: true): ArrayBuffer;
-    public readSteam() {
+    public readStream(stream: csharp.System.IO.Stream, length: number): csharp.System.Array$1<number>;
+    public readStream(stream: csharp.System.IO.Stream, length: number, toBuffer: true): ArrayBuffer;
+    public readStream() {
         let stream: csharp.System.IO.Stream = arguments[0], length: number = arguments[1], toBuffer: boolean = arguments[2];
         let bytes = csharp.System.Array.CreateInstance($typeof(csharp.System.Byte), length) as csharp.System.Array$1<number>;
         stream.Read(bytes, 0, length);
