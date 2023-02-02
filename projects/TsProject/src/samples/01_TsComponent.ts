@@ -69,7 +69,7 @@ export class Sample04 extends xor.TsComponent {
 
     @xor.field({ value: [1] })
     declare private _prop6: Array<1 | 3 | 5>;
-    @xor.field({ value: [Sample04.Type2.P5] })
+    @xor.field({ value: [Sample04.Type1.P1] })
     declare private _prop7: Array<Sample04.Type1>;
     @xor.field({ value: [Sample04.Type3.P6] })
     declare private _prop8: Array<Sample04.Type3>;
