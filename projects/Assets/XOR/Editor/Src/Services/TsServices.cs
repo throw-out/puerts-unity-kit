@@ -31,6 +31,8 @@ namespace XOR.Services
         public ProgramState state;
         /// <summary>状态值  </summary>
         public string stateMessage;
+        /// <summary>项目根路径 </summary>
+        public string root;
         public Dictionary<string, Statement> Statements { get; private set; }
 
         public Program()

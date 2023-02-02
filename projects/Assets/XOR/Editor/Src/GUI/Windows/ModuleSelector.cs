@@ -144,7 +144,7 @@ namespace XOR
                     string path = statement.Value.module;
                     if (path.Contains("/") || path.Contains("\\"))
                     {
-                        path = PathUtil.GetLocalPath(path);
+                        path = PathUtil.GetLocalPath(path, program.root);
                     }
                     this.root.AddStatement(path.Replace("\\", "/"), statement.Value);
                 }

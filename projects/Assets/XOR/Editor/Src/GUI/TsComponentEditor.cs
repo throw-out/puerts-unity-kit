@@ -19,6 +19,7 @@ namespace XOR
         private static bool memberFoldout = true;
 
         private TsComponent component;
+        private Program program;
         private Statement statement;
 
         private Rect moduleSelectorRect;
@@ -50,7 +51,8 @@ namespace XOR
             {
                 return;
             }
-            statement = EditorApplicationUtil.GetStatement(Helper.GetGuid(component));
+            program = EditorApplicationUtil.GetProgram();
+            statement = program?.GetStatement(Helper.GetGuid(component));
             if (statement != null && statement.version != Helper.GetVersion(component))
             {
                 Helper.RebuildProperties(component, statement);
@@ -142,7 +144,9 @@ namespace XOR
 
                 GUILayout.BeginHorizontal();
                 GUILayout.Label("Module:", GUILayout.Width(ModuleHeaderWidth));
-                if (statement != null) GUILayout.Label(new GUIContent(statement.module, statement.module), Skin.label);
+                if (statement != null) GUILayout.Label(new GUIContent(
+                    statement.module.Contains("\\") || statement.module.Contains("/") ? PathUtil.GetLocalPath(statement.module, program.root) : statement.module, statement.module
+                ), Skin.label);
                 else GUILayout.Label("module missing", Skin.label);
                 GUILayout.EndHorizontal();
             }

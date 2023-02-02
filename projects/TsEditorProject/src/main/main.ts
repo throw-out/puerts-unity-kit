@@ -21,6 +21,7 @@ class Workflow {
         const worker = this._createWorker(editorProject);
 
         const program = new csharp.XOR.Services.Program();
+        program.root = Path.GetDirectoryName(project);
         program.Reset();
         //请求子线程, 开始解析工程
         worker.post(WorkerEvent.StartProgream, { project, program }, true);
