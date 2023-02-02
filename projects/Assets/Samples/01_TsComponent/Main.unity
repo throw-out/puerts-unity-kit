@@ -38,7 +38,7 @@ RenderSettings:
   m_ReflectionIntensity: 1
   m_CustomReflection: {fileID: 0}
   m_Sun: {fileID: 0}
-  m_IndirectSpecularColor: {r: 0.44657898, g: 0.4964133, b: 0.5748178, a: 1}
+  m_IndirectSpecularColor: {r: 0.44657874, g: 0.49641258, b: 0.5748172, a: 1}
   m_UseRadianceAmbientProbe: 0
 --- !u!157 &3
 LightmapSettings:
@@ -152,7 +152,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   guid: e1cb6fde-b4dd-4fba-b08d-aed2f2bea1f2
   route: 
-  version: 90025DD2F2A365D1F4F7AC60CA8B62D1C7C04257E815780A9A8C6E9681E69413
+  version: 960F7F8D1E4D198B494362FC261FD8C4E54E299F8E82E9EECFBB80F23B8C0287
   StringPairs:
   - index: 0
     key: _prop1
@@ -328,7 +328,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   guid: d2ea683a-0e55-41a2-b837-b7e7c2a1fee4
   route: 
-  version: 90025DD2F2A365D1F4F7AC60CA8B62D1C7C04257E815780A9A8C6E9681E69413
+  version: D5EA5141D1E0093416AA1E2F1004D33F2058697CD8199C31E0CAC0FD8C9083B6
   StringPairs:
   - index: 3
     key: _prop4
@@ -345,18 +345,21 @@ MonoBehaviour:
     value: 50
   BigintPairs: []
   BooleanPairs: []
-  Vector2Pairs: []
+  Vector2Pairs:
+  - index: 4
+    key: _prop5
+    value: {x: 1, y: 10}
   Vector3Pairs: []
   ObjectPairs: []
   StringArrayPairs: []
   NumberArrayPairs:
-  - index: 4
-    key: _prop5
+  - index: 5
+    key: _prop6
     value:
     - 1
     - 15
-  - index: 5
-    key: _prop6
+  - index: 6
+    key: _prop7
     value:
     - 1
     - 33
@@ -411,7 +414,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   guid: 70292285-10d5-44e0-9031-e12b14a05d15
   route: 
-  version: 90025DD2F2A365D1F4F7AC60CA8B62D1C7C04257E815780A9A8C6E9681E69413
+  version: 291D64B0A75E5B8F1F39E21C678B3393B8B7B71AF166932D1DA2603C213F2272
   StringPairs:
   - index: 1
     key: _prop2
@@ -437,14 +440,17 @@ MonoBehaviour:
   StringArrayPairs:
   - index: 7
     key: _prop8
-    value: []
+    value:
+    - p6
   NumberArrayPairs:
   - index: 5
     key: _prop6
-    value: []
+    value:
+    - 1
   - index: 6
     key: _prop7
-    value: []
+    value:
+    - 0
   BigintArrayPairs: []
   BooleanArrayPairs: []
   Vector2ArrayPairs: []
@@ -495,7 +501,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   guid: a071b597-ff11-420a-b7d5-cd586ee4b1a1
   route: 
-  version: 90025DD2F2A365D1F4F7AC60CA8B62D1C7C04257E815780A9A8C6E9681E69413
+  version: D1C637C7882EC5DECBAE7473D8679991E6B6E95DDA7DA1F293E31EDC16D38BF0
   StringPairs: []
   NumberPairs: []
   BigintPairs: []
