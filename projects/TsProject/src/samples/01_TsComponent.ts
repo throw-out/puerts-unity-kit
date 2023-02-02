@@ -46,11 +46,13 @@ export class Sample03 extends xor.TsComponent {
     declare private _prop3: number;
     @xor.field({ value: "string default value" })
     declare private _prop4: string;
+    @xor.field({ value: new Vector2(1, 10) })
+    declare private _prop5: Vector2;
 
     @xor.field({ type: csharp.System.Int16, value: [1, 15] })
-    declare private _prop5: number[];
-    @xor.field({ range: [0, 100], value: [1, 33.333, 67.67] })
     declare private _prop6: number[];
+    @xor.field({ range: [0, 100], value: [1, 33.333, 67.67] })
+    declare private _prop7: number[];
 }
 /**
  * enum类型演示:
@@ -65,8 +67,11 @@ export class Sample04 extends xor.TsComponent {
     declare private _prop4: Sample04.Type2;
     declare private _prop5: Sample04.Type3;
 
+    @xor.field({ value: [1] })
     declare private _prop6: Array<1 | 3 | 5>;
+    @xor.field({ value: [Sample04.Type2.P5] })
     declare private _prop7: Array<Sample04.Type1>;
+    @xor.field({ value: [Sample04.Type3.P6] })
     declare private _prop8: Array<Sample04.Type3>;
 }
 export namespace Sample04 {

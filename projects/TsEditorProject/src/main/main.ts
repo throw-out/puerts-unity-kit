@@ -57,7 +57,7 @@ class Workflow {
         debug.port = 9090;
         debug.wait = false;
         const options = new csharp.XOR.ThreadOptions();
-        options.remote = true;
+        options.remote = false;
         options.isEditor = true;
         options.debugger = debug;
 

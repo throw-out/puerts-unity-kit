@@ -158,7 +158,7 @@ export class Program {
         this.sourceHash = new Map();
         this.sourceDefinitions = new Map();
 
-        this.throttler = new Throttler(100, 1);
+        this.throttler = new Throttler(10, 1);
 
         this.resolves();
     }
@@ -276,14 +276,14 @@ export class Program {
                 continue;
 
             let { expression: target, arguments: args } = <ts.CallExpression>callExpression;
-            if (this.getModuleFromNode(target) !== ModuleFlags.Global)
+            if (this.getModuleFromNode(target) !== ModuleFlags.Global || args.length === 0 || args[0].kind !== ts.SyntaxKind.StringLiteral)
                 continue;
             switch (this.getFullName(target)) {
                 case DecoratorFlags.GUID:
-                    define.guid = util.getExpressionValue<string>(this.checker, args[0]);
+                    define.guid = this.getExpressionValue<string>(args[0]);
                     break;
                 case DecoratorFlags.Route:
-                    define.route = util.getExpressionValue<string>(this.checker, args[0]);
+                    define.route = this.getExpressionValue<string>(args[0]);
                     break;
             }
         }
@@ -662,14 +662,11 @@ export class Program {
                             let [min, max] = (<ts.ArrayLiteralExpression>initializer).elements;
                             if (min && min.kind === ts.SyntaxKind.NumericLiteral &&
                                 max && max.kind === ts.SyntaxKind.NumericLiteral) {
-                                range = [
-                                    util.getExpressionValue(this.checker, min),
-                                    util.getExpressionValue(this.checker, max)
-                                ];
+                                range = [this.getExpressionValue(min), this.getExpressionValue(max)];
                             }
                             break;
                         case "value":
-                            value = util.getExpressionValue(this.checker, initializer);
+                            value = this.getExpressionValue(initializer);
                             break;
                         case "mask":
                             break;
@@ -789,7 +786,7 @@ export class Program {
      * @param node 
      * @returns 
      */
-    private getDeclarationByReference(node: ts.TypeReferenceNode) {
+    private getDeclarationByReference(node: ts.TypeReferenceNode | ts.Expression) {
         const type = this.checker.getTypeAtLocation(node);
         const symbol = type.getSymbol();
         if (symbol) {
@@ -798,6 +795,144 @@ export class Program {
                 return declarations.find(d => d.kind === ts.SyntaxKind.ClassDeclaration) ||
                     declarations.find(d => d.kind === ts.SyntaxKind.InterfaceDeclaration) ||
                     declarations[0];
+            }
+        }
+        return null;
+    }
+
+    /**解析ts.Expression并获取其值: 基础类型丶C#类型或其数组类型 */
+    public getExpressionValue<T = any>(expression: ts.Expression, depth: number = 0): T {
+        if (depth > 3)
+            return null;
+        let result: any;
+        switch (expression.kind) {
+            case ts.SyntaxKind.StringLiteral:
+                result = (<ts.StringLiteral>expression).text;
+                break;
+            case ts.SyntaxKind.NumericLiteral:
+                result = Number((<ts.NumericLiteral>expression).text);
+                break;
+            case ts.SyntaxKind.BigIntLiteral:
+                result = BigInt((<ts.BigIntLiteral>expression).text);
+                break;
+            case ts.SyntaxKind.TrueKeyword:
+                result = true;
+                break;
+            case ts.SyntaxKind.FalseKeyword:
+                result = false;
+                break;
+            case ts.SyntaxKind.ArrayLiteralExpression:
+                result = util.toCSharpArray(
+                    (<ts.ArrayLiteralExpression>expression).elements.map(e => this.getExpressionValue(e, depth + 1))
+                );
+                break;
+            case ts.SyntaxKind.NewExpression:               //构造对象
+                result = this.newObjectIfCSharp(<ts.NewExpression>expression, depth + 1);
+                break;
+            case ts.SyntaxKind.PropertyAccessExpression:    //访问属性
+                {
+                    let propertyAccess = <ts.PropertyAccessExpression>expression,
+                        propertyName = propertyAccess.name.getText();
+                    let typeExpression = propertyAccess.expression;
+                    //目标是否为C#类型?
+                    let module = this.getModuleFromNode(typeExpression), fullName = this.getFullName(typeExpression);
+                    if (util.isCSharpDeclare(module, fullName)) {
+                        let val: any;
+                        if (typeExpression.kind === ts.SyntaxKind.NewExpression) {
+                            val = this.newObjectIfCSharp(<ts.NewExpression>typeExpression, depth + 1);
+                            if (val) val = val[propertyName];
+                        }
+                        else {
+                            val = csharp;
+                            try {
+                                [...util.getCSharpFullname(module, fullName).split("."), propertyName].forEach(name => {
+                                    if (!val) return;
+                                    val = val[name];
+                                });
+                            }
+                            catch (e) {
+                                console.warn(e);
+                                val = null;
+                            }
+                        }
+                        if (val instanceof csharp.System.Object || (typeof (val) in this._baseTypes)) {
+                            result = val;
+                        }
+                    }
+                    //目标为ts类型
+                    else {
+                        let typeDeclaration = this.getDeclarationByReference(typeExpression);
+                        if (typeDeclaration) {
+                            let isStatic = typeExpression.kind !== ts.SyntaxKind.NewExpression
+                            result = this.getDeclarationMemberValue(typeDeclaration, [propertyName, isStatic], depth);
+                        }
+                    }
+                }
+                break;
+        }
+        return result;
+    }
+    /**获取声明成员值: 基础类型丶C#类型或其数组类型*/
+    public getDeclarationMemberValue(declaration: ts.Declaration, member: string | [name: string, isStatic: boolean], depth: number = 0) {
+        let memberName: string, isStatic: boolean;
+        if (Array.isArray(member)) {
+            memberName = member[0];
+            isStatic = !!member[1];
+        } else {
+            memberName = member;
+            isStatic = true;
+        }
+
+        let result: any;
+        switch (declaration.kind) {
+            case ts.SyntaxKind.ClassDeclaration:
+                {
+                    for (let member of (<ts.ClassDeclaration>declaration).members) {
+                        if (member.kind === ts.SyntaxKind.PropertyDeclaration &&
+                            (<ts.PropertyDeclaration>member).initializer &&
+                            memberName == member.name.getText() && util.isStatic(member) === isStatic) {
+                            result = this.getExpressionValue((<ts.PropertyDeclaration>member).initializer, depth);
+                            break;
+                        }
+                    }
+                    console.log(1);
+                }
+                break;
+            case ts.SyntaxKind.EnumDeclaration:
+                {
+                    let initializerValue = 0;
+                    for (let member of (<ts.EnumDeclaration>declaration).members) {
+                        let value = member.initializer ? this.getExpressionValue(member.initializer, depth) : initializerValue;
+                        if (memberName === member.name.getText()) {
+                            result = value;
+                            break;
+                        }
+                        if (typeof (value) === "number") {
+                            initializerValue = value + 1;
+                        }
+                    }
+                }
+                break;
+        }
+        return result;
+    }
+    /**构建C#对象 */
+    private newObjectIfCSharp(expression: ts.NewExpression, depth: number = 0) {
+        let typeExpression = expression.expression;
+        //目标是否为C#类型?
+        let module = this.getModuleFromNode(typeExpression), fullName = this.getFullName(typeExpression);
+        if (util.isCSharpDeclare(module, fullName)) {
+            let val: any = csharp;
+            util.getCSharpFullname(module, fullName).split(".").forEach(name => {
+                if (!val) return;
+                val = val[name];
+            });
+            if (val) {
+                try {
+                    return new val(...expression.arguments.map(o => this.getExpressionValue(o, depth)));
+                } catch (e) {
+                    console.warn(e);
+                }
             }
         }
         return null;
@@ -847,7 +982,7 @@ export class Program {
                 {
                     let types: Array<number | string> = (<ts.UnionTypeNode>typeNode).types.map(t => {
                         if (t.kind === ts.SyntaxKind.LiteralType) {
-                            return util.getExpressionValue(this.checker, (<ts.LiteralTypeNode>t).literal);
+                            return this.getExpressionValue((<ts.LiteralTypeNode>t).literal);
                         }
                         return null;
                     });
@@ -862,7 +997,7 @@ export class Program {
                 {
                     let initializerValue = 0;
                     let members = (<ts.EnumDeclaration>typeNode).members.map(m => {
-                        let value = m.initializer ? util.getExpressionValue(this.checker, m.initializer) : initializerValue;
+                        let value = m.initializer ? this.getExpressionValue(m.initializer) : initializerValue;
                         if (typeof (value) === "number") {
                             initializerValue = value + 1;
                         }
@@ -885,11 +1020,8 @@ export class Program {
                     if (module === ModuleFlags.Global && fullName in this._baseTypes) {
                         type = this._baseTypes[fullName];
                     }
-                    else if (module === ModuleFlags.CSharp || (module === ModuleFlags.Global || module === ModuleFlags.CS) && fullName.startsWith("CS.")) {
-                        if (fullName.startsWith("CS.")) {
-                            fullName = fullName.substring(3);
-                        }
-                        type = csharp.XOR.ReflectionUtil.GetType(fullName);
+                    else if (util.isCSharpDeclare(module, fullName)) {
+                        type = csharp.XOR.ReflectionUtil.GetType(util.getCSharpFullname(module, fullName));
                     }
                     else if (typeNode.kind === ts.SyntaxKind.TypeReference) {
                         let declaration = this.getDeclarationByReference(<ts.TypeReferenceNode>typeNode);
@@ -988,6 +1120,21 @@ const util = new class {
         }
         return false;
     }
+    public isStatic(node: ts.Node): boolean {
+        if (!ts.canHaveModifiers(node))
+            return false;
+        let modifiers = ts.getModifiers(node);
+        if (modifiers) {
+            for (let modifier of modifiers) {
+                switch (modifier.kind) {
+                    case ts.SyntaxKind.StaticKeyword:
+                        return true;
+                        break;
+                }
+            }
+        }
+        return false;
+    }
     public isPublic(node: ts.Node, defaultValue: boolean = true): boolean {
         if (!ts.canHaveModifiers(node))
             return false;
@@ -1055,41 +1202,17 @@ const util = new class {
         };
     }
 
-    /**解析ts.Expression并获取其值: 基础类型或C#类型 */
-    public getExpressionValue<T = any>(checker: ts.TypeChecker, expression: ts.Expression, depth: number = 0): T {
-        if (depth > 1)
-            return null;
-        let result: any;
-        switch (expression.kind) {
-            case ts.SyntaxKind.StringLiteral:
-                result = (<ts.StringLiteral>expression).text;
-                break;
-            case ts.SyntaxKind.NumericLiteral:
-                result = Number((<ts.NumericLiteral>expression).text);
-                break;
-            case ts.SyntaxKind.BigIntLiteral:
-                result = BigInt((<ts.BigIntLiteral>expression).text);
-                break;
-            case ts.SyntaxKind.TrueKeyword:
-                result = true;
-                break;
-            case ts.SyntaxKind.FalseKeyword:
-                result = false;
-                break;
-            case ts.SyntaxKind.ArrayLiteralExpression:
-                result = this.toCSharpArray(
-                    (<ts.ArrayLiteralExpression>expression).elements.map(e => this.getExpressionValue(checker, e, depth + 1))
-                );
-                break;
-            case ts.SyntaxKind.NewExpression:
-                //TODO 构造对象
-                //(<ts.NewExpression>expression);
-                break;
-            case ts.SyntaxKind.PropertyAccessExpression:
-                //TODO 访问静态属性
-                break;
+    /**是否为C#类型声明 */
+    public isCSharpDeclare(module: string, fullName: string) {
+        return module === ModuleFlags.CSharp ||
+            (module === ModuleFlags.Global || module === ModuleFlags.CS) && fullName.startsWith("CS.");
+    }
+    /**获取C#类型声明 */
+    public getCSharpFullname(module: string, fullName: string) {
+        if (fullName.startsWith("CS.") && module !== ModuleFlags.CSharp) {
+            fullName = fullName.substring(3);
         }
-        return result;
+        return fullName;
     }
     /**转为C#数组类型, 长度必需大于1且至少有一个非null成员, 成员类型必需一致 */
     public toCSharpArray(array: Array<any>) {

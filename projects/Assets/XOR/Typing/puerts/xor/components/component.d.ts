@@ -5,7 +5,11 @@ type FieldOptions = NumberConstructor | Partial<{
     type: NumberConstructor;
     /**指定数值范围: 仅可用于number类型 */
     range: [min: number, max: number];
-    /**默认值: 只能是基础类型丶C#类型或其数组类型 */
+    /**默认值: 只能是基础类型丶C#类型或其数组类型
+     * 初始化:
+     * PropertyAccess: ts类型必需是字段声明且赋初值, C#类型必需是可在子线程访问的类型
+     * new:     ts类型不允许, C#类型必需是可在子线程访问的类型
+     */
     value: any;
 }>;
 declare class TsComponentConstructor extends xor.TsBehaviour {
