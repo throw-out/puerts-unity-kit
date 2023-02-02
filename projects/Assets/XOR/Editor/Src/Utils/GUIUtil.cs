@@ -46,11 +46,6 @@ namespace XOR
             }
             else
             {
-                /*
-                using (new EditorGUI.DisabledScope(true))
-                {
-                    GUILayout.Button("重启服务");
-                }//*/
                 if (GUILayout.Button("启动服务"))
                 {
                     EditorApplicationUtil.Start();

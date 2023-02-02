@@ -49,10 +49,10 @@ namespace XOR
 
 
         [MenuItem("Tools/XOR/Component/SyncAll")]
-        static void SyncAllComponents()
-        {
+        static void SyncTsComponents() => TsComponentHelper.SyncAssetsComponents(false);
+        [MenuItem("Tools/XOR/Component/SyncAll[Force]")]
+        static void SyncTsComponentsForce() => TsComponentHelper.SyncAssetsComponents(true);
 
-        }
 
         [MenuItem("Tools/XOR/Therad/Current")]
         static void ThreadCurrentStatus()

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Text;
 using UnityEditor;
 using UnityEngine;
 using XOR.Serializables;
@@ -53,12 +54,12 @@ namespace XOR
                 return;
             }
             program = EditorApplicationUtil.GetProgram();
-            statement = program?.GetStatement(Helper.GetGuid(component));
-            if (statement != null && statement.version != Helper.GetVersion(component))
+            statement = program?.GetStatement(TsComponentHelper.GetGuid(component));
+            if (statement != null && statement.version != TsComponentHelper.GetVersion(component))
             {
-                Helper.RebuildProperties(component, statement);
+                TsComponentHelper.RebuildProperties(component, statement);
             }
-            Helper.RebuildNodes(root, properties, statement);
+            TsComponentHelper.RebuildNodes(root, properties, statement);
 
             EditorGUILayout.BeginVertical();
 
@@ -126,9 +127,9 @@ namespace XOR
 
         void _RenderModule()
         {
-            string guid = component != null ? Helper.GetGuid(component) : string.Empty;
-            string route = component != null ? Helper.GetRoute(component) : string.Empty;
-            string version = component != null ? Helper.GetVersion(component) : string.Empty;
+            string guid = component != null ? TsComponentHelper.GetGuid(component) : string.Empty;
+            string route = component != null ? TsComponentHelper.GetRoute(component) : string.Empty;
+            string version = component != null ? TsComponentHelper.GetVersion(component) : string.Empty;
 
             using (new EditorGUI.DisabledScope(true))
             {
@@ -167,11 +168,11 @@ namespace XOR
             {
                 if (GUILayout.Button("重置"))
                 {
-                    Helper.ClearProperties(component);
-                    Helper.RebuildProperties(component, statement);
+                    TsComponentHelper.ClearProperties(component);
+                    TsComponentHelper.RebuildProperties(component, statement);
                     serializedObject.ApplyModifiedProperties();
                     serializedObject.Update();
-                    Helper.RebuildNodes(root, properties, statement);
+                    TsComponentHelper.RebuildNodes(root, properties, statement);
                 }
                 if (GUILayout.Button("编辑") && File.Exists(statement.path))
                 {
@@ -196,7 +197,7 @@ namespace XOR
             {
                 serializedObject.ApplyModifiedProperties();
                 serializedObject.Update();
-                Helper.SetDirty(component);
+                TsComponentHelper.SetDirty(component);
             }
         }
 
@@ -204,155 +205,271 @@ namespace XOR
         {
             if (component == null)
                 return;
-            Helper.ClearProperties(component);
-            Helper.SetGuid(component, guid);
-            Helper.SetDirty(component);
+            TsComponentHelper.ClearProperties(component);
+            TsComponentHelper.SetGuid(component, guid);
+            TsComponentHelper.SetDirty(component);
         }
 
-        static class Helper
+    }
+    internal static class TsComponentHelper
+    {
+        const BindingFlags Flags = BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic;
+        static FieldInfo _guidField;
+        static FieldInfo _routeField;
+        static FieldInfo _versionField;
+        static FieldInfo guidField
         {
-            const BindingFlags Flags = BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic;
-            static FieldInfo _guidField;
-            static FieldInfo _routeField;
-            static FieldInfo _versionField;
-            static FieldInfo guidField
+            get
             {
-                get
-                {
-                    if (_guidField == null) _guidField = typeof(TsComponent).GetField("guid", Flags);
-                    return _guidField;
-                }
+                if (_guidField == null) _guidField = typeof(TsComponent).GetField("guid", Flags);
+                return _guidField;
             }
-            static FieldInfo routeField
+        }
+        static FieldInfo routeField
+        {
+            get
             {
-                get
-                {
-                    if (_routeField == null) _routeField = typeof(TsComponent).GetField("route", Flags);
-                    return _routeField;
-                }
+                if (_routeField == null) _routeField = typeof(TsComponent).GetField("route", Flags);
+                return _routeField;
             }
-            static FieldInfo versionField
+        }
+        static FieldInfo versionField
+        {
+            get
             {
-                get
-                {
-                    if (_versionField == null) _versionField = typeof(TsComponent).GetField("version", Flags);
-                    return _versionField;
-                }
+                if (_versionField == null) _versionField = typeof(TsComponent).GetField("version", Flags);
+                return _versionField;
             }
+        }
 
-            public static string GetGuid(TsComponent component)
-            {
-                return guidField.GetValue(component) as string;
-            }
-            public static string GetRoute(TsComponent component)
-            {
-                return routeField.GetValue(component) as string;
-            }
-            public static string GetVersion(TsComponent component)
-            {
-                return versionField.GetValue(component) as string;
-            }
-            public static void SetGuid(TsComponent component, string value)
-            {
-                guidField.SetValue(component, value);
-            }
-            public static void SetRoute(TsComponent component, string value)
-            {
-                routeField.SetValue(component, value);
-            }
-            public static void SetVersion(TsComponent component, string value)
-            {
-                versionField.SetValue(component, value);
-            }
+        public static string GetGuid(TsComponent component)
+        {
+            return guidField.GetValue(component) as string;
+        }
+        public static string GetRoute(TsComponent component)
+        {
+            return routeField.GetValue(component) as string;
+        }
+        public static string GetVersion(TsComponent component)
+        {
+            return versionField.GetValue(component) as string;
+        }
+        public static void SetGuid(TsComponent component, string value)
+        {
+            guidField.SetValue(component, value);
+        }
+        public static void SetRoute(TsComponent component, string value)
+        {
+            routeField.SetValue(component, value);
+        }
+        public static void SetVersion(TsComponent component, string value)
+        {
+            versionField.SetValue(component, value);
+        }
 
-            public static void RebuildNodes(SerializedObjectWrap root, List<NodeWrap> outputNodes, Statement statement)
+        public static void RebuildNodes(SerializedObjectWrap root, List<NodeWrap> outputNodes, Statement statement)
+        {
+            if (outputNodes == null)
+                return;
+            outputNodes.Clear();
+            //创建当前需要渲染的节点信息
+            foreach (var info in root.FieldMapping)
             {
-                if (outputNodes == null)
-                    return;
-                outputNodes.Clear();
-                //创建当前需要渲染的节点信息
-                foreach (var info in root.FieldMapping)
+                SerializedProperty arrayParent = root.GetProperty(info.Key);
+                for (int i = 0; i < arrayParent.arraySize; i++)
                 {
-                    SerializedProperty arrayParent = root.GetProperty(info.Key);
-                    for (int i = 0; i < arrayParent.arraySize; i++)
+                    var nw = new NodeWrap(arrayParent.GetArrayElementAtIndex(i), info.Value.Element.Type, i, arrayParent);
+                    if (statement != null && statement is TypeDeclaration type && type.Properties.TryGetValue(nw.Key, out var property))
                     {
-                        var nw = new NodeWrap(arrayParent.GetArrayElementAtIndex(i), info.Value.Element.Type, i, arrayParent);
-                        if (statement != null && statement is TypeDeclaration type && type.Properties.TryGetValue(nw.Key, out var property))
-                        {
-                            nw.ExplicitValueType = property.valueType;
-                            nw.ExplicitValueRange = property.valueRange;
-                            nw.ExplicitValueEnum = property.valueEnum;
-                            nw.Tooltip = property.BuildTooltip();
-                        }
-                        outputNodes.Add(nw);
+                        nw.ExplicitValueType = property.valueType;
+                        nw.ExplicitValueRange = property.valueRange;
+                        nw.ExplicitValueEnum = property.valueEnum;
+                        nw.Tooltip = property.BuildTooltip();
+                    }
+                    outputNodes.Add(nw);
+                }
+            }
+            outputNodes.Sort((n1, n2) => n1.Index < n2.Index ? -1 : n1.Index < n2.Index ? 1 : 0);
+        }
+        public static void RebuildProperties(TsComponent component, Statement statement)
+        {
+            if (statement == null || !(statement is TypeDeclaration))
+                return;
+            TypeDeclaration type = (TypeDeclaration)statement;
+
+            ComponentWrap<TsComponent> cw = ComponentWrap<TsComponent>.Create();
+            //移除无效的节点
+            Dictionary<string, IPair> properties = cw.GetProperties(component)?.ToDictionary(pair => pair.Key);
+            if (properties != null)
+            {
+                foreach (string key in properties.Keys.ToArray())
+                {
+                    if (!type.Properties.ContainsKey(key) ||
+                        !cw.IsExplicitPropertyValue(component, key, type.Properties[key].valueType)    //检测当前值兼容性
+                    )
+                    {
+                        properties.Remove(key);
+                        cw.RemoveProperty(component, key);
                     }
                 }
-                outputNodes.Sort((n1, n2) => n1.Index < n2.Index ? -1 : n1.Index < n2.Index ? 1 : 0);
             }
-            public static void RebuildProperties(TsComponent component, Statement statement)
+            //添加未序列化的节点
+            int index = 0;
+            foreach (var property in type.Properties.Values)
             {
-                if (statement == null || !(statement is TypeDeclaration))
-                    return;
-                TypeDeclaration type = (TypeDeclaration)statement;
-
-                ComponentWrap<TsComponent> cw = ComponentWrap<TsComponent>.Create();
-                //移除无效的节点
-                Dictionary<string, IPair> properties = cw.GetProperties(component)?.ToDictionary(pair => pair.Key);
-                if (properties != null)
+                IPair current = null;
+                properties?.TryGetValue(property.name, out current);
+                if (current == null)
                 {
-                    foreach (string key in properties.Keys.ToArray())
+                    if (cw.AddProperty(component, property.valueType, property.name, index))
                     {
-                        if (!type.Properties.ContainsKey(key) ||
-                            !cw.IsExplicitPropertyValue(component, key, type.Properties[key].valueType)    //检测当前值兼容性
-                        )
+                        if (property.defaultValue != null) cw.SetPropertyValue(component, property.name, property.defaultValue);
+                    }
+                    else
+                    {
+                        Debug.LogWarning($"{nameof(XOR.TsComponent)} unsupport type: {property.valueType.FullName}");
+                    }
+                }
+                else if (current.Index != index)
+                {
+                    cw.SetPropertyIndex(component, property.name, index);
+                }
+                index++;
+            }
+
+            TsComponentHelper.SetVersion(component, statement.version);
+            TsComponentHelper.SetDirty(component);
+        }
+        public static void ClearProperties(TsComponent component)
+        {
+            ComponentWrap<TsComponent> cw = ComponentWrap<TsComponent>.Create();
+            cw.ClearProperties(component);
+
+            TsComponentHelper.SetVersion(component, default);
+            TsComponentHelper.SetDirty(component);
+        }
+
+        public static void SetDirty(UnityEngine.Object obj)
+        {
+            if (obj == null)
+                return;
+            EditorUtility.SetDirty(obj);
+        }
+
+        public static void SyncAssetsComponents(bool isForce)
+        {
+            if (UnityEngine.Application.isPlaying)
+            {
+                EditorUtility.DisplayDialog("提示", "你必需退出Play模式才能继续操作.", "确定");
+                return;
+            }
+            XOR.Services.Program program = EditorApplicationUtil.GetProgram();
+            if (program == null || program.state != XOR.Services.ProgramState.Completed)
+            {
+                bool startup = EditorUtility.DisplayDialog("提示", "你必需启动XOR服务并等待其初始化完成.", "启动", "取消");
+                if (startup && !EditorApplicationUtil.IsRunning())
+                    EditorApplicationUtil.Start();
+                return;
+            }
+            string currentScene = UnityEditor.SceneManagement.EditorSceneManager.GetActiveScene().path;
+            HashSet<string> unknwonGuids = new HashSet<string>(),
+                resolveAssets = new HashSet<string>();
+
+            string[] assetPaths = AssetDatabase.GetAllAssetPaths().Where(p => p.StartsWith("Assets")).ToArray();
+            try
+            {
+                for (int i = 0; i < assetPaths.Length; i++)
+                {
+                    if (EditorUtility.DisplayCancelableProgressBar("遍历资源中", assetPaths[i], (i) / assetPaths.Length))
+                        break;
+                    var obj = AssetDatabase.LoadAssetAtPath<UnityEngine.Object>(assetPaths[i]);
+                    if (obj is GameObject gameObject)
+                    {
+                        bool dirty = SyncGameObjectComponents(program, gameObject, unknwonGuids, isForce);
+                        if (dirty)
                         {
-                            properties.Remove(key);
-                            cw.RemoveProperty(component, key);
+                            resolveAssets.Add(assetPaths[i]);
+                            AssetDatabase.SaveAssets();
+                        }
+                    }
+                    else if (obj is SceneAsset)
+                    {
+                        var scene = UnityEditor.SceneManagement.EditorSceneManager.OpenScene(assetPaths[i]);
+                        bool dirty = SyncSceneComponents(program, scene, unknwonGuids, isForce);
+                        if (dirty)
+                        {
+                            resolveAssets.Add(assetPaths[i]);
+                            AssetDatabase.SaveAssets();
                         }
                     }
                 }
-                //添加未序列化的节点
-                int index = 0;
-                foreach (var property in type.Properties.Values)
+            }
+            finally
+            {
+                EditorUtility.ClearProgressBar();
+                //打开最开始的场景
+                UnityEditor.SceneManagement.EditorSceneManager.OpenScene(currentScene);
+                //打印信息
+                StringBuilder builder = new StringBuilder();
+                builder.AppendFormat("Sync Asset {0}, unknown guid {1}", resolveAssets.Count, unknwonGuids.Count);
+                if (unknwonGuids.Count > 0)
                 {
-                    IPair current = null;
-                    properties?.TryGetValue(property.name, out current);
-                    if (current == null)
+                    builder.AppendLine();
+                    builder.Append("<b>Unknown Guids:</b>");
+                    foreach (var guid in unknwonGuids)
                     {
-                        if (cw.AddProperty(component, property.valueType, property.name, index))
-                        {
-                            if (property.defaultValue != null) cw.SetPropertyValue(component, property.name, property.defaultValue);
-                        }
-                        else
-                        {
-                            Debug.LogWarning($"{nameof(XOR.TsComponent)} unsupport type: {property.valueType.FullName}");
-                        }
+                        builder.AppendLine();
+                        builder.Append(guid);
                     }
-                    else if (current.Index != index)
-                    {
-                        cw.SetPropertyIndex(component, property.name, index);
-                    }
-                    index++;
                 }
-
-                Helper.SetVersion(component, statement.version);
-                Helper.SetDirty(component);
+                if (resolveAssets.Count > 0)
+                {
+                    builder.AppendLine();
+                    builder.Append("<b>Sync Assets:</b>");
+                    foreach (var asset in resolveAssets)
+                    {
+                        builder.AppendLine();
+                        builder.Append(asset);
+                    }
+                }
+                Debug.Log(builder.ToString());
             }
-            public static void ClearProperties(TsComponent component)
+        }
+        static bool SyncGameObjectComponents(XOR.Services.Program program, GameObject gameObject, HashSet<string> unknwonGuids, bool isForce)
+        {
+            var dirty = false;
+            var components = gameObject.GetComponentsInChildren<XOR.TsComponent>();
+            for (int i = 0; i < components.Length; i++)
             {
-                ComponentWrap<TsComponent> cw = ComponentWrap<TsComponent>.Create();
-                cw.ClearProperties(component);
-
-                Helper.SetVersion(component, default);
-                Helper.SetDirty(component);
+                var guid = TsComponentHelper.GetGuid(components[i]);
+                if (string.IsNullOrEmpty(guid))
+                    continue;
+                var statement = program.GetStatement(guid);
+                if (statement == null)
+                {
+                    if (unknwonGuids != null) unknwonGuids.Add(guid);
+                    continue;
+                }
+                if (isForce || TsComponentHelper.GetVersion(components[i]) != statement.version)
+                {
+                    TsComponentHelper.RebuildProperties(components[i], statement);
+                    dirty |= true;
+                }
             }
-
-            public static void SetDirty(UnityEngine.Object obj)
+            if (dirty)
             {
-                if (obj == null)
-                    return;
-                EditorUtility.SetDirty(obj);
+                SetDirty(gameObject);
             }
+            return dirty;
+        }
+        static bool SyncSceneComponents(XOR.Services.Program program, UnityEngine.SceneManagement.Scene sceen, HashSet<string> unknwonGuids, bool isForce)
+        {
+            var dirty = false;
+            foreach (GameObject gameObject in sceen.GetRootGameObjects())
+            {
+                dirty |= SyncGameObjectComponents(program, gameObject, unknwonGuids, isForce);
+            }
+            return dirty;
         }
     }
 }
