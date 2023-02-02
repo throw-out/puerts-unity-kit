@@ -163,6 +163,7 @@ namespace XOR
                 if (GUILayout.Button("重置"))
                 {
                     Helper.ClearProperties(component);
+                    Helper.RebuildProperties(component, statement);
                     serializedObject.ApplyModifiedProperties();
                     serializedObject.Update();
                     Helper.RebuildNodes(root, properties, statement);
