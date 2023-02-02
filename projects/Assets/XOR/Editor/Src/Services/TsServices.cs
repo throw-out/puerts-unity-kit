@@ -218,7 +218,7 @@ namespace XOR.Services
                         foreach (var e in this.valueEnum)
                         {
                             builder.AppendLine();
-                            builder.AppendFormat("\t{0}", e.Key);
+                            builder.AppendFormat("\t[{0}]", e.Key);
                         }
                     }
                     else
@@ -226,7 +226,7 @@ namespace XOR.Services
                         foreach (var e in this.valueEnum)
                         {
                             builder.AppendLine();
-                            builder.AppendFormat("\t{0} \t {1}", e.Key, e.Value);
+                            builder.AppendFormat("\t[{0}, {1}]", e.Key, e.Value);
                         }
                     }
                 }
