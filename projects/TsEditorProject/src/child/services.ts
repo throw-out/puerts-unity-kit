@@ -505,7 +505,7 @@ export class Program {
         ctd.name = name;
         ctd.module = module;
         ctd.guid = declaration.guid;
-        ctd.version = this.getSourceFileHash(node);
+        ctd.version = csharp.XOR.HashUtil.SHA256(node.getFullText());
         //成员声明
         let members = this.getFields(node, true);
         if (members) {
