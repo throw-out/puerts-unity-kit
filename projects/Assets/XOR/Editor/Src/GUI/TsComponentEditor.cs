@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Reflection;
 using UnityEditor;
@@ -172,9 +173,9 @@ namespace XOR
                     serializedObject.Update();
                     Helper.RebuildNodes(root, properties, statement);
                 }
-                if (GUILayout.Button("编辑"))
+                if (GUILayout.Button("编辑") && File.Exists(statement.path))
                 {
-
+                    FileUtil.OpenFileInIDE(statement.path, statement.line);
                 }
             }
             GUILayout.EndHorizontal();

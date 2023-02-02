@@ -26492,6 +26492,8 @@ declare namespace CS {
             public version: string
             public name: string
             public module: string
+            public path: string
+            public line: number
         }
         class EnumDeclaration extends XOR.Services.Statement {
             protected [__keep_incompatibility]: never;

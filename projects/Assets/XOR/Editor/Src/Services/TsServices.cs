@@ -89,6 +89,9 @@ namespace XOR.Services
         public string name;
         /// <summary>声明类所在模块/文件路径 </summary>
         public string module;
+
+        public string path;
+        public int line;
     }
 
     public class EnumDeclaration : Statement

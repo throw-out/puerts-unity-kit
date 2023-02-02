@@ -506,6 +506,8 @@ export class Program {
         ctd.module = module;
         ctd.guid = declaration.guid;
         ctd.version = csharp.XOR.HashUtil.SHA256(node.getFullText());
+        ctd.path = node.getSourceFile().fileName;
+        ctd.line = util.getTextLine(node.getSourceFile().text, node.getStart());
         //成员声明
         let members = this.getFields(node, true);
         if (members) {
@@ -1200,6 +1202,16 @@ const util = new class {
             },
             newLength: newLength
         };
+    }
+    /**获取字符位置其对应的行数 */
+    public getTextLine(content: string, charIndex: number): number {
+        let line = 0;
+        for (let i = 0; i < content.length && i < charIndex; i++) {
+            if (content[i] === "\n") {
+                line++;
+            }
+        }
+        return line;
     }
 
     /**是否为C#类型声明 */
