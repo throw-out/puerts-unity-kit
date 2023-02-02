@@ -297,6 +297,72 @@ export class Program {
         }
         definitions.push(definition);
     }
+    /**为目标类分配指定内容 */
+    private allocDecorator(node: ts.Node, decoratorContent: string) {
+        let sourceFile = node.getSourceFile();
+
+        let content = sourceFile.getFullText();
+        let start = node.getStart(), end = node.getEnd();
+
+        let stringBuilder = [decoratorContent, "\n"];
+        //检查语句前面的空格字符, 检查前一句是否有换行
+        let preIndex = start - 1, hasEnter = false;
+        while (preIndex > 0) {
+            let curChar = content[preIndex];
+            if (EmptyCharacters.includes(curChar)) {
+                stringBuilder.unshift(curChar);
+                preIndex--;
+            } else {
+                hasEnter = EnterCharacters.includes(curChar);
+                break;
+            }
+        }
+        if (!hasEnter) stringBuilder.unshift("\n");
+        start = preIndex + 1;
+
+        //新的ts脚本内容
+        let insert = stringBuilder.join("");
+        let newContent = `${content.slice(0, start)}${insert}${content.slice(start)}`;
+        /*
+        return ts.updateSourceFile(sourceFile, newContent, {
+            span: {
+                start: preIndex,
+                length: 0
+            },
+            newLength: insert.length,
+        }, true);
+        //*/
+        //return ts.updateSourceFile(sourceFile, newContent, util.getTextChangeRange(sourceFile.text, newContent, true), true);
+        return ts.updateSourceFile(sourceFile, newContent, {
+            span: {
+                start: 0,
+                length: sourceFile.text.length
+            },
+            newLength: newContent.length
+        }, false);
+    }
+    /**移除SourceFile所有定义 */
+    private removeDeclarations(path: string, removeSourceFile?: boolean) {
+        let declarations = this.sourceDefinitions.get(path);
+        //移除文件声明
+        declarations?.forEach(declaration => {
+            this.types.delete(declaration.absoluteName);
+            this.cp.RemoveStatement(declaration.guid);
+        });
+        this.sourceHash.delete(path);
+        this.sourceDefinitions.delete(path);
+        //将sourceFile内容置为null
+        let sourceFile: ts.SourceFile;
+        if (removeSourceFile && (sourceFile = this.program.getSourceFile(path))) {
+            ts.updateSourceFile(sourceFile, "", {
+                span: {
+                    start: 0,
+                    length: 0
+                },
+                newLength: 0,
+            }, false);
+        }
+    }
     //#endregion
 
     private async resolvePending() {
@@ -323,63 +389,62 @@ export class Program {
             await this.resolveComponents();
 
             next();
+            return;
         }
         //锁定文件并验证hash
-        else {
-            let stream: csharp.System.IO.FileStream;
-            try {
-                stream = File.OpenRead(path);
-                let cHash = csharp.XOR.HashUtil.SHA256(stream);
-                //如果文件与初始hash不同或已与SourceFile同步, 则取消接下来的执行
-                if (cHash !== hash || cHash === this.sourceHash.get(path)) {
-                    return;
-                }
-                let newContent = UTF8.GetString(util.readSteam(stream, Number(stream.Length)));
-                //更新文件声明
-                if (sourceFile) {
-                    this.removeDeclarations(path, false);
-                    //更新SourceFile内容
-                    sourceFile = ts.updateSourceFile(sourceFile, newContent, {
-                        span: {
-                            start: 0,
-                            length: newContent.length
-                        },
-                        newLength: newContent.length,
-                    }, false);
-                }
-                //新增SourceFile文件
-                else {
-                    let program = ts.createProgram({
-                        rootNames: [...this.program.getRootFileNames(), path],
-                        options: this.options,
-                        oldProgram: this.program
-                    });
-                    //@ts-ignore
-                    this.program = program;
-                    //@ts-ignore
-                    this.checker = this.program.getTypeChecker();
-
-                    sourceFile = program.getSourceFile(path);
-                }
-                //重新生成此SourceFile文件的声明
-                if (!sourceFile.statements)
-                    return;
-                let newAbsoluteNames = await this.resolveStatements(sourceFile.statements);
-                if (!newAbsoluteNames || newAbsoluteNames.length === 0)
-                    return;
-                //重新解析关系
-                await this.resolveComponents();
-
-                declarations = this.sourceDefinitions.get(path);
-                if (declarations && declarations.length > 0) {
-                    this.pushDefinitions(declarations);
-                }
-            } catch (e) {
-                console.warn(e);
-            } finally {
-                stream?.Close();
-                next();
+        let stream: csharp.System.IO.FileStream;
+        try {
+            stream = File.OpenRead(path);
+            let _hash = csharp.XOR.HashUtil.SHA256(stream);
+            //如果文件与初始hash不同或已与SourceFile同步, 则取消接下来的执行
+            if (_hash !== hash || _hash === this.sourceHash.get(path)) {
+                return;
             }
+            let newContent = UTF8.GetString(util.readSteam(stream, Number(stream.Length)));
+            //更新文件声明
+            if (sourceFile) {
+                this.removeDeclarations(path, false);
+                //更新SourceFile内容
+                sourceFile = ts.updateSourceFile(sourceFile, newContent, {
+                    span: {
+                        start: 0,
+                        length: newContent.length
+                    },
+                    newLength: newContent.length,
+                }, false);
+            }
+            //新增SourceFile文件
+            else {
+                let program = ts.createProgram({
+                    rootNames: [...this.program.getRootFileNames(), path],
+                    options: this.options,
+                    oldProgram: this.program
+                });
+                //@ts-ignore
+                this.program = program;
+                //@ts-ignore
+                this.checker = this.program.getTypeChecker();
+
+                sourceFile = program.getSourceFile(path);
+            }
+            //重新生成此SourceFile文件的声明
+            if (!sourceFile.statements)
+                return;
+            let newAbsoluteNames = await this.resolveStatements(sourceFile.statements);
+            if (!newAbsoluteNames || newAbsoluteNames.length === 0)
+                return;
+            //重新解析关系
+            await this.resolveComponents();
+
+            declarations = this.sourceDefinitions.get(path);
+            if (declarations && declarations.length > 0) {
+                this.pushDefinitions(declarations);
+            }
+        } catch (e) {
+            console.warn(e);
+        } finally {
+            stream?.Close();
+            next();
         }
     }
     private async resolveDefinitions() {
@@ -395,7 +460,7 @@ export class Program {
         let updateSourceFile: ts.SourceFile;
         //分配新的guid
         for (let declaration of declarations) {
-            if (declaration.guid || !this.isExportTsCompoent(declaration)) {
+            if (declaration.guid || !this.isExportTsComponent(declaration)) {
                 continue;
             }
             let td = this.types.get(declaration.absoluteName);
@@ -417,14 +482,14 @@ export class Program {
         }
         //推送定义到C#
         for (let declaration of declarations) {
-            if (!declaration.guid || !this.isExportTsCompoent(declaration)) {
+            if (!declaration.guid || !this.isExportTsComponent(declaration)) {
                 continue;
             }
             this.pushDefinition(declaration);
         }
     }
     private pushDefinition(declaration: TypeDefinition) {
-        if (!declaration.guid || !this.isExportTsCompoent(declaration)) {
+        if (!declaration.guid || !this.isExportTsComponent(declaration)) {
             return;
         }
 
@@ -470,65 +535,7 @@ export class Program {
         }
         this.cp.AddStatement(ctd);
     }
-    /**为目标类分配指定内容 */
-    private allocDecorator(node: ts.Node, decoratorContent: string) {
-        let sourceFile = node.getSourceFile();
-
-        let content = sourceFile.getFullText();
-        let start = node.getStart(), end = node.getEnd();
-
-        let stringBuilder = [decoratorContent, "\n"];
-        //检查语句前面的空格字符, 检查前一句是否有换行
-        let preIndex = start - 1, hasEnter = false;
-        while (preIndex > 0) {
-            let curChar = content[preIndex];
-            if (EmptyCharacters.includes(curChar)) {
-                stringBuilder.unshift(curChar);
-                preIndex--;
-            } else {
-                hasEnter = EnterCharacters.includes(curChar);
-                break;
-            }
-        }
-        if (!hasEnter) stringBuilder.unshift("\n");
-        start = preIndex + 1;
-
-        //新的ts脚本内容
-        let insert = stringBuilder.join("");
-        let newContent = `${content.slice(0, start)}${insert}${content.slice(start)}`;
-
-        return ts.updateSourceFile(sourceFile, newContent, {
-            span: {
-                start: preIndex,
-                length: 0
-            },
-            newLength: insert.length,
-        }, false);
-    }
-    /**移除定义文件 */
-    private removeDeclarations(path: string, removeSourceFile?: boolean) {
-        let declarations = this.sourceDefinitions.get(path);
-        //移除文件声明
-        declarations?.forEach(declaration => {
-            this.types.delete(declaration.absoluteName);
-            this.cp.RemoveStatement(declaration.guid);
-        });
-        this.sourceHash.delete(path);
-        this.sourceDefinitions.delete(path);
-        //将sourceFile内容置为null
-        let sourceFile: ts.SourceFile;
-        if (removeSourceFile && (sourceFile = this.program.getSourceFile(path))) {
-            ts.updateSourceFile(sourceFile, "", {
-                span: {
-                    start: 0,
-                    length: 0
-                },
-                newLength: 0,
-            }, false);
-        }
-    }
-
-    private isExportTsCompoent(type: TypeDefinition) {
+    private isExportTsComponent(type: TypeDefinition) {
         return !(
             !type.isComponent ||
             !type.isExport ||
@@ -1004,6 +1011,51 @@ const util = new class {
         return !this.isPublic(node, defaultValue);
     }
 
+    /**比对源文件, 并获取TextChangeRange */
+    public getTextChangeRange(content: string, newContent: string, forwardRemoveEmpty: boolean = true): ts.TextChangeRange {
+        let contentLength = content.length,
+            newContentLength = newContent.length;
+
+        let start: number = 0, end: number = -1;
+        //find start
+        for (let i = 0; i < contentLength; i++) {
+            if (content[i] !== newContent[i])
+                break;
+            start = i;
+        }
+        if (forwardRemoveEmpty) {
+            for (let i = start; i >= 0; i--) {
+                start = i;
+                if (!EmptyCharacters.includes(content[i]))
+                    break;
+            }
+        }
+        //find end
+        for (let i = 0; i < contentLength; i++) {
+            let index1 = contentLength - i - 1, index2 = newContentLength - i - 1;
+            if (content[contentLength - i - 1] !== newContent[index2] || index1 < start)
+                break;
+            end = index1;
+        }
+
+        let spanLength: number, newLength: number;
+        if (end < 0) {
+            spanLength = contentLength - start;
+            newLength = newContentLength - start;
+        } else {
+            spanLength = end - start;
+            newLength = end - start + newContentLength - contentLength;
+        }
+        return {
+            span: {
+                start,
+                length: spanLength
+            },
+            newLength: newLength
+        };
+    }
+
+    /**解析ts.Expression并获取其值: 基础类型或C#类型 */
     public getExpressionValue<T = any>(checker: ts.TypeChecker, expression: ts.Expression, depth: number = 0): T {
         if (depth > 1)
             return null;
@@ -1039,6 +1091,7 @@ const util = new class {
         }
         return result;
     }
+    /**转为C#数组类型, 长度必需大于1且至少有一个非null成员, 成员类型必需一致 */
     public toCSharpArray(array: Array<any>) {
         let firstIndex = array?.findIndex(e => e !== undefined && e !== null && e !== void 0) ?? -1;
         if (firstIndex >= 0) {
@@ -1071,6 +1124,7 @@ const util = new class {
         }
         return null;
     }
+    /**转为enumerable数据 */
     public toCSharpEnumerable(members: Array<{ name: string, value: string | number }>) {
         if (!members || members.length === 0 || !members.every(({ value: v }) => typeof (v) === "string" || typeof (v) === "number" || typeof (v) === "bigint")) {
             return null;
@@ -1086,6 +1140,10 @@ const util = new class {
         return { type, enumerable };
     }
 
+    /**读取System.IO.Stream
+     * @param stream 
+     * @param length 
+     */
     public readSteam(stream: csharp.System.IO.Stream, length: number): csharp.System.Array$1<number>;
     public readSteam(stream: csharp.System.IO.Stream, length: number, toBuffer: true): ArrayBuffer;
     public readSteam() {
@@ -1097,6 +1155,7 @@ const util = new class {
         }
         return bytes;
     }
+    /**取IterableIterator<T>下表 */
     public at<T>(iterator: IterableIterator<T>, index: number) {
         if (!iterator)
             return null;
