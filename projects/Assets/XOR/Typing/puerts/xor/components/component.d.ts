@@ -3,9 +3,9 @@ type NumberConstructor = typeof csharp.System.Byte | typeof csharp.System.SByte 
 type FieldOptions = NumberConstructor | Partial<{
     /**指定RawType(原始类型: System.Int16/System.Int32等类型都对应number) */
     type: NumberConstructor;
-    /**指定数值范围 */
+    /**指定数值范围: 仅可用于number类型 */
     range: [min: number, max: number];
-    /**默认值 */
+    /**默认值: 只能是基础类型丶C#类型或其数组类型 */
     value: any;
 }>;
 declare class TsComponentConstructor extends xor.TsBehaviour {
@@ -19,7 +19,7 @@ declare global {
          * @param guid
          * @example
          * ```
-         * //⚠⚠⚠警告: 此语句由xor自动生成并与class/enum声明绑定, 用户不应该手动创建丶修改丶移动或删除
+         * //⚠⚠⚠警告: 此语句由xor生成和管理, 且与class声明绑定, 用户不应该手动创建丶修改丶移动或删除
          * \@xor.guid('global uniqure identifier')
          * export class Example extends xor.TsComponent{
          *      //......
@@ -31,7 +31,7 @@ declare global {
          * @param path
          * @example
          * ```
-         * //⚠⚠⚠警告: 此语句由xor自动生成并与class/enum声明绑定, 用户不应该手动创建丶修改丶移动或删除
+         * //⚠⚠⚠警告: 此语句由xor生成和管理, 且与class声明绑定, 用户不应该手动创建丶修改丶移动或删除
          * \@xor.route('global unique arbitrary string')
          * export class Example extends xor.TsComponent{
          *      //......
