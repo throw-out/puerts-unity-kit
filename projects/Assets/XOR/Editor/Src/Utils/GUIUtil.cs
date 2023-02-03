@@ -122,12 +122,12 @@ namespace XOR
             if (!string.IsNullOrEmpty(newPath) && File.Exists(newPath))
             {
                 Settings asset = Settings.Load(true, true);
-                asset.EditorProject = PathUtil.GetLocalPath(newPath);
+                asset.editorProject = PathUtil.GetLocalPath(newPath);
 
                 EditorUtility.SetDirty(asset);
                 AssetDatabase.SaveAssets();
                 AssetDatabase.Refresh();
-                return asset.EditorProject;
+                return asset.editorProject;
             }
             return string.Empty;
         }
@@ -150,12 +150,12 @@ namespace XOR
             if (!string.IsNullOrEmpty(newPath) && File.Exists(newPath))
             {
                 Settings asset = Settings.Load(true, true);
-                asset.Project = PathUtil.GetLocalPath(newPath);
+                asset.project = PathUtil.GetLocalPath(newPath);
 
                 EditorUtility.SetDirty(asset);
                 AssetDatabase.SaveAssets();
                 AssetDatabase.Refresh();
-                return asset.Project;
+                return asset.project;
             }
             return string.Empty;
         }

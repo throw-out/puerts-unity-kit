@@ -75,8 +75,9 @@ namespace XOR
             Prefs.Enable.SetValue(true);
             try
             {
-                string editorProjectConfig = Settings.Load().EditorProject,
-                    projectConfig = Settings.Load().Project;
+                string editorProjectConfig = Settings.Load().editorProject,
+                    projectConfig = Settings.Load().project;
+                bool useNodejsWatch = Settings.Load().watchType == Settings.WacthType.Nodejs && PuertsUtil.IsSupportNodejs();
 
                 editorProjectConfig = PathUtil.GetFullPath(editorProjectConfig);
                 projectConfig = PathUtil.GetFullPath(projectConfig);
@@ -109,6 +110,7 @@ namespace XOR
                 //创建EditorApplication实例
                 EditorApplication app = EditorApplication.GetInstance();
                 app.Loader.AddLoader(new FileLoader(editorOutput, editorRoot));
+                app.Env.UsingAction<string, string, bool>();
                 //create interfaces
                 CSharpInterfaces ci = new CSharpInterfaces();
                 ci.SetWorker = app.SetWorker;
@@ -118,18 +120,21 @@ namespace XOR
                 TSInterfaces ti = Init(ci);
                 app.SetInterfaces(ti);
 
-                ti.Start(editorOutput, projectConfig);
+                ti.Start(editorOutput, projectConfig, useNodejsWatch);
 
                 //监听文件修改
-                string dirpath = Path.GetDirectoryName(projectConfig);
                 EditorFileWatcher.ReleaseInstance();
-                EditorFileWatcher watcher = EditorFileWatcher.GetInstance();
-                watcher.AddWatcher(dirpath, "*.ts");
-                watcher.AddWatcher(dirpath, "*.tsx");
-                watcher.OnChanged((path, type) => ti.FileChanged(path));
-                watcher.Start(true);
+                if (!useNodejsWatch)
+                {
+                    string dirpath = Path.GetDirectoryName(projectConfig);
+                    EditorFileWatcher watcher = EditorFileWatcher.GetInstance();
+                    watcher.AddWatcher(dirpath, "*.ts");
+                    watcher.AddWatcher(dirpath, "*.tsx");
+                    watcher.OnChanged((path, type) => ti.FileChanged(path));
+                    watcher.Start(true);
+                    Logger.Log($"<b>XOR.{nameof(EditorFileWatcher)}:</b> {dirpath}");
+                }
 
-                Logger.Log($"<b>XOR.{nameof(EditorFileWatcher)}:</b> {dirpath}");
                 Logger.Log($"<b>XOR.{nameof(EditorApplication)}: <color=green>Started</color>.</b>");
             }
             catch (System.Exception e)

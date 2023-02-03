@@ -91,11 +91,11 @@ namespace XOR
             Settings.LOGGER current = Settings.LOGGER.NONE;
             if (Settings.Instance != null)
             {
-                current = Settings.Instance.Logger;
+                current = Settings.Instance.logger;
             }
             else if (Thread.CurrentThread.ManagedThreadId == MAIN_THREAD_ID)
             {
-                current = Settings.Load(true, false).Logger;
+                current = Settings.Load(true, false).logger;
             }
             else
             {

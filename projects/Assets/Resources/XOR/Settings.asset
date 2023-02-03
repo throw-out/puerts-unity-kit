@@ -12,7 +12,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 82258d1f5aae6a64fbb04b7f75bba57c, type: 3}
   m_Name: Settings
   m_EditorClassIdentifier: 
-  Project: ../TsProject/tsconfig.json
-  EditorProject: ../TsEditorProject/tsconfig.json
-  IsESM: 0
-  Logger: 14
+  project: ../TsProject/tsconfig.json
+  editorProject: ../TsEditorProject/tsconfig.json
+  isESM: 0
+  watchType: 1
+  logger: 14

@@ -79,13 +79,21 @@ namespace XOR
         static Settings() => resourceAssetPath = "XOR/Settings";
 
         /// <summary>TS项目路径配置(相对路径) </summary>
-        public string Project = "../TsProject/tsconfig.json";
+        public string project = "../TsProject/tsconfig.json";
         /// <summary>TS Editor项目路径配置 </summary>
-        public string EditorProject = "../TsEditorProject/tsconfig.json";
+        public string editorProject = "../TsEditorProject/tsconfig.json";
         /// <summary>是否使用ESM模块 </summary>
-        public bool IsESM = false;
+        public bool isESM = false;
 
-        public LOGGER Logger = LOGGER.LOG | LOGGER.WARN | LOGGER.ERROR;
+        /// <summary>Wacther类型 </summary>
+        public WacthType watchType = WacthType.Nodejs;
+        public enum WacthType
+        {
+            Csharp,
+            Nodejs
+        }
+
+        public LOGGER logger = LOGGER.LOG | LOGGER.WARN | LOGGER.ERROR;
         public enum LOGGER
         {
             NONE = 0,

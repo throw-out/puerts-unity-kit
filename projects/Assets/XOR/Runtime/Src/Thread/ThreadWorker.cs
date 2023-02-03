@@ -95,7 +95,7 @@ namespace XOR
             if (this.Loader == null)
                 throw new Exception("Thread cannot work, loader instance required.");
 
-            bool isESM = Settings.Load().IsESM;
+            bool isESM = Settings.Load().isESM;
 
             this.IsInitialized = false;
             this._running = true;

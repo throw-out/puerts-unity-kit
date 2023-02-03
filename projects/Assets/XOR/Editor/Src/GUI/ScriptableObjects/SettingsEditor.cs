@@ -22,6 +22,8 @@ namespace XOR
                 GUILayout.Space(HeightSpace);
                 GUIUtil.RenderGroup(RenderEditorProject, Settings.Load(true, true));
                 GUILayout.Space(HeightSpace);
+                GUIUtil.RenderGroup(RenderWatchType, Settings.Load(true, true));
+                GUILayout.Space(HeightSpace);
                 GUIUtil.RenderGroup(RenderOther, Settings.Load(true, true));
                 GUILayout.Space(HeightSpace);
             }
@@ -51,7 +53,7 @@ namespace XOR
 
             using (new EditorGUI.DisabledScope(true))
             {
-                GUILayout.TextField(settings.Project);
+                GUILayout.TextField(settings.project);
             }
 
             GUILayout.BeginHorizontal();
@@ -61,7 +63,7 @@ namespace XOR
             }
             if (GUILayout.Button("查看"))
             {
-                string path = PathUtil.GetFullPath(settings.Project);
+                string path = PathUtil.GetFullPath(settings.project);
                 if (File.Exists(path))
                 {
                     EditorUtility.RevealInFinder(path);
@@ -79,7 +81,7 @@ namespace XOR
 
             using (new EditorGUI.DisabledScope(true))
             {
-                GUILayout.TextField(settings.EditorProject);
+                GUILayout.TextField(settings.editorProject);
             }
 
             GUILayout.BeginHorizontal();
@@ -89,7 +91,7 @@ namespace XOR
             }
             if (GUILayout.Button("查看"))
             {
-                string path = PathUtil.GetFullPath(settings.EditorProject);
+                string path = PathUtil.GetFullPath(settings.editorProject);
                 if (File.Exists(path))
                 {
                     EditorUtility.RevealInFinder(path);
@@ -101,25 +103,54 @@ namespace XOR
             }
             GUILayout.EndHorizontal();
         }
+        void RenderWatchType(Settings settings)
+        {
+            GUILayout.Label("File Wacther");
 
+            using (new EditorGUI.DisabledScope(!PuertsUtil.IsSupportNodejs()))
+            {
+                GUILayout.BeginHorizontal();
+                GUILayout.Label("Type", GUILayout.Width(HeaderWidth));
+                Settings.WacthType wacthType = (Settings.WacthType)EditorGUILayout.EnumPopup(settings.watchType);
+                GUILayout.EndHorizontal();
+                if (wacthType != settings.watchType)
+                {
+                    settings.watchType = wacthType;
+                }
+            }
+            GUILayout.Space(HeightSpace);
+            GUILayout.BeginHorizontal("HelpBox");
+            GUILayout.Label(string.Empty, Skin.infoIcon);
+            GUILayout.Label("在部分Unity版本上System.IO.FileSystemWatcher存在BUG, 可使用nodejs fs.wacth来监听文件变化", Skin.labelArea, GUILayout.ExpandHeight(true));
+            GUILayout.EndHorizontal();
+
+            if (!PuertsUtil.IsSupportNodejs())
+            {
+                GUILayout.Space(HeightSpace);
+                GUILayout.BeginHorizontal("HelpBox");
+                GUILayout.Label(string.Empty, Skin.warnIcon);
+                GUILayout.Label("nodejs在当前环境上不可用", Skin.labelArea, GUILayout.ExpandHeight(true));
+                GUILayout.EndHorizontal();
+            }
+        }
         void RenderOther(Settings settings)
         {
             GUILayout.BeginHorizontal();
             GUILayout.Label("IsESM", GUILayout.Width(HeaderWidth));
-            bool on = GUILayout.Toggle(settings.IsESM, string.Empty);
+            bool on = GUILayout.Toggle(settings.isESM, string.Empty);
             GUILayout.EndHorizontal();
-            if (on != settings.IsESM)
+            if (on != settings.isESM)
             {
-                settings.IsESM = on;
+                settings.isESM = on;
             }
 
             GUILayout.BeginHorizontal();
             GUILayout.Label("Logger", GUILayout.Width(HeaderWidth));
-            Settings.LOGGER logger = (Settings.LOGGER)EditorGUILayout.EnumFlagsField(settings.Logger);
+            Settings.LOGGER logger = (Settings.LOGGER)EditorGUILayout.EnumFlagsField(settings.logger);
             GUILayout.EndHorizontal();
-            if (logger != settings.Logger)
+            if (logger != settings.logger)
             {
-                settings.Logger = logger;
+                settings.logger = logger;
             }
         }
 
@@ -133,10 +164,11 @@ namespace XOR
             var _default = ScriptableObject.CreateInstance<Settings>();
             var _current = Settings.Load(true, true);
 
-            _current.Project = _default.Project;
-            _current.EditorProject = _default.EditorProject;
-            _current.IsESM = _default.IsESM;
-            _current.Logger = _default.Logger;
+            _current.project = _default.project;
+            _current.editorProject = _default.editorProject;
+            _current.isESM = _default.isESM;
+            _current.logger = _default.logger;
+            _current.watchType = _default.watchType;
 
             EditorUtility.SetDirty(_current);
             AssetDatabase.SaveAssets();

@@ -22,7 +22,7 @@ namespace XOR
         {
             base.Init();
 
-            bool isESM = Settings.Load().IsESM;
+            bool isESM = Settings.Load().isESM;
 
             Loader = new MergeLoader();
             Loader.AddLoader(new DefaultLoader(), int.MaxValue);

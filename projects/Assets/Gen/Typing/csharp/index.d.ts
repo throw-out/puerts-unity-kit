@@ -26479,7 +26479,7 @@ declare namespace CS {
         }
         class TSInterfaces extends System.Object {
             protected [__keep_incompatibility]: never;
-            public Start: System.Action$2<string, string>
+            public Start: System.Action$3<string, string, boolean>
             public Stop: System.Action
             public FileChanged: System.Action$1<string>
             public constructor()

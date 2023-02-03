@@ -43,7 +43,7 @@ namespace XOR
             }
             __instance = this;
 
-            bool isESM = Settings.Load().IsESM;
+            bool isESM = Settings.Load().isESM;
 
             Loader = new MergeLoader();
             Loader.AddLoader(new DefaultLoader(), int.MaxValue);

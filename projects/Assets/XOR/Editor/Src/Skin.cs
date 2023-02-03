@@ -88,7 +88,16 @@ namespace XOR
             style.onNormal = style.onHover = style.onActive = style.onFocused = style.normal;
             return style;
         });
-
+        public static readonly Accessor<GUIStyle> labelArea = new Accessor<GUIStyle>(() =>
+        {
+            GUIStyle style = new GUIStyle(GUI.skin.label);
+            style.alignment = TextAnchor.MiddleLeft;
+            style.richText = true;
+            style.stretchWidth = false;
+            style.stretchHeight = true;
+            style.wordWrap = true;
+            return style;
+        });
 
         public static readonly Accessor<GUIStyle> arrawLeft = new Accessor<GUIStyle>(() =>
         {
