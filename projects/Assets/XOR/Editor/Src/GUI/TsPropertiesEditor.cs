@@ -11,6 +11,10 @@ namespace XOR
 
     internal class TsPropertiesEditor : Editor
     {
+        private static bool menuFoldout = true;
+        private static bool memberFoldout = true;
+        private static bool diagnosisFoldout = true;
+
         private TsProperties component;
         private ReorderableList reorderableList;
 
@@ -39,7 +43,137 @@ namespace XOR
             }
             TsPropertiesHelper.RebuildNodes(root, nodes);
 
-            reorderableList.DoLayoutList();
+            EditorGUILayout.BeginVertical();
+            RenderMenu();
+            RenderMembers();
+            RenderDiagnosis();
+            EditorGUILayout.EndVertical();
+        }
+
+        void RenderMenu()
+        {
+            if (GUIUtil.RenderHeader("菜单"))
+            {
+                menuFoldout = !menuFoldout;
+            }
+            if (menuFoldout)
+            {
+                GUIUtil.RenderGroup(_RenderMenu);
+            }
+        }
+        void RenderMembers()
+        {
+            if (GUIUtil.RenderHeader("成员属性"))
+            {
+                memberFoldout = !memberFoldout;
+            }
+            if (memberFoldout)
+            {
+                reorderableList.DoLayoutList();
+            }
+        }
+        void RenderDiagnosis()
+        {
+            if (GUIUtil.RenderHeader("诊断"))
+            {
+                diagnosisFoldout = !diagnosisFoldout;
+            }
+            if (diagnosisFoldout)
+            {
+                GUIUtil.RenderGroup(_RenderDiagnosis);
+            }
+        }
+
+        void _RenderMenu()
+        {
+            GUILayout.Space(5f);
+            EditorGUILayout.BeginHorizontal();
+            if (GUILayout.Button("Generate Declare"))
+            {
+                XOR.Serializables.TsProperties.Utility.CustomMenu(new string[] {
+                    "public",
+                    "protected",
+                    "private",
+                    "FullType/public",
+                    "FullType/protected",
+                    "FullType/private",
+                }, null, null, null, selectIndex =>
+                {
+                    string code = XOR.Serializables.TsProperties.Utility.GenerateDeclareCode(
+                        component.GenPairs(),
+                        (selectIndex % 3) == 0 ? "declare public" : (selectIndex % 3) == 1 ? "declare protected" : "declare private",
+                        selectIndex >= 0
+                    );
+                    var editor = new TextEditor();
+                    editor.text = code;
+                    editor.OnFocus();
+                    editor.Copy();
+                    Debug.Log("已复制到剪贴板:\n" + code);
+                });
+            }
+            if (GUILayout.Button("Parsed Declare"))
+            {
+                var editor = new TextEditor();
+                editor.OnFocus();
+                editor.Paste();
+                var code = editor.text;
+                if (string.IsNullOrEmpty(code))
+                    return;
+            }
+            EditorGUILayout.EndHorizontal();
+
+            GUILayout.Space(5f);
+            EditorGUILayout.BeginHorizontal();
+            Prefs.CheckKeyRedefinition.SetValue(EditorGUILayout.Toggle(string.Empty, Prefs.CheckKeyRedefinition, GUILayout.Width(20f)));
+            EditorGUILayout.LabelField("check key redefinition");
+            EditorGUILayout.EndHorizontal();
+
+            GUILayout.Space(5f);
+            EditorGUILayout.BeginHorizontal();
+            Prefs.CheckKeyValidity.SetValue(EditorGUILayout.Toggle(string.Empty, Prefs.CheckKeyValidity, GUILayout.Width(20f)));
+            EditorGUILayout.LabelField("check key validity");
+            EditorGUILayout.EndHorizontal();
+
+            GUILayout.Space(5f);
+        }
+        void _RenderDiagnosis()
+        {
+            int DiagnosisCount = 0;
+            XOR.Serializables.ResultPair[] pairs = (Prefs.CheckKeyRedefinition || Prefs.CheckKeyValidity) ? component.GenPairs() : null;
+            if (pairs != null && pairs.Length > 0)
+            {
+                List<string> usedKeys = new List<string>();
+                for (int i = 0; i < pairs.Length; i++)
+                {
+                    string key = pairs[i].key;
+                    if (Prefs.CheckKeyRedefinition)
+                    {
+                        if (usedKeys.Contains(key))
+                        {
+                            GUILayout.Space(5f);
+                            GUILayout.BeginHorizontal("HelpBox");
+                            GUILayout.Label(string.Empty, Skin.warnIcon);
+                            GUILayout.Label($"redefinition key at {i} (other at {usedKeys.IndexOf(key)})\n", Skin.labelArea);
+                            GUILayout.EndHorizontal();
+                            DiagnosisCount++;
+                        }
+                        else usedKeys.Add(key);
+                    }
+                    if (Prefs.CheckKeyValidity && !XOR.Serializables.TsProperties.Utility.IsValidKey(key))
+                    {
+                        GUILayout.Space(5f);
+                        GUILayout.BeginHorizontal("HelpBox");
+                        GUILayout.Label(string.Empty, Skin.warnIcon);
+                        GUILayout.Label($"invail key definition at {i} ({key})\n");
+                        GUILayout.EndHorizontal();
+                        DiagnosisCount++;
+                    }
+                }
+            }
+            if (DiagnosisCount == 0)
+            {
+                GUILayout.Label("Empty");
+            }
         }
 
         void CreateReorderableList()
@@ -47,11 +181,15 @@ namespace XOR
             reorderableList = new ReorderableList(
                 nodes,
                 typeof(NodeWrap),
-                true, true, true, true
+                true, false, true, true
             );
             reorderableList.elementHeightCallback = (index) =>
             {
                 return display.GetHeight(nodes[index]);
+            };
+            reorderableList.drawHeaderCallback = (Rect rect) =>
+            {   //绘制表头
+                //UnityEngine.GUI.Label(rect, "成员属性");
             };
             reorderableList.drawElementCallback = (rect, index, selected, focused) =>
             {   //绘制元素
@@ -62,15 +200,10 @@ namespace XOR
                     root.Update();
                 }
             };
-            reorderableList.drawHeaderCallback = (Rect rect) =>
-            {   //绘制表头
-                UnityEngine.GUI.Label(rect, "成员属性");
-            };
             reorderableList.onRemoveCallback = (ReorderableList list) =>
             {
                 nodes[list.index].RemoveFromArrayParent();
                 root.ApplyModifiedProperties();
-                root.Update();
                 TsPropertiesHelper.RebuildNodes(root, nodes);
             };
             reorderableList.onAddCallback = (ReorderableList list) =>
@@ -78,6 +211,7 @@ namespace XOR
                 XOR.Serializables.TsProperties.Utility.PopupCreate(root, nodes.Count, () =>
                 {
                     root.ApplyModifiedProperties();
+                    TsPropertiesHelper.RebuildNodes(root, nodes);
                 });
             };
             reorderableList.onChangedCallback = (a) =>
@@ -87,8 +221,7 @@ namespace XOR
                     nodes[i].Index = i;
                 }
                 root.ApplyModifiedProperties();
-                root.Update();
-                TsPropertiesHelper.RebuildNodes(root, nodes);
+                //TsPropertiesHelper.RebuildNodes(root, nodes);
             };
         }
     }

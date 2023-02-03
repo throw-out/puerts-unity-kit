@@ -7,24 +7,22 @@ namespace XOR
     internal static class Prefs
     {
         /// <summary>
-        /// 框架服务总开关
+        /// 框架AST服务开关
         /// </summary>
-        /// <typeparam name="bool"></typeparam>
-        /// <returns></returns>
-        internal static readonly Accessor<bool> Enable = new Accessor<bool>("Enable");
+        internal static readonly Accessor<bool> ASTEnable = new Accessor<bool>("ASTEnable");
 
         /// <summary>
-        /// 指定项目路径(tsconfig.json文件路径)
+        /// 检测key是否重定义
         /// </summary>
-        /// <typeparam name="string"></typeparam>
-        /// <returns></returns>
-        internal static readonly Accessor<string> ProjectPath = new Accessor<string>("ProjectPath");
+        internal static readonly Accessor<bool> CheckKeyRedefinition = new Accessor<bool>("CheckKeyRedefinition", true);
+        /// <summary>
+        /// 检测key是否为一个有效命名
+        /// /// </summary>
+        internal static readonly Accessor<bool> CheckKeyValidity = new Accessor<bool>("CheckKeyValidity", true);
 
         /// <summary>
         /// 指定语言环境
         /// </summary>
-        /// <typeparam name="int"></typeparam>
-        /// <returns></returns>
         internal static readonly Accessor<int> Language = new Accessor<int>("Language");
 
         internal class Accessor<T>

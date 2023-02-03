@@ -1487,6 +1487,82 @@ namespace XOR.Serializables.TsProperties
             }
         }
 
+        private static List<string> reservedKeywords = new List<string>()
+        {
+            "abstract", "arguments", "boolean", "break", "byte",
+            "case", "catch", "char", "class", "const",
+            "continue", "debugger", "default", "delete", "do",
+            "double", "else", "enum", "eval", "export",
+            "extends", "false", "final", "finally", "float",
+            "for", "function", "goto", "if", "implements",
+            "import", "in", "instanceof", "int", "interface",
+            "let", "long", "native", "new", "null",
+            "package", "private", "protected", "public", "return",
+            "short", "static", "super", "switch", "synchronized",
+            "this", "throw", "throws", "transient", "true",
+            "try", "typeof", "var", "void", "volatile",
+            "while", "with", "yield"
+        };
+        /// <summary>检测命名是否符合规则 </summary>
+        public static bool IsValidKey(string name)
+        {
+            //#:    35
+            //$:    36
+            //0-9:  48-57
+            //A-Z:  65-90
+            //_:    95
+            //a-z:  97-122
+            if (string.IsNullOrEmpty(name))
+                return false;
+            for (int i = 0; i < name.Length; i++)
+            {
+                var c = name[i];
+                if (!(
+                    c == 35 && i == 0 ||
+                    c == 36 ||
+                    c >= 48 && c <= 57 && i != 0 ||
+                    c >= 65 && c <= 90 ||
+                    c == 95 ||
+                    c >= 97 && c <= 122))
+                    return false;
+            }
+            return !reservedKeywords.Contains(name);
+        }
+        /// <summary>生成typescript声明代码 </summary>
+        public static string GenerateDeclareCode(XOR.Serializables.ResultPair[] pairs, string declarePrefix, bool useFullname)
+        {
+            var resultCode = "";
+            declarePrefix = declarePrefix.Trim();
+            foreach (var pair in pairs)
+            {
+                if (!string.IsNullOrEmpty(resultCode))
+                    resultCode += "\n";
+                var typeStr = GetTypeName(null, useFullname);
+                if (pair.value != null)
+                {
+                    typeStr = GetTypeName(pair.value.GetType(), useFullname);
+                    if (pair.value.GetType().IsArray && ((Array)pair.value).Length > 0)
+                    {
+                        var arr = (Array)pair.value;
+                        for (int i = 0; i < arr.Length; i++)
+                        {
+                            var o = arr.GetValue(i);
+                            if (o != null && !o.Equals(null))
+                            {
+                                typeStr = "System.Array$1<" + GetTypeName(o.GetType(), useFullname) + ">";
+                                break;
+                            }
+                        }
+                    }
+                }
+                var keyStr = pair.key;
+                if (!IsValidKey(keyStr))
+                    keyStr = "[\"" + keyStr + "\"]";
+                resultCode += $"{declarePrefix} {keyStr}: {typeStr};";
+            }
+            return resultCode;
+        }
+
         /// <summary>
         /// 获取UnityEngine.Object上的组件
         /// </summary>
@@ -1608,6 +1684,27 @@ namespace XOR.Serializables.TsProperties
                     element.RemoveFromArrayParent();
                 }
             }
+        }
+
+        static string GetTypeName(Type type, bool useFullname)
+        {
+            if (type == null)
+                return "undefined";
+            //Array Type
+            if (type.IsArray)
+                return "System.Array$1<" + GetTypeName(type.GetElementType(), useFullname) + ">";
+            //Value Mapping
+            if (type.Equals(typeof(double)) || type.Equals(typeof(float)) || type.Equals(typeof(int)) || type.Equals(typeof(long)))
+                return "number";
+            if (type.Equals(typeof(long)))
+                return "bigint";
+            if (type.Equals(typeof(string)) || type.Equals(typeof(char)))
+                return "string";
+            if (type.Equals(typeof(bool)))
+                return "boolean";
+            if (type.Equals(typeof(DateTime)))
+                return "Date";
+            return useFullname ? type.FullName.Replace("+", ".") : type.Name;
         }
     }
 

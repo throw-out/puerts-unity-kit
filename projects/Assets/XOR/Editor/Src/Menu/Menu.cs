@@ -18,7 +18,7 @@ namespace XOR
         static void InitializeStart()
         {
             EditorApplicationHandler.delayCall -= InitializeStart;
-            if (Prefs.Enable && !EditorApplicationUtil.IsRunning())
+            if (Prefs.ASTEnable && !EditorApplicationUtil.IsRunning())
             {
                 EditorApplicationUtil.Start();
             }

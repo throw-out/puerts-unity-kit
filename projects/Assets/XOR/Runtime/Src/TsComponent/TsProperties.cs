@@ -39,5 +39,32 @@ namespace XOR
         [SerializeField]
         private XOR.Serializables.ObjectArray[] ObjectArrayPairs;
         #endregion
+
+        public XOR.Serializables.ResultPair[] GenPairs()
+        {
+            var pairsArray = new IEnumerable<XOR.Serializables.IPair>[] {
+                StringPairs,
+                NumberPairs,
+                BigintPairs,
+                BooleanPairs,
+                Vector2Pairs,
+                Vector3Pairs,
+                ObjectPairs,
+                StringArrayPairs,
+                NumberArrayPairs,
+                BigintArrayPairs,
+                BooleanArrayPairs,
+                Vector2ArrayPairs,
+                Vector3ArrayPairs,
+                ObjectArrayPairs,
+            };
+            var list = (from pairs in pairsArray
+                        where pairs != null
+                        from pair in pairs
+                        where pair != null
+                        select pair).ToList();
+            list.Sort((v1, v2) => v1.Index < v2.Index ? -1 : v1.Index > v2.Index ? 1 : 0);
+            return list.Select(o => new XOR.Serializables.ResultPair(o)).ToArray();
+        }
     }
 }

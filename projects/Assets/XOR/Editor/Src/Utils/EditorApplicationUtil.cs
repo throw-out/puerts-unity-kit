@@ -75,7 +75,7 @@ namespace XOR
 
         public static void Start()
         {
-            Prefs.Enable.SetValue(true);
+            Prefs.ASTEnable.SetValue(true);
             try
             {
                 string editorProjectConfig = Settings.Load().editorProject,
@@ -89,7 +89,7 @@ namespace XOR
                     string newPath = GUIUtil.RenderSelectEditorProject(editorProjectConfig);
                     if (string.IsNullOrEmpty(newPath))
                     {
-                        Prefs.Enable.SetValue(false);
+                        Prefs.ASTEnable.SetValue(false);
                         return;
                     }
                     editorProjectConfig = PathUtil.GetFullPath(newPath);
@@ -99,7 +99,7 @@ namespace XOR
                     string newPath = GUIUtil.RenderSelectProject(projectConfig);
                     if (string.IsNullOrEmpty(newPath))
                     {
-                        Prefs.Enable.SetValue(false);
+                        Prefs.ASTEnable.SetValue(false);
                         return;
                     }
                     projectConfig = PathUtil.GetFullPath(newPath);
@@ -142,7 +142,7 @@ namespace XOR
             }
             catch (System.Exception e)
             {
-                Prefs.Enable.SetValue(false);
+                Prefs.ASTEnable.SetValue(false);
                 EditorApplication.ReleaseInstance();
                 EditorFileWatcher.ReleaseInstance();
                 Logger.Log($"<b>XOR.{nameof(EditorApplication)}: <color=red>Exception</color>:</b>\n{e}");
@@ -150,7 +150,7 @@ namespace XOR
         }
         public static void Stop(bool print = true)
         {
-            Prefs.Enable.SetValue(false);
+            Prefs.ASTEnable.SetValue(false);
             EditorApplication.ReleaseInstance();
             EditorFileWatcher.ReleaseInstance();
             if (!UnityEngine.Application.isPlaying)
