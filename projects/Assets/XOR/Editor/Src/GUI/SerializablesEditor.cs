@@ -7,6 +7,51 @@ using UnityEngine;
 
 namespace XOR.Serializables
 {
+    internal class RootWrap
+    {
+        public Type Type { get; private set; }
+        public SerializedObject Root { get; private set; }
+        public Dictionary<string, FieldWrap> FieldMapping { get; private set; }
+        public Dictionary<string, string> PathMapping { get; set; }
+
+        public string GetField(Type elementType)
+        {
+            var targetField = FieldMapping.FirstOrDefault(o => o.Value.Element.Type == elementType);
+            if (!string.IsNullOrEmpty(targetField.Key))
+            {
+                return targetField.Key;
+            }
+            return string.Empty;
+        }
+        public SerializedProperty GetProperty(string propertyName)
+        {
+            return Root != null ? Root.FindProperty(propertyName) : null;
+        }
+        public void Update()
+        {
+            if (Root != null)
+            {
+                Root.Update();
+            }
+        }
+        public void ApplyModifiedProperties()
+        {
+            if (Root != null)
+            {
+                Root.ApplyModifiedProperties();
+            }
+        }
+
+        public static RootWrap Create(SerializedObject root, Type type)
+        {
+            return new RootWrap()
+            {
+                Root = root,
+                Type = type,
+                FieldMapping = Helper.GetFieldMapping(type),
+            };
+        }
+    }
     internal class NodeWrap
     {
         public SerializedProperty Node { get; private set; }
@@ -108,28 +153,10 @@ namespace XOR.Serializables
             {
                 case SerializedPropertyType.Boolean:
                     return "bool";
+                case SerializedPropertyType.Integer:
+                    return "long";
             }
             return Enum.GetName(typeof(SerializedPropertyType), type);
-        }
-    }
-    internal class SerializedObjectWrap
-    {
-        public SerializedObject Root { get; private set; }
-        public Type Type { get; private set; }
-        public Dictionary<string, FieldWrap> FieldMapping { get; private set; }
-
-        public SerializedProperty GetProperty(string propertyName)
-        {
-            return Root != null ? Root.FindProperty(propertyName) : null;
-        }
-        public static SerializedObjectWrap Create(SerializedObject root, Type type)
-        {
-            return new SerializedObjectWrap()
-            {
-                Root = root,
-                Type = type,
-                FieldMapping = Helper.GetFieldMapping(type),
-            };
         }
     }
 
@@ -196,6 +223,7 @@ namespace XOR.Serializables
         public FieldInfo Field { get; private set; }
         public Type FieldType { get; private set; }
         public ElementWrap Element { get; private set; }
+        public string Menu { get; private set; }
 
         public IEnumerable<IPair> GetValue(object component)
         {
@@ -249,11 +277,13 @@ namespace XOR.Serializables
             ElementWrap element = ElementWrap.From(elementType);
             if (element == null)
                 return null;
+            var menuPath = elementType.GetCustomAttribute<XOR.Serializables.MenuPathAttribute>(false);
             return new FieldWrap()
             {
                 Field = field,
                 FieldType = field.FieldType,
-                Element = element
+                Element = element,
+                Menu = menuPath?.Path ?? elementType.Name
             };
         }
     }
@@ -432,6 +462,18 @@ namespace XOR.Serializables
         }
     }
 
+    /// <summary>
+    /// 定义为目标数据的的渲染器
+    /// </summary>
+    [AttributeUsageAttribute(AttributeTargets.Class, Inherited = false, AllowMultiple = true)]
+    internal class RenderTargetAttribute : Attribute
+    {
+        public Type Type { get; private set; }
+        public RenderTargetAttribute(Type type)
+        {
+            this.Type = type;
+        }
+    }
 
     static class Helper
     {
@@ -1083,18 +1125,843 @@ namespace XOR.Serializables.TsComponent
             }
         }
     }
-
-
-    /// <summary>
-    /// 定义为目标数据的的渲染器
-    /// </summary>
-    [AttributeUsageAttribute(AttributeTargets.Class, Inherited = false, AllowMultiple = true)]
-    internal class RenderTargetAttribute : Attribute
+}
+namespace XOR.Serializables.TsProperties
+{
+    internal class Display
     {
-        public Type Type { get; private set; }
-        public RenderTargetAttribute(Type type)
+        private RootWrap root;
+        private readonly Dictionary<Type, Renderer> renderers;
+        public Display(RootWrap root)
         {
-            this.Type = type;
+            this.renderers = new Dictionary<Type, Renderer>();
+            this.root = root;
+        }
+        public void AddRenderer<TRenderer>(Type valueType)
+            where TRenderer : Renderer, new()
+        {
+            var renderer = new TRenderer();
+            renderer.Root = root;
+            this.renderers.Add(valueType, renderer);
+        }
+        public bool Render(Rect position, NodeWrap node)
+        {
+            Renderer renderer = null;
+            this.renderers.TryGetValue(node.ElementType, out renderer);
+            if (renderer != null)
+            {
+                renderer.Dirty = false;
+                renderer.Node = node;
+                renderer.Render(position, GUIContent.none);
+                return renderer.Dirty;
+            }
+            return false;
+        }
+        public float GetHeight(NodeWrap node)
+        {
+            Renderer renderer = null;
+            this.renderers.TryGetValue(node.ElementType, out renderer);
+            if (renderer != null)
+            {
+                renderer.Node = node;
+                return renderer.GetHeight();
+            }
+            return EditorGUIUtility.singleLineHeight;
+        }
+        public static Display Create(RootWrap root)
+        {
+            Assembly assembly = typeof(Display).Assembly;
+            Type[] rendererTypes = (from type in assembly.GetTypes()
+                                    where !type.IsAbstract && typeof(Renderer).IsAssignableFrom(type)
+                                    select type).ToArray();
+            Display display = new Display(root);
+            foreach (var type in rendererTypes)
+            {
+                var target = type.GetCustomAttribute<RenderTargetAttribute>(false);
+                if (target == null)
+                    continue;
+                var renderer = System.Activator.CreateInstance(type) as Renderer;
+                renderer.Root = root;
+                display.renderers.Add(target.Type, renderer);
+            }
+            return display;
+        }
+    }
+
+    internal class Utility
+    {
+        public static void PopupCreate(RootWrap root, int index, Action callback = null)
+        {
+            string[] menuItems = root.FieldMapping.Select(o => o.Value.Menu).ToArray();
+            CustomMenu(menuItems, null, null, null, (selectIndex) =>
+            {
+                //Create Element
+                var arrayParent = root.GetProperty(root.FieldMapping.Keys.ElementAt(selectIndex));
+                arrayParent.arraySize++;
+                var newNode = new NodeWrap(
+                    arrayParent.GetArrayElementAtIndex(arrayParent.arraySize - 1),
+                    root.FieldMapping.Values.ElementAt(selectIndex).Element.Type
+                );
+                newNode.Index = index;
+                newNode.Key = "key" + index;
+                if (newNode.ValueNode.isArray)
+                {
+                    newNode.ValueNode.arraySize = 0;
+                    newNode.ValueNode.isExpanded = true;
+                }
+                newNode.CleanValue();
+                //应用更改
+                root.ApplyModifiedProperties();
+
+                if (callback != null) callback.Invoke();
+            });
+        }
+        public static void PopupTypes(RootWrap root, NodeWrap node)
+        {
+            var menuItems = root.FieldMapping.Select(o => o.Value.Menu).ToArray();
+            var selected = new[] { menuItems.ToList().IndexOf(root.GetField(node.ElementType)) };
+            CustomMenu(menuItems, null, selected, selected, (selectIndex) =>
+            {
+                //Create Element
+                var arrayParent = root.GetProperty(root.FieldMapping.Keys.ElementAt(selectIndex));
+                arrayParent.arraySize++;
+                var newNode = new NodeWrap(
+                    arrayParent.GetArrayElementAtIndex(arrayParent.arraySize - 1),
+                    root.FieldMapping.Values.ElementAt(selectIndex).Element.Type
+                );
+                newNode.Index = selectIndex;
+                newNode.Key = "key" + selectIndex;
+                if (newNode.ValueNode.isArray)
+                {
+                    newNode.ValueNode.arraySize = 0;
+                    newNode.ValueNode.isExpanded = true;
+                }
+                newNode.CleanValue();
+
+                Copy(node, newNode);
+                //Delete Element
+                node.RemoveFromArrayParent();
+                //应用更改
+                root.ApplyModifiedProperties();
+            });
+        }
+        public static void PopupComponentsAndTypes(RootWrap root, NodeWrap node, UnityEngine.Object obj, Type targetType)
+        {
+            var menuItems = root.FieldMapping.Select(o => o.Value.Menu).ToArray();
+            var selected = new[] { menuItems.ToList().IndexOf(root.GetField(node.ElementType)) };
+            string[] separator = null;
+            var objects = GetCompoents(obj, targetType);
+            if (objects != null)
+            {
+                //Options
+                var _menuItems = new List<string>() { "<NULL>" };
+                _menuItems.AddRange(CheckOptions((from o in objects select ("-" + o.GetType().Name)).ToArray()));
+                _menuItems.AddRange(menuItems);
+                menuItems = _menuItems.ToArray();
+                //Objects
+                var _objects = objects.ToList();
+                _objects.Insert(0, null);
+                objects = _objects.ToArray();
+                //Separator
+                string nullable = null;
+                separator = new List<string>(from _ in _objects select nullable) { }.ToArray();
+                separator[0] = separator[separator.Length - 1] = "";
+                //Select
+                selected = new List<int>() { _objects.IndexOf(obj), selected[0] + objects.Length }.ToArray();
+            }
+            CustomMenu(menuItems, separator, selected, selected, (selectIndex) =>
+           {
+               if (objects == null || selectIndex >= objects.Length)
+               {
+                   selectIndex = selectIndex - (objects != null ? objects.Length : 0);
+                   //Create Element
+                   var arrayParent = root.GetProperty(root.FieldMapping.Keys.ElementAt(selectIndex));
+                   arrayParent.arraySize++;
+                   var newNode = new NodeWrap(
+                        arrayParent.GetArrayElementAtIndex(arrayParent.arraySize - 1),
+                        root.FieldMapping.Values.ElementAt(selectIndex).Element.Type
+                    );
+                   newNode.Index = selectIndex;
+                   newNode.Key = "key" + selectIndex;
+
+                   if (newNode.ValueNode.isArray)
+                   {
+                       newNode.ValueNode.arraySize = node.ValueNode.isArray ? node.ValueNode.arraySize : 0;
+                       newNode.ValueNode.isExpanded = node.ValueNode.isArray ? node.ValueNode.isExpanded : true;
+                   }
+                   newNode.CleanValue();
+                   Copy(node, newNode);
+                   //Delete Element
+                   node.RemoveFromArrayParent();
+               }
+               else
+               {
+                   node.ValueNode.objectReferenceValue = objects[selectIndex];
+               }
+               //应用更改
+               root.ApplyModifiedProperties();
+           });
+        }
+        public static void PopupComponents(RootWrap info, SerializedProperty node, UnityEngine.Object obj, Type targetType)
+        {
+            var menuItems = new[] { "<NULL>" };
+            var selected = new[] { 0 };
+            string[] separator = null;
+            var objects = GetCompoents(obj, targetType);
+            if (objects != null)
+            {
+                //Options
+                var _menuItems = new List<string>() { "<NULL>" };
+                _menuItems.AddRange(CheckOptions((from o in objects select ("-" + o.GetType().Name)).ToArray()));
+                menuItems = _menuItems.ToArray();
+                //Objects
+                var _objects = objects.ToList();
+                _objects.Insert(0, null);
+                objects = _objects.ToArray();
+                //Separator
+                separator = new[] { "" };
+                //Select
+                selected = new List<int>() { _objects.IndexOf(obj) }.ToArray();
+            }
+            CustomMenu(menuItems, separator, selected, selected, (selectIndex) =>
+            {
+                if (objects != null && selectIndex < objects.Length)
+                {
+                    node.objectReferenceValue = objects[selectIndex];
+                    //应用更改
+                    info.ApplyModifiedProperties();
+                }
+            });
+        }
+        public static void PopupArrayComponents(RootWrap info, SerializedProperty arrayParent, Type targetType)
+        {
+            var objDict = new Dictionary<SerializedProperty, Dictionary<string, UnityEngine.Object>>();
+            var objNames = new List<string>();
+            for (int i = 0; i < arrayParent.arraySize; i++)
+            {
+                var node = arrayParent.GetArrayElementAtIndex(i);
+                var compoents = new Dictionary<string, UnityEngine.Object>();
+                var _objects = GetCompoents(node.objectReferenceValue, targetType);
+                if (_objects != null)
+                {
+                    Array.ForEach(_objects, o =>
+                    {
+                        var name = o.GetType().Name;
+                        objNames.Add(name);
+                        compoents[name] = o;
+                    });
+                }
+                objDict.Add(node, compoents);
+            }
+            objNames = objNames.Distinct().ToList();
+            objNames.Sort();
+            Array.ForEach(new[] { "Transform", "GameObject" }, name =>
+            {
+                if (!objNames.Contains(name)) return;
+                objNames.Remove(name);
+                objNames.Insert(0, name);
+            });
+            objNames.Insert(0, "<NULL>");
+
+            var selected = new int[0];
+            var separator = new[] { "" };
+            CustomMenu(objNames.ToArray(), separator, selected, selected, (selectIndex) =>
+           {
+               if (selectIndex >= 0 && selectIndex < objNames.Count)
+               {
+                   var name = objNames[selectIndex];
+                   foreach (var item in objDict)
+                   {
+                       UnityEngine.Object obj = null;
+                       if (item.Value.TryGetValue(name, out obj) || selectIndex == 0)
+                       {
+                           item.Key.objectReferenceValue = obj;
+                       }
+                   }
+                   //应用更改
+                   info.ApplyModifiedProperties();
+               }
+           });
+        }
+
+        /// <summary>
+        /// 在鼠标位置弹出菜单(在GUI调用完成后)
+        /// </summary>
+        public static void CustomMenu(string[] options, string[] separator, int[] selected, int[] disabled, Action<int> callback)
+        {
+            //EditorUtility.DisplayCustomMenu();  // 在指定区域弹出菜单 (需GUI方法内部调用)
+            var _separator = new List<string>(separator != null ? separator : new string[0]);
+            var _selected = new List<int>(selected != null ? selected : new int[0]);
+            var _disabled = new List<int>(disabled != null ? disabled : new int[0]);
+            var menu = new UnityEditor.GenericMenu();
+            for (int i = 0; i < options.Length; i++)
+            {
+                var index = i;
+                if (_disabled.Contains(index))
+                    menu.AddDisabledItem(new GUIContent(options[i]), _selected.Contains(index));
+                else
+                    menu.AddItem(new GUIContent(options[i]), _selected.Contains(index), () => callback(index));
+                if (i < _separator.Count && _separator[i] != null)
+                    menu.AddSeparator(_separator[i]);
+            }
+            menu.ShowAsContext();
+        }
+
+        public static void Copy(NodeWrap from, NodeWrap to)
+        {
+            if (from.ValueType.IsArray && to.ValueType.IsArray)
+            {
+                var targetType = to.ValueType.GetElementType();
+                for (int i = 0; i < from.ValueNode.arraySize && i < to.ValueNode.arraySize; i++)
+                {
+                    Copy(
+                        from.ValueNode.GetArrayElementAtIndex(i),
+                        to.ValueNode.GetArrayElementAtIndex(i),
+                        targetType
+                    );
+                }
+            }
+            else
+            {
+                Copy(from.ValueNode, to.ValueNode, to.ValueType);
+            }
+        }
+        public static void Copy(SerializedProperty from, SerializedProperty to, Type targetType)
+        {
+            if (from.propertyType == to.propertyType)
+            {
+                switch (from.propertyType)
+                {
+                    case SerializedPropertyType.Integer:
+                        to.intValue = from.intValue;
+                        break;
+                    case SerializedPropertyType.Boolean:
+                        to.boolValue = from.boolValue;
+                        break;
+                    case SerializedPropertyType.Float:
+                        to.doubleValue = from.doubleValue;
+                        break;
+                    case SerializedPropertyType.String:
+                        to.stringValue = from.stringValue;
+                        break;
+                    case SerializedPropertyType.Color:
+                        to.colorValue = from.colorValue;
+                        break;
+                    case SerializedPropertyType.ObjectReference:
+                        if (from.objectReferenceValue != null && targetType.IsAssignableFrom(from.objectReferenceValue.GetType()))
+                        {
+                            to.objectReferenceValue = from.objectReferenceValue;
+                        }
+                        break;
+                    case SerializedPropertyType.Vector2:
+                        to.vector2Value = from.vector2Value;
+                        break;
+                    case SerializedPropertyType.Vector3:
+                        to.vector3Value = from.vector3Value;
+                        break;
+                    case SerializedPropertyType.Vector4:
+                        to.vector4Value = from.vector4Value;
+                        break;
+                    case SerializedPropertyType.Rect:
+                        to.rectValue = from.rectValue;
+                        break;
+                    case SerializedPropertyType.Bounds:
+                        to.boundsValue = from.boundsValue;
+                        break;
+                    case SerializedPropertyType.Vector2Int:
+                        to.vector2IntValue = from.vector2IntValue;
+                        break;
+                    case SerializedPropertyType.Vector3Int:
+                        to.vector3IntValue = from.vector3IntValue;
+                        break;
+                    case SerializedPropertyType.RectInt:
+                        to.rectIntValue = from.rectIntValue;
+                        break;
+                    case SerializedPropertyType.BoundsInt:
+                        to.boundsIntValue = from.boundsIntValue;
+                        break;
+                }
+            }
+        }
+
+        /// <summary>
+        /// 获取UnityEngine.Object上的组件
+        /// </summary>
+        /// <param name="obj"></param>
+        /// <param name="targetType"></param>
+        /// <returns></returns>
+        static UnityEngine.Object[] GetCompoents(UnityEngine.Object obj, Type targetType)
+        {
+            if (obj != null)
+            {
+                var result = new List<UnityEngine.Object>();
+                var type = obj.GetType();
+                //获取GameObject和Transform组件
+                var getObj = type.GetProperty("gameObject");
+                var getTrf = type.GetProperty("transform");
+                var gameObject = (getObj != null ? getObj.GetValue(obj) : null) as GameObject;
+                var transform = (getTrf != null ? getTrf.GetValue(obj) : null) as Transform;
+                //调用GetComponents方法获取所有组件, 如果有gameObject则从Gameobject对象中获取所有组件(排除obj自身对排序的干扰)
+                if (gameObject != null)
+                    type = gameObject.GetType();
+                var getComponents = (from method in type.GetMethods()
+                                     let parames = method.GetParameters()
+                                     where method.Name == "GetComponents"
+                                        && method.ReturnType == typeof(Component[])
+                                        && parames.Length == 1
+                                        && parames[0].ParameterType == typeof(System.Type)
+                                     select method).FirstOrDefault();
+                if (getComponents != null)
+                {
+                    var components = getComponents.Invoke(gameObject != null ? gameObject : obj, new object[] { typeof(Component) }) as Component[];
+                    foreach (var o in components)
+                    {
+                        if (!result.Contains(o))
+                            result.Add(o);
+                    }
+                }
+                //obj自身
+                if (!result.Contains(obj))
+                    result.Add(obj);
+                //通过Type名进行排序
+                result = (from o in result orderby o.GetType().Name select o).ToList();
+                //GameObject / Transform
+                if (transform != null)
+                {
+                    result.Remove(transform);
+                    result.Insert(0, transform);
+                }
+                if (gameObject != null)
+                {
+                    result.Remove(gameObject);
+                    result.Insert(0, gameObject);
+                }
+                //移除无效项
+                if (targetType != null)
+                {
+                    for (int i = result.Count - 1; i >= 0; i--)
+                    {
+                        if (result[i] == null || !targetType.IsAssignableFrom(result[i].GetType()))
+                        {
+                            result.RemoveAt(i);
+                        }
+                    }
+                }
+                return result.ToArray();
+            }
+            return null;
+        }
+        /// <summary>
+        /// 检测Menu.Options是否有重复名称, 并返回更正后的Options
+        /// </summary>
+        /// <param name="options"></param>
+        /// <returns></returns>
+        static string[] CheckOptions(string[] options)
+        {
+            //重命名(重复名称-相同类型)
+            var countDict = new Dictionary<string, int>();
+            foreach (var option in options)
+            {
+                if (countDict.ContainsKey(option))
+                {
+                    var count = countDict[option];
+                    countDict[option] = count == 0 ? 2 : ++count;
+                }
+                else countDict.Add(option, 0);
+            }
+            for (int i = options.Length - 1; i >= 0; i--)
+            {
+                var count = countDict[options[i]];
+                if (count > 0)
+                {
+                    countDict[options[i]] = count - 1;
+                    options[i] += "(" + count + ")";
+                }
+            }
+            return options;
+        }
+        /// <summary> 删除选中的节点 </summary>
+        static void DeleteElements(NodeWrap[] nodes)
+        {
+            //依据父节点进行分组
+            var grouping = new Dictionary<SerializedProperty, List<NodeWrap>>();
+            foreach (var node in nodes)
+            {
+                List<NodeWrap> list;
+                if (!grouping.TryGetValue(node.ArrayParent, out list))
+                {
+                    list = new List<NodeWrap>();
+                    grouping.Add(node.ArrayParent, list);
+                }
+                list.Add(node);
+            }
+            //进行排序然后删除(先删除arrayIndex大的节点)
+            foreach (var group in grouping)
+            {
+                var values = group.Value.ToList();
+                values.Sort((v1, v2) => v1.ArrayIndex > v2.ArrayIndex ? -1 : v1.ArrayIndex < v2.ArrayIndex ? 1 : 0);
+                foreach (var element in values)
+                {
+                    element.RemoveFromArrayParent();
+                }
+            }
+        }
+    }
+
+    internal abstract class Renderer
+    {
+        protected const float HEIGHT_SPACING = HEIGHT_SPACING_HALF * 2;
+        protected const float HEIGHT_SPACING_HALF = 2f;
+        protected const float OPTIONS_WIDTH = 16f;
+        protected const float QUAD_WIDTH = OPTIONS_WIDTH + 4f;
+#if UNITY_2019_1_OR_NEWER
+        protected const string OPTIONS_STYLE = "PaneOptions";
+#else
+        protected const string OPTIONS_STYLE = "Icon.Options";
+#endif
+
+        /// <summary>
+        /// 节点值是否被修改
+        /// </summary>
+        public bool Dirty { get; set; }
+        public NodeWrap Node { get; set; }
+        public RootWrap Root { get; set; }
+        public virtual void Render(Rect position, GUIContent label)
+        {
+            //创建一个属性包装器，用于将常规GUI控件与SerializedProperty一起使用
+            using (new EditorGUI.PropertyScope(position, label, Node.ArrayParent))
+            {
+                //设置属性名宽度 Name HP
+                EditorGUIUtility.labelWidth = 0;
+                //输入框高度，默认一行的高度
+                position.height = this.GetLineHeight();
+
+                float normalizeWidth = position.width - QUAD_WIDTH,
+                    normalizeHalf = normalizeWidth / 2f;
+
+                //输入框的位置
+                Rect keyRect = new Rect(position)
+                {
+                    width = normalizeHalf,
+                    height = position.height - HEIGHT_SPACING,
+                    y = position.y + HEIGHT_SPACING_HALF
+                };
+                Rect valueRect = new Rect(keyRect)
+                {
+                    x = keyRect.x + keyRect.width + 2,
+                    width = normalizeHalf,
+                };
+                Rect operationRect = new Rect(valueRect)
+                {
+                    x = valueRect.x + valueRect.width + 2,
+                };
+
+                Node.Key = EditorGUI.TextField(keyRect, string.Empty, Node.Key);
+                RenderValue(position, valueRect);
+                RenderOperation(operationRect);
+            }
+        }
+        protected abstract void RenderValue(Rect position, Rect valueRect);
+        protected virtual void RenderOperation(Rect operationRect)
+        {
+            if (EditorGUI.Toggle(operationRect, false, OPTIONS_STYLE))
+            {
+                Utility.PopupTypes(Root, Node);
+            }
+        }
+
+        public virtual float GetLineHeight()
+        {
+            return EditorGUIUtility.singleLineHeight + HEIGHT_SPACING;
+        }
+        public virtual float GetHeight()
+        {
+            return this.GetLineHeight();
+        }
+    }
+    internal abstract class ArrayRenderer : Renderer
+    {
+        protected const float PropertyNameWidth = 100f;
+        protected const float ArrayMemberIndent = 30f;
+        protected const float ArrayMemberTitleWidth = PropertyNameWidth - ArrayMemberIndent;
+        protected const float ArrayMenuButtonWidth = 20f;
+        protected const float VerticalSpacing = 2f;
+
+        const float PADDING_LEFT = 0f;
+        const float PADDING = OPTIONS_WIDTH;
+        private Color gray = new Color(0.5f, 0.5f, 0.5f, 0.2f);
+
+        public override void Render(Rect position, GUIContent label)
+        {
+            base.Render(position, label);
+
+            if (Node.ValueNode.isExpanded)
+            {
+                RenderMembers(position);
+            }
+        }
+        protected override void RenderValue(Rect position, Rect valueRect)
+        {
+            var arrayParent = Node.ValueNode;
+            var arrayTypeName = (Node.ExplicitValueType != null ? Node.ExplicitValueType : Node.ValueType).FullName;
+            if (arrayTypeName.EndsWith("[]"))
+            {
+                arrayTypeName = arrayTypeName.Replace("[]", $"[{arrayParent.arraySize}]");
+            }
+            arrayParent.isExpanded = EditorGUI.Foldout(new Rect(valueRect) { x = valueRect.x + 10 }, arrayParent.isExpanded, arrayTypeName);
+
+        }
+        private void RenderMenu(Rect position, SerializedProperty parentNode, bool hasObjectReference)
+        {
+            float height = EditorGUIUtility.singleLineHeight;
+            Rect mbRect = new Rect(position)
+            {
+                x = position.x + position.width - PADDING - height * 2 - HEIGHT_SPACING * 2,
+                height = height,
+                width = height
+            };
+            Rect pbRect = new Rect(mbRect)
+            {
+                x = mbRect.x + height + HEIGHT_SPACING
+            };
+
+            if (EditorGUI.Toggle(mbRect, false, "OL Minus") && parentNode.arraySize > 0)
+            {
+                parentNode.arraySize--;
+            }
+            if (EditorGUI.Toggle(pbRect, false, "OL Plus"))
+            {
+                parentNode.arraySize++;
+            }
+
+            if (hasObjectReference)
+            {
+                Rect optionsRect = new Rect(pbRect) { x = pbRect.x + height + HEIGHT_SPACING };
+                if (EditorGUI.Toggle(optionsRect, false, OPTIONS_STYLE))
+                {
+                    Utility.PopupArrayComponents(
+                        Root,
+                        parentNode,
+                        Node.ValueType.GetElementType()
+                    );
+                }
+            }
+        }
+        protected virtual void RenderMembers(Rect position)
+        {
+            var arrayParent = Node.ValueNode;
+            var lineHight = base.GetLineHeight();
+
+            //draw background
+            Rect bgRect = new Rect(position)
+            {
+                y = lineHight + position.y,
+                x = position.x + PADDING_LEFT,
+                width = position.width - PADDING,
+                height = lineHight * (arrayParent.arraySize + 1)
+            };
+            if (arrayParent.arraySize > 0)
+                bgRect.height += HEIGHT_SPACING;
+            EditorGUI.DrawRect(bgRect, gray);
+
+            //draw title
+            Rect titleRect = new Rect(position)
+            {
+                y = position.y + lineHight,
+                x = position.x + PADDING_LEFT,
+                width = position.width - PADDING
+            };
+
+            //draw elements
+            bool hasObjectReference = false;
+            Rect elementRect = new Rect(titleRect)
+            {
+                y = titleRect.y + titleRect.height
+            };
+            for (int i = 0; i < arrayParent.arraySize; i++)
+            {
+                hasObjectReference |= RenderMember(
+                    new Rect(elementRect) { y = elementRect.y + lineHight * i },
+                    i,
+                    arrayParent.GetArrayElementAtIndex(i)
+                );
+            }
+
+            RenderMenu(titleRect, arrayParent, hasObjectReference);
+        }
+        protected virtual bool RenderMember(Rect position, int index, SerializedProperty memberNode)
+        {
+            Rect indexRect = new Rect(position)
+            {
+                width = 60f,
+            },
+                valueRect = new Rect(indexRect)
+                {
+                    x = indexRect.x + indexRect.width + 2,
+                    width = position.width - indexRect.width - QUAD_WIDTH
+                },
+                optionsRect = new Rect(valueRect)
+                {
+                    x = valueRect.x + valueRect.width + 2,
+                    width = QUAD_WIDTH,
+                };
+
+            EditorGUI.LabelField(indexRect, $"  [{index.ToString().PadLeft(3, ' ')}]");
+            RenderMemberValue(valueRect, memberNode, Node.ValueType.GetElementType());
+            if (memberNode.propertyType == SerializedPropertyType.ObjectReference
+                       && EditorGUI.Toggle(optionsRect, false, OPTIONS_STYLE))
+            {
+                Utility.PopupComponents(
+                    Root,
+                    memberNode,
+                    memberNode.objectReferenceValue,
+                    Node.ValueType.GetElementType()
+                );
+            }
+            return memberNode.propertyType == SerializedPropertyType.ObjectReference;
+        }
+        protected abstract void RenderMemberValue(Rect positon, SerializedProperty node, Type type);
+
+        public override float GetHeight()
+        {
+            var height = base.GetLineHeight();
+            if (Node != null)
+            {
+                var arrayParent = Node.ValueNode;
+                if (arrayParent.isExpanded)
+                {
+                    height += base.GetLineHeight() * (arrayParent.arraySize + 1) + HEIGHT_SPACING;
+                    if (arrayParent.arraySize > 0)
+                        height += HEIGHT_SPACING;
+                }
+            }
+            return height;
+        }
+    }
+
+    [RenderTarget(typeof(XOR.Serializables.Number))]
+    internal class NumberRenderer : Renderer
+    {
+        protected override void RenderValue(Rect position, Rect valueRect)
+        {
+            var value = Node.ValueNode.doubleValue;
+            var newValue = EditorGUI.DoubleField(valueRect, string.Empty, value);
+            if (Math.Abs(newValue - value) > float.Epsilon)
+            {
+                Node.ValueNode.doubleValue = newValue;
+                Dirty |= true;
+            }
+        }
+    }
+    [RenderTarget(typeof(XOR.Serializables.Bigint))]
+    internal class BigintRenderer : Renderer
+    {
+        protected override void RenderValue(Rect position, Rect valueRect)
+        {
+            var value = Node.ValueNode.longValue;
+            var newValue = EditorGUI.LongField(valueRect, string.Empty, value);
+            if (newValue != value)
+            {
+                Node.ValueNode.longValue = newValue;
+                Dirty |= true;
+            }
+        }
+    }
+    [RenderTarget(typeof(XOR.Serializables.String))]
+    internal class StringRenderer : Renderer
+    {
+        protected override void RenderValue(Rect position, Rect valueRect)
+        {
+            var value = Node.ValueNode.stringValue;
+            var newValue = EditorGUI.TextField(valueRect, string.Empty, value);
+            if (newValue != value)
+            {
+                Node.ValueNode.stringValue = newValue;
+                Dirty |= true;
+            }
+        }
+    }
+    [RenderTarget(typeof(XOR.Serializables.Boolean))]
+    internal class BooleanRenderer : Renderer
+    {
+        protected override void RenderValue(Rect position, Rect valueRect)
+        {
+            var value = Node.ValueNode.boolValue;
+            var newValue = EditorGUI.Toggle(valueRect, string.Empty, value);
+            if (newValue != value)
+            {
+                Node.ValueNode.boolValue = newValue;
+                Dirty |= true;
+            }
+        }
+    }
+    [RenderTarget(typeof(XOR.Serializables.Vector2))]
+    internal class Vector2Renderer : Renderer
+    {
+        protected override void RenderValue(Rect position, Rect valueRect)
+        {
+            var value = Node.ValueNode.vector2Value;
+            var newValue = EditorGUI.Vector2Field(valueRect, string.Empty, value);
+            if (newValue != value)
+            {
+                Node.ValueNode.vector2Value = newValue;
+                Dirty |= true;
+            }
+        }
+    }
+    [RenderTarget(typeof(XOR.Serializables.Vector3))]
+    internal class Vector3Renderer : Renderer
+    {
+        protected override void RenderValue(Rect position, Rect valueRect)
+        {
+            var value = Node.ValueNode.vector3Value;
+            var newValue = EditorGUI.Vector3Field(valueRect, string.Empty, value);
+            if (newValue != value)
+            {
+                Node.ValueNode.vector3Value = newValue;
+                Dirty |= true;
+            }
+        }
+    }
+    [RenderTarget(typeof(XOR.Serializables.Object))]
+    internal class ObjectRenderer : Renderer
+    {
+        protected override void RenderValue(Rect position, Rect valueRect)
+        {
+            var value = Node.ValueNode.objectReferenceValue;
+            var newValue = EditorGUI.ObjectField(valueRect, string.Empty, value, typeof(UnityEngine.Object), true);
+            if (newValue != value)
+            {
+                Node.ValueNode.objectReferenceValue = newValue;
+                Dirty |= true;
+            }
+        }
+        protected override void RenderOperation(Rect optionsRect)
+        {
+            if (EditorGUI.Toggle(optionsRect, false, OPTIONS_STYLE))
+            {
+                Utility.PopupComponentsAndTypes(
+                    Root,
+                    Node,
+                    Node.ValueNode.objectReferenceValue,
+                    Node.ValueType
+                );
+            }
+        }
+    }
+
+    [RenderTarget(typeof(XOR.Serializables.ObjectArray))]
+    class ObjectArrayRenderer : ArrayRenderer
+    {
+        protected override void RenderMemberValue(Rect valueRect, SerializedProperty node, Type type)
+        {
+            var value = node.objectReferenceValue;
+            var newValue = EditorGUI.ObjectField(valueRect, string.Empty, value, typeof(UnityEngine.Object), true);
+            if (newValue != value)
+            {
+                node.objectReferenceValue = newValue;
+                Dirty |= true;
+            }
         }
     }
 }

@@ -63,9 +63,10 @@ namespace XOR.Serializables
         typeof(short), typeof(ushort), typeof(int),
         typeof(uint), typeof(float), typeof(double)
     )]
-    [MenuPath("Array/Double")]
+    [MenuPath("Array/Number")]
     [System.Serializable]
     public class NumberArray : Pair<System.Double[]> { }
+    [MenuPath("Array/Bigint")]
     [System.Serializable]
     public class BigintArray : Pair<System.Int64[]> { }
     [MenuPath("Array/Boolean")]

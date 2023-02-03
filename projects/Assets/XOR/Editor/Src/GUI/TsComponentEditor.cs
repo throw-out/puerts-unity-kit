@@ -26,7 +26,7 @@ namespace XOR
 
         private Rect moduleSelectorRect;
 
-        private SerializedObjectWrap root;
+        private RootWrap root;
         private List<NodeWrap> nodes;
         private XOR.Serializables.TsComponent.Display display;
 
@@ -38,7 +38,7 @@ namespace XOR
                 servicesStatusFoldout = true;
             }
             //初始化节点信息
-            root = SerializedObjectWrap.Create(serializedObject, typeof(TsComponent));
+            root = RootWrap.Create(serializedObject, typeof(TsComponent));
             nodes = new List<NodeWrap>();
             display = XOR.Serializables.TsComponent.Display.Create();
         }
@@ -116,7 +116,7 @@ namespace XOR
             {
                 using (new EditorGUI.DisabledScope(statement == null))
                 {
-                    GUIUtil.RenderGroup(_RenderPropertiesNodes);
+                    GUIUtil.RenderGroup(_RenderNodes);
                 }
             }
             else
@@ -181,7 +181,7 @@ namespace XOR
             }
             GUILayout.EndHorizontal();
         }
-        void _RenderPropertiesNodes()
+        void _RenderNodes()
         {
             if (display == null || nodes == null || nodes.Count == 0)
             {
@@ -267,7 +267,7 @@ namespace XOR
             versionField.SetValue(component, value);
         }
 
-        public static void RebuildNodes(SerializedObjectWrap root, List<NodeWrap> outputNodes, Statement statement)
+        public static void RebuildNodes(RootWrap root, List<NodeWrap> outputNodes, Statement statement)
         {
             if (outputNodes == null)
                 return;
