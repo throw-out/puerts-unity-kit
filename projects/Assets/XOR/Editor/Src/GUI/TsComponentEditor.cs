@@ -27,7 +27,7 @@ namespace XOR
         private Rect moduleSelectorRect;
 
         private SerializedObjectWrap root;
-        private List<NodeWrap> properties;
+        private List<NodeWrap> nodes;
         private XOR.Serializables.TsComponent.Display display;
 
         void OnEnable()
@@ -39,7 +39,7 @@ namespace XOR
             }
             //初始化节点信息
             root = SerializedObjectWrap.Create(serializedObject, typeof(TsComponent));
-            properties = new List<NodeWrap>();
+            nodes = new List<NodeWrap>();
             display = XOR.Serializables.TsComponent.Display.Create();
         }
         void OnDisable()
@@ -59,7 +59,7 @@ namespace XOR
             {
                 TsComponentHelper.RebuildProperties(component, statement);
             }
-            TsComponentHelper.RebuildNodes(root, properties, statement);
+            TsComponentHelper.RebuildNodes(root, nodes, statement);
 
             EditorGUILayout.BeginVertical();
 
@@ -172,7 +172,7 @@ namespace XOR
                     TsComponentHelper.RebuildProperties(component, statement);
                     serializedObject.ApplyModifiedProperties();
                     serializedObject.Update();
-                    TsComponentHelper.RebuildNodes(root, properties, statement);
+                    TsComponentHelper.RebuildNodes(root, nodes, statement);
                 }
                 if (GUILayout.Button("编辑") && File.Exists(statement.path))
                 {
@@ -183,13 +183,13 @@ namespace XOR
         }
         void _RenderPropertiesNodes()
         {
-            if (display == null || properties == null || properties.Count == 0)
+            if (display == null || nodes == null || nodes.Count == 0)
             {
                 GUILayout.Label("Empty");
                 return;
             }
             bool dirty = false;
-            foreach (var node in properties)
+            foreach (var node in nodes)
             {
                 dirty |= display.Render(node);
             }
