@@ -12,14 +12,13 @@ namespace XOR.Serializables
         public Type Type { get; private set; }
         public SerializedObject Root { get; private set; }
         public Dictionary<string, FieldWrap> FieldMapping { get; private set; }
-        public Dictionary<string, string> PathMapping { get; set; }
 
-        public string GetField(Type elementType)
+        public string GetMenu(Type elementType)
         {
             var targetField = FieldMapping.FirstOrDefault(o => o.Value.Element.Type == elementType);
             if (!string.IsNullOrEmpty(targetField.Key))
             {
-                return targetField.Key;
+                return targetField.Value.Menu;
             }
             return string.Empty;
         }
@@ -672,10 +671,6 @@ namespace XOR.Serializables.TsComponent
     internal abstract class Renderer
     {
         protected const float PropertyNameWidth = 100f;
-        protected const float ArrayMemberIndent = 30f;
-        protected const float ArrayMemberTitleWidth = PropertyNameWidth - ArrayMemberIndent;
-        protected const float ArrayMenuButtonWidth = 20f;
-        protected const float VerticalSpacing = 2f;
 
         /// <summary>
         /// 节点值是否被修改
@@ -700,6 +695,10 @@ namespace XOR.Serializables.TsComponent
     }
     internal abstract class ArrayRenderer : Renderer
     {
+        protected const float ArrayMemberIndent = 30f;
+        protected const float ArrayMemberTitleWidth = PropertyNameWidth - ArrayMemberIndent;
+        protected const float ArrayMenuButtonWidth = 20f;
+        protected const float VerticalSpacing = 2f;
         public override void Render()
         {
             base.Render();
@@ -731,7 +730,7 @@ namespace XOR.Serializables.TsComponent
             arrayParent.isExpanded = EditorGUILayout.Foldout(arrayParent.isExpanded, arrayTypeName);
         }
 
-        private void RenderMenu()
+        protected virtual void RenderMenu()
         {
             EditorGUILayout.BeginHorizontal();
             int size = Node.ValueNode.arraySize;
@@ -785,7 +784,7 @@ namespace XOR.Serializables.TsComponent
             using (new EditorGUI.DisabledScope(true))
             {
                 string typeName = (Node.ExplicitValueType != null ? Node.ExplicitValueType : Node.ValueType).FullName;
-                GUILayout.Label(new GUIContent(typeName, $"不受支持的类型: {typeName}"), GUI.skin.textField);
+                GUILayout.Label(new GUIContent(typeName, $"未实现编辑的类型: {typeName}"), GUI.skin.textField);
             }
         }
     }
@@ -1132,6 +1131,7 @@ namespace XOR.Serializables.TsProperties
     {
         private RootWrap root;
         private readonly Dictionary<Type, Renderer> renderers;
+        private Renderer unknown;
         public Display(RootWrap root)
         {
             this.renderers = new Dictionary<Type, Renderer>();
@@ -1147,7 +1147,10 @@ namespace XOR.Serializables.TsProperties
         public bool Render(Rect position, NodeWrap node)
         {
             Renderer renderer = null;
-            this.renderers.TryGetValue(node.ElementType, out renderer);
+            if (!this.renderers.TryGetValue(node.ElementType, out renderer))
+            {
+                renderer = unknown;
+            }
             if (renderer != null)
             {
                 renderer.Dirty = false;
@@ -1175,6 +1178,7 @@ namespace XOR.Serializables.TsProperties
                                     where !type.IsAbstract && typeof(Renderer).IsAssignableFrom(type)
                                     select type).ToArray();
             Display display = new Display(root);
+            display.unknown = new UnknownRenderer();
             foreach (var type in rendererTypes)
             {
                 var target = type.GetCustomAttribute<RenderTargetAttribute>(false);
@@ -1219,7 +1223,7 @@ namespace XOR.Serializables.TsProperties
         public static void PopupTypes(RootWrap root, NodeWrap node)
         {
             var menuItems = root.FieldMapping.Select(o => o.Value.Menu).ToArray();
-            var selected = new[] { menuItems.ToList().IndexOf(root.GetField(node.ElementType)) };
+            var selected = new[] { menuItems.ToList().IndexOf(root.GetMenu(node.ElementType)) };
             CustomMenu(menuItems, null, selected, selected, (selectIndex) =>
             {
                 //Create Element
@@ -1229,12 +1233,12 @@ namespace XOR.Serializables.TsProperties
                     arrayParent.GetArrayElementAtIndex(arrayParent.arraySize - 1),
                     root.FieldMapping.Values.ElementAt(selectIndex).Element.Type
                 );
-                newNode.Index = selectIndex;
-                newNode.Key = "key" + selectIndex;
+                newNode.Index = node.Index;
+                newNode.Key = node.Key;
                 if (newNode.ValueNode.isArray)
                 {
-                    newNode.ValueNode.arraySize = 0;
-                    newNode.ValueNode.isExpanded = true;
+                    newNode.ValueNode.arraySize = node.ValueNode.isArray ? node.ValueNode.arraySize : 0;
+                    newNode.ValueNode.isExpanded = node.ValueNode.isArray ? node.ValueNode.isExpanded : true;
                 }
                 newNode.CleanValue();
 
@@ -1248,7 +1252,7 @@ namespace XOR.Serializables.TsProperties
         public static void PopupComponentsAndTypes(RootWrap root, NodeWrap node, UnityEngine.Object obj, Type targetType)
         {
             var menuItems = root.FieldMapping.Select(o => o.Value.Menu).ToArray();
-            var selected = new[] { menuItems.ToList().IndexOf(root.GetField(node.ElementType)) };
+            var selected = new[] { menuItems.ToList().IndexOf(root.GetMenu(node.ElementType)) };
             string[] separator = null;
             var objects = GetCompoents(obj, targetType);
             if (objects != null)
@@ -1270,37 +1274,36 @@ namespace XOR.Serializables.TsProperties
                 selected = new List<int>() { _objects.IndexOf(obj), selected[0] + objects.Length }.ToArray();
             }
             CustomMenu(menuItems, separator, selected, selected, (selectIndex) =>
-           {
-               if (objects == null || selectIndex >= objects.Length)
-               {
-                   selectIndex = selectIndex - (objects != null ? objects.Length : 0);
-                   //Create Element
-                   var arrayParent = root.GetProperty(root.FieldMapping.Keys.ElementAt(selectIndex));
-                   arrayParent.arraySize++;
-                   var newNode = new NodeWrap(
-                        arrayParent.GetArrayElementAtIndex(arrayParent.arraySize - 1),
-                        root.FieldMapping.Values.ElementAt(selectIndex).Element.Type
+            {
+                if (objects == null || selectIndex >= objects.Length)
+                {
+                    selectIndex = selectIndex - (objects != null ? objects.Length : 0);
+                    //Create Element
+                    var arrayParent = root.GetProperty(root.FieldMapping.Keys.ElementAt(selectIndex));
+                    arrayParent.arraySize++;
+                    var newNode = new NodeWrap(
+                            arrayParent.GetArrayElementAtIndex(arrayParent.arraySize - 1),
+                            root.FieldMapping.Values.ElementAt(selectIndex).Element.Type
                     );
-                   newNode.Index = selectIndex;
-                   newNode.Key = "key" + selectIndex;
-
-                   if (newNode.ValueNode.isArray)
-                   {
-                       newNode.ValueNode.arraySize = node.ValueNode.isArray ? node.ValueNode.arraySize : 0;
-                       newNode.ValueNode.isExpanded = node.ValueNode.isArray ? node.ValueNode.isExpanded : true;
-                   }
-                   newNode.CleanValue();
-                   Copy(node, newNode);
-                   //Delete Element
-                   node.RemoveFromArrayParent();
-               }
-               else
-               {
-                   node.ValueNode.objectReferenceValue = objects[selectIndex];
-               }
-               //应用更改
-               root.ApplyModifiedProperties();
-           });
+                    newNode.Index = node.Index;
+                    newNode.Key = node.Key;
+                    if (newNode.ValueNode.isArray)
+                    {
+                        newNode.ValueNode.arraySize = node.ValueNode.isArray ? node.ValueNode.arraySize : 0;
+                        newNode.ValueNode.isExpanded = node.ValueNode.isArray ? node.ValueNode.isExpanded : true;
+                    }
+                    newNode.CleanValue();
+                    Copy(node, newNode);
+                    //Delete Element
+                    node.RemoveFromArrayParent();
+                }
+                else
+                {
+                    node.ValueNode.objectReferenceValue = objects[selectIndex];
+                }
+                //应用更改
+                root.ApplyModifiedProperties();
+            });
         }
         public static void PopupComponents(RootWrap info, SerializedProperty node, UnityEngine.Object obj, Type targetType)
         {
@@ -1610,14 +1613,14 @@ namespace XOR.Serializables.TsProperties
 
     internal abstract class Renderer
     {
-        protected const float HEIGHT_SPACING = HEIGHT_SPACING_HALF * 2;
-        protected const float HEIGHT_SPACING_HALF = 2f;
-        protected const float OPTIONS_WIDTH = 16f;
-        protected const float QUAD_WIDTH = OPTIONS_WIDTH + 4f;
+        protected const float VerticalSpacingDouble = VerticalSpacing * 2;
+        protected const float VerticalSpacing = 2f;
+        protected const float OperationWidth = 16f;
+        protected const float QuadWidth = OperationWidth + 4f;
 #if UNITY_2019_1_OR_NEWER
-        protected const string OPTIONS_STYLE = "PaneOptions";
+        protected const string OperationStyle = "PaneOptions";
 #else
-        protected const string OPTIONS_STYLE = "Icon.Options";
+        protected const string OperationStyle = "Icon.Options";
 #endif
 
         /// <summary>
@@ -1636,15 +1639,15 @@ namespace XOR.Serializables.TsProperties
                 //输入框高度，默认一行的高度
                 position.height = this.GetLineHeight();
 
-                float normalizeWidth = position.width - QUAD_WIDTH,
+                float normalizeWidth = position.width - QuadWidth,
                     normalizeHalf = normalizeWidth / 2f;
 
                 //输入框的位置
                 Rect keyRect = new Rect(position)
                 {
                     width = normalizeHalf,
-                    height = position.height - HEIGHT_SPACING,
-                    y = position.y + HEIGHT_SPACING_HALF
+                    height = position.height - VerticalSpacingDouble,
+                    y = position.y + VerticalSpacing
                 };
                 Rect valueRect = new Rect(keyRect)
                 {
@@ -1655,8 +1658,12 @@ namespace XOR.Serializables.TsProperties
                 {
                     x = valueRect.x + valueRect.width + 2,
                 };
-
-                Node.Key = EditorGUI.TextField(keyRect, string.Empty, Node.Key);
+                var newKey = EditorGUI.TextField(keyRect, string.Empty, Node.Key);
+                if (newKey != Node.Key)
+                {
+                    Node.Key = newKey;
+                    Dirty |= true;
+                }
                 RenderValue(position, valueRect);
                 RenderOperation(operationRect);
             }
@@ -1664,7 +1671,7 @@ namespace XOR.Serializables.TsProperties
         protected abstract void RenderValue(Rect position, Rect valueRect);
         protected virtual void RenderOperation(Rect operationRect)
         {
-            if (EditorGUI.Toggle(operationRect, false, OPTIONS_STYLE))
+            if (EditorGUI.Toggle(operationRect, false, OperationStyle))
             {
                 Utility.PopupTypes(Root, Node);
             }
@@ -1672,7 +1679,7 @@ namespace XOR.Serializables.TsProperties
 
         public virtual float GetLineHeight()
         {
-            return EditorGUIUtility.singleLineHeight + HEIGHT_SPACING;
+            return EditorGUIUtility.singleLineHeight + VerticalSpacingDouble;
         }
         public virtual float GetHeight()
         {
@@ -1681,15 +1688,11 @@ namespace XOR.Serializables.TsProperties
     }
     internal abstract class ArrayRenderer : Renderer
     {
-        protected const float PropertyNameWidth = 100f;
         protected const float ArrayMemberIndent = 30f;
-        protected const float ArrayMemberTitleWidth = PropertyNameWidth - ArrayMemberIndent;
-        protected const float ArrayMenuButtonWidth = 20f;
-        protected const float VerticalSpacing = 2f;
-
-        const float PADDING_LEFT = 0f;
-        const float PADDING = OPTIONS_WIDTH;
-        private Color gray = new Color(0.5f, 0.5f, 0.5f, 0.2f);
+        protected const float ArrayMemberTitleWidth = 70f;
+        protected const float HorizontalSpacing = VerticalSpacing;
+        protected const float Padding = OperationWidth;
+        private Color boxColor = new Color(0.5f, 0.5f, 0.5f, 0.2f);
 
         public override void Render(Rect position, GUIContent label)
         {
@@ -1697,7 +1700,48 @@ namespace XOR.Serializables.TsProperties
 
             if (Node.ValueNode.isExpanded)
             {
-                RenderMembers(position);
+                var arrayParent = Node.ValueNode;
+                var lineHight = base.GetLineHeight();
+
+                //render background box
+                Rect bgRect = new Rect(position)
+                {
+                    y = lineHight + position.y,
+                    x = position.x + ArrayMemberIndent,
+                    width = position.width - Padding - ArrayMemberIndent,
+                    height = lineHight * (arrayParent.arraySize + 1) + VerticalSpacing * arrayParent.arraySize
+                };
+                if (arrayParent.arraySize > 0)
+                {
+                    bgRect.height += VerticalSpacingDouble;
+                }
+                EditorGUI.DrawRect(bgRect, boxColor);
+
+                //render menu
+                Rect menuRect = new Rect(position)
+                {
+                    y = position.y + lineHight,
+                    x = position.x + ArrayMemberIndent,
+                    width = position.width - Padding - ArrayMemberIndent,
+                    height = lineHight
+                };
+
+                //render members
+                bool hasObjectReference = false;
+                Rect memberRect = new Rect(menuRect)
+                {
+                    y = menuRect.y + menuRect.height + VerticalSpacingDouble,
+                };
+                for (int i = 0; i < arrayParent.arraySize; i++)
+                {
+                    hasObjectReference |= RenderMember(
+                        new Rect(memberRect) { y = memberRect.y + (lineHight + VerticalSpacing) * i },
+                        i,
+                        arrayParent.GetArrayElementAtIndex(i)
+                    );
+                }
+
+                RenderMenu(menuRect, arrayParent, hasObjectReference);
             }
         }
         protected override void RenderValue(Rect position, Rect valueRect)
@@ -1709,35 +1753,56 @@ namespace XOR.Serializables.TsProperties
                 arrayTypeName = arrayTypeName.Replace("[]", $"[{arrayParent.arraySize}]");
             }
             arrayParent.isExpanded = EditorGUI.Foldout(new Rect(valueRect) { x = valueRect.x + 10 }, arrayParent.isExpanded, arrayTypeName);
-
         }
-        private void RenderMenu(Rect position, SerializedProperty parentNode, bool hasObjectReference)
+        protected virtual void RenderMenu(Rect position, SerializedProperty parentNode, bool hasObjectReference)
         {
             float height = EditorGUIUtility.singleLineHeight;
-            Rect mbRect = new Rect(position)
+
+            Rect titleRect = new Rect(position)
             {
-                x = position.x + position.width - PADDING - height * 2 - HEIGHT_SPACING * 2,
+                x = position.x + HorizontalSpacing,
+                y = position.y + VerticalSpacing,
+                width = ArrayMemberTitleWidth - HorizontalSpacing
+            },
+            lengthRect = new Rect(titleRect)
+            {
+                x = titleRect.x + titleRect.width + HorizontalSpacing,
+                width = position.width - ArrayMemberTitleWidth - height * 2 - HorizontalSpacing * 4 - Padding
+            },
+            mbRect = new Rect(lengthRect)
+            {
+                x = lengthRect.x + lengthRect.width + HorizontalSpacing,
+                height = height,
+                width = height
+            },
+            pbRect = new Rect(mbRect)
+            {
+                x = mbRect.x + mbRect.width + HorizontalSpacing,
                 height = height,
                 width = height
             };
-            Rect pbRect = new Rect(mbRect)
-            {
-                x = mbRect.x + height + HEIGHT_SPACING
-            };
 
-            if (EditorGUI.Toggle(mbRect, false, "OL Minus") && parentNode.arraySize > 0)
+            int size = Node.ValueNode.arraySize;
+            EditorGUI.LabelField(titleRect, "Length");
+            int newSize = Mathf.Clamp(EditorGUI.IntField(lengthRect, size), 0, ushort.MaxValue);
+            if (EditorGUI.Toggle(mbRect, false, "OL Minus") && size > 0)
             {
-                parentNode.arraySize--;
+                newSize = size - 1;
             }
-            if (EditorGUI.Toggle(pbRect, false, "OL Plus"))
+            if (EditorGUI.Toggle(pbRect, false, "OL Plus") && size < ushort.MaxValue)
             {
-                parentNode.arraySize++;
+                newSize = size + 1;
+            }
+            if (newSize != size)
+            {
+                Node.ValueNode.arraySize = newSize;
+                Dirty |= true;
             }
 
             if (hasObjectReference)
             {
-                Rect optionsRect = new Rect(pbRect) { x = pbRect.x + height + HEIGHT_SPACING };
-                if (EditorGUI.Toggle(optionsRect, false, OPTIONS_STYLE))
+                Rect optionsRect = new Rect(pbRect) { x = pbRect.x + height + VerticalSpacing };
+                if (EditorGUI.Toggle(optionsRect, false, OperationStyle))
                 {
                     Utility.PopupArrayComponents(
                         Root,
@@ -1747,69 +1812,28 @@ namespace XOR.Serializables.TsProperties
                 }
             }
         }
-        protected virtual void RenderMembers(Rect position)
-        {
-            var arrayParent = Node.ValueNode;
-            var lineHight = base.GetLineHeight();
-
-            //draw background
-            Rect bgRect = new Rect(position)
-            {
-                y = lineHight + position.y,
-                x = position.x + PADDING_LEFT,
-                width = position.width - PADDING,
-                height = lineHight * (arrayParent.arraySize + 1)
-            };
-            if (arrayParent.arraySize > 0)
-                bgRect.height += HEIGHT_SPACING;
-            EditorGUI.DrawRect(bgRect, gray);
-
-            //draw title
-            Rect titleRect = new Rect(position)
-            {
-                y = position.y + lineHight,
-                x = position.x + PADDING_LEFT,
-                width = position.width - PADDING
-            };
-
-            //draw elements
-            bool hasObjectReference = false;
-            Rect elementRect = new Rect(titleRect)
-            {
-                y = titleRect.y + titleRect.height
-            };
-            for (int i = 0; i < arrayParent.arraySize; i++)
-            {
-                hasObjectReference |= RenderMember(
-                    new Rect(elementRect) { y = elementRect.y + lineHight * i },
-                    i,
-                    arrayParent.GetArrayElementAtIndex(i)
-                );
-            }
-
-            RenderMenu(titleRect, arrayParent, hasObjectReference);
-        }
         protected virtual bool RenderMember(Rect position, int index, SerializedProperty memberNode)
         {
             Rect indexRect = new Rect(position)
             {
-                width = 60f,
+                x = position.x + HorizontalSpacing,
+                width = ArrayMemberTitleWidth - HorizontalSpacing
             },
-                valueRect = new Rect(indexRect)
-                {
-                    x = indexRect.x + indexRect.width + 2,
-                    width = position.width - indexRect.width - QUAD_WIDTH
-                },
-                optionsRect = new Rect(valueRect)
-                {
-                    x = valueRect.x + valueRect.width + 2,
-                    width = QUAD_WIDTH,
-                };
+            valueRect = new Rect(indexRect)
+            {
+                x = indexRect.x + indexRect.width + HorizontalSpacing,
+                width = position.width - indexRect.width - HorizontalSpacing - QuadWidth
+            },
+            optionsRect = new Rect(valueRect)
+            {
+                x = valueRect.x + valueRect.width + HorizontalSpacing,
+                width = QuadWidth,
+            };
 
-            EditorGUI.LabelField(indexRect, $"  [{index.ToString().PadLeft(3, ' ')}]");
+            EditorGUI.LabelField(indexRect, $"Element {index}");
             RenderMemberValue(valueRect, memberNode, Node.ValueType.GetElementType());
             if (memberNode.propertyType == SerializedPropertyType.ObjectReference
-                       && EditorGUI.Toggle(optionsRect, false, OPTIONS_STYLE))
+                       && EditorGUI.Toggle(optionsRect, false, OperationStyle))
             {
                 Utility.PopupComponents(
                     Root,
@@ -1825,19 +1849,27 @@ namespace XOR.Serializables.TsProperties
         public override float GetHeight()
         {
             var height = base.GetLineHeight();
-            if (Node != null)
+            if (Node != null && Node.ValueNode.isExpanded)
             {
-                var arrayParent = Node.ValueNode;
-                if (arrayParent.isExpanded)
-                {
-                    height += base.GetLineHeight() * (arrayParent.arraySize + 1) + HEIGHT_SPACING;
-                    if (arrayParent.arraySize > 0)
-                        height += HEIGHT_SPACING;
-                }
+                height += (base.GetLineHeight() + VerticalSpacing) * (Node.ValueNode.arraySize + 1);
+                height += VerticalSpacingDouble;
             }
             return height;
         }
     }
+
+    internal class UnknownRenderer : Renderer
+    {
+        protected override void RenderValue(Rect position, Rect valueRect)
+        {
+            using (new EditorGUI.DisabledScope(true))
+            {
+                string typeName = (Node.ExplicitValueType != null ? Node.ExplicitValueType : Node.ValueType).FullName;
+                EditorGUI.LabelField(valueRect, new GUIContent(typeName, $"未实现编辑的类型: {typeName}"), GUI.skin.textField);
+            }
+        }
+    }
+
 
     [RenderTarget(typeof(XOR.Serializables.Number))]
     internal class NumberRenderer : Renderer
@@ -1938,7 +1970,7 @@ namespace XOR.Serializables.TsProperties
         }
         protected override void RenderOperation(Rect optionsRect)
         {
-            if (EditorGUI.Toggle(optionsRect, false, OPTIONS_STYLE))
+            if (EditorGUI.Toggle(optionsRect, false, OperationStyle))
             {
                 Utility.PopupComponentsAndTypes(
                     Root,
@@ -1950,8 +1982,93 @@ namespace XOR.Serializables.TsProperties
         }
     }
 
+
+    [RenderTarget(typeof(XOR.Serializables.NumberArray))]
+    internal class NumberArrayRenderer : ArrayRenderer
+    {
+        protected override void RenderMemberValue(Rect valueRect, SerializedProperty node, Type type)
+        {
+            var value = node.doubleValue;
+            var newValue = EditorGUI.DoubleField(valueRect, string.Empty, value);
+            if (Math.Abs(newValue - value) > float.Epsilon)
+            {
+                node.doubleValue = newValue;
+                Dirty |= true;
+            }
+        }
+    }
+    [RenderTarget(typeof(XOR.Serializables.BigintArray))]
+    internal class BigintArrayRenderer : ArrayRenderer
+    {
+        protected override void RenderMemberValue(Rect valueRect, SerializedProperty node, Type type)
+        {
+            var value = node.longValue;
+            var newValue = EditorGUI.LongField(valueRect, string.Empty, value);
+            if (newValue != value)
+            {
+                node.longValue = newValue;
+                Dirty |= true;
+            }
+        }
+    }
+    [RenderTarget(typeof(XOR.Serializables.StringArray))]
+    internal class StringArrayRenderer : ArrayRenderer
+    {
+        protected override void RenderMemberValue(Rect valueRect, SerializedProperty node, Type type)
+        {
+            var value = node.stringValue;
+            var newValue = EditorGUI.TextField(valueRect, string.Empty, value);
+            if (newValue != value)
+            {
+                node.stringValue = newValue;
+                Dirty |= true;
+            }
+        }
+    }
+    [RenderTarget(typeof(XOR.Serializables.BooleanArray))]
+    internal class BooleanArrayRenderer : ArrayRenderer
+    {
+        protected override void RenderMemberValue(Rect valueRect, SerializedProperty node, Type type)
+        {
+            var value = node.boolValue;
+            var newValue = EditorGUI.Toggle(valueRect, string.Empty, value);
+            if (newValue != value)
+            {
+                node.boolValue = newValue;
+                Dirty |= true;
+            }
+        }
+    }
+    [RenderTarget(typeof(XOR.Serializables.Vector2Array))]
+    internal class Vector2ArrayRenderer : ArrayRenderer
+    {
+        protected override void RenderMemberValue(Rect valueRect, SerializedProperty node, Type type)
+        {
+            var value = node.vector2Value;
+            var newValue = EditorGUI.Vector2Field(valueRect, string.Empty, value);
+            if (newValue != value)
+            {
+                node.vector2Value = newValue;
+                Dirty |= true;
+            }
+        }
+    }
+    [RenderTarget(typeof(XOR.Serializables.Vector3Array))]
+    internal class Vector3ArrayRenderer : ArrayRenderer
+    {
+        protected override void RenderMemberValue(Rect valueRect, SerializedProperty node, Type type)
+        {
+            var value = node.vector3Value;
+            var newValue = EditorGUI.Vector3Field(valueRect, string.Empty, value);
+            if (newValue != value)
+            {
+                node.vector3Value = newValue;
+                Dirty |= true;
+            }
+        }
+    }
     [RenderTarget(typeof(XOR.Serializables.ObjectArray))]
-    class ObjectArrayRenderer : ArrayRenderer
+    internal class ObjectArrayRenderer : ArrayRenderer
     {
         protected override void RenderMemberValue(Rect valueRect, SerializedProperty node, Type type)
         {
