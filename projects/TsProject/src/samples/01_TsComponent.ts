@@ -33,7 +33,7 @@ export class Sample02 extends xor.TsComponent {
     declare private _prop8: Transform[];
 }
 /**
- * 指定RawType丶指定DefaultValue和指定range的演示
+ * 指定RawType丶DefaultValue和Range的演示
  */
 @xor.guid("d2ea683a-0e55-41a2-b837-b7e7c2a1fee4")
 export class Sample03 extends xor.TsComponent {
