@@ -21,13 +21,16 @@ namespace XOR
             Program program = EditorApplication.Instance?.Program;
             if (program == null)
                 return "Initializing";
-
-            string stateStr = Enum.GetName(typeof(ProgramState), program.state);
-            if (!string.IsNullOrEmpty(program.stateMessage))
-            {
-                stateStr += $"({program.stateMessage})";
-            }
-            return stateStr;
+            return Enum.GetName(typeof(ProgramState), program.state);
+        }
+        public static string GetCompileStatus()
+        {
+            if (!IsRunning())
+                return "UNKNOWN";
+            Program program = EditorApplication.Instance?.Program;
+            if (program == null || string.IsNullOrEmpty(program.compile))
+                return "-";
+            return program.compile;
         }
         public static string GetScripts()
         {

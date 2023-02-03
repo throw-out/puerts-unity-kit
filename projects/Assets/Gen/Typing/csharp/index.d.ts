@@ -26467,7 +26467,7 @@ declare namespace CS {
             public errors: number
             public scripts: number
             public state: XOR.Services.ProgramState
-            public stateMessage: string
+            public compile: string
             public root: string
             public get Statements(): System.Collections.Generic.Dictionary$2<string, XOR.Services.Statement>;
             public GetStatement($guid: string, $create?: boolean): XOR.Services.Statement

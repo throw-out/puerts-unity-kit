@@ -29,8 +29,8 @@ namespace XOR.Services
         public int scripts;
         /// <summary>当前状态  </summary>
         public ProgramState state;
-        /// <summary>状态值  </summary>
-        public string stateMessage;
+        /// <summary>编译状态值  </summary>
+        public string compile;
         /// <summary>项目根路径 </summary>
         public string root;
         public Dictionary<string, Statement> Statements { get; private set; }
@@ -61,7 +61,7 @@ namespace XOR.Services
         {
             this.errors = 0;
             this.state = ProgramState.Pending;
-            this.stateMessage = string.Empty;
+            this.compile = string.Empty;
             this.Statements.Clear();
         }
     }

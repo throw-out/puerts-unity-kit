@@ -89,17 +89,16 @@ class Workflow {
     }
     private _createWatcher(path: string) {
         const fs: typeof nodefs = require("fs");
-        const extNames = [".ts", ".tsx"];
+        const extNames = [".ts", ".tsx"], listenr = (event: "change" | "rename", filename: string) => {
+            if (typeof (filename) !== "string" || !extNames.includes(Path.GetExtension(filename)))
+                return;
+            this.change(Path.GetFullPath(Path.Combine(path, filename)));
+        };
         const watcher = fs.watch(path, {
             encoding: "utf8",
             persistent: true,
             recursive: true,
-        });
-        watcher.on("change", (event, filename) => {
-            if (typeof (filename) !== "string" || !extNames.includes(Path.GetExtension(filename)))
-                return;
-            this.change(Path.GetFullPath(Path.Combine(path, filename)));
-        });
+        }, listenr);
 
         xor.globalListener.quit.add(() => watcher.close());
         return watcher;

@@ -9,7 +9,7 @@ let program: services.Program;
 
 xor.globalWorker.on(WorkerEvent.StartProgream, (data: { project: string, program: csharp.XOR.Services.Program }) => {
     data.program.state = csharp.XOR.Services.ProgramState.Scanning;
-    data.program.stateMessage = '';
+    data.program.compile = '';
 
     const timer = new Timer();
 

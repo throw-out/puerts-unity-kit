@@ -33,6 +33,18 @@ enum DecoratorFlags {
     Route = "xor.route",
     Field = "xor.field",
 }
+class Timer {
+    private _start: number;
+    constructor() {
+        this.reset();
+    }
+    public reset() {
+        this._start = new Date().valueOf();
+    }
+    public duration() {
+        return new Date().valueOf() - this._start;
+    }
+}
 
 /**读取tsconfig.json文件并反序化成对象
  * @param path 
@@ -125,25 +137,24 @@ export function parseConfigFile(tsconfigFile: string, options?: {
 export class Program {
     private readonly cp: csharp.XOR.Services.Program;
 
-    private readonly watch: ts.Watch<ts.BuilderProgram>;
     private readonly program: ts.Program;
     private readonly checker: ts.TypeChecker;
 
     private readonly types: Map<string, ts.ClassDeclaration>;
-
-    private readonly sourceHash: Map<string, string>;
+    private readonly sourceTypes: Map<string, ts.ClassDeclaration[]>;
     private readonly sourceDefinitions: Map<string, TypeDefinition[]>;
 
     private readonly throttler: Throttler;
 
     //是否正在进行解析中
     private resolving: boolean;
-    private pending: Map<string, string>;
+    private pending: Set<string>;
 
     constructor(cp: csharp.XOR.Services.Program, rootNames: string[], options: ts.CompilerOptions) {
         cp.state = csharp.XOR.Services.ProgramState.Compiling;
-        cp.stateMessage = '';
 
+        let timer = new Timer();
+        cp.compile = 'compiling';
         this.cp = cp;
         this.program = ts.createProgram({
             rootNames,
@@ -154,8 +165,11 @@ export class Program {
             }
         });
         this.checker = this.program.getTypeChecker();
+        cp.compile = `${timer.duration()}ms`;
+        cp.errors = ts.getPreEmitDiagnostics(this.program).length;
+
         this.types = new Map();
-        this.sourceHash = new Map();
+        this.sourceTypes = new Map();
         this.sourceDefinitions = new Map();
 
         this.throttler = new Throttler(10, 1);
@@ -163,29 +177,30 @@ export class Program {
         this.resolves();
     }
     private async resolves() {
+
         this.resolving = true;
         await this.resolveSources();
-        await this.resolveComponents();
-
         await this.resolveDefinitions();
+
+        this.cp.state = csharp.XOR.Services.ProgramState.Allocating;
+        for (let [fileName, declarations] of this.sourceDefinitions) {
+            await this.throttler.complete();
+            this.pushDefinitions(declarations);
+        }
         this.resolving = false;
 
         this.cp.state = csharp.XOR.Services.ProgramState.Completed;
-        this.cp.stateMessage = '';
 
         this.resolvePending();
     }
-    /**文件修改状态 */
-    public change(path: string) {
-        console.log("file change: " + path);
-        path = Path.GetFullPath(path).replace(/\\/g, "/");
-        //文件已同步(被Program修改, 则取消此次操作)
-        let hash = File.Exists(path) ? HashUtil.SHA256File(path) : null;
-        if (hash && this.sourceHash.get(path) === hash)
-            return;
-        //文件新增丶更新或删除
-        if (!this.pending) this.pending = new Map();
-        this.pending.set(path, hash);
+    /**文件修改状态: 新增丶更新或删除 */
+    public change(file: string) {
+        //console.log("file change: " + file);
+        file = Path.GetFullPath(file).replace(/\\/g, "/");
+        if (!this.pending) {
+            this.pending = new Set()
+        }
+        this.pending.add(file);
 
         this.resolvePending();
     }
@@ -204,9 +219,9 @@ export class Program {
         this.cp.scripts = sourceFiles.length;
 
         this.cp.state = csharp.XOR.Services.ProgramState.Analyzing;
-        this.cp.stateMessage = 'file';
         //开始解析文件
         this.types.clear();
+        this.sourceTypes.clear();
         for (const source of sourceFiles) {
             if (!source.statements)
                 continue;
@@ -241,16 +256,6 @@ export class Program {
             }
         }
     }
-    private resolveClassDeclaration(node: ts.ClassDeclaration): Promise<void>;
-    private resolveClassDeclaration(node: ts.ClassDeclaration, sync: true): void;
-    private async resolveClassDeclaration() {
-        let node: ts.ClassDeclaration = arguments[0],
-            sync: boolean = arguments[1];
-        if (!sync) {
-            await this.throttler.complete();
-        }
-        this.types.set(this.getAbsoluteName(node), node);
-    }
     private resolveModuleDeclaration(node: ts.ModuleDeclaration): Promise<void>;
     private resolveModuleDeclaration(node: ts.ModuleDeclaration, sync: true): void;
     private async resolveModuleDeclaration() {
@@ -270,20 +275,33 @@ export class Program {
             }
         }
     }
+    private resolveClassDeclaration(node: ts.ClassDeclaration): Promise<void>;
+    private resolveClassDeclaration(node: ts.ClassDeclaration, sync: true): void;
+    private async resolveClassDeclaration() {
+        let node: ts.ClassDeclaration = arguments[0],
+            sync: boolean = arguments[1];
+        if (!sync) {
+            await this.throttler.complete();
+        }
+        this.types.set(this.getAbsoluteName(node), node);
+
+        let types = this.sourceTypes.get(node.getSourceFile().fileName);
+        if (!types) {
+            types = [];
+            this.sourceTypes.set(node.getSourceFile().fileName, types);
+        }
+        types.push(node);
+    }
     //#endregion
 
 
     //#region Component-Decorator定义处理流程
-    private resolveComponents(): Promise<void>;
-    private resolveComponents(sync: true): void;
-    private async resolveComponents() {
-        let sync: boolean = arguments[0];
+    private resolveDefinitions(): Promise<void>;
+    private resolveDefinitions(files: string[]): void;
+    private async resolveDefinitions() {
+        let files: string[] = arguments[0];
 
-        this.sourceDefinitions.clear();
-        for (let [absoluteName, node] of this.types) {
-            if (!sync) {
-                await this.throttler.complete();
-            }
+        let resolve = (absoluteName: string, node: ts.ClassDeclaration) => {
             let definition: TypeDefinition = {
                 absoluteName,
                 isExport: util.isExport(node),
@@ -291,18 +309,36 @@ export class Program {
                 isAbstract: util.isAbstract(node),
                 isComponent: this.isInheritFromTsComponent(node) && !this.isTsComponent(node)
             };
-            this.resolveComponentDecorator(node, definition);
+            this.resolveDefinitionDecorator(node, definition);
 
-            let path = node.getSourceFile().fileName;
-            let definitions = this.sourceDefinitions.get(path);
+            let file = node.getSourceFile().fileName;
+            let definitions = this.sourceDefinitions.get(file);
             if (!definitions) {
                 definitions = [];
-                this.sourceDefinitions.set(path, definitions);
+                this.sourceDefinitions.set(file, definitions);
             }
             definitions.push(definition);
+        };
+
+        if (files && files.length > 0) {
+            for (let file of files) {
+                let types = this.sourceTypes.get(file);
+                if (!types || types.length === 0)
+                    continue;
+                for (let node of types) {
+                    resolve(this.getAbsoluteName(node), node);
+                }
+            }
+        }
+        else {
+            this.sourceDefinitions.clear();
+            for (let [absoluteName, node] of this.types) {
+                await this.throttler.complete();
+                resolve(absoluteName, node)
+            }
         }
     }
-    private resolveComponentDecorator(node: ts.ClassDeclaration, define: TypeDefinition) {
+    private resolveDefinitionDecorator(node: ts.ClassDeclaration, define: TypeDefinition) {
         if (!node.modifiers)
             return;
         for (let modifier of node.modifiers) {
@@ -361,57 +397,53 @@ export class Program {
         return newSourceFile;
     }
     /**移除SourceFile所有定义 */
-    private removeDeclarations(path: string, removeSourceFile?: boolean) {
-        let declarations = this.sourceDefinitions.get(path);
+    private removeDeclarations(file: string) {
+        let declarations = this.sourceDefinitions.get(file);
         //移除文件声明
         declarations?.forEach(declaration => {
             this.types.delete(declaration.absoluteName);
             this.cp.RemoveStatement(declaration.guid);
         });
-        this.sourceHash.delete(path);
-        this.sourceDefinitions.delete(path);
-        //将sourceFile内容置为null
-        let sourceFile: ts.SourceFile;
-        if (removeSourceFile && (sourceFile = this.program.getSourceFile(path))) {
-            ts.updateSourceFile(sourceFile, "", {
-                span: {
-                    start: 0,
-                    length: 0
-                },
-                newLength: 0,
-            }, false);
-        }
+        this.sourceTypes.delete(file);
+        this.sourceDefinitions.delete(file);
     }
-    /**
-     * 更新了SourceFile文件, 重建TypeChecker对象
+    /**更新了SourceFile文件, 重建TypeChecker对象
      * @param files 
      */
-    private rebuildTypeChecker(...updateFiles: string[]) {
+    private rebuildTypeChecker(...files: string[]) {
         let rootNames = [...this.program.getRootFileNames()];
 
-        let needAnalyzing: string[] = [];
-        for (let path of updateFiles) {
-            let oldSourceFile = this.program.getSourceFile(path);
+        let updateFiles: string[] = [], change: number = 0;
+        for (let file of files) {
+            let oldSourceFile = this.program.getSourceFile(file);
             if (!oldSourceFile) {                       //new file
-                rootNames.push(path);
-                needAnalyzing.push(path);
+                rootNames.push(file);
+                updateFiles.push(file);
+                change++;
                 continue;
             }
-            if (!File.Exists(path)) {                   //delete file
-                let idx = rootNames.indexOf(path);
+            let { exist, content: newContent, error } = util.tryReadFile(file);
+            if (error) {
+                console.warn(error);
+                this.pending.add(file);
+                continue;
+            }
+            if (!exist) {                               //delete file
+                let idx = rootNames.indexOf(file);
                 if (idx >= 0) {
                     rootNames.splice(idx, 1);
-                    this.removeDeclarations(path);
+                    this.removeDeclarations(file);
+                    change++;
                 }
                 continue;
             }
-            let newContent = File.ReadAllText(path);
             if (newContent === oldSourceFile.text) {    //same content
                 continue;
             }
             //更新文件内容
-            this.removeDeclarations(path);
-            needAnalyzing.push(path);
+            this.removeDeclarations(file);
+            updateFiles.push(file);
+            change++;
             ts.updateSourceFile(
                 oldSourceFile,
                 newContent,
@@ -419,7 +451,11 @@ export class Program {
                 false
             );
         }
+        if (change === 0 && files.length !== 0)
+            return null;
         //重建TypeChecker对象
+        let timer = new Timer();
+        this.cp.compile = 'compiling';
         //@ts-ignore
         this.program = ts.createProgram({
             rootNames,
@@ -428,13 +464,14 @@ export class Program {
         });
         //@ts-ignore
         this.checker = this.program.getTypeChecker();
+        this.cp.compile = `${timer.duration()}ms`;
+        this.cp.errors = ts.getPreEmitDiagnostics(this.program).length;
 
         //重新解析文件
-        if (needAnalyzing.length > 0) {
+        if (updateFiles.length > 0) {
             this.cp.state = csharp.XOR.Services.ProgramState.Analyzing;
-            this.cp.stateMessage = '';
-            for (let path of needAnalyzing) {
-                let sourceFile = this.program.getSourceFile(path);
+            for (let file of updateFiles) {
+                let sourceFile = this.program.getSourceFile(file);
                 if (!sourceFile || !sourceFile.statements)
                     continue;
                 this.resolveStatements(sourceFile.statements, true);
@@ -442,6 +479,7 @@ export class Program {
 
             this.cp.state = csharp.XOR.Services.ProgramState.Completed;
         }
+        return updateFiles;
     }
     //#endregion
 
@@ -452,77 +490,27 @@ export class Program {
             return;
 
         this.resolving = true;
-        let next = () => {
-            this.resolving = false;
-            this.resolvePending();
-        };
 
-        let path = util.at(this.pending.keys(), 0), hash = this.pending.get(path),
-            declarations = this.sourceDefinitions.get(path);
-        this.pending.delete(path);
-
-        let sourceFile = this.program.getSourceFile(path);
-        //如果文件已删除
-        if (!File.Exists(path)) {
-            this.removeDeclarations(path, !!sourceFile);
-            if (sourceFile) {
-                this.rebuildTypeChecker();
-            }
-
+        let files = [...this.pending];
+        this.pending.clear();
+        let newFiles = this.rebuildTypeChecker(...files);
+        if (newFiles && newFiles.length > 0) {
             //重新解析关系
-            await this.resolveComponents();
-
-            next();
-            return;
-        }
-        //锁定文件并验证hash
-        try {
-            let newContent = File.ReadAllText(path);
-            let newHash = csharp.XOR.HashUtil.SHA256(newContent);
-            //如果文件与初始hash不同或已与SourceFile同步, 则取消接下来的执行
-            if (newHash !== hash || newHash === this.sourceHash.get(path)) {
-                return;
-            }
-            //更新文件声明
-            if (sourceFile) {
-                this.removeDeclarations(path, false);
-                //更新SourceFile内容
-                sourceFile = ts.updateSourceFile(
-                    sourceFile,
-                    newContent,
-                    util.getTextChangeRange(sourceFile.text, newContent),
-                    false
-                );
-                this.rebuildTypeChecker(path);
-            }
-            //新增SourceFile文件
-            else {
-                this.rebuildTypeChecker(path);
-
-                sourceFile = this.program.getSourceFile(path);
-            }
-            //重新解析关系
-            await this.resolveComponents();
-
-            declarations = this.sourceDefinitions.get(path);
-            if (declarations && declarations.length > 0) {
+            this.resolveDefinitions(newFiles);
+            //重新推送定义
+            for (let file of newFiles) {
+                let declarations = this.sourceDefinitions.get(file);
+                if (!declarations || declarations.length === 0)
+                    continue;
                 this.pushDefinitions(declarations);
             }
-        } catch (e) {
-            console.warn(e);
-        } finally {
-            next();
         }
-    }
-    private async resolveDefinitions() {
-        this.cp.state = csharp.XOR.Services.ProgramState.Allocating;
-        this.cp.stateMessage = '';
+        await new Promise<void>((resolve) => setTimeout(resolve, 1));
 
-        for (let [fileName, declarations] of this.sourceDefinitions) {
-            await this.throttler.complete();
-            this.pushDefinitions(declarations);
-        }
+        this.resolving = false;
+        this.resolvePending();
     }
+
     private pushDefinitions(declarations: TypeDefinition[]) {
         let newSourceFile: ts.SourceFile;
         //分配新的guid
@@ -544,7 +532,6 @@ export class Program {
         }
         //保存SourceFile文件
         if (newSourceFile) {
-            this.sourceHash.delete(newSourceFile.fileName);
             File.WriteAllText(newSourceFile.fileName, newSourceFile.text);
             this.rebuildTypeChecker();
         }
@@ -746,16 +733,6 @@ export class Program {
                 break;
         }
         return { type, range, value };
-    }
-
-    private getSourceFileHash(node: ts.Node) {
-        let path = node.getSourceFile().fileName;
-        let hash = this.sourceHash.get(path);
-        if (!hash) {
-            hash = HashUtil.SHA256(node.getSourceFile().text);
-            this.sourceHash.set(path, hash);
-        }
-        return hash;
     }
 
     //#region 类型方法
@@ -1341,20 +1318,21 @@ const util = new class {
         return { type, enumerable };
     }
 
-    /**读取System.IO.Stream
-     * @param stream 
-     * @param length 
+    /**读取文件
+     * @param path 
+     * @returns 
      */
-    public readStream(stream: csharp.System.IO.Stream, length: number): csharp.System.Array$1<number>;
-    public readStream(stream: csharp.System.IO.Stream, length: number, toBuffer: true): ArrayBuffer;
-    public readStream() {
-        let stream: csharp.System.IO.Stream = arguments[0], length: number = arguments[1], toBuffer: boolean = arguments[2];
-        let bytes = csharp.System.Array.CreateInstance($typeof(csharp.System.Byte), length) as csharp.System.Array$1<number>;
-        stream.Read(bytes, 0, length);
-        if (toBuffer) {
-            return csharp.XOR.BufferUtil.ToBuffer(bytes);
+    public tryReadFile(path: string) {
+        let exist: boolean, content: string, error: Error;
+        try {
+            exist = File.Exists(path);
+            if (exist) {
+                content = File.ReadAllText(path);
+            }
+        } catch (e) {
+            error = e;
         }
-        return bytes;
+        return { exist, content, error }
     }
     /**取IterableIterator<T>下表 */
     public at<T>(iterator: IterableIterator<T>, index: number) {

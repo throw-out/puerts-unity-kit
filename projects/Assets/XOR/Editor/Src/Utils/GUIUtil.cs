@@ -58,6 +58,10 @@ namespace XOR
             GUILayout.Label(EditorApplicationUtil.GetStatus());
             GUILayout.EndHorizontal();
             GUILayout.BeginHorizontal();
+            GUILayout.Label("编译状态: ", GUILayout.ExpandWidth(false));
+            GUILayout.Label(EditorApplicationUtil.GetCompileStatus());
+            GUILayout.EndHorizontal();
+            GUILayout.BeginHorizontal();
             GUILayout.Label("编译错误: ", GUILayout.ExpandWidth(false));
             GUILayout.Label(EditorApplicationUtil.GetErrors());
             GUILayout.EndHorizontal();
