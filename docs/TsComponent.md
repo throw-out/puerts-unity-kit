@@ -6,7 +6,7 @@
 - 枚举类型如不指定value, 其默认值为0(`System.Int32`)或null(`System.String`)
 - AST解析器运行在子线程中, 指定value时的表达式必需要能在子线程中访问: `例如UnityEngine.Vector2.right是可以的, 而UnityEngine.Application.dataPath是不可以的`
 
-## 支持的类型
+## 内置类型
 |  类型   | 基础 | 数组|
 | ------- | --- | --- |
 | string  | √   | √   |
