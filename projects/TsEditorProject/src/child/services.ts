@@ -177,7 +177,7 @@ export class Program {
     }
     /**文件修改状态 */
     public change(path: string) {
-        //console.log("file change: " + path);
+        console.log("file change: " + path);
         path = Path.GetFullPath(path).replace(/\\/g, "/");
         //文件已同步(被Program修改, 则取消此次操作)
         let hash = File.Exists(path) ? HashUtil.SHA256File(path) : null;
@@ -191,24 +191,6 @@ export class Program {
     }
 
     //#region SourceFile 处理流程
-    /**
-     * 更新了SourceFile文件, 重建Program对象
-     */
-    private rebuildProgram(...newFiles: string[]) {
-        //@ts-ignore
-        this.program = ts.createProgram({
-            rootNames: [...this.program.getRootFileNames(), ...newFiles],
-            options: this.program.getCompilerOptions(),
-            oldProgram: this.program
-        });
-        //@ts-ignore
-        this.checker = this.program.getTypeChecker();
-        //重新解析文件
-        this.resolveSources(true);
-
-        this.cp.state = csharp.XOR.Services.ProgramState.Completed;
-        this.cp.stateMessage = '';
-    }
     /**
      * 解析SourceFiles
      */
@@ -225,124 +207,83 @@ export class Program {
         this.cp.stateMessage = 'file';
         //开始解析文件
         this.types.clear();
-        if (sync) {
-            for (const source of sourceFiles) {
-                if (!source.statements)
-                    continue;
+        for (const source of sourceFiles) {
+            if (!source.statements)
+                continue;
+            if (sync) {
                 this.resolveStatements(source.statements, true);
-            }
-        } else {
-            for (const source of sourceFiles) {
-                if (!source.statements)
-                    continue;
+            } else {
                 await this.resolveStatements(source.statements);
             }
         }
     }
-    private resolveStatements(statements: ts.NodeArray<ts.Statement>): Promise<string[]>;
-    private resolveStatements(statements: ts.NodeArray<ts.Statement>, sync: true): string[];
-    private resolveStatements() {
+    private resolveStatements(statements: ts.NodeArray<ts.Statement>): Promise<void>;
+    private resolveStatements(statements: ts.NodeArray<ts.Statement>, sync: true): void;
+    private async resolveStatements() {
         let statements: ts.NodeArray<ts.Statement> = arguments[0],
             sync: boolean = arguments[1];
-        if (sync) {
-            let absoluteNames = new Array<string>();
-            for (let statement of statements) {
-                switch (statement.kind) {
-                    case ts.SyntaxKind.ClassDeclaration:
-                        absoluteNames.push(
-                            this.resolveClassDeclaration(<ts.ClassDeclaration>statement, true)
-                        );
-                        break;
-                    case ts.SyntaxKind.ModuleDeclaration:
-                        absoluteNames.push(...
-                            this.resolveModuleDeclaration(<ts.ModuleDeclaration>statement, true)
-                        );
-                        break;
-                }
-            }
-            return absoluteNames;
-        } else {
-            return new Promise<string[]>(async (resolve) => {
-                let absoluteNames = new Array<string>();
-                for (let statement of statements) {
-                    switch (statement.kind) {
-                        case ts.SyntaxKind.ClassDeclaration:
-                            absoluteNames.push(
-                                await this.resolveClassDeclaration(<ts.ClassDeclaration>statement)
-                            );
-                            break;
-                        case ts.SyntaxKind.ModuleDeclaration:
-                            absoluteNames.push(...
-                                await this.resolveModuleDeclaration(<ts.ModuleDeclaration>statement)
-                            );
-                            break;
+        for (let statement of statements) {
+            switch (statement.kind) {
+                case ts.SyntaxKind.ClassDeclaration:
+                    if (sync) {
+                        this.resolveClassDeclaration(<ts.ClassDeclaration>statement, true);
+                    } else {
+                        await this.resolveClassDeclaration(<ts.ClassDeclaration>statement);
                     }
-                }
-                resolve(absoluteNames);
-            });
+                    break;
+                case ts.SyntaxKind.ModuleDeclaration:
+                    if (sync) {
+                        this.resolveModuleDeclaration(<ts.ModuleDeclaration>statement, true);
+                    } else {
+                        await this.resolveModuleDeclaration(<ts.ModuleDeclaration>statement);
+                    }
+                    break;
+            }
         }
     }
-    private resolveClassDeclaration(node: ts.ClassDeclaration): Promise<string>;
-    private resolveClassDeclaration(node: ts.ClassDeclaration, sync: true): string;
-    private resolveClassDeclaration() {
+    private resolveClassDeclaration(node: ts.ClassDeclaration): Promise<void>;
+    private resolveClassDeclaration(node: ts.ClassDeclaration, sync: true): void;
+    private async resolveClassDeclaration() {
         let node: ts.ClassDeclaration = arguments[0],
             sync: boolean = arguments[1];
-
-        let absoluteName = this.getAbsoluteName(node);
-        this.types.set(absoluteName, node);
-        if (sync) {
-            return absoluteName;
-        } else {
-            return new Promise<string>(async (resolve) => {
-                await this.throttler.complete();
-                resolve(absoluteName);
-            });
+        if (!sync) {
+            await this.throttler.complete();
         }
+        this.types.set(this.getAbsoluteName(node), node);
     }
-    private resolveModuleDeclaration(node: ts.ModuleDeclaration): Promise<string[]>;
-    private resolveModuleDeclaration(node: ts.ModuleDeclaration, sync: true): string[];
-    private resolveModuleDeclaration() {
+    private resolveModuleDeclaration(node: ts.ModuleDeclaration): Promise<void>;
+    private resolveModuleDeclaration(node: ts.ModuleDeclaration, sync: true): void;
+    private async resolveModuleDeclaration() {
         let node: ts.ModuleDeclaration = arguments[0],
             sync: boolean = arguments[1];
-
-        if (sync) {
-            let absoluteNames: string[];
-            for (let childNode of node.getChildren()) {
-                switch (childNode.kind) {
-                    case ts.SyntaxKind.ModuleBlock:
-                        absoluteNames = this.resolveStatements((<ts.ModuleBlock>childNode).statements, true);
-                        break;
-                    case ts.SyntaxKind.Identifier:
-                        break;
-                }
-            }
-            return absoluteNames ?? [];
-        } else {
-            return new Promise<string[]>(async (resolve) => {
-                let absoluteNames = new Array<string>();
-                for (let childNode of node.getChildren()) {
-                    switch (childNode.kind) {
-                        case ts.SyntaxKind.ModuleBlock:
-                            absoluteNames.push(...
-                                await this.resolveStatements((<ts.ModuleBlock>childNode).statements)
-                            );
-                            break;
-                        case ts.SyntaxKind.Identifier:
-                            break;
+        for (let childNode of node.getChildren()) {
+            switch (childNode.kind) {
+                case ts.SyntaxKind.ModuleBlock:
+                    if (sync) {
+                        this.resolveStatements((<ts.ModuleBlock>childNode).statements, sync)
+                    } else {
+                        await this.resolveStatements((<ts.ModuleBlock>childNode).statements)
                     }
-                }
-                resolve(absoluteNames);
-            });
+                    break;
+                case ts.SyntaxKind.Identifier:
+                    break;
+            }
         }
     }
     //#endregion
 
 
     //#region Component-Decorator定义处理流程
+    private resolveComponents(): Promise<void>;
+    private resolveComponents(sync: true): void;
     private async resolveComponents() {
-        for (let [absoluteName, node] of this.types) {
-            await this.throttler.complete();
+        let sync: boolean = arguments[0];
 
+        this.sourceDefinitions.clear();
+        for (let [absoluteName, node] of this.types) {
+            if (!sync) {
+                await this.throttler.complete();
+            }
             let definition: TypeDefinition = {
                 absoluteName,
                 isExport: util.isExport(node),
@@ -351,7 +292,14 @@ export class Program {
                 isComponent: this.isInheritFromTsComponent(node) && !this.isTsComponent(node)
             };
             this.resolveComponentDecorator(node, definition);
-            this.resolveSourceDefinition(node, definition);
+
+            let path = node.getSourceFile().fileName;
+            let definitions = this.sourceDefinitions.get(path);
+            if (!definitions) {
+                definitions = [];
+                this.sourceDefinitions.set(path, definitions);
+            }
+            definitions.push(definition);
         }
     }
     private resolveComponentDecorator(node: ts.ClassDeclaration, define: TypeDefinition) {
@@ -376,15 +324,6 @@ export class Program {
                     break;
             }
         }
-    }
-    private resolveSourceDefinition(node: ts.Declaration, definition: TypeDefinition) {
-        let fileName = node.getSourceFile().fileName;
-        let definitions = this.sourceDefinitions.get(fileName);
-        if (!definitions) {
-            definitions = [];
-            this.sourceDefinitions.set(fileName, definitions);
-        }
-        definitions.push(definition);
     }
     /**为目标类分配指定内容 */
     private allocDecorator(node: ts.Node, decoratorContent: string) {
@@ -443,6 +382,67 @@ export class Program {
             }, false);
         }
     }
+    /**
+     * 更新了SourceFile文件, 重建TypeChecker对象
+     * @param files 
+     */
+    private rebuildTypeChecker(...updateFiles: string[]) {
+        let rootNames = [...this.program.getRootFileNames()];
+
+        let needAnalyzing: string[] = [];
+        for (let path of updateFiles) {
+            let oldSourceFile = this.program.getSourceFile(path);
+            if (!oldSourceFile) {                       //new file
+                rootNames.push(path);
+                needAnalyzing.push(path);
+                continue;
+            }
+            if (!File.Exists(path)) {                   //delete file
+                let idx = rootNames.indexOf(path);
+                if (idx >= 0) {
+                    rootNames.splice(idx, 1);
+                    this.removeDeclarations(path);
+                }
+                continue;
+            }
+            let newContent = File.ReadAllText(path);
+            if (newContent === oldSourceFile.text) {    //same content
+                continue;
+            }
+            //更新文件内容
+            this.removeDeclarations(path);
+            needAnalyzing.push(path);
+            ts.updateSourceFile(
+                oldSourceFile,
+                newContent,
+                util.getTextChangeRange(oldSourceFile.text, newContent),
+                false
+            );
+        }
+        //重建TypeChecker对象
+        //@ts-ignore
+        this.program = ts.createProgram({
+            rootNames,
+            options: this.program.getCompilerOptions(),
+            oldProgram: this.program
+        });
+        //@ts-ignore
+        this.checker = this.program.getTypeChecker();
+
+        //重新解析文件
+        if (needAnalyzing.length > 0) {
+            this.cp.state = csharp.XOR.Services.ProgramState.Analyzing;
+            this.cp.stateMessage = '';
+            for (let path of needAnalyzing) {
+                let sourceFile = this.program.getSourceFile(path);
+                if (!sourceFile || !sourceFile.statements)
+                    continue;
+                this.resolveStatements(sourceFile.statements, true);
+            }
+
+            this.cp.state = csharp.XOR.Services.ProgramState.Completed;
+        }
+    }
     //#endregion
 
     private async resolvePending() {
@@ -466,7 +466,7 @@ export class Program {
         if (!File.Exists(path)) {
             this.removeDeclarations(path, !!sourceFile);
             if (sourceFile) {
-                this.rebuildProgram();
+                this.rebuildTypeChecker();
             }
 
             //重新解析关系
@@ -476,17 +476,13 @@ export class Program {
             return;
         }
         //锁定文件并验证hash
-        let stream: csharp.System.IO.FileStream;
         try {
-            stream = File.OpenRead(path);
-            let _hash = csharp.XOR.HashUtil.SHA256(stream);
+            let newContent = File.ReadAllText(path);
+            let newHash = csharp.XOR.HashUtil.SHA256(newContent);
             //如果文件与初始hash不同或已与SourceFile同步, 则取消接下来的执行
-            if (_hash !== hash || _hash === this.sourceHash.get(path)) {
+            if (newHash !== hash || newHash === this.sourceHash.get(path)) {
                 return;
             }
-            let newContent = UTF8.GetString(util.readStream(stream, Number(stream.Length)));
-            stream.Close();
-            stream = null;
             //更新文件声明
             if (sourceFile) {
                 this.removeDeclarations(path, false);
@@ -497,11 +493,11 @@ export class Program {
                     util.getTextChangeRange(sourceFile.text, newContent),
                     false
                 );
-                this.rebuildProgram();
+                this.rebuildTypeChecker(path);
             }
             //新增SourceFile文件
             else {
-                this.rebuildProgram(path);
+                this.rebuildTypeChecker(path);
 
                 sourceFile = this.program.getSourceFile(path);
             }
@@ -515,7 +511,6 @@ export class Program {
         } catch (e) {
             console.warn(e);
         } finally {
-            stream?.Close();
             next();
         }
     }
@@ -551,7 +546,7 @@ export class Program {
         if (newSourceFile) {
             this.sourceHash.delete(newSourceFile.fileName);
             File.WriteAllText(newSourceFile.fileName, newSourceFile.text);
-            this.rebuildProgram();
+            this.rebuildTypeChecker();
         }
         //推送定义到C#
         for (let declaration of declarations) {
