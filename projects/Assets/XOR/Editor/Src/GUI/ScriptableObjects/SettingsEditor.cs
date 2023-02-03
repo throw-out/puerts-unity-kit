@@ -121,7 +121,7 @@ namespace XOR
             GUILayout.Space(HeightSpace);
             GUILayout.BeginHorizontal("HelpBox");
             GUILayout.Label(string.Empty, Skin.infoIcon);
-            GUILayout.Label("在部分Unity版本上System.IO.FileSystemWatcher存在BUG, 可使用nodejs fs.wacth来监听文件变化", Skin.labelArea, GUILayout.ExpandHeight(true));
+            GUILayout.Label("System.IO.FileSystemWatcher在部分Unity版本上不能正常工作, 可更新至最新LTS版后再次尝试, 或使用nodejs fs.wacth来替代FileWacther功能.", Skin.labelArea, GUILayout.ExpandHeight(true));
             GUILayout.EndHorizontal();
 
             if (!PuertsUtil.IsSupportNodejs())
