@@ -25945,8 +25945,39 @@ declare namespace CS {
             public static GetType($fullName: string): System.Type
             public GetType(): System.Type
         }
-        class TsComponent extends UnityEngine.MonoBehaviour {
+        class TsBehaviour extends UnityEngine.MonoBehaviour implements System.IDisposable {
             protected [__keep_incompatibility]: never;
+            public m_ClassName: string
+            public m_ModuleName: string
+            public m_ModulePath: string
+            public m_Line: number
+            public m_Column: number
+            public m_ModuleStack: string
+            public get IsActivated(): boolean;
+            public get IsStarted(): boolean;
+            public get IsDestroyed(): boolean;
+            public get IsEnable(): boolean;
+            public RemoveProxy($name: string): boolean
+            public AddProxy($name: string, $proxy: XOR.Proxy): void
+            public GetProxy($name: string): XOR.Proxy
+            public CreateProxy($name: string, $callback: System.Action): XOR.ProxyAction
+            public CreateProxyForBool($name: string, $callback: System.Action$1<boolean>): XOR.ProxyAction$1<boolean>
+            public CreateProxyForEventData($name: string, $callback: System.Action$1<UnityEngine.EventSystems.PointerEventData>): XOR.ProxyAction$1<UnityEngine.EventSystems.PointerEventData>
+            public CreateProxyForDrag($enter: System.Action$1<UnityEngine.EventSystems.PointerEventData>, $stay: System.Action$1<UnityEngine.EventSystems.PointerEventData>, $exit: System.Action$1<UnityEngine.EventSystems.PointerEventData>, $stayFrame?: boolean): XOR.OnDragProxy
+            public CreateProxyForCollision($enter: System.Action$1<UnityEngine.Collision>, $stay: System.Action$1<UnityEngine.Collision>, $exit: System.Action$1<UnityEngine.Collision>, $stayFrame?: boolean): XOR.OnCollisionProxy
+            public CreateProxyForCollision2D($enter: System.Action$1<UnityEngine.Collision2D>, $stay: System.Action$1<UnityEngine.Collision2D>, $exit: System.Action$1<UnityEngine.Collision2D>, $stayFrame?: boolean): XOR.OnCollision2DProxy
+            public CreateProxyForTrigger($enter: System.Action$1<UnityEngine.Collider>, $stay: System.Action$1<UnityEngine.Collider>, $exit: System.Action$1<UnityEngine.Collider>, $stayFrame?: boolean): XOR.OnTriggerProxy
+            public CreateProxyForTrigger2D($enter: System.Action$1<UnityEngine.Collider2D>, $stay: System.Action$1<UnityEngine.Collider2D>, $exit: System.Action$1<UnityEngine.Collider2D>, $stayFrame?: boolean): XOR.OnTrigger2DProxy
+            public Dispose(): void
+            public Dispose($destroy: boolean): void
+            public static DisposeAll(): void
+            public constructor()
+        }
+        class TsComponent extends XOR.TsBehaviour implements System.IDisposable, XOR.Serializables.IAccessor {
+            protected [__keep_incompatibility]: never;
+            public GetProperties(): System.Array$1<XOR.Serializables.ResultPair>
+            public SetProperty($key: string, $value: any): void
+            public SetPropertyListener($handler: System.Action$2<string, any>): void
             public constructor()
         }
         class Application extends XOR.SingletonMonoBehaviour$1<XOR.Application>
@@ -26356,34 +26387,6 @@ declare namespace CS {
             public set exit(value: System.Action$1<UnityEngine.Collider>);
             public constructor()
         }
-        class TsBehaviour extends UnityEngine.MonoBehaviour implements System.IDisposable {
-            protected [__keep_incompatibility]: never;
-            public m_ClassName: string
-            public m_ModuleName: string
-            public m_ModulePath: string
-            public m_Line: number
-            public m_Column: number
-            public m_ModuleStack: string
-            public get IsActivated(): boolean;
-            public get IsStarted(): boolean;
-            public get IsDestroyed(): boolean;
-            public get IsEnable(): boolean;
-            public RemoveProxy($name: string): boolean
-            public AddProxy($name: string, $proxy: XOR.Proxy): void
-            public GetProxy($name: string): XOR.Proxy
-            public CreateProxy($name: string, $callback: System.Action): XOR.ProxyAction
-            public CreateProxyForBool($name: string, $callback: System.Action$1<boolean>): XOR.ProxyAction$1<boolean>
-            public CreateProxyForEventData($name: string, $callback: System.Action$1<UnityEngine.EventSystems.PointerEventData>): XOR.ProxyAction$1<UnityEngine.EventSystems.PointerEventData>
-            public CreateProxyForDrag($enter: System.Action$1<UnityEngine.EventSystems.PointerEventData>, $stay: System.Action$1<UnityEngine.EventSystems.PointerEventData>, $exit: System.Action$1<UnityEngine.EventSystems.PointerEventData>, $stayFrame?: boolean): XOR.OnDragProxy
-            public CreateProxyForCollision($enter: System.Action$1<UnityEngine.Collision>, $stay: System.Action$1<UnityEngine.Collision>, $exit: System.Action$1<UnityEngine.Collision>, $stayFrame?: boolean): XOR.OnCollisionProxy
-            public CreateProxyForCollision2D($enter: System.Action$1<UnityEngine.Collision2D>, $stay: System.Action$1<UnityEngine.Collision2D>, $exit: System.Action$1<UnityEngine.Collision2D>, $stayFrame?: boolean): XOR.OnCollision2DProxy
-            public CreateProxyForTrigger($enter: System.Action$1<UnityEngine.Collider>, $stay: System.Action$1<UnityEngine.Collider>, $exit: System.Action$1<UnityEngine.Collider>, $stayFrame?: boolean): XOR.OnTriggerProxy
-            public CreateProxyForTrigger2D($enter: System.Action$1<UnityEngine.Collider2D>, $stay: System.Action$1<UnityEngine.Collider2D>, $exit: System.Action$1<UnityEngine.Collider2D>, $stayFrame?: boolean): XOR.OnTrigger2DProxy
-            public Dispose(): void
-            public Dispose($destroy: boolean): void
-            public static DisposeAll(): void
-            public constructor()
-        }
         class TsMessages extends UnityEngine.MonoBehaviour {
             protected [__keep_incompatibility]: never;
             public callback: XOR.ReceiveMessagesCallback
@@ -26398,9 +26401,11 @@ declare namespace CS {
             Invoke?: (eventName: string, args: System.Array$1<string>) => void;
         }
         var ReceiveMessagesCallback: { new(func: (eventName: string, args: System.Array$1<string>) => void): ReceiveMessagesCallback; }
-        class TsProperties extends UnityEngine.MonoBehaviour {
+        class TsProperties extends UnityEngine.MonoBehaviour implements XOR.Serializables.IAccessor {
             protected [__keep_incompatibility]: never;
-            public GenPairs(): System.Array$1<XOR.Serializables.ResultPair>
+            public GetProperties(): System.Array$1<XOR.Serializables.ResultPair>
+            public SetProperty($key: string, $value: any): void
+            public SetPropertyListener($handler: System.Action$2<string, any>): void
             public constructor()
         }
         class TsScriptableObject extends UnityEngine.ScriptableObject {
@@ -30367,14 +30372,6 @@ declare namespace CS {
         }
         var GetValueForCheck: { new(func: () => any): GetValueForCheck; }
     }
-    class MyData extends System.ValueType {
-        protected [__keep_incompatibility]: never;
-        public name: string
-        public action: string
-    }
-    class DelegateUtil extends System.Object {
-        protected [__keep_incompatibility]: never;
-    }
     namespace PuertsStaticWrap {
         class AutoStaticCodeUsing extends System.Object {
             protected [__keep_incompatibility]: never;
@@ -30384,22 +30381,20 @@ declare namespace CS {
             public static UsingGeneric($jsEnv: Puerts.JsEnv, $usingAction: boolean, ...types: System.Type[]): void
         }
     }
-    namespace XOR.Settings {
-        enum LOGGER { NONE = 0, INFO = 1, LOG = 2, WARN = 4, ERROR = 8 }
-        enum WacthType { Csharp = 0, Nodejs = 1 }
+    class MyData extends System.ValueType {
+        protected [__keep_incompatibility]: never;
+        public name: string
+        public action: string
     }
-    namespace XOR.ThreadWorker {
-        class EventData extends System.Object {
-            protected [__keep_incompatibility]: never;
-            public type: XOR.ThreadWorker.ValueType
-            public value: any
-            public key: any
-            public id: number
-            public constructor()
-        }
-        enum ValueType { Unknown = 0, Value = 1, Object = 2, Array = 3, ArrayBuffer = 4, RefObject = 5, Json = 6, Error = 7 }
+    class DelegateUtil extends System.Object {
+        protected [__keep_incompatibility]: never;
     }
     namespace XOR.Serializables {
+        interface IAccessor {
+            GetProperties(): System.Array$1<XOR.Serializables.ResultPair>
+            SetProperty($key: string, $value: any): void
+            SetPropertyListener($handler: System.Action$2<string, any>): void
+        }
         class ResultPair extends System.Object {
             protected [__keep_incompatibility]: never;
             public key: string
@@ -30545,6 +30540,21 @@ declare namespace CS {
             public constructor()
         }
     }
+    namespace XOR.Settings {
+        enum LOGGER { NONE = 0, INFO = 1, LOG = 2, WARN = 4, ERROR = 8 }
+        enum WacthType { Csharp = 0, Nodejs = 1 }
+    }
+    namespace XOR.ThreadWorker {
+        class EventData extends System.Object {
+            protected [__keep_incompatibility]: never;
+            public type: XOR.ThreadWorker.ValueType
+            public value: any
+            public key: any
+            public id: number
+            public constructor()
+        }
+        enum ValueType { Unknown = 0, Value = 1, Object = 2, Array = 3, ArrayBuffer = 4, RefObject = 5, Json = 6, Error = 7 }
+    }
     namespace XOR.IEnumeratorUtil {
         class Tick extends System.ValueType {
             protected [__keep_incompatibility]: never;
@@ -30571,7 +30581,7 @@ declare namespace CS {
             public get ValueType(): System.Type;
             public constructor()
         }
-        class MyData extends XOR.Serializables.Pair$1<XOR.TsComponent.MyData> implements XOR.Serializables.IPair {
+        class MyData extends XOR.Serializables.Pair$1<MyData> implements XOR.Serializables.IPair {
             protected [__keep_incompatibility]: never;
             public get Index(): number;
             public get Key(): string;
@@ -30579,7 +30589,7 @@ declare namespace CS {
             public get ValueType(): System.Type;
             public constructor()
         }
-        class MyDataArray extends XOR.Serializables.Pair$1<System.Array$1<XOR.TsComponent.MyData>> implements XOR.Serializables.IPair {
+        class MyDataArray extends XOR.Serializables.Pair$1<System.Array$1<MyData>> implements XOR.Serializables.IPair {
             protected [__keep_incompatibility]: never;
             public get Index(): number;
             public get Key(): string;

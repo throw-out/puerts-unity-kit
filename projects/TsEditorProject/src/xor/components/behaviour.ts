@@ -15,6 +15,9 @@ import Time = csharp.UnityEngine.Time;
 const { File, Path } = csharp.System.IO;
 const isEditor = Application.isEditor;
 
+type AccessorType = csharp.UnityEngine.Component & csharp.XOR.Serializables.IAccessor;
+type AccessorUnionType = AccessorType | AccessorType[] | csharp.System.Array$1<AccessorType>;
+
 /**
  * 详情参阅: https://docs.unity3d.com/cn/current/ScriptReference/MonoBehaviour.html
  */
@@ -274,17 +277,25 @@ class TsBehaviourConstructor {
     private __listeners__: Map<string, Function[]>;
     private __listenerProxy__: csharp.XOR.TsMessages;
 
-    public constructor(trf: Transform | GameObject, refs?: boolean | csharp.XOR.TsProperties | csharp.XOR.TsProperties[]) {
+    public constructor(trf: Transform | GameObject, accessor?: AccessorUnionType | boolean) {
         if (trf instanceof GameObject)
             trf = trf.transform;
         this.__transform__ = trf;
         this.__gameObject__ = trf.gameObject;
         //bind props
-        if (refs === undefined || refs === true) {
-            TsBehaviourConstructor.bindPropertys(this, trf.GetComponents($typeof(csharp.XOR.TsProperties)) as csharp.System.Array$1<csharp.XOR.TsProperties>, false);
+        if (accessor === undefined || accessor === true) {
+            TsBehaviourConstructor.bindAccessor(
+                this,
+                trf.GetComponents($typeof(csharp.XOR.TsProperties)) as csharp.System.Array$1<csharp.XOR.TsProperties>,
+                true
+            );
         }
-        else if (refs) {
-            TsBehaviourConstructor.bindPropertys(this, refs, false);
+        else if (accessor) {
+            TsBehaviourConstructor.bindAccessor(
+                this,
+                accessor,
+                true
+            );
         }
         //call constructor
         let ctor: Function = this["onConstructor"];
@@ -642,50 +653,124 @@ interface TsBehaviourConstructor extends IBehaviour, IGizmos, IOnPointerHandler,
 }
 
 namespace TsBehaviourConstructor {
-    /**将C# TsPropertys中的属性绑定到obj对象上
-     * @param instance 
-     * @param refs 
-     * @param destroy 
-     */
-    export function bindPropertys(instance: object, refs: csharp.XOR.TsProperties | csharp.XOR.TsProperties[] | csharp.System.Array$1<csharp.XOR.TsProperties>, destroy?: boolean) {
-        if (refs) {
-            let refsList = new Array<csharp.XOR.TsProperties>();
-            if (refs instanceof csharp.XOR.TsProperties) {
-                refsList.push(refs);
+    function toCSharpArray<T>(array: Array<T>, checkMemberType: boolean = true): csharp.System.Array$1<T> {
+        if (!array || array.length === 0)
+            return null;
+        let firstIndex = array.findIndex(m => m !== undefined && m !== null && m !== void 0) ?? -1;
+        if (firstIndex < 0)
+            return null;
+        let first = array[firstIndex];
+        let results: csharp.System.Array,
+            type = typeof first, memberType: csharp.System.Type;
+        switch (type) {
+            case "bigint":
+                results = csharp.System.Array.CreateInstance($typeof(csharp.System.Int64), array.length);
+                break;
+            case "number":
+                results = csharp.System.Array.CreateInstance($typeof(csharp.System.Double), array.length);
+                break;
+            case "string":
+                results = csharp.System.Array.CreateInstance($typeof(csharp.System.String), array.length);
+                break;
+            case "boolean":
+                results = csharp.System.Array.CreateInstance($typeof(csharp.System.Boolean), array.length);
+                break;
+            case "object":
+                if (first instanceof csharp.System.Object) {
+                    results = csharp.System.Array.CreateInstance(first.GetType(), array.length);
+                }
+                break;
+        }
+        if (results) {
+            for (let i = 0; i < array.length; i++) {
+                let value = array[i];
+                if (checkMemberType) {
+                    if (!memberType && typeof (value) !== type) {
+                        continue;
+                    }
+                    if (memberType && (typeof (value) !== "object" ||
+                        !(value instanceof csharp.System.Object) ||
+                        !memberType.IsAssignableFrom(value.GetType())
+                    )) {
+                        continue;
+                    }
+                }
+                results.SetValue(value, i);
             }
-            else if (Array.isArray(refs)) {
-                refsList = refs;
+        }
+        return results as csharp.System.Array$1<T>;
+    }
+    function toArray<T>(array: csharp.System.Array$1<T>): T[];
+    function toArray(array: csharp.System.Array): any[];
+    function toArray() {
+        let array: csharp.System.Array = arguments[0];
+        if (!array)
+            return null;
+        let results = new Array<any>();
+        for (let i = 0; i < array.Length; i++) {
+            results.push(array.GetValue(i));
+        }
+        return results;
+    }
+
+    /**将C# TsPropertys中的属性绑定到obj对象上
+     * @param object 
+     * @param accessor 
+     * @param bind       运行时绑定
+     */
+    export function bindAccessor(object: object, accessor: AccessorUnionType, bind?: boolean) {
+        if (!accessor)
+            return;
+
+        let list: AccessorType[] =
+            accessor instanceof csharp.System.Array ? toArray(accessor) :
+                Array.isArray(accessor) ? accessor : [accessor];
+        for (let accessor of list) {
+            if (!accessor || accessor.Equals(null))
+                continue;
+            let properties = accessor.GetProperties();
+            if (!properties || properties.Length === 0)
+                continue;
+
+            let values: { [key: string]: any } = {};
+            for (let i = 0; i < properties.Length; i++) {
+                let { key, value } = properties.get_Item(i);
+                if (value && value instanceof csharp.System.Array) {
+                    value = toArray(value);
+                }
+                values[key] = value;
+            }
+            if (isEditor) {
+                if (bind) {
+                    accessor.SetPropertyListener((key, newValue) => {
+                        if (newValue && newValue instanceof csharp.System.Array) {
+                            newValue = toArray(newValue);
+                        }
+                        values[key] = newValue;
+                    });
+                }
+                for (let key in values) {
+                    if (key in object) {
+                        console.warn(`Object ${object}(${object["name"]}) already exists prop '${key}' ---> ${object[key]}`);
+                    }
+                    if (bind) {
+                        Object.defineProperty(object, key, {
+                            get: () => values[key],
+                            set: (newValue) => {
+                                values[key] = newValue;
+                                accessor.SetProperty(key, Array.isArray(newValue) ? toCSharpArray(newValue) : newValue);
+                            },
+                            configurable: true,
+                            enumerable: true,
+                        });
+                    } else {
+                        object[key] = values[key];
+                    }
+                }
             }
             else {
-                for (let i = 0; i < refs.Length; i++) {
-                    refsList.push(refs.get_Item(i));
-                }
+                Object.assign(object, values);
             }
-
-            refsList.forEach(ref => {
-                if (!ref || ref.Equals(null))
-                    return;
-
-                let props = ref.GenPairs();
-                for (let i = 0; i < props.Length; i++) {
-                    let prop = props.get_Item(i);
-                    //if (!prop) continue;
-                    if (isEditor && prop.key in instance) {
-                        console.warn(`Object ${instance}(${instance["name"]}) already exists prop '${prop.key}' ---> ${instance[prop.key]}`);
-                    }
-                    let value = prop.value;
-                    instance[prop.key] = value;
-                    if (value && value.GetType && (value.GetType() as csharp.System.Type).IsArray) {
-                        let arr = value as csharp.System.Array;
-                        for (let i = 0; i < arr.Length; i++) {
-                            if (arr.GetValue(i)?.Equals(null)) {
-                                arr.SetValue(null, i);
-                            }
-                        }
-                    }
-                }
-                if (destroy) GameObject.Destroy(ref);
-            })
         }
     }
 

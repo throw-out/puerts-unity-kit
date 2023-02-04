@@ -8,8 +8,11 @@ namespace XOR.Serializables
 {
     public interface IAccessor
     {
+        /// <summary>用于运行时获取组件序列化数据</summary>
         ResultPair[] GetProperties();
+        /// <summary>设置属性值(Editor Only)</summary>
         void SetProperty(string key, object value);
+        /// <summary>设置属性值编辑丶更新回调(Editor Only)</summary>
         void SetPropertyListener(Action<string, object> handler);
     }
 
@@ -118,7 +121,7 @@ namespace XOR.Serializables
     }
 
     internal static class Accessor<TComponent>
-    where TComponent : UnityEngine.Component
+        where TComponent : UnityEngine.Component
     {
         private const BindingFlags Flags = BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic;
         private static Func<TComponent, IEnumerable<XOR.Serializables.IPair>>[] memberAccessor;
@@ -163,6 +166,7 @@ namespace XOR.Serializables
                         else
                         {
                             Logger.LogWarning($"Invail Type Assignment: The target type require {pair.ValueType.FullName}, but actual type is {newValue.GetType().FullName}");
+                            setter.SetValue(pair, default);
                         }
                         break;
                     }

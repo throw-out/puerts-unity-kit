@@ -4,7 +4,7 @@ using UnityEngine;
 
 namespace XOR
 {
-    public partial class TsComponent : MonoBehaviour, XOR.Serializables.IAccessor
+    public partial class TsComponent : XOR.TsBehaviour, XOR.Serializables.IAccessor
     {
         [SerializeField]
         protected string guid;

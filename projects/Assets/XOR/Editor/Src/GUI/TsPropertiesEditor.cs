@@ -1,4 +1,6 @@
+using System;
 using System.Collections.Generic;
+using System.Reflection;
 using UnityEditor;
 using UnityEditorInternal;
 using UnityEngine;
@@ -196,6 +198,7 @@ namespace XOR
                 bool dirty = display.Render(rect, nodes[index]);
                 if (dirty)
                 {
+                    TsPropertiesHelper.ChangePropertyEvent(component, nodes[index].Key);
                     root.ApplyModifiedProperties();
                     root.Update();
                 }
@@ -228,6 +231,33 @@ namespace XOR
 
     internal static class TsPropertiesHelper
     {
+        const BindingFlags Flags = BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic;
+        static FieldInfo _onPropertyChange;
+        static FieldInfo onPropertyChange
+        {
+            get
+            {
+                if (_onPropertyChange == null) _onPropertyChange = typeof(TsProperties).GetField("onPropertyChange", Flags);
+                return _onPropertyChange;
+            }
+        }
+
+        public static void ChangePropertyEvent(TsProperties component, string key)
+        {
+            Action<string, object> func = onPropertyChange?.GetValue(component) as Action<string, object>;
+            if (func == null)
+            {
+                return;
+            }
+            ComponentWrap<TsProperties> cw = ComponentWrap<TsProperties>.Create();
+            IPair pair = cw.GetProperty(component, key);
+            if (pair == null)
+            {
+                return;
+            }
+            func(pair.Key, pair.Value);
+        }
+
         public static void RebuildNodes(RootWrap root, List<NodeWrap> outputNodes)
         {
             if (outputNodes == null)

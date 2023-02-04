@@ -191,7 +191,12 @@ namespace XOR
             bool dirty = false;
             foreach (var node in nodes)
             {
-                dirty |= display.Render(node);
+                bool _d = display.Render(node);
+                dirty |= _d;
+                if (_d)
+                {
+                    TsComponentHelper.ChangePropertyEvent(component, node.Key);
+                }
             }
             if (dirty)
             {
@@ -217,6 +222,7 @@ namespace XOR
         static FieldInfo _guidField;
         static FieldInfo _routeField;
         static FieldInfo _versionField;
+        static FieldInfo _onPropertyChange;
         static FieldInfo guidField
         {
             get
@@ -239,6 +245,14 @@ namespace XOR
             {
                 if (_versionField == null) _versionField = typeof(TsComponent).GetField("version", Flags);
                 return _versionField;
+            }
+        }
+        static FieldInfo onPropertyChange
+        {
+            get
+            {
+                if (_onPropertyChange == null) _onPropertyChange = typeof(TsComponent).GetField("onPropertyChange", Flags);
+                return _onPropertyChange;
             }
         }
 
@@ -265,6 +279,22 @@ namespace XOR
         public static void SetVersion(TsComponent component, string value)
         {
             versionField.SetValue(component, value);
+        }
+
+        public static void ChangePropertyEvent(TsComponent component, string key)
+        {
+            Action<string, object> func = onPropertyChange?.GetValue(component) as Action<string, object>;
+            if (func == null)
+            {
+                return;
+            }
+            ComponentWrap<TsComponent> cw = ComponentWrap<TsComponent>.Create();
+            IPair pair = cw.GetProperty(component, key);
+            if (pair == null)
+            {
+                return;
+            }
+            func(pair.Key, pair.Value);
         }
 
         public static void RebuildNodes(RootWrap root, List<NodeWrap> outputNodes, Statement statement)

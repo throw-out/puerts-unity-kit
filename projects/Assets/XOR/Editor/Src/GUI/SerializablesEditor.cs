@@ -452,13 +452,18 @@ namespace XOR.Serializables
             fieldWrap.AppendElement(component, elementObj);
         }
 
-        public static ComponentWrap<TComponent> Create()
+        private static ComponentWrap<TComponent> _cacheInsatcne;
+        public static ComponentWrap<TComponent> Create(bool isForce = false)
         {
-            return new ComponentWrap<TComponent>()
+            if (_cacheInsatcne == null || isForce)
             {
-                Type = typeof(TComponent),
-                FieldMapping = Helper.GetFieldMapping(typeof(TComponent)),
-            };
+                _cacheInsatcne = new ComponentWrap<TComponent>()
+                {
+                    Type = typeof(TComponent),
+                    FieldMapping = Helper.GetFieldMapping(typeof(TComponent)),
+                }; ;
+            }
+            return _cacheInsatcne;
         }
     }
 
@@ -1713,7 +1718,7 @@ namespace XOR.Serializables.TsProperties
                 return "undefined";
             //Array Type
             if (type.IsArray)
-                return "System.Array$1<" + GetTypeName(type.GetElementType(), useFullname) + ">";
+                return $"{GetTypeName(type.GetElementType(), useFullname)}[]";
             //Value Mapping
             if (type.Equals(typeof(double)) || type.Equals(typeof(float)) || type.Equals(typeof(int)) || type.Equals(typeof(long)))
                 return "number";
