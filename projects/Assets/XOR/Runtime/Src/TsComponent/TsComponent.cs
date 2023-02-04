@@ -1,11 +1,10 @@
 using System;
+using System.Linq;
 using UnityEngine;
 
 namespace XOR
 {
-    using XOR.Serializables;
-
-    public partial class TsComponent : MonoBehaviour
+    public partial class TsComponent : MonoBehaviour, XOR.Serializables.IAccessor
     {
         [SerializeField]
         protected string guid;
@@ -45,5 +44,26 @@ namespace XOR
         [SerializeField]
         private XOR.Serializables.ObjectArray[] ObjectArrayPairs;
         #endregion
+
+        private Action<string, object> onPropertyChange;
+        public XOR.Serializables.ResultPair[] GetProperties()
+        {
+            return XOR.Serializables.Accessor<TsComponent>.GetProperties(this)
+                ?.Where(o => o != null)
+                .Select(o => new XOR.Serializables.ResultPair(o))
+                .ToArray();
+        }
+        public void SetProperty(string key, object value)
+        {
+#if UNITY_EDITOR
+            XOR.Serializables.Accessor<TsComponent>.SetProperty(this, key, value);
+#endif
+        }
+        public void SetPropertyListener(Action<string, object> handler)
+        {
+#if UNITY_EDITOR
+            this.onPropertyChange = handler;
+#endif
+        }
     }
 }

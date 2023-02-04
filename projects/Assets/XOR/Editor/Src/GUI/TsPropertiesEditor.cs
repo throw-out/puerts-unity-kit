@@ -100,7 +100,7 @@ namespace XOR
                 }, null, null, null, selectIndex =>
                 {
                     string code = XOR.Serializables.TsProperties.Utility.GenerateDeclareCode(
-                        component.GenPairs(),
+                        component.GetProperties(),
                         (selectIndex % 3) == 0 ? "declare public" : (selectIndex % 3) == 1 ? "declare protected" : "declare private",
                         selectIndex >= 0
                     );
@@ -139,7 +139,7 @@ namespace XOR
         void _RenderDiagnosis()
         {
             int DiagnosisCount = 0;
-            XOR.Serializables.ResultPair[] pairs = (Prefs.CheckKeyRedefinition || Prefs.CheckKeyValidity) ? component.GenPairs() : null;
+            XOR.Serializables.ResultPair[] pairs = (Prefs.CheckKeyRedefinition || Prefs.CheckKeyValidity) ? component.GetProperties() : null;
             if (pairs != null && pairs.Length > 0)
             {
                 List<string> usedKeys = new List<string>();

@@ -1,9 +1,18 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using UnityEngine;
 
 namespace XOR.Serializables
 {
+    public interface IAccessor
+    {
+        ResultPair[] GetProperties();
+        void SetProperty(string key, object value);
+        void SetPropertyListener(Action<string, object> handler);
+    }
+
     public class ResultPair
     {
         public string key;
@@ -14,6 +23,7 @@ namespace XOR.Serializables
             this.value = pair.Value;
         }
     }
+
     public interface IPair
     {
         int Index { get; }
@@ -104,6 +114,93 @@ namespace XOR.Serializables
         public ImplicitAttribute(Type firstType, params Type[] types)
         {
             this.Types = types.Concat(new[] { firstType }).Distinct().ToArray();
+        }
+    }
+
+    internal static class Accessor<TComponent>
+    where TComponent : UnityEngine.Component
+    {
+        private const BindingFlags Flags = BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic;
+        private static Func<TComponent, IEnumerable<XOR.Serializables.IPair>>[] memberAccessor;
+        private static Dictionary<Type, FieldInfo> memberValueAccessor;
+
+        public static IEnumerable<IPair> GetProperties(TComponent component)
+        {
+            if (GetAccessor().Length > 0)
+            {
+                List<IPair> results = new List<IPair>();
+                foreach (var m in GetAccessor().Select(func => func(component)))
+                {
+                    results.AddRange(m);
+                }
+                return results;
+            }
+            return null;
+        }
+        public static void SetProperty(TComponent component, string key, object newValue)
+        {
+            foreach (var func in GetAccessor())
+            {
+                var pairs = func(component);
+                if (pairs == null)
+                    continue;
+                foreach (var pair in pairs)
+                {
+                    if (pair == null)
+                        continue;
+                    if (pair.Key == key)
+                    {
+                        var setter = GetValueSetter(pair.GetType());
+                        //if (setter == null) continue;
+                        if (newValue == null)
+                        {
+                            setter.SetValue(pair, default);
+                        }
+                        else if (pair.ValueType.IsAssignableFrom(newValue.GetType()))
+                        {
+                            setter.SetValue(pair, newValue);
+                        }
+                        else
+                        {
+                            Logger.LogWarning($"Invail Type Assignment: The target type require {pair.ValueType.FullName}, but actual type is {newValue.GetType().FullName}");
+                        }
+                        break;
+                    }
+                }
+            }
+        }
+        /// <summary>
+        /// 创建Delegate而非使用反射调用
+        /// </summary>
+        public static Func<TComponent, IEnumerable<IPair>>[] GetAccessor()
+        {
+            if (memberAccessor == null)
+            {
+                memberAccessor = typeof(TComponent).GetFields(Flags)
+                    .Where(m => typeof(IEnumerable<IPair>).IsAssignableFrom(m.FieldType) && (m.IsPublic || m.GetCustomAttribute<UnityEngine.SerializeField>() != null))
+                    .Select(m => DelegateUtil.CreateDelegate<Func<TComponent, IEnumerable<IPair>>>(m, false))
+                    .Where(func => func != null)
+                    .ToArray();
+            }
+            return memberAccessor;
+        }
+
+        public static FieldInfo GetValueSetter(Type type)
+        {
+            if (memberValueAccessor == null)
+            {
+                memberValueAccessor = new Dictionary<Type, FieldInfo>();
+            }
+            FieldInfo accessor;
+            if (!memberValueAccessor.TryGetValue(type, out accessor))
+            {
+                if (typeof(IPair).IsAssignableFrom(type))
+                {
+                    accessor = type.GetField("value", Flags);
+                }
+                memberValueAccessor.Add(type, accessor);
+            }
+            return accessor;
         }
     }
 }

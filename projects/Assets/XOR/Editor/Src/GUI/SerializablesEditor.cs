@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using System.Text;
 using UnityEditor;
 using UnityEngine;
 
@@ -411,7 +412,7 @@ namespace XOR.Serializables
             }
             else
             {
-                Debug.LogWarning($"Wrong Type Assignment: The target type require {fw.Element.ValueType.FullName}, but actual type is {newValue.GetType().FullName}");
+                Logger.LogWarning($"Invail Type Assignment: The target type require {fw.Element.ValueType.FullName}, but actual type is {newValue.GetType().FullName}");
                 return false;
             }
             return true;
@@ -1531,22 +1532,39 @@ namespace XOR.Serializables.TsProperties
         /// <summary>生成typescript声明代码 </summary>
         public static string GenerateDeclareCode(XOR.Serializables.ResultPair[] pairs, string declarePrefix, bool useFullname)
         {
-            var resultCode = "";
+            if (pairs == null || pairs.Length == 0)
+                return string.Empty;
             declarePrefix = declarePrefix.Trim();
-            foreach (var pair in pairs)
+
+            StringBuilder builder = new StringBuilder();
+            for (int i = 0; i < pairs.Length; i++)
             {
-                if (!string.IsNullOrEmpty(resultCode))
-                    resultCode += "\n";
-                var typeStr = GetTypeName(null, useFullname);
+                if (i > 0) builder.AppendLine();
+                var pair = pairs[i];
+
+                builder.Append(declarePrefix);
+                builder.Append(" ");
+                if (IsValidKey(pair.key))
+                {
+                    builder.Append(pair.key);
+                }
+                else
+                {
+                    builder.Append("[\"");
+                    builder.Append(pair.key);
+                    builder.Append("\"]");
+                }
+                builder.Append(": ");
+
                 if (pair.value != null)
                 {
-                    typeStr = GetTypeName(pair.value.GetType(), useFullname);
+                    string typeStr = null;
                     if (pair.value.GetType().IsArray && ((Array)pair.value).Length > 0)
                     {
                         var arr = (Array)pair.value;
-                        for (int i = 0; i < arr.Length; i++)
+                        for (int j = 0; j < arr.Length; j++)
                         {
-                            var o = arr.GetValue(i);
+                            var o = arr.GetValue(j);
                             if (o != null && !o.Equals(null))
                             {
                                 typeStr = "System.Array$1<" + GetTypeName(o.GetType(), useFullname) + ">";
@@ -1554,13 +1572,16 @@ namespace XOR.Serializables.TsProperties
                             }
                         }
                     }
+                    builder.Append(typeStr ?? GetTypeName(pair.value.GetType(), useFullname));
                 }
-                var keyStr = pair.key;
-                if (!IsValidKey(keyStr))
-                    keyStr = "[\"" + keyStr + "\"]";
-                resultCode += $"{declarePrefix} {keyStr}: {typeStr};";
+                else
+                {
+                    builder.Append(GetTypeName(null, useFullname));
+                }
+
+                builder.Append(";");
             }
-            return resultCode;
+            return builder.ToString();
         }
 
         /// <summary>

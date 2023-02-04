@@ -6,7 +6,7 @@ using UnityEngine;
 namespace XOR
 {
     [DisallowMultipleComponent]
-    public partial class TsProperties : MonoBehaviour
+    public partial class TsProperties : MonoBehaviour, XOR.Serializables.IAccessor
     {
         #region 序列化字段
         [SerializeField]
@@ -40,31 +40,25 @@ namespace XOR
         private XOR.Serializables.ObjectArray[] ObjectArrayPairs;
         #endregion
 
-        public XOR.Serializables.ResultPair[] GenPairs()
+        private Action<string, object> onPropertyChange;
+        public XOR.Serializables.ResultPair[] GetProperties()
         {
-            var pairsArray = new IEnumerable<XOR.Serializables.IPair>[] {
-                StringPairs,
-                NumberPairs,
-                BigintPairs,
-                BooleanPairs,
-                Vector2Pairs,
-                Vector3Pairs,
-                ObjectPairs,
-                StringArrayPairs,
-                NumberArrayPairs,
-                BigintArrayPairs,
-                BooleanArrayPairs,
-                Vector2ArrayPairs,
-                Vector3ArrayPairs,
-                ObjectArrayPairs,
-            };
-            var list = (from pairs in pairsArray
-                        where pairs != null
-                        from pair in pairs
-                        where pair != null
-                        select pair).ToList();
-            list.Sort((v1, v2) => v1.Index < v2.Index ? -1 : v1.Index > v2.Index ? 1 : 0);
-            return list.Select(o => new XOR.Serializables.ResultPair(o)).ToArray();
+            return XOR.Serializables.Accessor<TsProperties>.GetProperties(this)
+                ?.Where(o => o != null)
+                .Select(o => new XOR.Serializables.ResultPair(o))
+                .ToArray();
+        }
+        public void SetProperty(string key, object value)
+        {
+#if UNITY_EDITOR
+            XOR.Serializables.Accessor<TsProperties>.SetProperty(this, key, value);
+#endif
+        }
+        public void SetPropertyListener(Action<string, object> handler)
+        {
+#if UNITY_EDITOR
+            this.onPropertyChange = handler;
+#endif
         }
     }
 }
