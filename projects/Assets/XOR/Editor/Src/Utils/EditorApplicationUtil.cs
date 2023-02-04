@@ -46,6 +46,13 @@ namespace XOR
                 return "UNKNOWN";
             return $"{app.Program.errors}";
         }
+        public static int GetErrorsCount()
+        {
+            EditorApplication app = EditorApplication.Instance;
+            if (app == null || app.Program == null)
+                return 0;
+            return app.Program.errors;
+        }
         public static string GetTypeCount()
         {
             EditorApplication app = EditorApplication.Instance;

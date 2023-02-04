@@ -132,8 +132,6 @@ public class PuertsConfig
                 "UnityEngine.UI",
 
                 "Puerts",
-                "XOR",
-                "XOR.Services",
             };
             var selectTypes = (from assembly in AppDomain.CurrentDomain.GetAssemblies()
                                where !(assembly.ManifestModule is System.Reflection.Emit.ModuleBuilder)
@@ -143,6 +141,7 @@ public class PuertsConfig
 
             string[] customAssemblys = new string[] {
                 "Assembly-CSharp",
+                "puerts.unity.kit.xor",
             };
             var customTypes = (from assembly in customAssemblys.Select(s => Assembly.Load(s))
                                where !(assembly.ManifestModule is System.Reflection.Emit.ModuleBuilder)

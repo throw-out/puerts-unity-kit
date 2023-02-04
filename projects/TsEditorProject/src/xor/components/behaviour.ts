@@ -274,14 +274,14 @@ class TsBehaviourConstructor {
     private __listeners__: Map<string, Function[]>;
     private __listenerProxy__: csharp.XOR.TsMessages;
 
-    public constructor(trf: Transform | GameObject, refs?: boolean | csharp.XOR.TsPropertys | csharp.XOR.TsPropertys[]) {
+    public constructor(trf: Transform | GameObject, refs?: boolean | csharp.XOR.TsProperties | csharp.XOR.TsProperties[]) {
         if (trf instanceof GameObject)
             trf = trf.transform;
         this.__transform__ = trf;
         this.__gameObject__ = trf.gameObject;
         //bind props
         if (refs === undefined || refs === true) {
-            TsBehaviourConstructor.bindPropertys(this, trf.GetComponents($typeof(csharp.XOR.TsPropertys)) as csharp.System.Array$1<csharp.XOR.TsPropertys>, false);
+            TsBehaviourConstructor.bindPropertys(this, trf.GetComponents($typeof(csharp.XOR.TsProperties)) as csharp.System.Array$1<csharp.XOR.TsProperties>, false);
         }
         else if (refs) {
             TsBehaviourConstructor.bindPropertys(this, refs, false);
@@ -647,10 +647,10 @@ namespace TsBehaviourConstructor {
      * @param refs 
      * @param destroy 
      */
-    export function bindPropertys(instance: object, refs: csharp.XOR.TsPropertys | csharp.XOR.TsPropertys[] | csharp.System.Array$1<csharp.XOR.TsPropertys>, destroy?: boolean) {
+    export function bindPropertys(instance: object, refs: csharp.XOR.TsProperties | csharp.XOR.TsProperties[] | csharp.System.Array$1<csharp.XOR.TsProperties>, destroy?: boolean) {
         if (refs) {
-            let refsList = new Array<csharp.XOR.TsPropertys>();
-            if (refs instanceof csharp.XOR.TsPropertys) {
+            let refsList = new Array<csharp.XOR.TsProperties>();
+            if (refs instanceof csharp.XOR.TsProperties) {
                 refsList.push(refs);
             }
             else if (Array.isArray(refs)) {
@@ -666,7 +666,7 @@ namespace TsBehaviourConstructor {
                 if (!ref || ref.Equals(null))
                     return;
 
-                let props = ref.Pairs;
+                let props = ref.GenPairs();
                 for (let i = 0; i < props.Length; i++) {
                     let prop = props.get_Item(i);
                     //if (!prop) continue;

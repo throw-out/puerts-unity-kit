@@ -256,7 +256,7 @@ declare class TsBehaviourConstructor {
     private __component__;
     private __listeners__;
     private __listenerProxy__;
-    constructor(trf: Transform | GameObject, refs?: boolean | csharp.XOR.TsPropertys | csharp.XOR.TsPropertys[]);
+    constructor(trf: Transform | GameObject, refs?: boolean | csharp.XOR.TsProperties | csharp.XOR.TsProperties[]);
     StartCoroutine(routine: ((...args: any[]) => Generator) | Generator, ...args: any[]): csharp.UnityEngine.Coroutine;
     StopCoroutine(routine: csharp.UnityEngine.Coroutine): void;
     StopAllCoroutines(): void;
@@ -302,7 +302,7 @@ declare namespace TsBehaviourConstructor {
      * @param refs
      * @param destroy
      */
-    function bindPropertys(instance: object, refs: csharp.XOR.TsPropertys | csharp.XOR.TsPropertys[] | csharp.System.Array$1<csharp.XOR.TsPropertys>, destroy?: boolean): void;
+    function bindPropertys(instance: object, refs: csharp.XOR.TsProperties | csharp.XOR.TsProperties[] | csharp.System.Array$1<csharp.XOR.TsProperties>, destroy?: boolean): void;
     /**以独立组件的方式调用
      * 适用于Update丶LateUpdate和FixedUpdate方法, 默认以BatchProxy管理调用以满足更高性能要求
      * @returns

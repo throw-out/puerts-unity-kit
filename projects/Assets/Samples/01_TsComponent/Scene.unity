@@ -38,7 +38,7 @@ RenderSettings:
   m_ReflectionIntensity: 1
   m_CustomReflection: {fileID: 0}
   m_Sun: {fileID: 0}
-  m_IndirectSpecularColor: {r: 0.44657874, g: 0.49641258, b: 0.5748172, a: 1}
+  m_IndirectSpecularColor: {r: 0.44657898, g: 0.4964133, b: 0.5748178, a: 1}
   m_UseRadianceAmbientProbe: 0
 --- !u!157 &3
 LightmapSettings:
@@ -121,6 +121,85 @@ NavMeshSettings:
     debug:
       m_Flags: 0
   m_NavMeshData: {fileID: 0}
+--- !u!1 &795054122
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 795054124}
+  - component: {fileID: 795054123}
+  m_Layer: 0
+  m_Name: Sample05
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &795054123
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 795054122}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ebff9227b67714d4bbab6c48f78b48c5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  ColorPairs:
+  - index: 0
+    key: _prop1
+    value: {r: 1, g: 1, b: 1, a: 1}
+  ColorArrayPairs:
+  - index: 2
+    key: _prop3
+    value:
+    - {r: 1, g: 1, b: 1, a: 1}
+  MyDataPairs:
+  - index: 1
+    key: _prop2
+    value:
+      name: 
+      action: 
+  MyDataArrayPairs:
+  - index: 3
+    key: _prop4
+    value: []
+  guid: 36102130-2db9-4d62-9221-98c51c3c138c
+  route: 
+  version: CF96F784950EE9E3E91220763DED933D0E4388CACDBCD9B77F8B8E729E5ED172
+  StringPairs: []
+  NumberPairs: []
+  BigintPairs: []
+  BooleanPairs: []
+  Vector2Pairs: []
+  Vector3Pairs: []
+  ObjectPairs: []
+  StringArrayPairs: []
+  NumberArrayPairs: []
+  BigintArrayPairs: []
+  BooleanArrayPairs: []
+  Vector2ArrayPairs: []
+  Vector3ArrayPairs: []
+  ObjectArrayPairs: []
+--- !u!4 &795054124
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 795054122}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_RootOrder: 6
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1138852625
 GameObject:
   m_ObjectHideFlags: 0
@@ -150,6 +229,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ebff9227b67714d4bbab6c48f78b48c5, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  ColorPairs: []
+  ColorArrayPairs: []
+  MyDataPairs: []
+  MyDataArrayPairs: []
   guid: e1cb6fde-b4dd-4fba-b08d-aed2f2bea1f2
   route: 
   version: 960F7F8D1E4D198B494362FC261FD8C4E54E299F8E82E9EECFBB80F23B8C0287
@@ -326,9 +409,13 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ebff9227b67714d4bbab6c48f78b48c5, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  ColorPairs: []
+  ColorArrayPairs: []
+  MyDataPairs: []
+  MyDataArrayPairs: []
   guid: d2ea683a-0e55-41a2-b837-b7e7c2a1fee4
   route: 
-  version: D5EA5141D1E0093416AA1E2F1004D33F2058697CD8199C31E0CAC0FD8C9083B6
+  version: 37033110E604E1DE01BD7D2027921F785ED40F33FE8BF77126748F22205DF301
   StringPairs:
   - index: 3
     key: _prop4
@@ -412,6 +499,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ebff9227b67714d4bbab6c48f78b48c5, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  ColorPairs: []
+  ColorArrayPairs: []
+  MyDataPairs: []
+  MyDataArrayPairs: []
   guid: 70292285-10d5-44e0-9031-e12b14a05d15
   route: 
   version: 291D64B0A75E5B8F1F39E21C678B3393B8B7B71AF166932D1DA2603C213F2272
@@ -499,6 +590,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ebff9227b67714d4bbab6c48f78b48c5, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  ColorPairs: []
+  ColorArrayPairs: []
+  MyDataPairs: []
+  MyDataArrayPairs: []
   guid: a071b597-ff11-420a-b7d5-cd586ee4b1a1
   route: 
   version: D1C637C7882EC5DECBAE7473D8679991E6B6E95DDA7DA1F293E31EDC16D38BF0

@@ -43,7 +43,7 @@ class TsBehaviourConstructor {
         this.__gameObject__ = trf.gameObject;
         //bind props
         if (refs === undefined || refs === true) {
-            TsBehaviourConstructor.bindPropertys(this, trf.GetComponents((0, puerts_1.$typeof)(csharp.XOR.TsPropertys)), false);
+            TsBehaviourConstructor.bindPropertys(this, trf.GetComponents((0, puerts_1.$typeof)(csharp.XOR.TsProperties)), false);
         }
         else if (refs) {
             TsBehaviourConstructor.bindPropertys(this, refs, false);
@@ -403,7 +403,7 @@ class TsBehaviourConstructor {
     function bindPropertys(instance, refs, destroy) {
         if (refs) {
             let refsList = new Array();
-            if (refs instanceof csharp.XOR.TsPropertys) {
+            if (refs instanceof csharp.XOR.TsProperties) {
                 refsList.push(refs);
             }
             else if (Array.isArray(refs)) {
@@ -417,7 +417,7 @@ class TsBehaviourConstructor {
             refsList.forEach(ref => {
                 if (!ref || ref.Equals(null))
                     return;
-                let props = ref.Pairs;
+                let props = ref.GenPairs();
                 for (let i = 0; i < props.Length; i++) {
                     let prop = props.get_Item(i);
                     //if (!prop) continue;

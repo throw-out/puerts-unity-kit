@@ -1,5 +1,5 @@
 import * as csharp from "csharp";
-import { GameObject, Transform, Vector2, Vector3 } from "csharp.UnityEngine";
+import { Color, GameObject, Transform, Vector2, Vector3 } from "csharp.UnityEngine";
 
 /**
  * 基础类型演示
@@ -88,4 +88,17 @@ export namespace Sample04 {
         P6 = "p6",
         P7 = "p7",
     }
+}
+/**
+ * 自定义序列化类型: Color和csharp.MyData不属于XOR内置类型
+ */
+@xor.guid("36102130-2db9-4d62-9221-98c51c3c138c")
+export class Sample05 extends xor.TsComponent {
+    @xor.field({ value: Color.white })
+    declare private _prop1: Color;
+    declare private _prop2: csharp.MyData;
+
+    @xor.field({ value: [Color.white] })
+    declare private _prop3: Color[];
+    declare private _prop4: csharp.MyData[];
 }
