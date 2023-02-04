@@ -1,10 +1,12 @@
 使用typescript的AST解析器, 分析ts脚本获取class声明及其成员信息, 然后传递到C# SerializedObject渲染使用.
+ts类型必需继承自[xor.TsComponent](../projects/TsEditorProject/src/xor/components/component.ts#L59)丶export且不是abstract才会被序列化:
+ts类型成员必需使用declare修饰符或被[xor.field](../projects/TsEditorProject/src/xor/components/component.ts#87)修饰才能被序列化
 
 ## 使用需知
-- AST分析和SerializedObject渲染只在UnityEditor环境下生效
+- AST分析和SerializedObject渲染只在UnityEditor环境下使用
 - 指定value时如超出range设定时, 只会在SerializedObject渲染时才会重新设定为range区间
 - 枚举类型如不指定value, 其默认值为0(`System.Int32`)或null(`System.String`)
-- AST解析器运行在子线程中, 指定value时的表达式必需要能在子线程中访问: `例如UnityEngine.Vector2.right是可以的, 而UnityEngine.Application.dataPath是不可以的`
+- AST解析器运行在子线程中, 指定value时的表达式必需要能在子线程中访问: `例如UnityEngine.Vector2.right是可以的, 而UnityEngine.Application.dataPath是不可以`
 
 ## 内置类型
 |  类型   | 基础 | 数组|
