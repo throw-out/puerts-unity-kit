@@ -183,9 +183,10 @@ export class Program {
         await this.resolveDefinitions();
 
         this.cp.state = csharp.XOR.Services.ProgramState.Allocating;
+        await this.resolveDefinitionAllowGuids();
         for (let [fileName, declarations] of this.sourceDefinitions) {
             await this.throttler.complete();
-            this.pushDefinitions(declarations);
+            this.pushDefinitions(fileName, true);
         }
         this.resolving = false;
 
@@ -297,10 +298,21 @@ export class Program {
 
 
     //#region Component-Decorator定义处理流程
+    /**解析并生成TypeDefinition信息
+     * @param files 指定要处理的文件, 否则将处理全部类型
+     * @param sync  是否同步全部类型
+     */
     private resolveDefinitions(): Promise<void>;
     private resolveDefinitions(files: string[]): void;
+    private resolveDefinitions(sync: boolean): void;
     private async resolveDefinitions() {
-        let files: string[] = arguments[0];
+        let files: string[], sync: boolean;
+        if (typeof (arguments[0]) === "boolean") {
+            sync = arguments[0];
+        }
+        else if (Array.isArray(arguments[0])) {
+            files = arguments[0];
+        }
 
         let resolve = (absoluteName: string, node: ts.ClassDeclaration) => {
             let definition: TypeDefinition = {
@@ -310,7 +322,7 @@ export class Program {
                 isAbstract: util.isAbstract(node),
                 isComponent: this.isInheritFromTsComponent(node) && !this.isTsComponent(node)
             };
-            this.resolveDefinitionDecorator(node, definition);
+            this.readDecoratorOfDefinition(node, definition);
 
             let file = node.getSourceFile().fileName;
             let definitions = this.sourceDefinitions.get(file);
@@ -334,12 +346,70 @@ export class Program {
         else {
             this.sourceDefinitions.clear();
             for (let [absoluteName, node] of this.types) {
-                await this.throttler.complete();
+                if (!sync) {
+                    await this.throttler.complete();
+                }
                 resolve(absoluteName, node)
             }
         }
     }
-    private resolveDefinitionDecorator(node: ts.ClassDeclaration, define: TypeDefinition) {
+    /**给Definitions分配GUID
+     * @param files 指定要处理的文件, 否则将处理全部类型
+     */
+    private resolveDefinitionAllowGuids(): Promise<void>;
+    private resolveDefinitionAllowGuids(files: string[]): void;
+    private async resolveDefinitionAllowGuids() {
+        let files: string[] = arguments[0];
+
+        let update = 0;
+        let resolve = (declarations: TypeDefinition[]) => {
+            let newSourceFile: ts.SourceFile;
+            //分配新的guid
+            for (let declaration of declarations) {
+                if (declaration.guid || !this.isExportTsComponent(declaration)) {
+                    continue;
+                }
+                let td = this.types.get(declaration.absoluteName);
+                if (!td) {
+                    console.warn(`节点数据缺失: ${declaration.absoluteName}`);
+                    continue;
+                }
+                let guid = Guid.NewGuid().ToString();
+                let _newSourceFile = this.allocDecorator(td, `@xor.guid("${guid}")`);
+                if (_newSourceFile) {
+                    declaration.guid = guid;
+                    newSourceFile = _newSourceFile;
+                }
+            }
+            //保存SourceFile文件
+            if (newSourceFile) {
+                File.WriteAllText(newSourceFile.fileName, newSourceFile.text);
+                update++;
+            }
+        };
+
+        if (files && files.length > 0) {
+            for (let file of files) {
+                let declarations = this.sourceDefinitions.get(file);
+                if (!declarations || declarations.length === 0)
+                    continue;
+                resolve(declarations);
+            }
+        } else {
+            for (let [fileName, declarations] of this.sourceDefinitions) {
+                if (!declarations || declarations.length === 0)
+                    continue;
+                await this.throttler.complete();
+                resolve(declarations);
+            }
+        }
+        if (update > 0) {
+            this.rebuildTypeChecker();
+            this.resolveSources(true);
+        }
+    }
+    /**读取Decorator */
+    private readDecoratorOfDefinition(node: ts.ClassDeclaration, define: TypeDefinition) {
         if (!node.modifiers)
             return;
         for (let modifier of node.modifiers) {
@@ -362,7 +432,7 @@ export class Program {
             }
         }
     }
-    /**为目标类分配指定内容 */
+    /**为目标分配Decorator(指定文本内容) */
     private allocDecorator(node: ts.Node, decoratorContent: string) {
         let sourceFile = node.getSourceFile();
 
@@ -389,13 +459,12 @@ export class Program {
         let insert = stringBuilder.join("");
         let newContent = `${content.slice(0, start)}${insert}${content.slice(start)}`;
 
-        let newSourceFile = ts.updateSourceFile(
+        return ts.updateSourceFile(
             sourceFile,
             newContent,
             util.getTextChangeRange(sourceFile.text, newContent, true),
             false
-        );
-        return newSourceFile;
+        );;
     }
     /**移除SourceFile所有定义 */
     private removeDeclarations(file: string) {
@@ -408,10 +477,26 @@ export class Program {
         this.sourceTypes.delete(file);
         this.sourceDefinitions.delete(file);
     }
+    /**更新了SourceFile文件, 重建TypeChecker对象 */
+    private rebuildTypeChecker(rootNames?: string[]) {
+        //重建TypeChecker对象
+        let timer = new Timer();
+        this.cp.compile = 'compiling';
+        //@ts-ignore
+        this.program = ts.createProgram({
+            rootNames: rootNames ?? [...this.program.getRootFileNames()],
+            options: this.program.getCompilerOptions(),
+            oldProgram: this.program
+        });
+        //@ts-ignore
+        this.checker = this.program.getTypeChecker();
+        this.cp.compile = `${timer.duration()}ms`;
+        this.cp.errors = ts.getPreEmitDiagnostics(this.program).length;
+    }
     /**更新了SourceFile文件, 重建TypeChecker对象
      * @param files 
      */
-    private rebuildTypeChecker(...files: string[]) {
+    private changeFiles(...files: string[]) {
         let rootNames = [...this.program.getRootFileNames()];
 
         let updateFiles: string[] = [], change: number = 0;
@@ -452,21 +537,9 @@ export class Program {
                 false
             );
         }
-        if (change === 0 && files.length !== 0)
+        if (change === 0)
             return null;
-        //重建TypeChecker对象
-        let timer = new Timer();
-        this.cp.compile = 'compiling';
-        //@ts-ignore
-        this.program = ts.createProgram({
-            rootNames,
-            options: this.program.getCompilerOptions(),
-            oldProgram: this.program
-        });
-        //@ts-ignore
-        this.checker = this.program.getTypeChecker();
-        this.cp.compile = `${timer.duration()}ms`;
-        this.cp.errors = ts.getPreEmitDiagnostics(this.program).length;
+        this.rebuildTypeChecker(rootNames);
 
         //重新解析文件
         if (updateFiles.length > 0) {
@@ -477,7 +550,6 @@ export class Program {
                     continue;
                 this.resolveStatements(sourceFile.statements, true);
             }
-
             this.cp.state = csharp.XOR.Services.ProgramState.Completed;
         }
         return updateFiles;
@@ -494,16 +566,15 @@ export class Program {
 
         let files = [...this.pending];
         this.pending.clear();
-        let newFiles = this.rebuildTypeChecker(...files);
-        if (newFiles && newFiles.length > 0) {
+        let updateFiles = this.changeFiles(...files);
+        if (updateFiles && updateFiles.length > 0) {
             //重新解析关系
-            this.resolveDefinitions(newFiles);
+            this.resolveDefinitions(updateFiles);
+            this.resolveDefinitionAllowGuids(updateFiles);
+
             //重新推送定义
-            for (let file of newFiles) {
-                let declarations = this.sourceDefinitions.get(file);
-                if (!declarations || declarations.length === 0)
-                    continue;
-                this.pushDefinitions(declarations);
+            for (let file of updateFiles) {
+                this.pushDefinitions(file, true);
             }
         }
         await new Promise<void>((resolve) => setTimeout(resolve, 1));
@@ -512,86 +583,75 @@ export class Program {
         this.resolvePending();
     }
 
-    private pushDefinitions(declarations: TypeDefinition[]) {
-        let newSourceFile: ts.SourceFile;
-        //分配新的guid
-        for (let declaration of declarations) {
-            if (declaration.guid || !this.isExportTsComponent(declaration)) {
-                continue;
-            }
-            let td = this.types.get(declaration.absoluteName);
-            if (!td) {
-                console.warn(`节点数据缺失: ${declaration.absoluteName}`);
-                continue;
-            }
-            let guid = Guid.NewGuid().ToString();
-            let _newSourceFile = this.allocDecorator(td, `@xor.guid("${guid}")`);
-            if (_newSourceFile) {
-                declaration.guid = guid;
-                newSourceFile = _newSourceFile;
-            }
+    private pushDefinitions(file: string, isForce?: boolean): void;
+    private pushDefinitions(declarations: TypeDefinition[], isForce?: boolean): void;
+    private pushDefinitions() {
+        let declarations: TypeDefinition[] | string = arguments[0],
+            isForce: boolean = arguments[1];
+        if (typeof (declarations) === "string") {
+            declarations = this.sourceDefinitions.get(declarations);
         }
-        //保存SourceFile文件
-        if (newSourceFile) {
-            File.WriteAllText(newSourceFile.fileName, newSourceFile.text);
-            this.rebuildTypeChecker();
-        }
+        if (!declarations || declarations.length === 0)
+            return;
         //推送定义到C#
         for (let declaration of declarations) {
             if (!declaration.guid || !this.isExportTsComponent(declaration)) {
                 continue;
             }
-            this.pushDefinition(declaration);
-        }
-    }
-    private pushDefinition(declaration: TypeDefinition) {
-        if (!declaration.guid || !this.isExportTsComponent(declaration)) {
-            return;
-        }
+            let node = this.types.get(declaration.absoluteName);
+            if (!node) {
+                console.warn(`节点数据缺失: ${declaration.absoluteName}`);
+                continue;
+            }
+            let [module, name] = declaration.absoluteName.split("|");
+            let version = csharp.XOR.HashUtil.SHA256(node.getFullText());
 
-        let node = this.types.get(declaration.absoluteName);
-        if (!node) {
-            console.warn(`节点数据缺失: ${declaration.absoluteName}`);
-            return;
-        }
-        let [module, name] = declaration.absoluteName.split("|");
-
-        //创建type声明
-        let ctd = new csharp.XOR.Services.TypeDeclaration();
-        ctd.name = name;
-        ctd.module = module;
-        ctd.guid = declaration.guid;
-        ctd.version = csharp.XOR.HashUtil.SHA256(node.getFullText());
-        ctd.path = node.getSourceFile().fileName;
-        ctd.line = util.getTextLine(node.getSourceFile().text, node.getStart());
-        //成员声明
-        let members = this.getFields(node, true);
-        if (members) {
-            for (let [name, property] of members) {
-                let fieldArgs = this.getFieldArguments(property),
-                    fieldType = this.convertToCSharpType([property.type, fieldArgs?.type]);
-                if (!fieldType || !fieldType.type) {
+            //检验当前节点是否需要重新生成声明
+            let ctd: csharp.XOR.Services.TypeDeclaration;
+            if (!isForce) {
+                ctd = this.cp.GetStatement(declaration.guid) as csharp.XOR.Services.TypeDeclaration;
+                if (ctd && ctd.version === version) {
                     continue;
                 }
-                let cpd = new csharp.XOR.Services.PropertyDeclaration();
-                cpd.name = name;
-                cpd.valueType = fieldType.type;
-                ctd.AddProperty(cpd);
+            }
 
-                if (fieldType.enumerable) {
-                    for (let [name, value] of fieldType.enumerable) {
-                        cpd.AddEnum(name, value);
+            //创建声明对象
+            ctd = new csharp.XOR.Services.TypeDeclaration();
+            ctd.name = name;
+            ctd.module = module;
+            ctd.guid = declaration.guid;
+            ctd.version = version;
+            ctd.path = node.getSourceFile().fileName;
+            ctd.line = util.getTextLine(node.getSourceFile().text, node.getStart());
+            //成员声明
+            let members = this.getFields(node, true);
+            if (members) {
+                for (let [name, property] of members) {
+                    let fieldArgs = this.getFieldArguments(property),
+                        fieldType = this.convertToCSharpType([property.type, fieldArgs?.type]);
+                    if (!fieldType || !fieldType.type) {
+                        continue;
+                    }
+                    let cpd = new csharp.XOR.Services.PropertyDeclaration();
+                    cpd.name = name;
+                    cpd.valueType = fieldType.type;
+                    ctd.AddProperty(cpd);
+
+                    if (fieldType.enumerable) {
+                        for (let [name, value] of fieldType.enumerable) {
+                            cpd.AddEnum(name, value);
+                        }
+                    }
+                    else if (fieldArgs && fieldArgs.range) {
+                        cpd.SetRange(fieldArgs.range[0], fieldArgs.range[1]);
+                    }
+                    if (fieldArgs && fieldArgs.value !== undefined) {
+                        cpd.defaultValue = fieldArgs.value;
                     }
                 }
-                else if (fieldArgs && fieldArgs.range) {
-                    cpd.SetRange(fieldArgs.range[0], fieldArgs.range[1]);
-                }
-                if (fieldArgs && fieldArgs.value !== undefined) {
-                    cpd.defaultValue = fieldArgs.value;
-                }
             }
+            this.cp.AddStatement(ctd);
         }
-        this.cp.AddStatement(ctd);
     }
     private isExportTsComponent(type: TypeDefinition) {
         return !(
