@@ -21,8 +21,8 @@ xor.globalWorker.on(WorkerEvent.StartProgream, (data: { project: string, program
     program = new services.Program(data.program, rootNames, pcl.options);
     //console.log(`program parse duration ${timer.duration()}ms`);
 });
-xor.globalWorker.on(WorkerEvent.FileChanged, (path: string) => {
-    program?.change(path);
+xor.globalWorker.on(WorkerEvent.FileChanged, (path: string | string[]) => {
+    program?.change(Array.isArray(path) ? path : [path]);
 });
 
 class Timer {

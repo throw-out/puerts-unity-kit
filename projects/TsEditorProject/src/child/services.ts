@@ -194,14 +194,15 @@ export class Program {
         this.resolvePending();
     }
     /**文件修改状态: 新增丶更新或删除 */
-    public change(file: string) {
-        //console.log("file change: " + file);
-        file = Path.GetFullPath(file).replace(/\\/g, "/");
-        if (!this.pending) {
-            this.pending = new Set()
+    public change(files: string[]) {
+        for (let file of files) {
+            //console.log("file change: " + file);
+            file = Path.GetFullPath(file).replace(/\\/g, "/");
+            if (!this.pending) {
+                this.pending = new Set()
+            }
+            this.pending.add(file);
         }
-        this.pending.add(file);
-
         this.resolvePending();
     }
 

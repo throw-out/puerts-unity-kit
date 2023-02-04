@@ -6,13 +6,17 @@ type ReturnType<T extends Function> = T extends (...args: any[]) => infer R ? R 
 
 const { Path } = csharp.System.IO;
 
+const BatchProcess = true,      //批量处理file change事件
+    BatchProcessDelay = 100;    //批量处理file change事件的延迟
+
 require("puerts/console-track");
 //require("puerts/puerts-source-map-support");
 
 class Workflow {
+    private readonly ci: csharp.XOR.Services.CSharpInterfaces;
     private _worker: xor.ThreadWorker;
     private _watcher: ReturnType<typeof this._createWatcher>;
-    private readonly ci: csharp.XOR.Services.CSharpInterfaces;
+    private _changeEvents: Set<string>;
 
     constructor(ci: csharp.XOR.Services.CSharpInterfaces) {
         this.ci = ci;
@@ -53,20 +57,36 @@ class Workflow {
         this.ci.SetWorker.Invoke(null);
         this.ci.SetProgram.Invoke(null);
     }
-    public change(path: string) {
-        if (!this._worker || !this._worker.isAlive || !this._worker.isInitialized) {
-            console.warn(`worker is not alive or initializing:`);
-            return;
-        }
-        this._worker.post(WorkerEvent.FileChanged, path, true);
-    }
-
     public bind(): csharp.XOR.Services.TSInterfaces {
         let ti = new csharp.XOR.Services.TSInterfaces();
         ti.Stop = () => this.stop();
         ti.Start = (ep, p, useWatcher) => this.start(ep, p, useWatcher);
         ti.FileChanged = (path) => this.change(path);
         return ti;
+    }
+
+    private change(path: string) {
+        if (!BatchProcess) {
+            this.sendChangeEvent([path]);
+            return;
+        }
+        if (this._changeEvents) {
+            this._changeEvents.add(path);
+        } else {
+            this._changeEvents = new Set();
+            this._changeEvents.add(path);
+            setTimeout(() => {
+                this.sendChangeEvent([...this._changeEvents]);
+                this._changeEvents = null;
+            }, BatchProcessDelay);
+        }
+    }
+    private sendChangeEvent(paths: string[]) {
+        if (!this._worker || !this._worker.isAlive || !this._worker.isInitialized) {
+            console.warn(`worker is not alive or initializing:`);
+            return;
+        }
+        this._worker.post(WorkerEvent.FileChanged, paths, true);
     }
 
     private _createWorker(editorProject: string) {
