@@ -19,7 +19,7 @@
 | [puerts](https://github.com/Tencent/puerts/releases) |  1.4.0+ |
 | [nodejs](https://nodejs.org/) | `unknown`|
 
-## 使用
+## 开始使用
 1. 下载本模板项目;
 2. 进入目录`projects/TsEditorProject`和`projects/TsProject`安装依赖, 使用 `npm` or `yarn`; 
 3. 分别编译以上目录中的typescript脚本;
