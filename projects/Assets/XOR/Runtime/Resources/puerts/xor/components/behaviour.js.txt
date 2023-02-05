@@ -2,7 +2,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 const csharp = require("csharp");
 const puerts_1 = require("puerts");
-var GameObject = csharp.UnityEngine.GameObject;
+var Transform = csharp.UnityEngine.Transform;
 var RectTransform = csharp.UnityEngine.RectTransform;
 var Application = csharp.UnityEngine.Application;
 var Time = csharp.UnityEngine.Time;
@@ -36,14 +36,23 @@ class IOnMouse {
  * @see Standalone 如果需要绑定独立的组件, 在对应方法上添加此标注
  */
 class TsBehaviourConstructor {
-    constructor(trf, accessor) {
-        if (trf instanceof GameObject)
-            trf = trf.transform;
-        this.__transform__ = trf;
-        this.__gameObject__ = trf.gameObject;
+    constructor(object, accessor) {
+        let gameObject;
+        if (object instanceof csharp.XOR.TsBehaviour) {
+            gameObject = object.gameObject;
+            this.__component__ = object;
+        }
+        else if (object instanceof Transform) {
+            gameObject = object.gameObject;
+        }
+        else {
+            gameObject = object;
+        }
+        this.__gameObject__ = gameObject;
+        this.__transform__ = gameObject.transform;
         //bind props
         if (accessor === undefined || accessor === true) {
-            TsBehaviourConstructor.bindAccessor(this, trf.GetComponents((0, puerts_1.$typeof)(csharp.XOR.TsProperties)), true);
+            TsBehaviourConstructor.bindAccessor(this, object.GetComponents((0, puerts_1.$typeof)(csharp.XOR.TsProperties)), true);
         }
         else if (accessor) {
             TsBehaviourConstructor.bindAccessor(this, accessor, true);
@@ -61,7 +70,7 @@ class TsBehaviourConstructor {
         this._bindProxies();
         this._bindUpdateProxies();
         this._bindListeners();
-        this._bindModuleForEditor();
+        this._bindModuleOfEditor();
     }
     //协程
     StartCoroutine(routine, ...args) {
@@ -297,7 +306,7 @@ class TsBehaviourConstructor {
         }
     }
     //绑定脚本内容
-    _bindModuleForEditor() {
+    _bindModuleOfEditor() {
         if (!isEditor || !this.__gameObject__ || this.__gameObject__.Equals(null))
             return;
         //堆栈信息
@@ -322,7 +331,7 @@ class TsBehaviourConstructor {
                     //class在声明变量时赋初值, 构造函数中sourceMap解析会失败: 故此处尝试读取js.map文件手动解析
                     try {
                         let mapPath = path + ".map", tsPath;
-                        let sourceMap = JSON.parse(File.Exists(mapPath) ? File.ReadAllText(mapPath) : "");
+                        let sourceMap = File.Exists(mapPath) ? JSON.parse(File.ReadAllText(mapPath)) : null;
                         if (sourceMap && Array.isArray(sourceMap.sources) && sourceMap.sources.length == 1) {
                             tsPath = Path.GetFullPath(Path.Combine(Path.GetDirectoryName(path), sourceMap.sources[0]));
                         }

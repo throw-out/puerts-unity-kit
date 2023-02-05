@@ -170,8 +170,8 @@ namespace XOR
                 {
                     TsComponentHelper.ClearProperties(component);
                     TsComponentHelper.RebuildProperties(component, statement);
-                    serializedObject.ApplyModifiedProperties();
-                    serializedObject.Update();
+                    root.ApplyModifiedProperties();
+                    root.Update();
                     TsComponentHelper.RebuildNodes(root, nodes, statement);
                 }
                 if (GUILayout.Button("编辑") && File.Exists(statement.path))
@@ -195,13 +195,13 @@ namespace XOR
                 dirty |= _d;
                 if (_d)
                 {
-                    TsComponentHelper.ChangePropertyEvent(component, node.Key);
+                    TsComponentHelper.ChangePropertyEvent(root, component, node.Key);
                 }
             }
             if (dirty)
             {
-                serializedObject.ApplyModifiedProperties();
-                serializedObject.Update();
+                root.ApplyModifiedProperties();
+                root.Update();
                 TsComponentHelper.SetDirty(component);
             }
         }
@@ -281,13 +281,15 @@ namespace XOR
             versionField.SetValue(component, value);
         }
 
-        public static void ChangePropertyEvent(TsComponent component, string key)
+        public static void ChangePropertyEvent(RootWrap root, TsComponent component, string key)
         {
             Action<string, object> func = onPropertyChange?.GetValue(component) as Action<string, object>;
             if (func == null)
             {
                 return;
             }
+            root.ApplyModifiedProperties();
+            root.Update();
             ComponentWrap<TsComponent> cw = ComponentWrap<TsComponent>.Create();
             IPair pair = cw.GetProperty(component, key);
             if (pair == null)

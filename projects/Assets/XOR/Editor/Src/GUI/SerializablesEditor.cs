@@ -518,26 +518,8 @@ namespace XOR.Serializables
         /// <returns></returns>
         public static bool IsImplicitAssignable(ElementWrap element, Type valueType)
         {
-            if (element.ValueType.IsArray != valueType.IsArray)
-                return false;
-
-            Type[] implicitTypes = GetImplicitAssignableTypes(element.Type);
-            if (implicitTypes != null && implicitTypes.Contains(valueType))
-            {
-                return true;
-            }
-            if (element.ValueType.IsArray)      //数组类型隐式分配
-            {
-                return element.ValueType.GetElementType().IsAssignableFrom(valueType.GetElementType()) ||
-                    implicitTypes != null && implicitTypes.Contains(valueType.GetElementType());
-            }
-            return false;
+            return XOR.Serializables.ImplicitOperation.IsImplicitAssignable(element.Type, element.ValueType, valueType);
         }
-
-        static Dictionary<Type, Func<object, object>> typeConvertFuncs = new Dictionary<Type, Func<object, object>>()
-        {
-            { typeof(double), v => System.Convert.ToDouble(v)},
-        };
         /// <summary>
         /// 进行类型强转(允许隐式转换分配)
         /// </summary>
@@ -546,52 +528,8 @@ namespace XOR.Serializables
         /// <returns></returns>
         public static object GetAssignableValue(ElementWrap element, object value)
         {
-            if (value == null || element.ValueType.IsArray != value.GetType().IsArray)
-            {
-                return default;
-            }
-            Type valueType = element.ValueType;
-            //获取转化方法
-            Func<object, object> convertFunc;
-            typeConvertFuncs.TryGetValue(valueType.IsArray ? valueType.GetElementType() : valueType, out convertFunc);
-            if (convertFunc == null)
-            {
-                return default;
-            }
-            if (valueType.IsArray)
-            {
-                Array array = (Array)value;
-                Array newArray = Array.CreateInstance(valueType.GetElementType(), array.Length);
-                for (int i = 0; i < array.Length; i++)
-                {
-                    var am = array.GetValue(i);
-                    if (am == null) continue;
-                    newArray.SetValue(convertFunc(am), i);
-                }
-                return newArray;
-            }
-            else
-            {
-                return convertFunc(value);
-            }
+            return XOR.Serializables.ImplicitOperation.GetAssignableValue(element.ValueType, value);
         }
-
-        static Dictionary<Type, Type[]> cacheImplicitAssignableTypes = new Dictionary<Type, Type[]>();
-        static Type[] GetImplicitAssignableTypes(Type type)
-        {
-            Type[] implicitTypes;
-            if (!cacheImplicitAssignableTypes.TryGetValue(type, out implicitTypes))
-            {
-                ImplicitAttribute implicitDefine = type.GetCustomAttribute<ImplicitAttribute>(false);
-                if (implicitDefine != null)
-                {
-                    implicitTypes = implicitDefine.Types;
-                }
-                cacheImplicitAssignableTypes.Add(type, implicitTypes);
-            }
-            return implicitTypes;
-        }
-
         static readonly HashSet<Type> IntegerTypes = new HashSet<Type>()
         {
             typeof(byte),

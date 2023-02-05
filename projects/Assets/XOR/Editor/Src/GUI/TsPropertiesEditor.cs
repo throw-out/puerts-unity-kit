@@ -198,7 +198,7 @@ namespace XOR
                 bool dirty = display.Render(rect, nodes[index]);
                 if (dirty)
                 {
-                    TsPropertiesHelper.ChangePropertyEvent(component, nodes[index].Key);
+                    TsPropertiesHelper.ChangePropertyEvent(root, component, nodes[index].Key);
                     root.ApplyModifiedProperties();
                     root.Update();
                 }
@@ -242,13 +242,15 @@ namespace XOR
             }
         }
 
-        public static void ChangePropertyEvent(TsProperties component, string key)
+        public static void ChangePropertyEvent(RootWrap root, TsProperties component, string key)
         {
             Action<string, object> func = onPropertyChange?.GetValue(component) as Action<string, object>;
             if (func == null)
             {
                 return;
             }
+            root.ApplyModifiedProperties();
+            root.Update();
             ComponentWrap<TsProperties> cw = ComponentWrap<TsProperties>.Create();
             IPair pair = cw.GetProperty(component, key);
             if (pair == null)

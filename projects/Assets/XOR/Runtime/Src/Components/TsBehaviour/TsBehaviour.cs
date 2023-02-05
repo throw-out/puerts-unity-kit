@@ -354,11 +354,11 @@ namespace XOR
         }
 
 
-        public void Dispose()
+        public virtual void Dispose()
         {
             Dispose(true);
         }
-        public void Dispose(bool destroy)
+        protected virtual void Dispose(bool destroy)
         {
             this.awakeCallback = null;
             this.startCallback = null;

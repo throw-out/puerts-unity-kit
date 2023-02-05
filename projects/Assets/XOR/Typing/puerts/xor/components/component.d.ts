@@ -13,6 +13,7 @@ type FieldOptions = NumberConstructor | Partial<{
     value: any;
 }>;
 declare class TsComponentConstructor extends xor.TsBehaviour {
+    constructor(component: csharp.XOR.TsComponent);
 }
 /**接口声明 */
 declare global {
@@ -30,7 +31,7 @@ declare global {
          * }
          * ```
          */
-        function guid(guid: number | string): ClassDecorator;
+        function guid(guid: string): ClassDecorator;
         /**定义组件别名(后续可由此名称Get/Add TsComponent)
          * @param path
          * @example

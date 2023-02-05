@@ -1,9 +1,16 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 class TsComponentConstructor extends xor.TsBehaviour {
+    constructor(component) {
+        super(component, component);
+    }
 }
+const RegisterFlag = Symbol("__guid__");
+const RegisterTypes = {};
 function guid(guid) {
     return (target) => {
+        target[RegisterFlag] = guid;
+        RegisterTypes[guid] = target;
     };
 }
 function route(path) {
@@ -14,6 +21,12 @@ function field(options) {
     return (target, key) => {
     };
 }
+function getConstructor(guid) {
+    return RegisterTypes[guid];
+}
+function getGuid(type) {
+    return type[RegisterFlag];
+}
 function register() {
     let _g = (global ?? globalThis ?? this);
     _g.xor = _g.xor || {};
@@ -21,6 +34,8 @@ function register() {
     _g.xor.guid = guid;
     _g.xor.route = route;
     _g.xor.field = field;
+    _g.xor.getConstructor = getConstructor;
+    _g.xor.getGuid = getGuid;
 }
 register();
 //# sourceMappingURL=component.js.map

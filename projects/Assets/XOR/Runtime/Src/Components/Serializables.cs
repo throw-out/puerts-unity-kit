@@ -149,27 +149,28 @@ namespace XOR.Serializables
                     continue;
                 foreach (var pair in pairs)
                 {
-                    if (pair == null)
+                    if (pair == null || pair.Key != key)
                         continue;
-                    if (pair.Key == key)
+                    var setter = GetValueSetter(pair.GetType());
+                    //if (setter == null) continue;
+                    if (newValue == null)
                     {
-                        var setter = GetValueSetter(pair.GetType());
-                        //if (setter == null) continue;
-                        if (newValue == null)
-                        {
-                            setter.SetValue(pair, default);
-                        }
-                        else if (pair.ValueType.IsAssignableFrom(newValue.GetType()))
-                        {
-                            setter.SetValue(pair, newValue);
-                        }
-                        else
-                        {
-                            Logger.LogWarning($"Invail Type Assignment: The target type require {pair.ValueType.FullName}, but actual type is {newValue.GetType().FullName}");
-                            setter.SetValue(pair, default);
-                        }
-                        break;
+                        setter.SetValue(pair, default);
                     }
+                    else if (pair.ValueType.IsAssignableFrom(newValue.GetType()))
+                    {
+                        setter.SetValue(pair, newValue);
+                    }
+                    else if (ImplicitOperation.IsImplicitAssignable(pair.GetType(), pair.ValueType, newValue.GetType()))
+                    {
+                        setter.SetValue(pair, ImplicitOperation.GetAssignableValue(pair.ValueType, newValue));
+                    }
+                    else
+                    {
+                        Logger.LogWarning($"Invail Type Assignment: The target type require {pair.ValueType.FullName}, but actual type is {newValue.GetType().FullName}");
+                        setter.SetValue(pair, default);
+                    }
+                    break;
                 }
             }
         }
@@ -205,6 +206,84 @@ namespace XOR.Serializables
                 memberValueAccessor.Add(type, accessor);
             }
             return accessor;
+        }
+    }
+
+    public static class ImplicitOperation
+    {
+        /// <summary>
+        /// 是否可转换类型
+        /// </summary>
+        public static bool IsImplicitAssignable(Type elementType, Type elementValueType, Type valueType)
+        {
+            if (elementValueType.IsArray != valueType.IsArray)
+                return false;
+
+            Type[] implicitTypes = GetImplicitAssignableTypes(elementType);
+            if (implicitTypes != null && implicitTypes.Contains(valueType))
+            {
+                return true;
+            }
+            if (elementValueType.IsArray)      //数组类型隐式分配
+            {
+                return elementValueType.GetElementType().IsAssignableFrom(valueType.GetElementType()) ||
+                    implicitTypes != null && implicitTypes.Contains(valueType.GetElementType());
+            }
+            return false;
+        }
+
+        static Dictionary<Type, Func<object, object>> typeConvertFuncs = new Dictionary<Type, Func<object, object>>()
+        {
+            { typeof(double), v => System.Convert.ToDouble(v)},
+        };
+        /// <summary>
+        /// 进行类型转换(允许隐式转换分配)
+        /// </summary>
+        public static object GetAssignableValue(Type valueType, object value)
+        {
+            if (value == null || valueType.IsArray != value.GetType().IsArray)
+            {
+                return default;
+            }
+            //获取转化方法
+            Func<object, object> convertFunc;
+            typeConvertFuncs.TryGetValue(valueType.IsArray ? valueType.GetElementType() : valueType, out convertFunc);
+            if (convertFunc == null)
+            {
+                return default;
+            }
+            if (valueType.IsArray)
+            {
+                Array array = (Array)value;
+                Array newArray = Array.CreateInstance(valueType.GetElementType(), array.Length);
+                for (int i = 0; i < array.Length; i++)
+                {
+                    var am = array.GetValue(i);
+                    if (am == null) continue;
+                    newArray.SetValue(convertFunc(am), i);
+                }
+                return newArray;
+            }
+            else
+            {
+                return convertFunc(value);
+            }
+        }
+
+        static Dictionary<Type, Type[]> cacheImplicitAssignableTypes = new Dictionary<Type, Type[]>();
+        static Type[] GetImplicitAssignableTypes(Type type)
+        {
+            Type[] implicitTypes;
+            if (!cacheImplicitAssignableTypes.TryGetValue(type, out implicitTypes))
+            {
+                ImplicitAttribute implicitDefine = type.GetCustomAttribute<ImplicitAttribute>(false);
+                if (implicitDefine != null)
+                {
+                    implicitTypes = implicitDefine.Types;
+                }
+                cacheImplicitAssignableTypes.Add(type, implicitTypes);
+            }
+            return implicitTypes;
         }
     }
 }

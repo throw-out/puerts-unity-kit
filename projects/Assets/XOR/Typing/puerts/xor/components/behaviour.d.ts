@@ -258,7 +258,7 @@ declare class TsBehaviourConstructor {
     private __component__;
     private __listeners__;
     private __listenerProxy__;
-    constructor(trf: Transform | GameObject, accessor?: AccessorUnionType | boolean);
+    constructor(object: GameObject | Transform | csharp.XOR.TsBehaviour, accessor?: AccessorUnionType | boolean);
     StartCoroutine(routine: ((...args: any[]) => Generator) | Generator, ...args: any[]): csharp.UnityEngine.Coroutine;
     StopCoroutine(routine: csharp.UnityEngine.Coroutine): void;
     StopAllCoroutines(): void;
@@ -283,7 +283,7 @@ declare class TsBehaviourConstructor {
     private _bindProxies;
     private _bindUpdateProxies;
     private _bindListeners;
-    private _bindModuleForEditor;
+    private _bindModuleOfEditor;
     get transform(): Transform;
     get gameObject(): GameObject;
     get enabled(): boolean;

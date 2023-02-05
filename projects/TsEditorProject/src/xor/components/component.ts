@@ -26,11 +26,19 @@ type FieldOptions = NumberConstructor | Partial<{
 }>;
 
 class TsComponentConstructor extends xor.TsBehaviour {
-
+    constructor(component: csharp.XOR.TsComponent) {
+        super(component, component);
+    }
 }
-function guid(guid: number | string): ClassDecorator {
-    return (target) => {
+const RegisterFlag = Symbol("__guid__");
+const RegisterTypes: { [guid: string]: Function } = {
 
+};
+
+function guid(guid: string): ClassDecorator {
+    return (target) => {
+        target[RegisterFlag] = guid;
+        RegisterTypes[guid] = target;
     };
 }
 function route(path: string): ClassDecorator {
@@ -42,6 +50,12 @@ function field(options?: FieldOptions): PropertyDecorator {
     return (target, key) => {
     };
 }
+function getConstructor(guid: string): Function {
+    return RegisterTypes[guid];
+}
+function getGuid(type: Function): string {
+    return type[RegisterFlag];
+}
 
 function register() {
     let _g = (global ?? globalThis ?? this);
@@ -50,6 +64,8 @@ function register() {
     _g.xor.guid = guid;
     _g.xor.route = route;
     _g.xor.field = field;
+    _g.xor.getConstructor = getConstructor;
+    _g.xor.getGuid = getGuid;
 }
 register();
 
@@ -68,7 +84,7 @@ declare global {
          * }
          * ```
          */
-        function guid(guid: number | string): ClassDecorator;
+        function guid(guid: string): ClassDecorator;
         /**定义组件别名(后续可由此名称Get/Add TsComponent)
          * @param path 
          * @example

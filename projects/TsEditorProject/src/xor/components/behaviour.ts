@@ -278,16 +278,25 @@ class TsBehaviourConstructor {
     private __listeners__: Map<string, Function[]>;
     private __listenerProxy__: csharp.XOR.TsMessages;
 
-    public constructor(trf: Transform | GameObject, accessor?: AccessorUnionType | boolean) {
-        if (trf instanceof GameObject)
-            trf = trf.transform;
-        this.__transform__ = trf;
-        this.__gameObject__ = trf.gameObject;
+    public constructor(object: GameObject | Transform | csharp.XOR.TsBehaviour, accessor?: AccessorUnionType | boolean) {
+        let gameObject: GameObject;
+        if (object instanceof csharp.XOR.TsBehaviour) {
+            gameObject = object.gameObject;
+            this.__component__ = object;
+        }
+        else if (object instanceof Transform) {
+            gameObject = object.gameObject;
+        }
+        else {
+            gameObject = object;
+        }
+        this.__gameObject__ = gameObject;
+        this.__transform__ = gameObject.transform;
         //bind props
         if (accessor === undefined || accessor === true) {
             TsBehaviourConstructor.bindAccessor(
                 this,
-                trf.GetComponents($typeof(csharp.XOR.TsProperties)) as csharp.System.Array$1<csharp.XOR.TsProperties>,
+                object.GetComponents($typeof(csharp.XOR.TsProperties)) as csharp.System.Array$1<csharp.XOR.TsProperties>,
                 true
             );
         }
@@ -312,7 +321,7 @@ class TsBehaviourConstructor {
         this._bindProxies();
         this._bindUpdateProxies();
         this._bindListeners();
-        this._bindModuleForEditor();
+        this._bindModuleOfEditor();
     }
     //协程
     public StartCoroutine(routine: ((...args: any[]) => Generator) | Generator, ...args: any[]): csharp.UnityEngine.Coroutine {
@@ -555,7 +564,7 @@ class TsBehaviourConstructor {
         }
     }
     //绑定脚本内容
-    private _bindModuleForEditor() {
+    private _bindModuleOfEditor() {
         if (!isEditor || !this.__gameObject__ || this.__gameObject__.Equals(null))
             return;
         //堆栈信息
@@ -581,7 +590,7 @@ class TsBehaviourConstructor {
                     //class在声明变量时赋初值, 构造函数中sourceMap解析会失败: 故此处尝试读取js.map文件手动解析
                     try {
                         let mapPath = path + ".map", tsPath: string;
-                        let sourceMap = JSON.parse(File.Exists(mapPath) ? File.ReadAllText(mapPath) : "");
+                        let sourceMap = File.Exists(mapPath) ? JSON.parse(File.ReadAllText(mapPath)) : null;
                         if (sourceMap && Array.isArray(sourceMap.sources) && sourceMap.sources.length == 1) {
                             tsPath = Path.GetFullPath(Path.Combine(Path.GetDirectoryName(path), sourceMap.sources[0]));
                         }
