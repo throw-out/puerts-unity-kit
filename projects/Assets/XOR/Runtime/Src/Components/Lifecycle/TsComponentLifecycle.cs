@@ -186,6 +186,8 @@ namespace XOR
         {
             foreach (var component in components)
             {
+                if (component == null)
+                    continue;
                 component.JSObject = runtime.Create(component, component.GetGuid());
                 if (component.JSObject == null && !string.IsNullOrEmpty(component.GetGuid()))
                 {
@@ -224,6 +226,7 @@ namespace XOR
     }
 })();
 ");
+                    if (create == null) Logger.LogWarning($"XOR Modules Unregisted.");
                 }
                 return create?.Invoke(component, guid);
             }
