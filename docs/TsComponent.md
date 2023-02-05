@@ -35,3 +35,8 @@
 > 类型定义请查看[示例](../projects/Assets/Samples/01_TsComponent/CustomTypes)中的[TsComponent](../projects/Assets/Samples/01_TsComponent/CustomTypes/Runtime/TsComponent.cs)和[SerializablesEditor](../projects/Assets/Samples/01_TsComponent/CustomTypes/Editor/SerializablesEditor.cs)
 
 ![image](https://user-images.githubusercontent.com/45587825/216751394-12e34267-cee4-40ed-9269-8efa5e10320a.png)
+
+## 双向绑定演示
+> 在Sample06.OnGUI中修改this._value将会同步到Inspector, 反之在Inspector中修改_value字段亦会同步到Sample06._value上
+
+![image](https://user-images.githubusercontent.com/45587825/216810151-6f5d8d6d-c51e-49b3-a976-92d167202d82.png)
