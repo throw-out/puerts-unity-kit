@@ -1,6 +1,6 @@
 使用typescript的AST解析器, 分析ts脚本获取class声明及其成员信息, 然后传递到C# SerializedObject渲染使用.
-ts类型必需继承自[xor.TsComponent](../projects/TsEditorProject/src/xor/components/component.ts#L59)丶export且不是abstract才会被序列化:
-ts类型成员必需使用declare修饰符或被[xor.field](../projects/TsEditorProject/src/xor/components/component.ts#87)修饰才能被序列化
+- ts类型必需继承自[xor.TsComponent](../projects/TsEditorProject/src/xor/components/component.ts#L59)丶export且不是abstract才会被序列化:
+- ts类型成员必需使用declare修饰符或被[xor.field](../projects/TsEditorProject/src/xor/components/component.ts#87)修饰才能被序列化
 
 ## 使用需知
 - AST分析和SerializedObject渲染只在UnityEditor环境下使用
