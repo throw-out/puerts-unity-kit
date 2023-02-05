@@ -48,7 +48,7 @@ namespace XOR.Serializables
             {
                 Root = root,
                 Type = type,
-                FieldMapping = Helper.GetFieldMapping(type),
+                FieldMapping = Utility.GetFieldMapping(type),
             };
         }
     }
@@ -111,7 +111,7 @@ namespace XOR.Serializables
             this.ArrayParent = arrayParent;
             this.ArrayIndex = arrayIndex;
             this.ElementType = elementType;
-            this.ValueType = elementType.GetField("value", Helper.Flags).FieldType;
+            this.ValueType = elementType.GetField("value", Utility.Flags).FieldType;
         }
 
         /// <summary>从(数组)父节点上移除当前节点 </summary>
@@ -321,7 +321,7 @@ namespace XOR.Serializables
         {
             foreach (var fw in FieldMapping.Values)
             {
-                if (Helper.IsAssignable(fw.Element, valueType))
+                if (Utility.IsAssignable(fw.Element, valueType))
                 {
                     AddProperty(fw, component, key, index);
                     return true;
@@ -329,7 +329,7 @@ namespace XOR.Serializables
             }
             foreach (var fw in FieldMapping.Values)
             {
-                if (Helper.IsImplicitAssignable(fw.Element, valueType))
+                if (Utility.IsImplicitAssignable(fw.Element, valueType))
                 {
                     AddProperty(fw, component, key, index);
                     return true;
@@ -349,10 +349,10 @@ namespace XOR.Serializables
         public bool IsExplicitPropertyValue(TComponent component, string key, Type valueType)
         {
             FindProperty(component, key, out IPair value, out var fw, out var values);
-            if (fw == null || values == null || !Helper.IsAssignable(fw.Element, valueType) && !Helper.IsImplicitAssignable(fw.Element, valueType))
+            if (fw == null || values == null || !Utility.IsAssignable(fw.Element, valueType) && !Utility.IsImplicitAssignable(fw.Element, valueType))
                 return false;
             var _value = value.Value;
-            if (_value != null && Helper.IsAssignable(fw.Element, valueType))
+            if (_value != null && Utility.IsAssignable(fw.Element, valueType))
             {
                 var _vt = _value.GetType();
                 if (valueType.IsArray && _vt.IsArray)
@@ -402,17 +402,18 @@ namespace XOR.Serializables
             {
                 fw.Element.SetValue(value, default);
             }
-            else if (Helper.IsAssignable(fw.Element, newValue.GetType()))
+            else if (Utility.IsAssignable(fw.Element, newValue.GetType()))
             {
                 fw.Element.SetValue(value, newValue);
             }
-            else if (Helper.IsImplicitAssignable(fw.Element, newValue.GetType()))
+            else if (Utility.IsImplicitAssignable(fw.Element, newValue.GetType()))
             {
-                fw.Element.SetValue(value, Helper.GetImplicitAssignableValue(fw.Element, newValue));
+                fw.Element.SetValue(value, Utility.GetAssignableValue(fw.Element, newValue));
             }
             else
             {
                 Logger.LogWarning($"Invail Type Assignment: The target type require {fw.Element.ValueType.FullName}, but actual type is {newValue.GetType().FullName}");
+                fw.Element.SetValue(value, default);
                 return false;
             }
             return true;
@@ -460,7 +461,7 @@ namespace XOR.Serializables
                 _cacheInsatcne = new ComponentWrap<TComponent>()
                 {
                     Type = typeof(TComponent),
-                    FieldMapping = Helper.GetFieldMapping(typeof(TComponent)),
+                    FieldMapping = Utility.GetFieldMapping(typeof(TComponent)),
                 }; ;
             }
             return _cacheInsatcne;
@@ -480,7 +481,7 @@ namespace XOR.Serializables
         }
     }
 
-    static class Helper
+    internal static class Utility
     {
         public const BindingFlags Flags = BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public;
 
@@ -538,12 +539,12 @@ namespace XOR.Serializables
             { typeof(double), v => System.Convert.ToDouble(v)},
         };
         /// <summary>
-        /// 进行类型强转
+        /// 进行类型强转(允许隐式转换分配)
         /// </summary>
         /// <param name="element"></param>
         /// <param name="value"></param>
         /// <returns></returns>
-        public static object GetImplicitAssignableValue(ElementWrap element, object value)
+        public static object GetAssignableValue(ElementWrap element, object value)
         {
             if (value == null || element.ValueType.IsArray != value.GetType().IsArray)
             {
@@ -601,6 +602,11 @@ namespace XOR.Serializables
             typeof(System.Int32),
             typeof(System.UInt32),
         };
+        static readonly HashSet<Type> SingleTypes = new HashSet<Type>()
+        {
+            typeof(float),
+            typeof(double)
+        };
         static readonly Dictionary<Type, Tuple<long, long>> IntegerRanges = new Dictionary<Type, Tuple<long, long>>()
         {
             { typeof(byte), new Tuple<long, long>(byte.MinValue, byte.MaxValue) },
@@ -615,9 +621,67 @@ namespace XOR.Serializables
         {
             return IntegerTypes.Contains(type);
         }
+        public static bool IsSingleType(Type type)
+        {
+            return SingleTypes.Contains(type);
+        }
         public static bool GetIntegerRange(Type type, out Tuple<long, long> range)
         {
             return IntegerRanges.TryGetValue(type, out range);
+        }
+        public static bool SetIntegerRange(Type type, ref int value)
+        {
+            if (GetIntegerRange(type, out Tuple<long, long> range))
+            {
+                if (value < range.Item1) value = (int)range.Item1;
+                else if (value > range.Item2) value = (int)range.Item2;
+                return true;
+            }
+            return false;
+        }
+        public static bool SetIntegerArrayRange(Type type, Array array)
+        {
+            if (array == null || array.Length == 0)
+                return false;
+            if (GetIntegerRange(type, out Tuple<long, long> range))
+            {
+                for (int i = 0; i < array.Length; i++)
+                {
+                    int value = (int)(double)array.GetValue(i);
+                    if (value < range.Item1)
+                    {
+                        array.SetValue(range.Item1, i);
+                    }
+                    else if (value > range.Item2)
+                    {
+                        array.SetValue(range.Item2, i);
+                    }
+                }
+                return true;
+            }
+            return false;
+        }
+
+        public static void SetRange(Tuple<float, float> range, ref double value)
+        {
+            if (value < range.Item1) value = range.Item1;
+            else if (value > range.Item2) value = range.Item2;
+        }
+        public static void SetArrayRange(Tuple<float, float> range, double[] array)
+        {
+            if (array == null || array.Length == 0)
+                return;
+            for (int i = 0; i < array.Length; i++)
+            {
+                if (array[i] < range.Item1)
+                {
+                    array[i] = range.Item1;
+                }
+                else if (array[i] > range.Item2)
+                {
+                    array[i] = range.Item2;
+                }
+            }
         }
     }
 }
@@ -803,57 +867,57 @@ namespace XOR.Serializables.TsComponent
         {
             if (Node.ExplicitValueEnum != null)
             {
-                RenderEnumValue();
+                Dirty |= RenderEnumValue(Node, Node.ValueNode);
             }
-            else if (Node.ExplicitValueType != null && Helper.IsIntegerType(Node.ExplicitValueType))
+            else if (Node.ExplicitValueType != null && Utility.IsIntegerType(Node.ExplicitValueType))
             {
-                RenderIntegerValue();
+                Dirty |= RenderIntegerValue(Node, Node.ValueNode, Node.ExplicitValueType);
             }
             else
             {
-                RenderSingleValue();
+                Dirty |= RenderSingleValue(Node, Node.ValueNode);
             }
         }
-        protected virtual void RenderEnumValue()
+
+        public static bool RenderEnumValue(NodeWrap nw, SerializedProperty node)
         {
-            string[] keyOptions = Node.ExplicitValueEnum.Keys.ToArray();
-            int[] valueOptions = Node.ExplicitValueEnum.Values.Cast<int>().ToArray();
-            var value = (int)Node.ValueNode.doubleValue;
+            string[] keyOptions = nw.ExplicitValueEnum.Keys.ToArray();
+            int[] valueOptions = nw.ExplicitValueEnum.Values.Cast<int>().ToArray();
+            var value = (int)node.doubleValue;
             var newValue = EditorGUILayout.IntPopup(value, keyOptions, valueOptions);
-            if (newValue != value || Math.Abs(newValue - Node.ValueNode.doubleValue) > float.Epsilon)
+            if (newValue != value || Math.Abs(newValue - node.doubleValue) > float.Epsilon)
             {
-                Node.ValueNode.doubleValue = newValue;
-                Dirty |= true;
+                node.doubleValue = newValue;
+                return true;
             }
+            return false;
         }
-        protected virtual void RenderIntegerValue()
+        public static bool RenderIntegerValue(NodeWrap nw, SerializedProperty node, Type type)
         {
-            var value = (int)Node.ValueNode.doubleValue;
-            var newValue = Node.ExplicitValueRange != null ?
-                EditorGUILayout.IntSlider(value, (int)Node.ExplicitValueRange.Item1, (int)Node.ExplicitValueRange.Item2) :
+            var value = (int)node.doubleValue;
+            var newValue = nw.ExplicitValueRange != null ?
+                EditorGUILayout.IntSlider(value, (int)nw.ExplicitValueRange.Item1, (int)nw.ExplicitValueRange.Item2) :
                 EditorGUILayout.IntField(value);
-            if (Helper.GetIntegerRange(Node.ExplicitValueType, out Tuple<long, long> range))
+            Utility.SetIntegerRange(type, ref value);
+            if (newValue != value || Math.Abs(newValue - node.doubleValue) > float.Epsilon)
             {
-                if (newValue < range.Item1) newValue = (int)range.Item1;
-                else if (newValue > range.Item2) newValue = (int)range.Item2;
+                node.doubleValue = newValue;
+                return true;
             }
-            if (newValue != value || Math.Abs(newValue - Node.ValueNode.doubleValue) > float.Epsilon)
-            {
-                Node.ValueNode.doubleValue = newValue;
-                Dirty |= true;
-            }
+            return false;
         }
-        protected virtual void RenderSingleValue()
+        public static bool RenderSingleValue(NodeWrap nw, SerializedProperty node)
         {
-            var value = Node.ValueNode.doubleValue;
-            var newValue = Node.ExplicitValueRange != null ?
-                EditorGUILayout.Slider((float)value, Node.ExplicitValueRange.Item1, Node.ExplicitValueRange.Item2) :
+            var value = node.doubleValue;
+            var newValue = nw.ExplicitValueRange != null ?
+                EditorGUILayout.Slider((float)value, nw.ExplicitValueRange.Item1, nw.ExplicitValueRange.Item2) :
                 EditorGUILayout.DoubleField(value);
-            if (newValue != value || Math.Abs(newValue - Node.ValueNode.doubleValue) > float.Epsilon)
+            if (newValue != value || Math.Abs(newValue - node.doubleValue) > float.Epsilon)
             {
-                Node.ValueNode.doubleValue = newValue;
-                Dirty |= true;
+                node.doubleValue = newValue;
+                return true;
             }
+            return false;
         }
     }
     [RenderTarget(typeof(XOR.Serializables.Bigint))]
@@ -879,34 +943,36 @@ namespace XOR.Serializables.TsComponent
         {
             if (Node.ExplicitValueEnum != null)
             {
-                RenderEnumValue();
+                Dirty |= RenderEnumValue(Node, Node.ValueNode);
             }
             else
             {
-                RenderStringValue();
+                Dirty |= RenderStringValue(Node.ValueNode);
             }
         }
-        protected virtual void RenderStringValue()
+        public static bool RenderEnumValue(NodeWrap nw, SerializedProperty node)
         {
-            var value = Node.ValueNode.stringValue;
-            var newValue = EditorGUILayout.TextField(value);
-            if (newValue != value)
-            {
-                Node.ValueNode.stringValue = newValue;
-                Dirty |= true;
-            }
-        }
-        protected virtual void RenderEnumValue()
-        {
-            string[] keyOptions = Node.ExplicitValueEnum.Keys.ToArray(),
-               valueOptions = Node.ExplicitValueEnum.Values.Cast<string>().ToArray();
-            var valueIndex = Array.IndexOf(valueOptions, Node.ValueNode.stringValue);
+            string[] keyOptions = nw.ExplicitValueEnum.Keys.ToArray(),
+               valueOptions = nw.ExplicitValueEnum.Values.Cast<string>().ToArray();
+            var valueIndex = Array.IndexOf(valueOptions, node.stringValue);
             var newIndex = EditorGUILayout.Popup(valueIndex, keyOptions);
             if (newIndex != valueIndex)
             {
-                Node.ValueNode.stringValue = valueOptions[newIndex];
-                Dirty |= true;
+                node.stringValue = valueOptions[newIndex];
+                return true;
             }
+            return false;
+        }
+        public static bool RenderStringValue(SerializedProperty node)
+        {
+            var value = node.stringValue;
+            var newValue = EditorGUILayout.TextField(value);
+            if (newValue != value)
+            {
+                node.stringValue = newValue;
+                return true;
+            }
+            return false;
         }
     }
     [RenderTarget(typeof(XOR.Serializables.Boolean))]
@@ -970,57 +1036,15 @@ namespace XOR.Serializables.TsComponent
         {
             if (Node.ExplicitValueEnum != null)
             {
-                RenderMemberEnumValue(node, type);
+                Dirty |= NumberRenderer.RenderEnumValue(Node, node);
             }
-            else if (Helper.IsIntegerType(type))
+            else if (Utility.IsIntegerType(type))
             {
-                RenderMemberIntValue(node, type);
+                Dirty |= NumberRenderer.RenderIntegerValue(Node, node, type);
             }
             else
             {
-                RenderMemberSingleValue(node, type);
-            }
-        }
-
-        protected virtual void RenderMemberEnumValue(SerializedProperty node, Type type)
-        {
-            string[] keyOptions = Node.ExplicitValueEnum.Keys.ToArray();
-            int[] valueOptions = Node.ExplicitValueEnum.Values.Cast<int>().ToArray();
-            var value = (int)node.doubleValue;
-            var newValue = EditorGUILayout.IntPopup(value, keyOptions, valueOptions);
-            if (newValue != value || Math.Abs(newValue - node.doubleValue) > float.Epsilon)
-            {
-                node.doubleValue = newValue;
-                Dirty |= true;
-            }
-        }
-        protected virtual void RenderMemberIntValue(SerializedProperty node, Type type)
-        {
-            var value = (int)node.doubleValue;
-            var newValue = Node.ExplicitValueRange != null ?
-                EditorGUILayout.IntSlider(value, (int)Node.ExplicitValueRange.Item1, (int)Node.ExplicitValueRange.Item2) :
-                EditorGUILayout.IntField(value);
-            if (Helper.GetIntegerRange(type, out Tuple<long, long> range))
-            {
-                if (newValue < range.Item1) newValue = (int)range.Item1;
-                else if (newValue > range.Item2) newValue = (int)range.Item2;
-            }
-            if (newValue != value || Math.Abs(newValue - node.doubleValue) > float.Epsilon)
-            {
-                node.doubleValue = newValue;
-                Dirty |= true;
-            }
-        }
-        protected virtual void RenderMemberSingleValue(SerializedProperty node, Type type)
-        {
-            var value = node.doubleValue;
-            var newValue = Node.ExplicitValueRange != null ?
-                EditorGUILayout.Slider((float)value, Node.ExplicitValueRange.Item1, Node.ExplicitValueRange.Item2) :
-                EditorGUILayout.DoubleField(value);
-            if (newValue != value || Math.Abs(newValue - node.doubleValue) > float.Epsilon)
-            {
-                node.doubleValue = newValue;
-                Dirty |= true;
+                Dirty |= NumberRenderer.RenderSingleValue(Node, node);
             }
         }
     }
@@ -1047,34 +1071,11 @@ namespace XOR.Serializables.TsComponent
         {
             if (Node.ExplicitValueEnum != null)
             {
-                RenderMemberEnumValue(node, type);
+                Dirty |= StringRenderer.RenderEnumValue(Node, node);
             }
             else
             {
-                RenderMemberStringValue(node, type);
-            }
-        }
-        protected virtual void RenderMemberStringValue(SerializedProperty node, Type type)
-        {
-            var value = node.stringValue;
-            var newValue = EditorGUILayout.TextField(value);
-            if (newValue != value)
-            {
-                node.stringValue = newValue;
-                Dirty |= true;
-            }
-
-        }
-        protected virtual void RenderMemberEnumValue(SerializedProperty node, Type type)
-        {
-            string[] keyOptions = Node.ExplicitValueEnum.Keys.ToArray(),
-                valueOptions = Node.ExplicitValueEnum.Values.Cast<string>().ToArray();
-            var valueIndex = Array.IndexOf(valueOptions, node.stringValue);
-            var newIndex = EditorGUILayout.Popup(valueIndex, keyOptions);
-            if (newIndex != valueIndex)
-            {
-                node.stringValue = valueOptions[newIndex];
-                Dirty |= true;
+                Dirty |= StringRenderer.RenderStringValue(node);
             }
         }
     }

@@ -1,4 +1,5 @@
 import * as csharp from "csharp";
+import { Module } from "module";
 import { $typeof } from "puerts";
 
 import Transform = csharp.UnityEngine.Transform;
@@ -566,7 +567,7 @@ class TsBehaviourConstructor {
         //class名称
         let className = Object.getPrototypeOf(this).constructor.name;
 
-        let m_ModuleName: string, m_ModulePath: string, m_Line: number, m_Column: number;
+        let moduleName: string, modulePath: string, moduleLine: number, moduleColumn: number;
         //匹配new构造函数
         //let regex = /at [a-zA-z0-9#$._ ]+ \(([a-zA-Z0-9:/\\._ ]+(.js|.ts))\:([0-9]+)\:([0-9]+)\)/g;
         let regex = /at [a-zA-z0-9#$._ ]+ \(([^\n\r\*\"\|\<\>]+(.js|.cjs|.mjs|.ts|.mts))\:([0-9]+)\:([0-9]+)\)/g;
@@ -600,24 +601,26 @@ class TsBehaviourConstructor {
                     } catch (e) { console.warn(e); }
                 }
 
-                m_ModulePath = path;
-                m_ModuleName = path.substring(path.lastIndexOf("/") + 1);
-                m_Line = parseInt(line ?? "0");
-                m_Column = parseInt(column ?? "0");
-            } else if (m_ModulePath) {
+                modulePath = path;
+                moduleName = path.substring(path.lastIndexOf("/") + 1);
+                moduleLine = parseInt(line ?? "0");
+                moduleColumn = parseInt(column ?? "0");
+            } else if (modulePath) {
                 break;
             }
         }
-        this.component["m_ClassName"] = className;
-        if (m_ModulePath) {
-            this.component["m_ModuleName"] = m_ModuleName;
-            this.component["m_ModulePath"] = m_ModulePath;
-            this.component["m_Line"] = m_Line;
-            this.component["m_Column"] = m_Column;
-            this.component["m_ModuleStack"] = stack;
+        let module = new csharp.XOR.ModuleInfo();
+        module.className = className;
+        if (modulePath) {
+            module.moduleName = moduleName;
+            module.modulePath = modulePath;
+            module.line = moduleLine;
+            module.column = moduleColumn;
+            module.stack = stack;
         } else {
-            console.warn(`Unresolved module: ${className}\n${stack}`);
+            console.warn(`Unresolved Module: ${className}\n${stack}`);
         }
+        this.component.Module = module;
     }
 
     //Getter 丶 Setter

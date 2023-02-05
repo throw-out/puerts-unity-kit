@@ -10,25 +10,44 @@ namespace XOR
     [CustomEditor(typeof(TsBehaviour))]
     internal class TsBehaviourEditor : Editor
     {
+        private TsBehaviour component;
+        void OnEnable()
+        {
+            component = target as TsBehaviour;
+        }
         public override void OnInspectorGUI()
         {
-            base.OnInspectorGUI();
-            if (GUILayout.Button("Open Module"))
+            if (component == null)
             {
-                var instance = target as TsBehaviour;
-                if (!File.Exists(instance.m_ModulePath))
-                    throw new Exception("Unknow file: " + instance.m_ModulePath);
-
-#if UNITY_EDITOR && UNITY_2019_2_OR_NEWER
-                Unity.CodeEditor.CodeEditor.CurrentEditor.OpenProject(instance.m_ModulePath, instance.m_Line, 0);
-#else
-                UnityEngine.Debug.LogWarning($"Unsupported unity version: {UnityEngine.Application.version}");
-#endif
+                return;
             }
-            if (GUILayout.Button("Module Stack"))
+            using (new EditorGUI.DisabledScope(true))
             {
-                var instance = target as TsBehaviour;
-                Debug.Log(instance.m_ModuleStack);
+                GUILayout.BeginHorizontal();
+                GUILayout.Label("ClassName");
+                GUILayout.Label(component.Module?.className ?? string.Empty);
+                GUILayout.EndHorizontal();
+
+                GUILayout.BeginHorizontal();
+                GUILayout.Label("ModuleName");
+                GUILayout.Label(component.Module?.moduleName ?? string.Empty);
+                GUILayout.EndHorizontal();
+
+                GUILayout.BeginHorizontal();
+                GUILayout.Label("ModulePath");
+                GUILayout.Label(component.Module?.modulePath ?? string.Empty);
+                GUILayout.EndHorizontal();
+            }
+            if (GUILayout.Button("Open Module") && component.Module != null)
+            {
+                if (!File.Exists(component.Module.modulePath))
+                    throw new Exception("Unknow File: " + component.Module.modulePath);
+
+                FileUtil.OpenFileInIDE(component.Module.modulePath, component.Module.line, 0);
+            }
+            if (GUILayout.Button("Module Stack") && component.Module != null)
+            {
+                Debug.Log(component.Module.stack);
             }
         }
     }

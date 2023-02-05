@@ -7,6 +7,8 @@ import Collision = csharp.UnityEngine.Collision;
 import Collision2D = csharp.UnityEngine.Collision2D;
 import Collider = csharp.UnityEngine.Collider;
 import Collider2D = csharp.UnityEngine.Collider2D;
+type AccessorType = csharp.UnityEngine.Component & csharp.XOR.Serializables.IAccessor;
+type AccessorUnionType = AccessorType | AccessorType[] | csharp.System.Array$1<AccessorType>;
 /**
  * 详情参阅: https://docs.unity3d.com/cn/current/ScriptReference/MonoBehaviour.html
  */
@@ -256,7 +258,7 @@ declare class TsBehaviourConstructor {
     private __component__;
     private __listeners__;
     private __listenerProxy__;
-    constructor(trf: Transform | GameObject, refs?: boolean | csharp.XOR.TsProperties | csharp.XOR.TsProperties[]);
+    constructor(trf: Transform | GameObject, accessor?: AccessorUnionType | boolean);
     StartCoroutine(routine: ((...args: any[]) => Generator) | Generator, ...args: any[]): csharp.UnityEngine.Coroutine;
     StopCoroutine(routine: csharp.UnityEngine.Coroutine): void;
     StopAllCoroutines(): void;
@@ -298,11 +300,11 @@ interface TsBehaviourConstructor extends IBehaviour, IGizmos, IOnPointerHandler,
 }
 declare namespace TsBehaviourConstructor {
     /**将C# TsPropertys中的属性绑定到obj对象上
-     * @param instance
-     * @param refs
-     * @param destroy
+     * @param object
+     * @param accessor
+     * @param bind       运行时绑定
      */
-    function bindPropertys(instance: object, refs: csharp.XOR.TsProperties | csharp.XOR.TsProperties[] | csharp.System.Array$1<csharp.XOR.TsProperties>, destroy?: boolean): void;
+    function bindAccessor(object: object, accessor: AccessorUnionType, bind?: boolean): void;
     /**以独立组件的方式调用
      * 适用于Update丶LateUpdate和FixedUpdate方法, 默认以BatchProxy管理调用以满足更高性能要求
      * @returns

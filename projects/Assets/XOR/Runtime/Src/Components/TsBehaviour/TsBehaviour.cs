@@ -15,18 +15,7 @@ namespace XOR
         private WeakReference<TsBehaviour> referenceSelf;
         #region Editor 
 #if UNITY_EDITOR
-        [ReadOnly]
-        public string m_ClassName;
-        [ReadOnly]
-        public string m_ModuleName;
-        [ReadOnly]
-        public string m_ModulePath;
-        [HideInInspector]
-        public int m_Line;
-        [HideInInspector]
-        public int m_Column;
-        [HideInInspector]
-        public string m_ModuleStack;
+        public ModuleInfo Module { get; set; }
 #endif
         #endregion
 
@@ -406,28 +395,15 @@ namespace XOR
             referenceInstances = null;
         }
     }
-
-#if UNITY_EDITOR
-    internal class ReadOnlyAttribute : PropertyAttribute
+    public class ModuleInfo
     {
+        public string className { get; set; }
+        public string moduleName { get; set; }
+        public string modulePath { get; set; }
+        public int line { get; set; }
+        public int column { get; set; }
+        public string stack { get; set; }
     }
-    [CustomPropertyDrawer(typeof(ReadOnlyAttribute))]
-    internal class ReadOnlyDrawer : PropertyDrawer
-    {
-        public override float GetPropertyHeight(SerializedProperty property, GUIContent label)
-        {
-            return EditorGUI.GetPropertyHeight(property, label, true);
-        }
-
-        public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)
-        {
-            using (new EditorGUI.DisabledScope(true))
-            {
-                EditorGUI.PropertyField(position, property, label, true);
-            }
-        }
-    }
-#endif
 }
 
 

@@ -25947,12 +25947,8 @@ declare namespace CS {
         }
         class TsBehaviour extends UnityEngine.MonoBehaviour implements System.IDisposable {
             protected [__keep_incompatibility]: never;
-            public m_ClassName: string
-            public m_ModuleName: string
-            public m_ModulePath: string
-            public m_Line: number
-            public m_Column: number
-            public m_ModuleStack: string
+            public get Module(): XOR.ModuleInfo;
+            public set Module(value: XOR.ModuleInfo);
             public get IsActivated(): boolean;
             public get IsStarted(): boolean;
             public get IsDestroyed(): boolean;
@@ -26023,6 +26019,211 @@ declare namespace CS {
             public Dispose(): void
             public constructor()
             public constructor($subscribe: System.Action$1<XOR.Subscriber>)
+        }
+        class OnDragProxy extends XOR.Proxy implements UnityEngine.EventSystems.IDragHandler, UnityEngine.EventSystems.IEndDragHandler, UnityEngine.EventSystems.IEventSystemHandler, System.IDisposable, UnityEngine.EventSystems.IBeginDragHandler {
+            protected [__keep_incompatibility]: never;
+            public stayFrame: boolean
+            public get enter(): System.Action$1<UnityEngine.EventSystems.PointerEventData>;
+            public set enter(value: System.Action$1<UnityEngine.EventSystems.PointerEventData>);
+            public get stay(): System.Action$1<UnityEngine.EventSystems.PointerEventData>;
+            public set stay(value: System.Action$1<UnityEngine.EventSystems.PointerEventData>);
+            public get exit(): System.Action$1<UnityEngine.EventSystems.PointerEventData>;
+            public set exit(value: System.Action$1<UnityEngine.EventSystems.PointerEventData>);
+            public OnBeginDrag($eventData: UnityEngine.EventSystems.PointerEventData): void
+            public OnDrag($eventData: UnityEngine.EventSystems.PointerEventData): void
+            public OnEndDrag($eventData: UnityEngine.EventSystems.PointerEventData): void
+            public constructor()
+        }
+        class OnPointerClickProxy extends XOR.ProxyAction$1<UnityEngine.EventSystems.PointerEventData> implements UnityEngine.EventSystems.IEventSystemHandler, System.IDisposable, UnityEngine.EventSystems.IPointerClickHandler {
+            protected [__keep_incompatibility]: never;
+            public OnPointerClick($eventData: UnityEngine.EventSystems.PointerEventData): void
+            public constructor()
+        }
+        class OnPointerDownProxy extends XOR.ProxyAction$1<UnityEngine.EventSystems.PointerEventData> implements UnityEngine.EventSystems.IEventSystemHandler, System.IDisposable, UnityEngine.EventSystems.IPointerDownHandler {
+            protected [__keep_incompatibility]: never;
+            public OnPointerDown($eventData: UnityEngine.EventSystems.PointerEventData): void
+            public constructor()
+        }
+        class OnPointerEnterProxy extends XOR.ProxyAction$1<UnityEngine.EventSystems.PointerEventData> implements UnityEngine.EventSystems.IEventSystemHandler, UnityEngine.EventSystems.IPointerEnterHandler, System.IDisposable {
+            protected [__keep_incompatibility]: never;
+            public OnPointerEnter($eventData: UnityEngine.EventSystems.PointerEventData): void
+            public constructor()
+        }
+        class OnPointerExitProxy extends XOR.ProxyAction$1<UnityEngine.EventSystems.PointerEventData> implements UnityEngine.EventSystems.IEventSystemHandler, System.IDisposable, UnityEngine.EventSystems.IPointerExitHandler {
+            protected [__keep_incompatibility]: never;
+            public OnPointerExit($eventData: UnityEngine.EventSystems.PointerEventData): void
+            public constructor()
+        }
+        class OnPointerUpProxy extends XOR.ProxyAction$1<UnityEngine.EventSystems.PointerEventData> implements UnityEngine.EventSystems.IEventSystemHandler, System.IDisposable, UnityEngine.EventSystems.IPointerUpHandler {
+            protected [__keep_incompatibility]: never;
+            public OnPointerUp($eventData: UnityEngine.EventSystems.PointerEventData): void
+            public constructor()
+        }
+        class ProxyAction extends XOR.Proxy implements System.IDisposable {
+            protected [__keep_incompatibility]: never;
+            public get callback(): System.Action;
+            public set callback(value: System.Action);
+        }
+        class OnDrawGizmosSelectedProxy extends XOR.ProxyAction implements System.IDisposable {
+            protected [__keep_incompatibility]: never;
+            public constructor()
+        }
+        class OnSceneGUIProxy extends XOR.ProxyAction implements System.IDisposable {
+            protected [__keep_incompatibility]: never;
+            public constructor()
+        }
+        class FixedUpdateProxy extends XOR.ProxyAction implements System.IDisposable {
+            protected [__keep_incompatibility]: never;
+            public constructor()
+        }
+        class LateUpdateProxy extends XOR.ProxyAction implements System.IDisposable {
+            protected [__keep_incompatibility]: never;
+            public constructor()
+        }
+        class OnApplicationFocusProxy extends XOR.ProxyAction$1<boolean> implements System.IDisposable {
+            protected [__keep_incompatibility]: never;
+            public constructor()
+        }
+        class OnApplicationPauseProxy extends XOR.ProxyAction$1<boolean> implements System.IDisposable {
+            protected [__keep_incompatibility]: never;
+            public constructor()
+        }
+        class OnApplicationQuitProxy extends XOR.ProxyAction implements System.IDisposable {
+            protected [__keep_incompatibility]: never;
+            public constructor()
+        }
+        class OnBecameVisibleProxy extends XOR.ProxyAction$1<boolean> implements System.IDisposable {
+            protected [__keep_incompatibility]: never;
+            public constructor()
+        }
+        class OnDisableProxy extends XOR.ProxyAction implements System.IDisposable {
+            protected [__keep_incompatibility]: never;
+            public constructor()
+        }
+        class OnEnableProxy extends XOR.ProxyAction implements System.IDisposable {
+            protected [__keep_incompatibility]: never;
+            public constructor()
+        }
+        class OnGUIProxy extends XOR.ProxyAction implements System.IDisposable {
+            protected [__keep_incompatibility]: never;
+            public constructor()
+        }
+        class UpdateProxy extends XOR.ProxyAction implements System.IDisposable {
+            protected [__keep_incompatibility]: never;
+            public constructor()
+        }
+        class OnMouseDownProxy extends XOR.ProxyAction implements System.IDisposable {
+            protected [__keep_incompatibility]: never;
+            public constructor()
+        }
+        class OnMouseDragProxy extends XOR.ProxyAction implements System.IDisposable {
+            protected [__keep_incompatibility]: never;
+            public constructor()
+        }
+        class OnMouseEnterProxy extends XOR.ProxyAction implements System.IDisposable {
+            protected [__keep_incompatibility]: never;
+            public constructor()
+        }
+        class OnMouseExitProxy extends XOR.ProxyAction implements System.IDisposable {
+            protected [__keep_incompatibility]: never;
+            public constructor()
+        }
+        class OnMouseOverProxy extends XOR.ProxyAction implements System.IDisposable {
+            protected [__keep_incompatibility]: never;
+            public constructor()
+        }
+        class OnMouseUpAsButtonProxy extends XOR.ProxyAction implements System.IDisposable {
+            protected [__keep_incompatibility]: never;
+            public constructor()
+        }
+        class OnMouseUpProxy extends XOR.ProxyAction implements System.IDisposable {
+            protected [__keep_incompatibility]: never;
+            public constructor()
+        }
+        class OnCollision2DProxy extends XOR.Proxy implements System.IDisposable {
+            protected [__keep_incompatibility]: never;
+            public stayFrame: boolean
+            public get enter(): System.Action$1<UnityEngine.Collision2D>;
+            public set enter(value: System.Action$1<UnityEngine.Collision2D>);
+            public get stay(): System.Action$1<UnityEngine.Collision2D>;
+            public set stay(value: System.Action$1<UnityEngine.Collision2D>);
+            public get exit(): System.Action$1<UnityEngine.Collision2D>;
+            public set exit(value: System.Action$1<UnityEngine.Collision2D>);
+            public constructor()
+        }
+        class OnCollisionProxy extends XOR.Proxy implements System.IDisposable {
+            protected [__keep_incompatibility]: never;
+            public stayFrame: boolean
+            public get enter(): System.Action$1<UnityEngine.Collision>;
+            public set enter(value: System.Action$1<UnityEngine.Collision>);
+            public get stay(): System.Action$1<UnityEngine.Collision>;
+            public set stay(value: System.Action$1<UnityEngine.Collision>);
+            public get exit(): System.Action$1<UnityEngine.Collision>;
+            public set exit(value: System.Action$1<UnityEngine.Collision>);
+            public constructor()
+        }
+        class OnTrigger2DProxy extends XOR.Proxy implements System.IDisposable {
+            protected [__keep_incompatibility]: never;
+            public stayFrame: boolean
+            public get enter(): System.Action$1<UnityEngine.Collider2D>;
+            public set enter(value: System.Action$1<UnityEngine.Collider2D>);
+            public get stay(): System.Action$1<UnityEngine.Collider2D>;
+            public set stay(value: System.Action$1<UnityEngine.Collider2D>);
+            public get exit(): System.Action$1<UnityEngine.Collider2D>;
+            public set exit(value: System.Action$1<UnityEngine.Collider2D>);
+            public constructor()
+        }
+        class OnTriggerProxy extends XOR.Proxy implements System.IDisposable {
+            protected [__keep_incompatibility]: never;
+            public stayFrame: boolean
+            public get enter(): System.Action$1<UnityEngine.Collider>;
+            public set enter(value: System.Action$1<UnityEngine.Collider>);
+            public get stay(): System.Action$1<UnityEngine.Collider>;
+            public set stay(value: System.Action$1<UnityEngine.Collider>);
+            public get exit(): System.Action$1<UnityEngine.Collider>;
+            public set exit(value: System.Action$1<UnityEngine.Collider>);
+            public constructor()
+        }
+        class ModuleInfo extends System.Object {
+            protected [__keep_incompatibility]: never;
+            public get className(): string;
+            public set className(value: string);
+            public get moduleName(): string;
+            public set moduleName(value: string);
+            public get modulePath(): string;
+            public set modulePath(value: string);
+            public get line(): number;
+            public set line(value: number);
+            public get column(): number;
+            public set column(value: number);
+            public get stack(): string;
+            public set stack(value: string);
+            public constructor()
+        }
+        class TsMessages extends UnityEngine.MonoBehaviour {
+            protected [__keep_incompatibility]: never;
+            public callback: XOR.ReceiveMessagesCallback
+            public emptyCallback: System.Action
+            public ReceiveMessage($eventName: string): void
+            public ReceiveMultiparameterMessage($eventName: string, ...args: string[]): void
+            public ReceiveEmptyMessage(): void
+            public constructor()
+        }
+        interface ReceiveMessagesCallback {
+            (eventName: string, args: System.Array$1<string>): void;
+            Invoke?: (eventName: string, args: System.Array$1<string>) => void;
+        }
+        var ReceiveMessagesCallback: { new(func: (eventName: string, args: System.Array$1<string>) => void): ReceiveMessagesCallback; }
+        class TsProperties extends UnityEngine.MonoBehaviour implements XOR.Serializables.IAccessor {
+            protected [__keep_incompatibility]: never;
+            public GetProperties(): System.Array$1<XOR.Serializables.ResultPair>
+            public SetProperty($key: string, $value: any): void
+            public SetPropertyListener($handler: System.Action$2<string, any>): void
+            public constructor()
+        }
+        class TsScriptableObject extends UnityEngine.ScriptableObject {
+            protected [__keep_incompatibility]: never;
+            public constructor()
         }
         class JsEnvExtension extends System.Object {
             protected [__keep_incompatibility]: never;
@@ -26191,7 +26392,7 @@ declare namespace CS {
             public constructor($millisecondsTimeout: number)
             public constructor()
         }
-        class ThreadLoader extends System.Object implements XOR.ISyncProcess, Puerts.ILoader {
+        class ThreadLoader extends System.Object implements Puerts.ILoader, XOR.ISyncProcess {
             protected [__keep_incompatibility]: never;
             public FileExists($filepath: string): boolean
             public ReadFile($filepath: string, $debugpath: $Ref<string>): string
@@ -26222,195 +26423,6 @@ declare namespace CS {
             protected [__keep_incompatibility]: never;
             public port: number
             public wait: boolean
-        }
-        class OnDragProxy extends XOR.Proxy implements UnityEngine.EventSystems.IDragHandler, UnityEngine.EventSystems.IEndDragHandler, UnityEngine.EventSystems.IEventSystemHandler, System.IDisposable, UnityEngine.EventSystems.IBeginDragHandler {
-            protected [__keep_incompatibility]: never;
-            public stayFrame: boolean
-            public get enter(): System.Action$1<UnityEngine.EventSystems.PointerEventData>;
-            public set enter(value: System.Action$1<UnityEngine.EventSystems.PointerEventData>);
-            public get stay(): System.Action$1<UnityEngine.EventSystems.PointerEventData>;
-            public set stay(value: System.Action$1<UnityEngine.EventSystems.PointerEventData>);
-            public get exit(): System.Action$1<UnityEngine.EventSystems.PointerEventData>;
-            public set exit(value: System.Action$1<UnityEngine.EventSystems.PointerEventData>);
-            public OnBeginDrag($eventData: UnityEngine.EventSystems.PointerEventData): void
-            public OnDrag($eventData: UnityEngine.EventSystems.PointerEventData): void
-            public OnEndDrag($eventData: UnityEngine.EventSystems.PointerEventData): void
-            public constructor()
-        }
-        class OnPointerClickProxy extends XOR.ProxyAction$1<UnityEngine.EventSystems.PointerEventData> implements UnityEngine.EventSystems.IEventSystemHandler, System.IDisposable, UnityEngine.EventSystems.IPointerClickHandler {
-            protected [__keep_incompatibility]: never;
-            public OnPointerClick($eventData: UnityEngine.EventSystems.PointerEventData): void
-            public constructor()
-        }
-        class OnPointerDownProxy extends XOR.ProxyAction$1<UnityEngine.EventSystems.PointerEventData> implements UnityEngine.EventSystems.IEventSystemHandler, System.IDisposable, UnityEngine.EventSystems.IPointerDownHandler {
-            protected [__keep_incompatibility]: never;
-            public OnPointerDown($eventData: UnityEngine.EventSystems.PointerEventData): void
-            public constructor()
-        }
-        class OnPointerEnterProxy extends XOR.ProxyAction$1<UnityEngine.EventSystems.PointerEventData> implements UnityEngine.EventSystems.IEventSystemHandler, UnityEngine.EventSystems.IPointerEnterHandler, System.IDisposable {
-            protected [__keep_incompatibility]: never;
-            public OnPointerEnter($eventData: UnityEngine.EventSystems.PointerEventData): void
-            public constructor()
-        }
-        class OnPointerExitProxy extends XOR.ProxyAction$1<UnityEngine.EventSystems.PointerEventData> implements UnityEngine.EventSystems.IEventSystemHandler, System.IDisposable, UnityEngine.EventSystems.IPointerExitHandler {
-            protected [__keep_incompatibility]: never;
-            public OnPointerExit($eventData: UnityEngine.EventSystems.PointerEventData): void
-            public constructor()
-        }
-        class OnPointerUpProxy extends XOR.ProxyAction$1<UnityEngine.EventSystems.PointerEventData> implements UnityEngine.EventSystems.IEventSystemHandler, System.IDisposable, UnityEngine.EventSystems.IPointerUpHandler {
-            protected [__keep_incompatibility]: never;
-            public OnPointerUp($eventData: UnityEngine.EventSystems.PointerEventData): void
-            public constructor()
-        }
-        class ProxyAction extends XOR.Proxy implements System.IDisposable {
-            protected [__keep_incompatibility]: never;
-            public get callback(): System.Action;
-            public set callback(value: System.Action);
-        }
-        class OnDrawGizmosSelectedProxy extends XOR.ProxyAction implements System.IDisposable {
-            protected [__keep_incompatibility]: never;
-            public constructor()
-        }
-        class OnSceneGUIProxy extends XOR.ProxyAction implements System.IDisposable {
-            protected [__keep_incompatibility]: never;
-            public constructor()
-        }
-        class FixedUpdateProxy extends XOR.ProxyAction implements System.IDisposable {
-            protected [__keep_incompatibility]: never;
-            public constructor()
-        }
-        class LateUpdateProxy extends XOR.ProxyAction implements System.IDisposable {
-            protected [__keep_incompatibility]: never;
-            public constructor()
-        }
-        class OnApplicationFocusProxy extends XOR.ProxyAction$1<boolean> implements System.IDisposable {
-            protected [__keep_incompatibility]: never;
-            public constructor()
-        }
-        class OnApplicationPauseProxy extends XOR.ProxyAction$1<boolean> implements System.IDisposable {
-            protected [__keep_incompatibility]: never;
-            public constructor()
-        }
-        class OnApplicationQuitProxy extends XOR.ProxyAction implements System.IDisposable {
-            protected [__keep_incompatibility]: never;
-            public constructor()
-        }
-        class OnBecameVisibleProxy extends XOR.ProxyAction$1<boolean> implements System.IDisposable {
-            protected [__keep_incompatibility]: never;
-            public constructor()
-        }
-        class OnDisableProxy extends XOR.ProxyAction implements System.IDisposable {
-            protected [__keep_incompatibility]: never;
-            public constructor()
-        }
-        class OnEnableProxy extends XOR.ProxyAction implements System.IDisposable {
-            protected [__keep_incompatibility]: never;
-            public constructor()
-        }
-        class OnGUIProxy extends XOR.ProxyAction implements System.IDisposable {
-            protected [__keep_incompatibility]: never;
-            public constructor()
-        }
-        class UpdateProxy extends XOR.ProxyAction implements System.IDisposable {
-            protected [__keep_incompatibility]: never;
-            public constructor()
-        }
-        class OnMouseDownProxy extends XOR.ProxyAction implements System.IDisposable {
-            protected [__keep_incompatibility]: never;
-            public constructor()
-        }
-        class OnMouseDragProxy extends XOR.ProxyAction implements System.IDisposable {
-            protected [__keep_incompatibility]: never;
-            public constructor()
-        }
-        class OnMouseEnterProxy extends XOR.ProxyAction implements System.IDisposable {
-            protected [__keep_incompatibility]: never;
-            public constructor()
-        }
-        class OnMouseExitProxy extends XOR.ProxyAction implements System.IDisposable {
-            protected [__keep_incompatibility]: never;
-            public constructor()
-        }
-        class OnMouseOverProxy extends XOR.ProxyAction implements System.IDisposable {
-            protected [__keep_incompatibility]: never;
-            public constructor()
-        }
-        class OnMouseUpAsButtonProxy extends XOR.ProxyAction implements System.IDisposable {
-            protected [__keep_incompatibility]: never;
-            public constructor()
-        }
-        class OnMouseUpProxy extends XOR.ProxyAction implements System.IDisposable {
-            protected [__keep_incompatibility]: never;
-            public constructor()
-        }
-        class OnCollision2DProxy extends XOR.Proxy implements System.IDisposable {
-            protected [__keep_incompatibility]: never;
-            public stayFrame: boolean
-            public get enter(): System.Action$1<UnityEngine.Collision2D>;
-            public set enter(value: System.Action$1<UnityEngine.Collision2D>);
-            public get stay(): System.Action$1<UnityEngine.Collision2D>;
-            public set stay(value: System.Action$1<UnityEngine.Collision2D>);
-            public get exit(): System.Action$1<UnityEngine.Collision2D>;
-            public set exit(value: System.Action$1<UnityEngine.Collision2D>);
-            public constructor()
-        }
-        class OnCollisionProxy extends XOR.Proxy implements System.IDisposable {
-            protected [__keep_incompatibility]: never;
-            public stayFrame: boolean
-            public get enter(): System.Action$1<UnityEngine.Collision>;
-            public set enter(value: System.Action$1<UnityEngine.Collision>);
-            public get stay(): System.Action$1<UnityEngine.Collision>;
-            public set stay(value: System.Action$1<UnityEngine.Collision>);
-            public get exit(): System.Action$1<UnityEngine.Collision>;
-            public set exit(value: System.Action$1<UnityEngine.Collision>);
-            public constructor()
-        }
-        class OnTrigger2DProxy extends XOR.Proxy implements System.IDisposable {
-            protected [__keep_incompatibility]: never;
-            public stayFrame: boolean
-            public get enter(): System.Action$1<UnityEngine.Collider2D>;
-            public set enter(value: System.Action$1<UnityEngine.Collider2D>);
-            public get stay(): System.Action$1<UnityEngine.Collider2D>;
-            public set stay(value: System.Action$1<UnityEngine.Collider2D>);
-            public get exit(): System.Action$1<UnityEngine.Collider2D>;
-            public set exit(value: System.Action$1<UnityEngine.Collider2D>);
-            public constructor()
-        }
-        class OnTriggerProxy extends XOR.Proxy implements System.IDisposable {
-            protected [__keep_incompatibility]: never;
-            public stayFrame: boolean
-            public get enter(): System.Action$1<UnityEngine.Collider>;
-            public set enter(value: System.Action$1<UnityEngine.Collider>);
-            public get stay(): System.Action$1<UnityEngine.Collider>;
-            public set stay(value: System.Action$1<UnityEngine.Collider>);
-            public get exit(): System.Action$1<UnityEngine.Collider>;
-            public set exit(value: System.Action$1<UnityEngine.Collider>);
-            public constructor()
-        }
-        class TsMessages extends UnityEngine.MonoBehaviour {
-            protected [__keep_incompatibility]: never;
-            public callback: XOR.ReceiveMessagesCallback
-            public emptyCallback: System.Action
-            public ReceiveMessage($eventName: string): void
-            public ReceiveMultiparameterMessage($eventName: string, ...args: string[]): void
-            public ReceiveEmptyMessage(): void
-            public constructor()
-        }
-        interface ReceiveMessagesCallback {
-            (eventName: string, args: System.Array$1<string>): void;
-            Invoke?: (eventName: string, args: System.Array$1<string>) => void;
-        }
-        var ReceiveMessagesCallback: { new(func: (eventName: string, args: System.Array$1<string>) => void): ReceiveMessagesCallback; }
-        class TsProperties extends UnityEngine.MonoBehaviour implements XOR.Serializables.IAccessor {
-            protected [__keep_incompatibility]: never;
-            public GetProperties(): System.Array$1<XOR.Serializables.ResultPair>
-            public SetProperty($key: string, $value: any): void
-            public SetPropertyListener($handler: System.Action$2<string, any>): void
-            public constructor()
-        }
-        class TsScriptableObject extends UnityEngine.ScriptableObject {
-            protected [__keep_incompatibility]: never;
-            public constructor()
         }
         class BufferUtil extends System.Object {
             protected [__keep_incompatibility]: never;

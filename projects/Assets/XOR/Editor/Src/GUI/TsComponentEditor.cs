@@ -351,18 +351,58 @@ namespace XOR
                 properties?.TryGetValue(property.name, out current);
                 if (current == null)
                 {
-                    if (cw.AddProperty(component, property.valueType, property.name, index))
-                    {
-                        if (property.defaultValue != null) cw.SetPropertyValue(component, property.name, property.defaultValue);
-                    }
-                    else
+                    if (!cw.AddProperty(component, property.valueType, property.name, index))
                     {
                         Debug.LogWarning($"{nameof(XOR.TsComponent)} unsupport type: {property.valueType.FullName}");
+                        continue;
                     }
+                    if (property.defaultValue != null)
+                    {
+                        cw.SetPropertyValue(component, property.name, property.defaultValue);
+                    }
+                    current = cw.GetProperty(component, property.name);
                 }
                 else if (current.Index != index)
                 {
                     cw.SetPropertyIndex(component, property.name, index);
+                }
+                //检查Range
+                var valueType = property.valueType;
+                if (property.valueRange != null && XOR.Serializables.Utility.IsSingleType(valueType.IsArray ? valueType.GetElementType() : valueType))
+                {
+                    Tuple<float, float> range = property.valueRange;
+                    if (valueType.IsArray)
+                    {
+                        double[] array = current.Value as double[];
+                        XOR.Serializables.Utility.SetArrayRange(range, array);
+                        cw.SetPropertyValue(component, property.name, array);
+                    }
+                    else
+                    {
+                        double value = (double)current.Value;
+                        XOR.Serializables.Utility.SetRange(range, ref value);
+                        cw.SetPropertyValue(component, property.name, value);
+                    }
+                }
+                //integer值取值范围
+                if (XOR.Serializables.Utility.IsIntegerType(valueType.IsArray ? valueType.GetElementType() : valueType))
+                {
+                    if (valueType.IsArray)
+                    {
+                        Array array = current.Value as Array;
+                        if (XOR.Serializables.Utility.SetIntegerArrayRange(valueType, array))
+                        {
+                            cw.SetPropertyValue(component, property.name, array);
+                        }
+                    }
+                    else
+                    {
+                        int value = (int)(double)current.Value;
+                        if (XOR.Serializables.Utility.SetIntegerRange(valueType, ref value))
+                        {
+                            cw.SetPropertyValue(component, property.name, value);
+                        }
+                    }
                 }
                 index++;
             }

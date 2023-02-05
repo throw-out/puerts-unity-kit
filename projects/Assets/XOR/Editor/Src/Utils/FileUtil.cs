@@ -13,7 +13,12 @@ namespace XOR
         /// <returns></returns>
         public static bool OpenFileInIDE(string filepath, int line = 0, int column = 0)
         {
+#if UNITY_EDITOR && UNITY_2019_2_OR_NEWER
             return CodeEditor.CurrentEditor.OpenProject(filepath, line, column);
+#else
+            UnityEngine.Debug.LogWarning($"Unsupported unity version: {UnityEngine.Application.unityVersion}");
+            return false;
+#endif
         }
     }
 }
