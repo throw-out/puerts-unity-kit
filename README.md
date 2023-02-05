@@ -1,3 +1,5 @@
+[![license](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/throw-out/puerts-unity-kit/blob/main/LICENSE)
+
 **请悉知: 当前项目处于预览版, 其功能并不完善, 其中部分代码可能会在未来版本中进行修改或删除.**
 
 ## 介绍
