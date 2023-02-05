@@ -89,6 +89,7 @@ namespace XOR
         public WacthType watchType = WacthType.Nodejs;
         public enum WacthType
         {
+            None,
             Csharp,
             Nodejs
         }

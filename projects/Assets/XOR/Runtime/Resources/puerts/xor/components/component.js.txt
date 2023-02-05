@@ -1,5 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
+const csharp = require("csharp");
+const puerts_1 = require("puerts");
 class TsComponentConstructor extends xor.TsBehaviour {
     constructor(component) {
         super(component, component);
@@ -38,4 +40,25 @@ function register() {
     _g.xor.getGuid = getGuid;
 }
 register();
+/**重写GetComponent事件, 用于获取 */
+function overrideGetComponent() {
+    function createGetComponent(original) {
+        return function () {
+            let ctor = arguments[0];
+            if (typeof (ctor) === "function") {
+                if (RegisterFlag in ctor) {
+                    return this.GetTsComponent(ctor[RegisterFlag])?.JSObject;
+                }
+                if (ctor.prototype instanceof csharp.UnityEngine.Component) {
+                    return original.call(this, (0, puerts_1.$typeof)(ctor));
+                }
+            }
+            return original.apply(this, arguments);
+        };
+    }
+    const Component = csharp.UnityEngine.Component, GameObject = csharp.UnityEngine.GameObject;
+    Component.prototype.GetComponent = createGetComponent(Component.prototype.GetComponent);
+    GameObject.prototype.GetComponent = createGetComponent(GameObject.prototype.GetComponent);
+}
+overrideGetComponent();
 //# sourceMappingURL=component.js.map

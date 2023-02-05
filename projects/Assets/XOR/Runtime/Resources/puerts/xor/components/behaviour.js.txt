@@ -33,7 +33,7 @@ class IOnMouse {
  * 沿用C# MonoBehaviour习惯, 将OnEnable丶Update丶OnEnable等方法绑定到C#对象上, Unity将在生命周期内调用
  *
  * 注: 为避免多次跨语言调用, Update丶FixedUpdate丶LateUpdate方法将由BatchProxy统一管理(并非绑定到各自的GameObject上)
- * @see Standalone 如果需要绑定独立的组件, 在对应方法上添加此标注
+ * @see standalone 如果需要绑定独立的组件, 在对应方法上添加此标注
  */
 class TsBehaviourConstructor {
     constructor(object, accessor) {
@@ -244,16 +244,16 @@ class TsBehaviourConstructor {
             ["LateUpdate", BatchProxy.LateUpdate],
             ["FixedUpdate", BatchProxy.FixedUpdate],
         ].map(([funcname, proxy]) => {
-            let waitAsyncComplete = Metadata.getDefineData(proto, funcname, TsBehaviourConstructor.Throttle, false);
+            let waitAsyncComplete = Metadata.getDefineData(proto, funcname, TsBehaviourConstructor.throttle, false);
             let func = bind(this, funcname, waitAsyncComplete);
             if (!func) {
                 return null;
             }
-            if (Metadata.isDefine(proto, funcname, TsBehaviourConstructor.Standalone)) {
+            if (Metadata.isDefine(proto, funcname, TsBehaviourConstructor.standalone)) {
                 this.component.CreateProxy(funcname, func);
                 return undefined;
             }
-            let frameskip = Metadata.getDefineData(proto, funcname, TsBehaviourConstructor.Frameskip, 0);
+            let frameskip = Metadata.getDefineData(proto, funcname, TsBehaviourConstructor.frameskip, 0);
             return [func, proxy, frameskip];
         }).filter(o => !!o);
         if (proxies.length > 0) {
@@ -295,10 +295,10 @@ class TsBehaviourConstructor {
     _bindListeners() {
         let proto = Object.getPrototypeOf(this);
         for (let funcname of Metadata.getKeys(proto)) {
-            let eventName = Metadata.getDefineData(proto, funcname, TsBehaviourConstructor.Listener);
+            let eventName = Metadata.getDefineData(proto, funcname, TsBehaviourConstructor.listener);
             if (!eventName)
                 continue;
-            let waitAsyncComplete = Metadata.getDefineData(proto, funcname, TsBehaviourConstructor.Throttle, false);
+            let waitAsyncComplete = Metadata.getDefineData(proto, funcname, TsBehaviourConstructor.throttle, false);
             let func = bind(this, funcname, waitAsyncComplete);
             if (!func)
                 return undefined;
@@ -524,69 +524,70 @@ class TsBehaviourConstructor {
      * 适用于Update丶LateUpdate和FixedUpdate方法, 默认以BatchProxy管理调用以满足更高性能要求
      * @returns
      */
-    function Standalone() {
+    function standalone() {
         return (target, key) => {
             let proto = target.constructor.prototype;
             if (!(proto instanceof TsBehaviourConstructor)) {
-                console.warn(`${target.constructor.name}: invaild decorator ${Standalone.name}`);
+                console.warn(`${target.constructor.name}: invaild decorator ${standalone.name}`);
                 return;
             }
-            Metadata.define(proto, key, Standalone);
+            Metadata.define(proto, key, standalone);
         };
     }
-    TsBehaviourConstructor.Standalone = Standalone;
+    TsBehaviourConstructor.standalone = standalone;
     /**跨帧调用(全局共用/非单独的frameskip分区)
      * 适用于Update丶LateUpdate和FixedUpdate方法, 仅允许BatchProxy管理调用(与Standalone组件冲突)
+     * (如你需要处理Input等事件, 那么就不应该使用它)
      * @param value  每n帧调用一次(<不包含>大于1时才有效)
      * @returns
      */
-    function Frameskip(value) {
+    function frameskip(value) {
         return (target, key) => {
             let proto = target.constructor.prototype;
             if (!(proto instanceof TsBehaviourConstructor)) {
-                console.warn(`${target.constructor.name}: invaild decorator ${Frameskip.name}`);
+                console.warn(`${target.constructor.name}: invaild decorator ${frameskip.name}`);
                 return;
             }
             if (!Number.isInteger(value) || value <= 1) {
-                console.warn(`${target.constructor.name}: invaild decorator parameter ${value} for ${Frameskip.name}`);
+                console.warn(`${target.constructor.name}: invaild decorator parameter ${value} for ${frameskip.name}`);
                 return;
             }
-            Metadata.define(proto, key, Frameskip, value);
+            Metadata.define(proto, key, frameskip, value);
         };
     }
-    TsBehaviourConstructor.Frameskip = Frameskip;
+    TsBehaviourConstructor.frameskip = frameskip;
     /**节流方法
      * 适用于async/Promise方法, 在上一次调用完成后才会再次调用(Awake丶Update丶FixedUpdate...)
      * @param enable
      * @returns
      */
-    function Throttle(enable) {
+    function throttle(enable) {
         return (target, key) => {
             let proto = target.constructor.prototype;
             if (!(proto instanceof TsBehaviourConstructor)) {
-                console.warn(`${target.constructor.name}: invaild decorator ${Throttle.name}`);
+                console.warn(`${target.constructor.name}: invaild decorator ${throttle.name}`);
                 return;
             }
-            Metadata.define(proto, key, Throttle, !!enable);
+            Metadata.define(proto, key, throttle, !!enable);
         };
     }
-    TsBehaviourConstructor.Throttle = Throttle;
+    TsBehaviourConstructor.throttle = throttle;
     /**注册侦听器
      * 适用于@see csharp.XOR.TsMessages 回调
      * @param eventName
      * @returns
      */
-    function Listener(eventName) {
+    function listener(eventName) {
         return (target, key) => {
             let proto = target.constructor.prototype;
             if (!(proto instanceof TsBehaviourConstructor)) {
-                console.warn(`${target.constructor.name}: invaild decorator ${Listener.name}`);
+                console.warn(`${target.constructor.name}: invaild decorator ${listener.name}`);
                 return;
             }
-            Metadata.define(proto, key, Listener, eventName ?? key);
+            Metadata.define(proto, key, listener, eventName ?? key);
         };
     }
-    TsBehaviourConstructor.Listener = Listener;
+    TsBehaviourConstructor.listener = listener;
 })(TsBehaviourConstructor || (TsBehaviourConstructor = {}));
 /**Update批量调用 */
 class BatchProxy {

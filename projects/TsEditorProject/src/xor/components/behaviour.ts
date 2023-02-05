@@ -269,7 +269,7 @@ abstract class IOnMouse {
  * 沿用C# MonoBehaviour习惯, 将OnEnable丶Update丶OnEnable等方法绑定到C#对象上, Unity将在生命周期内调用
  * 
  * 注: 为避免多次跨语言调用, Update丶FixedUpdate丶LateUpdate方法将由BatchProxy统一管理(并非绑定到各自的GameObject上)
- * @see Standalone 如果需要绑定独立的组件, 在对应方法上添加此标注
+ * @see standalone 如果需要绑定独立的组件, 在对应方法上添加此标注
  */
 class TsBehaviourConstructor {
     private __transform__: Transform;
@@ -503,16 +503,16 @@ class TsBehaviourConstructor {
             ["LateUpdate", BatchProxy.LateUpdate],
             ["FixedUpdate", BatchProxy.FixedUpdate],
         ]).map(([funcname, proxy]) => {
-            let waitAsyncComplete = Metadata.getDefineData(proto, funcname, TsBehaviourConstructor.Throttle, false);
+            let waitAsyncComplete = Metadata.getDefineData(proto, funcname, TsBehaviourConstructor.throttle, false);
             let func: Function = bind(this, funcname, waitAsyncComplete);
             if (!func) {
                 return null;
             }
-            if (Metadata.isDefine(proto, funcname, TsBehaviourConstructor.Standalone)) {
+            if (Metadata.isDefine(proto, funcname, TsBehaviourConstructor.standalone)) {
                 this.component.CreateProxy(funcname, func as csharp.System.Action);
                 return undefined
             }
-            let frameskip = Metadata.getDefineData(proto, funcname, TsBehaviourConstructor.Frameskip, 0);
+            let frameskip = Metadata.getDefineData(proto, funcname, TsBehaviourConstructor.frameskip, 0);
             return <[Function, BatchProxy, number]>[func, proxy, frameskip];
         }).filter(o => !!o);
 
@@ -553,10 +553,10 @@ class TsBehaviourConstructor {
     private _bindListeners() {
         let proto = Object.getPrototypeOf(this);
         for (let funcname of Metadata.getKeys(proto)) {
-            let eventName = Metadata.getDefineData(proto, funcname, TsBehaviourConstructor.Listener);
+            let eventName = Metadata.getDefineData(proto, funcname, TsBehaviourConstructor.listener);
             if (!eventName)
                 continue;
-            let waitAsyncComplete = Metadata.getDefineData(proto, funcname, TsBehaviourConstructor.Throttle, false);
+            let waitAsyncComplete = Metadata.getDefineData(proto, funcname, TsBehaviourConstructor.throttle, false);
             let func: csharp.System.Action = bind(this, funcname, waitAsyncComplete);
             if (!func)
                 return undefined;
@@ -660,7 +660,7 @@ class TsBehaviourConstructor {
         return this.__component__;
     };
 }
-//无实际意义: 仅作为子类实现接口提示用
+//无实际意义: 仅作为继承子类提示接口名称用
 interface TsBehaviourConstructor extends IBehaviour, IGizmos, IOnPointerHandler, IOnDragHandler, IOnMouse, IOnCollision, IOnCollision2D, IOnTrigger, IOnTrigger2D {
 }
 
@@ -790,33 +790,34 @@ namespace TsBehaviourConstructor {
      * 适用于Update丶LateUpdate和FixedUpdate方法, 默认以BatchProxy管理调用以满足更高性能要求
      * @returns 
      */
-    export function Standalone(): PropertyDecorator {
+    export function standalone(): PropertyDecorator {
         return (target, key: string) => {
             let proto = target.constructor.prototype;
             if (!(proto instanceof TsBehaviourConstructor)) {
-                console.warn(`${target.constructor.name}: invaild decorator ${Standalone.name}`);
+                console.warn(`${target.constructor.name}: invaild decorator ${standalone.name}`);
                 return;
             }
-            Metadata.define(proto, key, Standalone);
+            Metadata.define(proto, key, standalone);
         };
     }
     /**跨帧调用(全局共用/非单独的frameskip分区)
      * 适用于Update丶LateUpdate和FixedUpdate方法, 仅允许BatchProxy管理调用(与Standalone组件冲突)
+     * (如你需要处理Input等事件, 那么就不应该使用它)
      * @param value  每n帧调用一次(<不包含>大于1时才有效)
      * @returns 
      */
-    export function Frameskip(value: number): PropertyDecorator {
+    export function frameskip(value: number): PropertyDecorator {
         return (target, key: string) => {
             let proto = target.constructor.prototype;
             if (!(proto instanceof TsBehaviourConstructor)) {
-                console.warn(`${target.constructor.name}: invaild decorator ${Frameskip.name}`);
+                console.warn(`${target.constructor.name}: invaild decorator ${frameskip.name}`);
                 return;
             }
             if (!Number.isInteger(value) || value <= 1) {
-                console.warn(`${target.constructor.name}: invaild decorator parameter ${value} for ${Frameskip.name}`);
+                console.warn(`${target.constructor.name}: invaild decorator parameter ${value} for ${frameskip.name}`);
                 return;
             }
-            Metadata.define(proto, key, Frameskip, value);
+            Metadata.define(proto, key, frameskip, value);
         };
     }
     /**节流方法
@@ -824,14 +825,14 @@ namespace TsBehaviourConstructor {
      * @param enable 
      * @returns 
      */
-    export function Throttle(enable: boolean): PropertyDecorator {
+    export function throttle(enable: boolean): PropertyDecorator {
         return (target, key: string) => {
             let proto = target.constructor.prototype;
             if (!(proto instanceof TsBehaviourConstructor)) {
-                console.warn(`${target.constructor.name}: invaild decorator ${Throttle.name}`);
+                console.warn(`${target.constructor.name}: invaild decorator ${throttle.name}`);
                 return;
             }
-            Metadata.define(proto, key, Throttle, !!enable);
+            Metadata.define(proto, key, throttle, !!enable);
         };
     }
     /**注册侦听器
@@ -839,14 +840,14 @@ namespace TsBehaviourConstructor {
      * @param eventName 
      * @returns 
      */
-    export function Listener(eventName?: string): PropertyDecorator {
+    export function listener(eventName?: string): PropertyDecorator {
         return (target, key: string) => {
             let proto = target.constructor.prototype;
             if (!(proto instanceof TsBehaviourConstructor)) {
-                console.warn(`${target.constructor.name}: invaild decorator ${Listener.name}`);
+                console.warn(`${target.constructor.name}: invaild decorator ${listener.name}`);
                 return;
             }
-            Metadata.define(proto, key, Listener, eventName ?? key);
+            Metadata.define(proto, key, listener, eventName ?? key);
         };
     }
 }

@@ -101,13 +101,13 @@ namespace XOR
                 return;
             if (componentReferences.TryGetValue(reference, out var components))
             {
+                componentReferences.Remove(reference);
                 for (int i = components.Count - 1; i >= 0; i--)
                 {
                     components[i].Release();
                     pending.Remove(components[i]);
                 }
             }
-            componentReferences.Remove(reference);
         }
         public static void GC(bool destroyed = true)
         {
@@ -120,10 +120,20 @@ namespace XOR
                 for (int j = list.Count - 1; j >= 0; j--)
                 {
                     reference = list[j];
-                    if (!reference.TryGetTarget(out var curent) || destroyed && curent == null)
+                    if (!reference.TryGetTarget(out var current) || destroyed && current == null)
                     {
                         DestroyComponents(reference);
                         list.RemoveAt(j);
+                    }
+                    else if (destroyed && componentReferences.TryGetValue(reference, out var components))
+                    {
+                        for (int k = components.Count - 1; k >= 0; k--)
+                        {
+                            if (components[k] == null)
+                            {
+                                components[k].Release();
+                            }
+                        }
                     }
                 }
                 if (list == null || list.Count == 0)

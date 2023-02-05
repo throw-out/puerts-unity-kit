@@ -134,7 +134,7 @@ namespace XOR
 
                 //监听文件修改
                 EditorFileWatcher.ReleaseInstance();
-                if (!useNodejsWatch)
+                if (!useNodejsWatch && Settings.Load().watchType != Settings.WacthType.None)
                 {
                     string dirpath = Path.GetDirectoryName(projectConfig);
                     EditorFileWatcher watcher = EditorFileWatcher.GetInstance();

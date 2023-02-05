@@ -1,7 +1,7 @@
 import * as csharp from "csharp";
 import { $typeof } from "puerts";
 
-
+type ConstructorType<T> = Function & { prototype: T };
 type NumberConstructor = typeof csharp.System.Byte |
     typeof csharp.System.SByte |
     typeof csharp.System.Char |
@@ -20,7 +20,7 @@ type FieldOptions = NumberConstructor | Partial<{
     /**默认值: 只能是基础类型丶C#类型或其数组类型
      * 初始化:
      * PropertyAccess: ts类型必需是字段声明且赋初值, C#类型必需是可在子线程访问的类型
-     * new:     ts类型不允许, C#类型必需是可在子线程访问的类型
+     * New:     ts类型不允许, C#类型必需是可在子线程访问的类型
      */
     value: any;
 }>;
@@ -31,9 +31,7 @@ class TsComponentConstructor extends xor.TsBehaviour {
     }
 }
 const RegisterFlag = Symbol("__guid__");
-const RegisterTypes: { [guid: string]: Function } = {
-
-};
+const RegisterTypes: { [guid: string]: Function } = {};
 
 function guid(guid: string): ClassDecorator {
     return (target) => {
@@ -101,5 +99,46 @@ declare global {
          * @param options 
          */
         function field(options?: FieldOptions): PropertyDecorator;
+    }
+}
+
+/**重写GetComponent事件, 用于获取 */
+function overrideGetComponent() {
+    function createGetComponent(original: Function) {
+        return function (this: csharp.UnityEngine.GameObject | csharp.UnityEngine.Component) {
+            let ctor: any = arguments[0];
+            if (typeof (ctor) === "function") {
+                if (RegisterFlag in ctor) {
+                    return this.GetTsComponent(ctor[RegisterFlag] as string)?.JSObject;
+                }
+                if (ctor.prototype instanceof csharp.UnityEngine.Component) {
+                    return original.call(this, $typeof(ctor));
+                }
+            }
+            return original.apply(this, arguments);
+        }
+    }
+
+    const Component = csharp.UnityEngine.Component,
+        GameObject = csharp.UnityEngine.GameObject;
+
+    Component.prototype.GetComponent = createGetComponent(Component.prototype.GetComponent);
+    GameObject.prototype.GetComponent = createGetComponent(GameObject.prototype.GetComponent);
+}
+overrideGetComponent();
+
+/**重写GetComponent事件, 用于获取 */
+declare module "csharp" {
+    namespace UnityEngine {
+        interface GameObject {
+            GetComponent<T extends UnityEngine.Component>(ctor: ConstructorType<T>): T;
+            GetComponent<T extends TsComponentConstructor>(ctor: ConstructorType<T>): T;
+            //GetTsComponents<T extends TsComponentConstructor=any>(): T[];
+        }
+        interface Component {
+            GetComponent<T extends UnityEngine.Component>(ctor: ConstructorType<T>): T;
+            GetComponent<T extends TsComponentConstructor>(ctor: ConstructorType<T>): T;
+            //GetTsComponents<T extends TsComponentConstructor=any>(): T[];
+        }
     }
 }

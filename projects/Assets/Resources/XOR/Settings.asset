@@ -15,5 +15,5 @@ MonoBehaviour:
   project: ../TsProject/tsconfig.json
   editorProject: ../TsEditorProject/tsconfig.json
   isESM: 0
-  watchType: 1
+  watchType: 2
   logger: 14

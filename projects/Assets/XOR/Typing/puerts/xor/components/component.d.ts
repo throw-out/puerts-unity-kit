@@ -1,4 +1,7 @@
 import * as csharp from "csharp";
+type ConstructorType<T> = Function & {
+    prototype: T;
+};
 type NumberConstructor = typeof csharp.System.Byte | typeof csharp.System.SByte | typeof csharp.System.Char | typeof csharp.System.Int16 | typeof csharp.System.UInt16 | typeof csharp.System.Int32 | typeof csharp.System.UInt32 | typeof csharp.System.Int64 | typeof csharp.System.UInt64;
 type FieldOptions = NumberConstructor | Partial<{
     /**指定RawType(原始类型: System.Int16/System.Int32等类型都对应number) */
@@ -8,7 +11,7 @@ type FieldOptions = NumberConstructor | Partial<{
     /**默认值: 只能是基础类型丶C#类型或其数组类型
      * 初始化:
      * PropertyAccess: ts类型必需是字段声明且赋初值, C#类型必需是可在子线程访问的类型
-     * new:     ts类型不允许, C#类型必需是可在子线程访问的类型
+     * New:     ts类型不允许, C#类型必需是可在子线程访问的类型
      */
     value: any;
 }>;
@@ -48,6 +51,19 @@ declare global {
          * @param options
          */
         function field(options?: FieldOptions): PropertyDecorator;
+    }
+}
+/**重写GetComponent事件, 用于获取 */
+declare module "csharp" {
+    namespace UnityEngine {
+        interface GameObject {
+            GetComponent<T extends UnityEngine.Component>(ctor: ConstructorType<T>): T;
+            GetComponent<T extends TsComponentConstructor>(ctor: ConstructorType<T>): T;
+        }
+        interface Component {
+            GetComponent<T extends UnityEngine.Component>(ctor: ConstructorType<T>): T;
+            GetComponent<T extends TsComponentConstructor>(ctor: ConstructorType<T>): T;
+        }
     }
 }
 export {};

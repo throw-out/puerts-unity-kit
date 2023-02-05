@@ -13,6 +13,7 @@ namespace XOR
         static Menu()
         {
             EditorApplicationHandler.delayCall += InitializeStart;
+            EditorApplicationHandler.dispose += Dispose;
         }
 
         static void InitializeStart()
@@ -21,6 +22,17 @@ namespace XOR
             if (Prefs.ASTEnable && !EditorApplicationUtil.IsRunning())
             {
                 EditorApplicationUtil.Start();
+            }
+        }
+        static void Dispose()
+        {
+            EditorApplicationHandler.dispose -= Dispose;
+            int count = ThreadWorker.RealThread - ThreadWorker.GetAllInstances().Count;
+            while (count > 0)
+            {
+                bool wait = EditorUtility.DisplayDialog("警告", $"AppDomain Unload期间发现有未正常关闭的{nameof(XOR.ThreadWorker)}实例(Count={count}), 强制Unload将可能导致{nameof(Puerts.JsEnv)}无法正常释放(C++)继而导致Crash!", "等待", "Unload");
+                if (!wait) break;
+                count = ThreadWorker.RealThread - ThreadWorker.GetAllInstances().Count;
             }
         }
 

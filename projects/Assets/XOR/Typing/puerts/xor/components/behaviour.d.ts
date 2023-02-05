@@ -250,7 +250,7 @@ declare abstract class IOnMouse {
  * 沿用C# MonoBehaviour习惯, 将OnEnable丶Update丶OnEnable等方法绑定到C#对象上, Unity将在生命周期内调用
  *
  * 注: 为避免多次跨语言调用, Update丶FixedUpdate丶LateUpdate方法将由BatchProxy统一管理(并非绑定到各自的GameObject上)
- * @see Standalone 如果需要绑定独立的组件, 在对应方法上添加此标注
+ * @see standalone 如果需要绑定独立的组件, 在对应方法上添加此标注
  */
 declare class TsBehaviourConstructor {
     private __transform__;
@@ -309,25 +309,26 @@ declare namespace TsBehaviourConstructor {
      * 适用于Update丶LateUpdate和FixedUpdate方法, 默认以BatchProxy管理调用以满足更高性能要求
      * @returns
      */
-    function Standalone(): PropertyDecorator;
+    function standalone(): PropertyDecorator;
     /**跨帧调用(全局共用/非单独的frameskip分区)
      * 适用于Update丶LateUpdate和FixedUpdate方法, 仅允许BatchProxy管理调用(与Standalone组件冲突)
+     * (如你需要处理Input等事件, 那么就不应该使用它)
      * @param value  每n帧调用一次(<不包含>大于1时才有效)
      * @returns
      */
-    function Frameskip(value: number): PropertyDecorator;
+    function frameskip(value: number): PropertyDecorator;
     /**节流方法
      * 适用于async/Promise方法, 在上一次调用完成后才会再次调用(Awake丶Update丶FixedUpdate...)
      * @param enable
      * @returns
      */
-    function Throttle(enable: boolean): PropertyDecorator;
+    function throttle(enable: boolean): PropertyDecorator;
     /**注册侦听器
      * 适用于@see csharp.XOR.TsMessages 回调
      * @param eventName
      * @returns
      */
-    function Listener(eventName?: string): PropertyDecorator;
+    function listener(eventName?: string): PropertyDecorator;
 }
 /**接口声明 */
 declare global {

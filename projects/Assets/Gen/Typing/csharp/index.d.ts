@@ -1124,6 +1124,12 @@ declare namespace CS {
             public BroadcastMessage($methodName: string, $options: UnityEngine.SendMessageOptions): void
             public constructor()
         }
+        /** Base class for everything attached to GameObjects.
+        */
+        interface Component {
+            GetTsComponents(): System.Array$1<XOR.TsComponent>;
+            GetTsComponent($guid: string): XOR.TsComponent;
+        }
         /** Behaviours are Components that can be enabled or disabled.
         */
         class Behaviour extends UnityEngine.Component {
@@ -3381,6 +3387,12 @@ declare namespace CS {
             public constructor($name: string)
             public constructor()
             public constructor($name: string, ...components: System.Type[])
+        }
+        /** Base class for all entities in Unity Scenes.
+        */
+        interface GameObject {
+            GetTsComponents(): System.Array$1<XOR.TsComponent>;
+            GetTsComponent($guid: string): XOR.TsComponent;
         }
         /** Store a collection of Keyframes that can be evaluated over time.
         */
@@ -25965,15 +25977,17 @@ declare namespace CS {
             public CreateProxyForTrigger($enter: System.Action$1<UnityEngine.Collider>, $stay: System.Action$1<UnityEngine.Collider>, $exit: System.Action$1<UnityEngine.Collider>, $stayFrame?: boolean): XOR.OnTriggerProxy
             public CreateProxyForTrigger2D($enter: System.Action$1<UnityEngine.Collider2D>, $stay: System.Action$1<UnityEngine.Collider2D>, $exit: System.Action$1<UnityEngine.Collider2D>, $stayFrame?: boolean): XOR.OnTrigger2DProxy
             public Dispose(): void
-            public Dispose($destroy: boolean): void
             public static DisposeAll(): void
             public constructor()
         }
         class TsComponent extends XOR.TsBehaviour implements System.IDisposable, XOR.Serializables.IAccessor {
             protected [__keep_incompatibility]: never;
+            public get JSObject(): Puerts.JSObject;
             public GetProperties(): System.Array$1<XOR.Serializables.ResultPair>
             public SetProperty($key: string, $value: any): void
             public SetPropertyListener($handler: System.Action$2<string, any>): void
+            public static GC(): void
+            public static Register($env: Puerts.JsEnv): void
             public constructor()
         }
         class Application extends XOR.SingletonMonoBehaviour$1<XOR.Application>
@@ -26233,6 +26247,13 @@ declare namespace CS {
             public static RequireXORModules($env: Puerts.JsEnv): void
             public static RequireXORModules($env: Puerts.JsEnv, $isESM: boolean): void
             public static RequireXORModules($env: Puerts.JsEnv, $isESM: boolean, $throwOnFailure: boolean): void
+        }
+        class TsComponentExtension extends System.Object {
+            protected [__keep_incompatibility]: never;
+            public static GetTsComponents($gameObject: UnityEngine.GameObject): System.Array$1<XOR.TsComponent>
+            public static GetTsComponents($gameObject: UnityEngine.Component): System.Array$1<XOR.TsComponent>
+            public static GetTsComponent($gameObject: UnityEngine.GameObject, $guid: string): XOR.TsComponent
+            public static GetTsComponent($gameObject: UnityEngine.Component, $guid: string): XOR.TsComponent
         }
         class FileLoader extends System.Object implements Puerts.ILoader {
             protected [__keep_incompatibility]: never;
@@ -30384,14 +30405,9 @@ declare namespace CS {
         }
         var GetValueForCheck: { new(func: () => any): GetValueForCheck; }
     }
-    namespace PuertsStaticWrap {
-        class AutoStaticCodeUsing extends System.Object {
-            protected [__keep_incompatibility]: never;
-            public static AutoUsing($jsEnv: Puerts.JsEnv): void
-            public static UsingAction($jsEnv: Puerts.JsEnv, ...args: string[]): void
-            public static UsingFunc($jsEnv: Puerts.JsEnv, ...args: string[]): void
-            public static UsingGeneric($jsEnv: Puerts.JsEnv, $usingAction: boolean, ...types: System.Type[]): void
-        }
+    class TsComponentRegister extends UnityEngine.MonoBehaviour {
+        protected [__keep_incompatibility]: never;
+        public constructor()
     }
     class MyData extends System.ValueType {
         protected [__keep_incompatibility]: never;
@@ -30400,6 +30416,15 @@ declare namespace CS {
     }
     class DelegateUtil extends System.Object {
         protected [__keep_incompatibility]: never;
+    }
+    namespace PuertsStaticWrap {
+        class AutoStaticCodeUsing extends System.Object {
+            protected [__keep_incompatibility]: never;
+            public static AutoUsing($jsEnv: Puerts.JsEnv): void
+            public static UsingAction($jsEnv: Puerts.JsEnv, ...args: string[]): void
+            public static UsingFunc($jsEnv: Puerts.JsEnv, ...args: string[]): void
+            public static UsingGeneric($jsEnv: Puerts.JsEnv, $usingAction: boolean, ...types: System.Type[]): void
+        }
     }
     namespace XOR.Serializables {
         interface IAccessor {
@@ -30551,10 +30576,15 @@ declare namespace CS {
             public constructor($firstType: System.Type, ...types: System.Type[])
             public constructor()
         }
+        class ImplicitOperation extends System.Object {
+            protected [__keep_incompatibility]: never;
+            public static IsImplicitAssignable($elementType: System.Type, $elementValueType: System.Type, $valueType: System.Type): boolean
+            public static GetAssignableValue($valueType: System.Type, $value: any): any
+        }
     }
     namespace XOR.Settings {
         enum LOGGER { NONE = 0, INFO = 1, LOG = 2, WARN = 4, ERROR = 8 }
-        enum WacthType { Csharp = 0, Nodejs = 1 }
+        enum WacthType { None = 0, Csharp = 1, Nodejs = 2 }
     }
     namespace XOR.ThreadWorker {
         class EventData extends System.Object {

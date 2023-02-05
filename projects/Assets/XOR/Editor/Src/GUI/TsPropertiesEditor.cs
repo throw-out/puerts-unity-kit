@@ -155,7 +155,7 @@ namespace XOR
                             GUILayout.Space(5f);
                             GUILayout.BeginHorizontal("HelpBox");
                             GUILayout.Label(string.Empty, Skin.warnIcon);
-                            GUILayout.Label($"redefinition key at {i} (other at {usedKeys.IndexOf(key)})\n", Skin.labelArea);
+                            GUILayout.Label($"redefinition key at {i} (other at {usedKeys.IndexOf(key)})\n", Skin.labelArea, GUILayout.ExpandHeight(true));
                             GUILayout.EndHorizontal();
                             DiagnosisCount++;
                         }
@@ -166,7 +166,7 @@ namespace XOR
                         GUILayout.Space(5f);
                         GUILayout.BeginHorizontal("HelpBox");
                         GUILayout.Label(string.Empty, Skin.warnIcon);
-                        GUILayout.Label($"invail key definition at {i} ({key})\n");
+                        GUILayout.Label($"invail key definition at {i} ({key})\n", Skin.labelArea, GUILayout.ExpandHeight(true));
                         GUILayout.EndHorizontal();
                         DiagnosisCount++;
                     }
