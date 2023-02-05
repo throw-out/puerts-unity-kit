@@ -4,7 +4,6 @@
 
 ## 使用需知
 - AST分析和SerializedObject渲染只在UnityEditor环境下使用
-- 指定value时如超出range设定时, 只会在SerializedObject渲染时才会重新设定为range区间
 - 枚举类型如不指定value, 其默认值为0(`System.Int32`)或null(`System.String`)
 - AST解析器运行在子线程中, 指定value时的表达式必需要能在子线程中访问: `例如UnityEngine.Vector2.right是可以的, 而UnityEngine.Application.dataPath是不可以`
 
@@ -19,7 +18,7 @@
 | UnityEngine.Vector3  | √   | √   |
 | UnityEngine.Object及其子类型  | √   | √   |
 
-> 其他类型请参照[自定义类型](../projects/Assets/Samples/01_TsComponent/CustomTypes)
+> 其他类型请参照[自定义类型](./TsComponent.md#自定义扩展类型演示)
 
 ## 基础类型演示
 ![image](https://user-images.githubusercontent.com/45587825/216535611-dddbc03e-d9d8-4f92-9b75-edb6a435b9f6.png)
@@ -30,9 +29,9 @@
 ## 枚举类型演示
  > 枚举类型如不指定value, 其默认值为0(`System.Int32`)或null(`System.String`)
 
-![image](https://user-images.githubusercontent.com/45587825/216536402-4d09df95-cca5-43b5-97f2-be93965d1b04.png)
+![image](https://user-images.githubusercontent.com/45587825/216808157-d8eaeee8-bcf9-410f-895f-c20ecf04901d.png)
 
 ## 自定义扩展类型演示
-> 查看[示例](../projects/Assets/Samples/01_TsComponent/CustomTypes)中的[TsComponent](../projects/Assets/Samples/01_TsComponent/CustomTypes/Runtime/TsComponent.cs)和[SerializablesEditor](../projects/Assets/Samples/01_TsComponent/CustomTypes/Editor/SerializablesEditor.cs)
+> 类型定义请查看[示例](../projects/Assets/Samples/01_TsComponent/CustomTypes)中的[TsComponent](../projects/Assets/Samples/01_TsComponent/CustomTypes/Runtime/TsComponent.cs)和[SerializablesEditor](../projects/Assets/Samples/01_TsComponent/CustomTypes/Editor/SerializablesEditor.cs)
 
 ![image](https://user-images.githubusercontent.com/45587825/216751394-12e34267-cee4-40ed-9269-8efa5e10320a.png)
