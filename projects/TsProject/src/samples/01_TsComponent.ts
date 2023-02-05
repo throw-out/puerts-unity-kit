@@ -107,6 +107,8 @@ export class Sample05 extends xor.TsComponent {
 
 /**
  * 双向绑定例子
+ * 在OnGUI中修改this._value将会同步到Inspector, 反之在Inspector中修改_value字段亦会同步到this._value上
+ * 注: 目前数组成员修改暂不支持
  */
 @xor.guid("7984a4b8-de57-4af6-a572-6c159bc6dce3")
 export class Sample06 extends xor.TsComponent {
