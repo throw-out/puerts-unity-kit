@@ -12,18 +12,22 @@
 主要功能:
 - TsBehaviour:
   > 在ts脚本中使用Unity [MonoBehaviour生命周期](https://docs.unity3d.com/2021.3/Documentation/Manual/ExecutionOrder.html)方法;
+  >
   > [[查看文档]](./docs/TsBehaviour.md)
 
 - TsProperties:
   > 一个单独的序列化类, 可用于保存数据丶挂载UnityEngine.Object对象等操作;
+  >
   > [[查看文档]](./docs/TsProperties.md)
 
 - TsComponent:
   > 对TsBehaviour和TsProperties的结合实现, 可序列化ts脚本中的成员变量, 并实现ts对象的生命周期管理;
+  >
   > [[查看文档]](./docs/TsComponent.md)
 
 - ThreadWorker:
   > 提供`跨线程`&`跨Puerts.JsEnv实例`交互(基于C#类型传递数据);
+  >
   > [[查看文档]](./docs/ThreadWorker.md)
 
 ## 环境
