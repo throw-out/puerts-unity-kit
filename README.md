@@ -1,4 +1,4 @@
-[![license](https://img.shields.io/badge/license-MIT-blue.svg)](./LICENSE)
+[![license](https://img.shields.io/badge/license-MIT-blue.svg)](./LICENSE)[![](https://img.shields.io/github/issues/throw-out/puerts-unity-kit)](https://github.com/throw-out/puerts-unity-kit/issues)
 
 - **请悉知: 当前项目处于预览期, 其功能并不完善, 其中部分代码可能会在未来版本中进行修改或删除.**
 - **如果你有好想法或任何问题, 请提交[[PR]](https://github.com/throw-out/puerts-unity-kit/pulls)和[[ISSUES]](https://github.com/throw-out/puerts-unity-kit/issues).**
