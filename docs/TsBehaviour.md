@@ -7,22 +7,6 @@
 ## 定义
 [TsBehaviour](../projects/Assets/XOR/Runtime/Src/Components/TsBehaviour/TsBehaviour.cs)
 
-## 方法
-| 名称  | 描述  |
-| ------------ | ------------ |
-| Module   | - |
-| IsActivated  | -  |
-| IsStarted | -  |
-| IsDestroyed | -  |
-| IsEnable | -  |
-
-## 方法
-| 名称  | 描述  |
-| ------------ | ------------ |
-| AddProxy   |  - |
-| GetProxy  | -  |
-| RemoveProxy  | -  |
-
 ## 简单演示
 
 ``` typescript
