@@ -1,4 +1,4 @@
-[![license](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/throw-out/puerts-unity-kit/blob/main/LICENSE)
+[![license](https://img.shields.io/badge/license-MIT-blue.svg)](./LICENSE)
 
 - **请悉知: 当前项目处于预览期, 其功能并不完善, 其中部分代码可能会在未来版本中进行修改或删除.**
 - **如果你有好想法或任何问题, 请提交[[PR]](https://github.com/throw-out/puerts-unity-kit/pulls)和[[ISSUES]](https://github.com/throw-out/puerts-unity-kit/issues).**
@@ -10,17 +10,21 @@
 > 了解更多, 请查看[[文档页面]](./docs).
 
 主要功能:
-- TsBehaviour: [[查看文档]](./docs/TsBehaviour.md)
+- TsBehaviour:
   > 在ts脚本中使用Unity [MonoBehaviour生命周期](https://docs.unity3d.com/2021.3/Documentation/Manual/ExecutionOrder.html)方法;
+  > [[查看文档]](./docs/TsBehaviour.md)
 
-- TsProperties: [[查看文档]](./docs/TsProperties.md)
+- TsProperties:
   > 一个单独的序列化类, 可用于保存数据丶挂载UnityEngine.Object对象等操作;
+  > [[查看文档]](./docs/TsProperties.md)
 
-- TsComponent: [[查看文档]](./docs/TsComponent.md)
+- TsComponent:
   > 对TsBehaviour和TsProperties的结合实现, 可序列化ts脚本中的成员变量, 并实现ts对象的生命周期管理;
+  > [[查看文档]](./docs/TsComponent.md)
 
-- ThreadWorker: [[查看文档]](./docs/ThreadWorker.md)
+- ThreadWorker:
   > 提供`跨线程`&`跨Puerts.JsEnv实例`交互(基于C#类型传递数据);
+  > [[查看文档]](./docs/ThreadWorker.md)
 
 ## 环境
 | 软件或包     |  版本           |
