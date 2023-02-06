@@ -1,11 +1,11 @@
 使用typescript的AST解析器, 分析ts脚本获取class声明及其成员信息, 然后传递到C# SerializedObject渲染使用.
-- ts类型必需继承自[xor.TsComponent](../projects/TsEditorProject/src/xor/components/component.ts#L59)丶export且不是abstract才会被序列化:
-- ts类型成员必需使用declare修饰符或被[xor.field](../projects/TsEditorProject/src/xor/components/component.ts#87)修饰才能被序列化
 
 ## 使用需知
+- ts类型必需继承自[xor.TsComponent](../projects/TsEditorProject/src/xor/components/component.ts)丶export且不是abstract才会被序列化:
+- ts类型成员必需使用declare修饰符或被[xor.field](../projects/TsEditorProject/src/xor/components/component.ts#87)修饰才能被序列化
 - AST分析和SerializedObject渲染只在UnityEditor环境下使用
 - 枚举类型如不指定value, 其默认值为0(`System.Int32`)或null(`System.String`)
-- AST解析器运行在子线程中, 指定value时的表达式必需要能在子线程中访问: `例如UnityEngine.Vector2.right是可以的, 而UnityEngine.Application.dataPath是不可以`
+- AST解析器运行在子线程中, 指定value时的表达式必需要能在子线程中访问: `例如UnityEngine.Vector2.right是可以的, 而UnityEngine.Application.dataPath不可以`
 
 ## 内置类型
 |  类型   | 基础 | 数组|
@@ -32,7 +32,7 @@
 ![image](https://user-images.githubusercontent.com/45587825/216808157-d8eaeee8-bcf9-410f-895f-c20ecf04901d.png)
 
 ## 自定义扩展类型演示
-> 类型定义请查看[示例](../projects/Assets/Samples/01_TsComponent/CustomTypes)中的[TsComponent](../projects/Assets/Samples/01_TsComponent/CustomTypes/Runtime/TsComponent.cs)和[SerializablesEditor](../projects/Assets/Samples/01_TsComponent/CustomTypes/Editor/SerializablesEditor.cs)
+> 此处演示实现请查看[示例](../projects/Assets/Samples/01_TsComponent/CustomTypes)中的[TsComponent](../projects/Assets/Samples/01_TsComponent/CustomTypes/Runtime/TsComponent.cs)和[SerializablesEditor](../projects/Assets/Samples/01_TsComponent/CustomTypes/Editor/SerializablesEditor.cs)
 
 ![image](https://user-images.githubusercontent.com/45587825/216751394-12e34267-cee4-40ed-9269-8efa5e10320a.png)
 
