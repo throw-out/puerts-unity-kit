@@ -238,10 +238,9 @@ namespace XOR
                 env.SupportCommonJS();
                 env.RequireXORModules(isESM);
                 env.BindXORThreadWorker(this);
-                if (waitDebugger)
-                {
-                    env.WaitDebugger();
-                }
+#if UNITY_EDITOR
+                if (waitDebugger) env.WaitDebugger();
+#endif
                 ThreadExecuteRun(env, filepath, !Options.stopOnError);
 
                 this.IsInitialized = true;
