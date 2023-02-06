@@ -1,0 +1,54 @@
+{
+    "services_status": {
+        "zh_cn": "服务状态:",
+        "en_us": "Services Status:"
+    },
+    "status": {
+        "zh_cn": "状态: ",
+        "en_us": "Status: "
+    },
+    "compile_status": {
+        "zh_cn": "编译状态: ",
+        "en_us": "Compile: "
+    },
+    "compile_errors": {
+        "zh_cn": "编译错误: ",
+        "en_us": "Errors: "
+    },
+    "script_number": {
+        "zh_cn": "脚本数量: ",
+        "en_us": "Scripts: "
+    },
+    "class_number": {
+        "zh_cn": "已解析类: ",
+        "en_us": "Types: "
+    },
+    "start_services": {
+        "zh_cn": "启动服务:",
+        "en_us": "Start Services"
+    },
+    "stop_services": {
+        "zh_cn": "停止服务:",
+        "en_us": "Stop Services"
+    },
+    "restart_services": {
+        "zh_cn": "重启服务:",
+        "en_us": "Restart Services"
+    },
+    "main_thread": {
+        "zh_cn": "主线程",
+        "en_us": "Main Thread"
+    },
+    "worker_thread": {
+        "zh_cn": "工作线程",
+        "en_us": "Worker Thread"
+    },
+    "module": {
+        "zh_cn": "模块",
+        "en_us": "Module"
+    },
+    "properties": {
+        "zh_cn": "成员属性",
+        "en_us": "properties"
+    }
+}

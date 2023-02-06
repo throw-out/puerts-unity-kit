@@ -30,7 +30,12 @@ namespace XOR
             int count = ThreadWorker.RealThread - ThreadWorker.GetAllInstances().Count;
             while (count > 0)
             {
-                bool wait = EditorUtility.DisplayDialog("警告", $"AppDomain Unload期间发现有未正常关闭的{nameof(XOR.ThreadWorker)}实例(Count={count}), 强制Unload将可能导致{nameof(Puerts.JsEnv)}无法正常释放(C++)继而导致Crash!", "等待", "Unload");
+                bool wait = EditorUtility.DisplayDialog(
+                    Language.Default.Get("warning"),
+                    string.Format(Language.Default.Get("appdomain_unload_exception"), nameof(XOR.ThreadWorker), count, nameof(Puerts.JsEnv)),
+                    Language.Default.Get("wait"),
+                    "Unload"
+                );
                 if (!wait) break;
                 count = ThreadWorker.RealThread - ThreadWorker.GetAllInstances().Count;
             }
@@ -44,6 +49,21 @@ namespace XOR
         }
 
 
+        #region Language菜单项
+        [MenuItem("Tools/XOR/Language/Refresh", false, 0)]
+        static void LanguageRefresh() => Language.Reload();
+        [MenuItem("Tools/XOR/Language/简体中文", false, 0)]
+        static void LanguageZHCN() => Prefs.Language.SetValue((int)Language.Env.ZH_CN);
+        [MenuItem("Tools/XOR/Language/简体中文", true, 0)]
+        static bool LanguageZHCNValidate() => Prefs.Language.GetValue() != (int)Language.Env.ZH_CN;
+        [MenuItem("Tools/XOR/Language/English", false, 0)]
+        static void LanguageENUS() => Prefs.Language.SetValue((int)Language.Env.EN_US);
+        [MenuItem("Tools/XOR/Language/English", true, 0)]
+        static bool LanguageENUSValidate() => Prefs.Language.GetValue() != (int)Language.Env.EN_US;
+        #endregion
+
+
+        #region Servies菜单项
         [MenuItem("Tools/XOR/Servies/Restart")]
         static void Reload()
         {
@@ -58,6 +78,7 @@ namespace XOR
         static void Disable() => EditorApplicationUtil.Stop();
         [MenuItem("Tools/XOR/Servies/Stop", true)]
         static bool DisableValidate() => EditorApplicationUtil.IsRunning();
+        #endregion
 
 
         [MenuItem("Tools/XOR/Component/SyncAll")]

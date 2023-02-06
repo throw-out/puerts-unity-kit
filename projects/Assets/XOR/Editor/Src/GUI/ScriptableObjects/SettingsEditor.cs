@@ -156,7 +156,12 @@ namespace XOR
 
         void RenderReset()
         {
-            bool ok = EditorUtility.DisplayDialog("提示", "您确定要重置XOR.Settings配置文件吗?", "重置", "取消");
+            bool ok = EditorUtility.DisplayDialog(
+                Language.Default.Get("tip"),
+                Language.Default.Get("want_reset_settings"),
+                Language.Default.Get("reset"),
+                Language.Default.Get("cancel")
+            );
             if (!ok)
             {
                 return;

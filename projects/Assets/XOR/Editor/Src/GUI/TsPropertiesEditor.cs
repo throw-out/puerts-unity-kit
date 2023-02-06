@@ -54,7 +54,7 @@ namespace XOR
 
         void RenderMenu()
         {
-            if (GUIUtil.RenderHeader("菜单"))
+            if (GUIUtil.RenderHeader(Language.Behaviour.Get("menu")))
             {
                 menuFoldout = !menuFoldout;
             }
@@ -65,7 +65,7 @@ namespace XOR
         }
         void RenderMembers()
         {
-            if (GUIUtil.RenderHeader("成员属性"))
+            if (GUIUtil.RenderHeader(Language.Behaviour.Get("properties")))
             {
                 memberFoldout = !memberFoldout;
             }
@@ -76,7 +76,7 @@ namespace XOR
         }
         void RenderDiagnosis()
         {
-            if (GUIUtil.RenderHeader("诊断"))
+            if (GUIUtil.RenderHeader(Language.Behaviour.Get("diagnosis")))
             {
                 diagnosisFoldout = !diagnosisFoldout;
             }
@@ -90,7 +90,7 @@ namespace XOR
         {
             GUILayout.Space(5f);
             EditorGUILayout.BeginHorizontal();
-            if (GUILayout.Button("Generate Declare"))
+            if (GUILayout.Button(Language.Behaviour.Get("generate_declare")))
             {
                 XOR.Serializables.TsProperties.Utility.CustomMenu(new string[] {
                     "public",
@@ -110,10 +110,10 @@ namespace XOR
                     editor.text = code;
                     editor.OnFocus();
                     editor.Copy();
-                    Debug.Log("已复制到剪贴板:\n" + code);
+                    Debug.Log(string.Join(Language.Behaviour.Get("copy_to_clipboard"), code));
                 });
             }
-            if (GUILayout.Button("Parsed Declare"))
+            if (GUILayout.Button(Language.Behaviour.Get("parsed_declare")))
             {
                 var editor = new TextEditor();
                 editor.OnFocus();
@@ -127,13 +127,13 @@ namespace XOR
             GUILayout.Space(5f);
             EditorGUILayout.BeginHorizontal();
             Prefs.CheckKeyRedefinition.SetValue(EditorGUILayout.Toggle(string.Empty, Prefs.CheckKeyRedefinition, GUILayout.Width(20f)));
-            EditorGUILayout.LabelField("check key redefinition");
+            EditorGUILayout.LabelField(Language.Behaviour.Get("check_key_redefinition"));
             EditorGUILayout.EndHorizontal();
 
             GUILayout.Space(5f);
             EditorGUILayout.BeginHorizontal();
             Prefs.CheckKeyValidity.SetValue(EditorGUILayout.Toggle(string.Empty, Prefs.CheckKeyValidity, GUILayout.Width(20f)));
-            EditorGUILayout.LabelField("check key validity");
+            EditorGUILayout.LabelField(Language.Behaviour.Get("check_key_validity"));
             EditorGUILayout.EndHorizontal();
 
             GUILayout.Space(5f);
@@ -155,7 +155,11 @@ namespace XOR
                             GUILayout.Space(5f);
                             GUILayout.BeginHorizontal("HelpBox");
                             GUILayout.Label(string.Empty, Skin.warnIcon);
-                            GUILayout.Label($"redefinition key at {i} (other at {usedKeys.IndexOf(key)})\n", Skin.labelArea, GUILayout.ExpandHeight(true));
+                            GUILayout.Label(
+                                string.Format(Language.Behaviour.Get("key_redefinition_details"), i, usedKeys.IndexOf(key)),
+                                Skin.labelArea,
+                                GUILayout.ExpandHeight(true)
+                            );
                             GUILayout.EndHorizontal();
                             DiagnosisCount++;
                         }
@@ -166,7 +170,11 @@ namespace XOR
                         GUILayout.Space(5f);
                         GUILayout.BeginHorizontal("HelpBox");
                         GUILayout.Label(string.Empty, Skin.warnIcon);
-                        GUILayout.Label($"invail key definition at {i} ({key})\n", Skin.labelArea, GUILayout.ExpandHeight(true));
+                        GUILayout.Label(
+                            string.Format(Language.Behaviour.Get("key_invail_details"), i, key),
+                            Skin.labelArea,
+                            GUILayout.ExpandHeight(true)
+                        );
                         GUILayout.EndHorizontal();
                         DiagnosisCount++;
                     }

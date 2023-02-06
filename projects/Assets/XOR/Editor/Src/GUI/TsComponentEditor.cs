@@ -87,7 +87,7 @@ namespace XOR
         }
         void RenderModule()
         {
-            if (GUIUtil.RenderHeader("模块"))
+            if (GUIUtil.RenderHeader(Language.Component.Get("module")))
             {
                 moduleFoldout = !moduleFoldout;
             }
@@ -108,7 +108,7 @@ namespace XOR
         }
         void RenderMembers()
         {
-            if (GUIUtil.RenderHeader("成员属性"))
+            if (GUIUtil.RenderHeader(Language.Component.Get("properties")))
             {
                 memberFoldout = !memberFoldout;
             }
@@ -156,7 +156,7 @@ namespace XOR
         void _RenderModuleSelector()
         {
             GUILayout.BeginHorizontal();
-            if (GUILayout.Button("模块"))
+            if (GUILayout.Button(Language.Component.Get("module")))
             {
                 ModuleSelector.Show(EditorApplicationUtil.GetProgram(), OnSelectorCallback, moduleSelectorRect);
             }
@@ -166,7 +166,7 @@ namespace XOR
             }
             using (new EditorGUI.DisabledScope(statement == null))
             {
-                if (GUILayout.Button("重置"))
+                if (GUILayout.Button(Language.Default.Get("reset")))
                 {
                     TsComponentHelper.ClearProperties(component);
                     TsComponentHelper.RebuildProperties(component, statement);
@@ -174,7 +174,7 @@ namespace XOR
                     root.Update();
                     TsComponentHelper.RebuildNodes(root, nodes, statement);
                 }
-                if (GUILayout.Button("编辑") && File.Exists(statement.path))
+                if (GUILayout.Button(Language.Default.Get("edit")) && File.Exists(statement.path))
                 {
                     FileUtil.OpenFileInIDE(statement.path, statement.line);
                 }
@@ -432,13 +432,22 @@ namespace XOR
         {
             if (UnityEngine.Application.isPlaying)
             {
-                EditorUtility.DisplayDialog("提示", "你必需退出Play模式才能继续操作.", "确定");
+                EditorUtility.DisplayDialog(
+                    Language.Default.Get("tip"),
+                    Language.Default.Get("must_exit_playing"),
+                    Language.Default.Get("confirm")
+                );
                 return;
             }
             XOR.Services.Program program = EditorApplicationUtil.GetProgram();
             if (program == null || program.state != XOR.Services.ProgramState.Completed)
             {
-                bool startup = EditorUtility.DisplayDialog("提示", "你必需启动XOR服务并等待其初始化完成.", "启动", "取消");
+                bool startup = EditorUtility.DisplayDialog(
+                    Language.Default.Get("tip"),
+                    Language.Default.Get("must_start_services"),
+                    Language.Default.Get("launch"),
+                    Language.Default.Get("cancel")
+                );
                 if (startup && !EditorApplicationUtil.IsRunning())
                     EditorApplicationUtil.Start();
                 return;
@@ -452,7 +461,7 @@ namespace XOR
             {
                 for (int i = 0; i < assetPaths.Length; i++)
                 {
-                    if (EditorUtility.DisplayCancelableProgressBar("遍历资源中", assetPaths[i], (i) / assetPaths.Length))
+                    if (EditorUtility.DisplayCancelableProgressBar(Language.Default.Get("scanning_resources"), assetPaths[i], (i) / assetPaths.Length))
                         break;
                     var obj = AssetDatabase.LoadAssetAtPath<UnityEngine.Object>(assetPaths[i]);
                     if (obj is GameObject gameObject)
@@ -483,7 +492,7 @@ namespace XOR
                 UnityEditor.SceneManagement.EditorSceneManager.OpenScene(currentScene);
                 //打印信息
                 StringBuilder builder = new StringBuilder();
-                builder.AppendFormat("Sync Asset {0}, unknown guid {1}", resolveAssets.Count, unknwonGuids.Count);
+                builder.AppendFormat("Sync Asset {0}, Unknown Guid {1}", resolveAssets.Count, unknwonGuids.Count);
                 if (unknwonGuids.Count > 0)
                 {
                     builder.AppendLine();

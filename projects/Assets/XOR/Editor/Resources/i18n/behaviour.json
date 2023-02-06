@@ -1,0 +1,42 @@
+{
+    "menu": {
+        "zh_cn": "菜单",
+        "en_us": "Menu"
+    },
+    "properties": {
+        "zh_cn": "成员属性",
+        "en_us": "properties"
+    },
+    "diagnosis": {
+        "zh_cn": "诊断",
+        "en_us": "Diagnosis"
+    },
+    "generate_declare": {
+        "zh_cn": "生成声明",
+        "en_us": "Generate Declare"
+    },
+    "parsed_declare": {
+        "zh_cn": "粘贴声明",
+        "en_us": "Parsed Declare"
+    },
+    "check_key_redefinition": {
+        "zh_cn": "检测键名重复定义",
+        "en_us": "Check key redefinition"
+    },
+    "check_key_validity": {
+        "zh_cn": "检测键名是否符合规则",
+        "en_us": "Check key validity"
+    },
+    "key_redefinition_details": {
+        "zh_cn": "重复键名在第{0}行 (其他键在第{1}行)\n",
+        "en_us": "redefinition key at line {0} (other at line {1})\n"
+    },
+    "key_invail_details": {
+        "zh_cn": "无效的键名在第{0}行 ({1})\n",
+        "en_us": "invaild key definition at line {0} ({1})\n"
+    },
+    "copy_to_clipboard": {
+        "zh_cn": "已复制到剪贴板:\n{0}",
+        "en_us": "Copied to clipboard:\n{0}"
+    }
+}

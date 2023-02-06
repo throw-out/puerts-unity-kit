@@ -1,1 +1,78 @@
-{}
+{
+    "warning": {
+        "zh_cn": "警告",
+        "en_us": "Warning"
+    },
+    "tip": {
+        "zh_cn": "提示",
+        "en_us": "Tip"
+    },
+    "confirm": {
+        "zh_cn": "确定",
+        "en_us": "Confirm"
+    },
+    "cancel": {
+        "zh_cn": "取消",
+        "en_us": "Cancel"
+    },
+    "launch": {
+        "zh_cn": "启动",
+        "en_us": "Launch"
+    },
+    "reset": {
+        "zh_cn": "重置",
+        "en_us": "reset"
+    },
+    "edit": {
+        "zh_cn": "编辑",
+        "en_us": "Edit"
+    },
+    "config": {
+        "zh_cn": "配置",
+        "en_us": "Config"
+    },
+    "wait": {
+        "zh_cn": "等待",
+        "en_us": "Wait"
+    },
+    "scanning_resources": {
+        "zh_cn": "扫描资源中",
+        "en_us": "Scanning resources"
+    },
+    "must_exit_playing": {
+        "zh_cn": "你必需退出Play模式才能继续操作.",
+        "en_us": "You must exit Playing mode to continue"
+    },
+    "must_start_services": {
+        "zh_cn": "你必需启动XOR服务并等待其初始化完成.",
+        "en_us": "You must start the XOR service and wait for its initializated."
+    },
+    "want_reset_settings": {
+        "zh_cn": "您确定要重置XOR.Settings配置文件吗?",
+        "en_us": "Are you want to reset the XOR.Settings configuration file?"
+    },
+    "appdomain_unload_exception": {
+        "zh_cn": "AppDomain Unload期间发现有未正常关闭的{0}实例(Count={1}), 强制Unload将可能导致{2}无法正常释放(C++)继而导致crash!",
+        "en_us": "During AppDomain Unload, {0} instance (Count={1}) was not closed. Forcing Unload may cause {2} to not release(C++) and crash!"
+    },
+    "file_missing": {
+        "zh_cn": "文件缺失",
+        "en_us": "File Missing"
+    },
+    "file_missing_details": {
+        "zh_cn": "文件缺失:\n{0}",
+        "en_us": "File Missing:\n{0}"
+    },
+    "project_config_title": {
+        "zh_cn": "编辑器项目",
+        "en_us": "Editor Project"
+    },
+    "editor_project_config_title": {
+        "zh_cn": "游戏项目",
+        "en_us": "Game Project"
+    },
+    "select_tscofnig": {
+        "zh_cn": "请选择typescript配置文件(tsconfig.json)",
+        "en_us": "Please select the typescript configuration file (tsconfig. json)"
+    }
+}

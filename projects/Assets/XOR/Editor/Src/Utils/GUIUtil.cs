@@ -13,16 +13,19 @@ namespace XOR
 
             GUILayout.BeginVertical(Skin.headerBox, GUILayout.ExpandHeight(true));
             GUILayout.BeginHorizontal();
-            click |= GUILayout.Button("服务状态:", Skin.labelBold, GUILayout.ExpandWidth(false));
+            click |= GUILayout.Button(Language.Component.Get("services_status"),
+                Skin.labelBold,
+                GUILayout.ExpandWidth(false)
+            );
             click |= GUILayout.Button("●"
                 , EditorApplicationUtil.IsRunning() ? Skin.labelGreen : Skin.labelGray
                 , GUILayout.ExpandWidth(false)
             );
-            click |= GUILayout.Button("主线程", Skin.label);
+            click |= GUILayout.Button(Language.Component.Get("main_thread"), Skin.label);
             click |= GUILayout.Button("●"
                 , !EditorApplicationUtil.IsWorkerRunning() ? Skin.labelGray : EditorApplicationUtil.IsInitializing() ? Skin.labelYellow : Skin.labelGreen
                 , GUILayout.ExpandWidth(false));
-            click |= GUILayout.Button("工作线程", Skin.label);
+            click |= GUILayout.Button(Language.Component.Get("worker_thread"), Skin.label);
             GUILayout.EndHorizontal();
             GUILayout.EndVertical();
 
@@ -34,19 +37,19 @@ namespace XOR
             GUILayout.BeginHorizontal();
             if (EditorApplicationUtil.IsRunning())
             {
-                if (GUILayout.Button("重启服务"))
+                if (GUILayout.Button(Language.Component.Get("restart_services")))
                 {
                     EditorApplicationUtil.Stop(false);
                     EditorApplicationUtil.Start();
                 }
-                if (GUILayout.Button("停止服务"))
+                if (GUILayout.Button(Language.Component.Get("stop_services")))
                 {
                     EditorApplicationUtil.Stop();
                 }
             }
             else
             {
-                if (GUILayout.Button("启动服务"))
+                if (GUILayout.Button(Language.Component.Get("start_services")))
                 {
                     EditorApplicationUtil.Start();
                 }
@@ -54,23 +57,23 @@ namespace XOR
             GUILayout.EndHorizontal();
 
             GUILayout.BeginHorizontal();
-            GUILayout.Label("状态: ", GUILayout.ExpandWidth(false));
+            GUILayout.Label(Language.Component.Get("status"), GUILayout.ExpandWidth(false));
             GUILayout.Label(EditorApplicationUtil.GetStatus());
             GUILayout.EndHorizontal();
             GUILayout.BeginHorizontal();
-            GUILayout.Label("编译状态: ", GUILayout.ExpandWidth(false));
+            GUILayout.Label(Language.Component.Get("compile_status"), GUILayout.ExpandWidth(false));
             GUILayout.Label(EditorApplicationUtil.GetCompileStatus());
             GUILayout.EndHorizontal();
             GUILayout.BeginHorizontal();
-            GUILayout.Label("编译错误: ", GUILayout.ExpandWidth(false));
+            GUILayout.Label(Language.Component.Get("compile_errors"), GUILayout.ExpandWidth(false));
             GUILayout.Label(EditorApplicationUtil.GetErrors());
             GUILayout.EndHorizontal();
             GUILayout.BeginHorizontal();
-            GUILayout.Label("脚本数量: ", GUILayout.ExpandWidth(false));
+            GUILayout.Label(Language.Component.Get("script_number"), GUILayout.ExpandWidth(false));
             GUILayout.Label(EditorApplicationUtil.GetScripts());
             GUILayout.EndHorizontal();
             GUILayout.BeginHorizontal();
-            GUILayout.Label("已解析类: ", GUILayout.ExpandWidth(false));
+            GUILayout.Label(Language.Component.Get("class_number"), GUILayout.ExpandWidth(false));
             GUILayout.Label(EditorApplicationUtil.GetTypeCount());
             GUILayout.EndHorizontal();
 
@@ -116,13 +119,22 @@ namespace XOR
         {
             if (!string.IsNullOrEmpty(currentPath))
             {
-                bool ok = EditorUtility.DisplayDialog("编辑器项目", $"以下配置文件不存在:\n{currentPath}", "配置", "取消");
+                bool ok = EditorUtility.DisplayDialog(
+                    Language.Default.Get("file_missing"),
+                    string.Format(Language.Default.Get("file_missing_details"), currentPath),
+                    Language.Default.Get("config"),
+                    Language.Default.Get("cancel")
+                );
                 if (!ok)
                 {
                     return string.Empty;
                 }
             }
-            string newPath = EditorUtility.OpenFilePanelWithFilters("编辑器项目", "请选择XOR.typescript tsconfig.json文件", new string[] { "NPM", "json" });
+            string newPath = EditorUtility.OpenFilePanelWithFilters(
+                Language.Default.Get("editor_project_config_title"),
+                Language.Default.Get("select_tscofnig"),
+                new string[] { "NPM", "json" }
+            );
             if (!string.IsNullOrEmpty(newPath) && File.Exists(newPath))
             {
                 Settings asset = Settings.Load(true, true);
@@ -144,13 +156,22 @@ namespace XOR
         {
             if (!string.IsNullOrEmpty(currentPath))
             {
-                bool ok = EditorUtility.DisplayDialog("编辑器项目", $"以下配置文件不存在:\n{currentPath}", "配置", "取消");
+                bool ok = EditorUtility.DisplayDialog(
+                    Language.Default.Get("file_missing"),
+                    string.Format(Language.Default.Get("file_missing_details"), currentPath),
+                    Language.Default.Get("config"),
+                    Language.Default.Get("cancel")
+                );
                 if (!ok)
                 {
                     return string.Empty;
                 }
             }
-            string newPath = EditorUtility.OpenFilePanelWithFilters("游戏项目", "请选择typescript tsconfig.json文件", new string[] { "NPM", "json" });
+            string newPath = EditorUtility.OpenFilePanelWithFilters(
+                Language.Default.Get("project_config_title"),
+                Language.Default.Get("select_tscofnig"),
+                new string[] { "NPM", "json" }
+            );
             if (!string.IsNullOrEmpty(newPath) && File.Exists(newPath))
             {
                 Settings asset = Settings.Load(true, true);

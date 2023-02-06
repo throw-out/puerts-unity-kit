@@ -1,13 +1,17 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
+using UnityEditor;
 using UnityEngine;
 
 namespace XOR
 {
     internal class Language
     {
-        internal static Env Type = Env.EN_US;
-        internal static readonly Language Default = new Language("i18n/default.json");
+        internal static Env Type => (Env)Prefs.Language.GetValue();
+
+        public static readonly Language Default = new Language("i18n/default");
+        public static readonly Language Component = new Language("i18n/component");
+        public static readonly Language Behaviour = new Language("i18n/behaviour");
 
         private Language(string path)
         {
@@ -20,7 +24,7 @@ namespace XOR
         {
             if (i18n == null)
             {
-                i18n = Read() ?? new Dictionary<string, I18nData>();
+                i18n = Load() ?? new Dictionary<string, I18nData>();
             }
 
             I18nData data;
@@ -39,14 +43,20 @@ namespace XOR
             return string.Empty;
         }
 
-        Dictionary<string, I18nData> Read()
+        private Dictionary<string, I18nData> Load()
         {
             TextAsset asset = Resources.Load<TextAsset>(path);
             if (asset == null || string.IsNullOrEmpty(asset.text))
                 return null;
-            return JsonUtility.FromJson<Dictionary<string, I18nData>>(asset.text);
+            return Unity.Plastic.Newtonsoft.Json.JsonConvert.DeserializeObject<Dictionary<string, I18nData>>(asset.text);
         }
 
+        public static void Reload()
+        {
+            Default.i18n = null;
+            Component.i18n = null;
+            Behaviour.i18n = null;
+        }
 
         [System.Serializable]
         internal struct I18nData
@@ -56,8 +66,8 @@ namespace XOR
         }
         internal enum Env
         {
-            EN_US = 0,
             ZH_CN,
+            EN_US,
         }
     }
 }
