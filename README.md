@@ -20,7 +20,7 @@
   > 对TsBehaviour和TsProperties的结合实现, 可序列化ts脚本中的成员变量, 并实现ts对象的生命周期管理;
 
 - ThreadWorker: [[查看文档]](./docs/ThreadWorker.md)
-  > 提供`跨线程`&`跨Puerts.JsEnv实例`交互(基于C#数据类型传递数据);
+  > 提供`跨线程`&`跨Puerts.JsEnv实例`交互(基于C#类型传递数据);
 
 ## 环境
 | 软件或包     |  版本           |
