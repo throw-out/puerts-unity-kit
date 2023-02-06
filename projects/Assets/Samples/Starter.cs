@@ -4,7 +4,7 @@ using System.IO;
 using UnityEngine;
 using XOR;
 
-public class TsComponentRegister : MonoBehaviour
+public class Starter : MonoBehaviour
 {
     void Awake()
     {
@@ -18,6 +18,8 @@ public class TsComponentRegister : MonoBehaviour
 #endif
         app.Env.Eval("require('./main')");
         app.Env.Eval("require('./samples/01_TsComponent')");
+        app.Env.Eval("require('./samples/02_TsProperties')");
+        app.Env.Eval("require('./samples/03_TsBehaviour')");
 
         TsComponent.Register(app.Env);
     }

@@ -38,7 +38,7 @@ RenderSettings:
   m_ReflectionIntensity: 1
   m_CustomReflection: {fileID: 0}
   m_Sun: {fileID: 0}
-  m_IndirectSpecularColor: {r: 0.44657898, g: 0.4964133, b: 0.5748178, a: 1}
+  m_IndirectSpecularColor: {r: 0.44657874, g: 0.49641258, b: 0.5748172, a: 1}
   m_UseRadianceAmbientProbe: 0
 --- !u!157 &3
 LightmapSettings:
@@ -131,6 +131,7 @@ GameObject:
   m_Component:
   - component: {fileID: 795422079}
   - component: {fileID: 795422078}
+  - component: {fileID: 795422080}
   m_Layer: 0
   m_Name: 02_TsProperties
   m_TagString: Untagged
@@ -150,33 +151,21 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0d7c9f09628e9c44c85dc6d486bcdcaa, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  StringPairs:
-  - index: 4
-    key: key0
-    value: 
+  StringPairs: []
   NumberPairs:
-  - index: 3
+  - index: 0
+    key: key0
+    value: 12
+  BigintPairs: []
+  BooleanPairs:
+  - index: 2
     key: key1
     value: 0
-  BigintPairs:
+  Vector2Pairs: []
+  Vector3Pairs: []
+  ObjectPairs:
   - index: 1
     key: key2
-    value: 0
-  BooleanPairs:
-  - index: 7
-    key: key3
-    value: 0
-  Vector2Pairs:
-  - index: 2
-    key: key4
-    value: {x: 0, y: 0}
-  Vector3Pairs:
-  - index: 0
-    key: key1
-    value: {x: 0, y: 0, z: 0}
-  ObjectPairs:
-  - index: 6
-    key: key6 asda
     value: {fileID: 0}
   StringArrayPairs: []
   NumberArrayPairs: []
@@ -184,13 +173,7 @@ MonoBehaviour:
   BooleanArrayPairs: []
   Vector2ArrayPairs: []
   Vector3ArrayPairs: []
-  ObjectArrayPairs:
-  - index: 5
-    key: key7
-    value:
-    - {fileID: 0}
-    - {fileID: 0}
-    - {fileID: 0}
+  ObjectArrayPairs: []
 --- !u!4 &795422079
 Transform:
   m_ObjectHideFlags: 0
@@ -203,8 +186,21 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 0}
-  m_RootOrder: 2
+  m_RootOrder: 3
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &795422080
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 795422077}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4664d250fc322c842afd706145ffe099, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_Target: {fileID: 795422078}
 --- !u!1 &1954127726
 GameObject:
   m_ObjectHideFlags: 0
@@ -287,6 +283,49 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_RootOrder: 0
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &1990429343
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1990429345}
+  - component: {fileID: 1990429344}
+  m_Layer: 0
+  m_Name: Starter
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &1990429344
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1990429343}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ad0fa15b3bc451447ac58845dffd905b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+--- !u!4 &1990429345
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1990429343}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_RootOrder: 2
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1993392560
 GameObject:

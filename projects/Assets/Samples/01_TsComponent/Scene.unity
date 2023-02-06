@@ -38,7 +38,7 @@ RenderSettings:
   m_ReflectionIntensity: 1
   m_CustomReflection: {fileID: 0}
   m_Sun: {fileID: 0}
-  m_IndirectSpecularColor: {r: 0.44657898, g: 0.4964133, b: 0.5748178, a: 1}
+  m_IndirectSpecularColor: {r: 0.44657874, g: 0.49641258, b: 0.5748172, a: 1}
   m_UseRadianceAmbientProbe: 0
 --- !u!157 &3
 LightmapSettings:
@@ -366,7 +366,7 @@ GameObject:
   - component: {fileID: 1238659246}
   - component: {fileID: 1238659245}
   m_Layer: 0
-  m_Name: Register
+  m_Name: Starter
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -525,7 +525,7 @@ MonoBehaviour:
   MyDataArrayPairs: []
   guid: d2ea683a-0e55-41a2-b837-b7e7c2a1fee4
   route: 
-  version: 37033110E604E1DE01BD7D2027921F785ED40F33FE8BF77126748F22205DF301
+  version: B81F8B155047895CC87CC96E733175E26CED513045FF7FF4147DBA9B363709FD
   StringPairs:
   - index: 3
     key: _prop4
@@ -545,7 +545,7 @@ MonoBehaviour:
   Vector2Pairs:
   - index: 4
     key: _prop5
-    value: {x: 1, y: 10}
+    value: {x: 2, y: 10}
   Vector3Pairs: []
   ObjectPairs: []
   StringArrayPairs: []
