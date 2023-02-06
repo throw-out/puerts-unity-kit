@@ -329,7 +329,7 @@ namespace XOR.Serializables
             }
             foreach (var fw in FieldMapping.Values)
             {
-                if (Utility.IsImplicitAssignable(fw.Element, valueType))
+                if (Utility.IsCastAssignable(fw.Element, valueType))
                 {
                     AddProperty(fw, component, key, index);
                     return true;
@@ -349,7 +349,7 @@ namespace XOR.Serializables
         public bool IsExplicitPropertyValue(TComponent component, string key, Type valueType)
         {
             FindProperty(component, key, out IPair value, out var fw, out var values);
-            if (fw == null || values == null || !Utility.IsAssignable(fw.Element, valueType) && !Utility.IsImplicitAssignable(fw.Element, valueType))
+            if (fw == null || values == null || !Utility.IsAssignable(fw.Element, valueType) && !Utility.IsCastAssignable(fw.Element, valueType))
                 return false;
             var _value = value.Value;
             if (_value != null && Utility.IsAssignable(fw.Element, valueType))
@@ -406,9 +406,9 @@ namespace XOR.Serializables
             {
                 fw.Element.SetValue(value, newValue);
             }
-            else if (Utility.IsImplicitAssignable(fw.Element, newValue.GetType()))
+            else if (Utility.IsCastAssignable(fw.Element, newValue.GetType()))
             {
-                fw.Element.SetValue(value, Utility.GetAssignableValue(fw.Element, newValue));
+                fw.Element.SetValue(value, Utility.GetCastAssignableValue(fw.Element, newValue));
             }
             else
             {
@@ -511,14 +511,14 @@ namespace XOR.Serializables
             return element.ValueType.IsAssignableFrom(valueType);
         }
         /// <summary>
-        /// 是否允许隐式分配
+        /// 是否允许强转分配或隐式分配
         /// </summary>
         /// <param name="elementType"></param>
         /// <param name="valueType"></param>
         /// <returns></returns>
-        public static bool IsImplicitAssignable(ElementWrap element, Type valueType)
+        public static bool IsCastAssignable(ElementWrap element, Type valueType)
         {
-            return XOR.Serializables.ImplicitOperation.IsImplicitAssignable(element.Type, element.ValueType, valueType);
+            return XOR.Serializables.Convert.IsCastAssignable(element.Type, element.ValueType, valueType);
         }
         /// <summary>
         /// 进行类型强转(允许隐式转换分配)
@@ -526,9 +526,9 @@ namespace XOR.Serializables
         /// <param name="element"></param>
         /// <param name="value"></param>
         /// <returns></returns>
-        public static object GetAssignableValue(ElementWrap element, object value)
+        public static object GetCastAssignableValue(ElementWrap element, object value)
         {
-            return XOR.Serializables.ImplicitOperation.GetAssignableValue(element.ValueType, value);
+            return XOR.Serializables.Convert.GetCastAssignableValue(element.ValueType, value);
         }
         static readonly HashSet<Type> IntegerTypes = new HashSet<Type>()
         {

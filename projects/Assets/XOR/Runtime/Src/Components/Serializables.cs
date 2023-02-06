@@ -48,14 +48,14 @@ namespace XOR.Serializables
     [System.Serializable]
     public class String : Pair<System.String> { }
 
-    [Implicit(
+    [CastAssignable(
         typeof(byte), typeof(sbyte), typeof(char),
         typeof(short), typeof(ushort), typeof(int),
         typeof(uint), typeof(float), typeof(double)
     )]
     [System.Serializable]
     public class Number : Pair<System.Double> { }
-    [Implicit(typeof(long), typeof(ulong))]
+    [CastAssignable(typeof(long), typeof(ulong))]
     [System.Serializable]
     public class Bigint : Pair<System.Int64> { }
     [System.Serializable]
@@ -71,7 +71,7 @@ namespace XOR.Serializables
     [System.Serializable]
     public class StringArray : Pair<System.String[]> { }
 
-    [Implicit(
+    [CastAssignable(
         typeof(byte), typeof(sbyte), typeof(char),
         typeof(short), typeof(ushort), typeof(int),
         typeof(uint), typeof(float), typeof(double)
@@ -111,10 +111,10 @@ namespace XOR.Serializables
     /// 定义隐式转换类型
     /// </summary>
     [AttributeUsageAttribute(AttributeTargets.Class, Inherited = false, AllowMultiple = false)]
-    public class ImplicitAttribute : Attribute
+    public class CastAssignableAttribute : Attribute
     {
         public Type[] Types { get; private set; }
-        public ImplicitAttribute(Type firstType, params Type[] types)
+        public CastAssignableAttribute(Type firstType, params Type[] types)
         {
             this.Types = types.Concat(new[] { firstType }).Distinct().ToArray();
         }
@@ -161,9 +161,9 @@ namespace XOR.Serializables
                     {
                         setter.SetValue(pair, newValue);
                     }
-                    else if (ImplicitOperation.IsImplicitAssignable(pair.GetType(), pair.ValueType, newValue.GetType()))
+                    else if (Convert.IsCastAssignable(pair.GetType(), pair.ValueType, newValue.GetType()))
                     {
-                        setter.SetValue(pair, ImplicitOperation.GetAssignableValue(pair.ValueType, newValue));
+                        setter.SetValue(pair, Convert.GetCastAssignableValue(pair.ValueType, newValue));
                     }
                     else
                     {
@@ -209,53 +209,63 @@ namespace XOR.Serializables
         }
     }
 
-    public static class ImplicitOperation
+    public static class Convert
     {
         /// <summary>
-        /// 是否可转换类型
+        /// 是否可转换类型(强转或隐式转换)
         /// </summary>
-        public static bool IsImplicitAssignable(Type elementType, Type elementValueType, Type valueType)
+        public static bool IsCastAssignable(Type elementType, Type elementValueType, Type valueType)
         {
             if (elementValueType.IsArray != valueType.IsArray)
                 return false;
 
-            Type[] implicitTypes = GetImplicitAssignableTypes(elementType);
-            if (implicitTypes != null && implicitTypes.Contains(valueType))
+            Type[] castTypes = GetCastAssignableTypes(elementType);
+            if (castTypes != null && castTypes.Contains(valueType))
             {
                 return true;
             }
             if (elementValueType.IsArray)      //数组类型隐式分配
             {
-                return elementValueType.GetElementType().IsAssignableFrom(valueType.GetElementType()) ||
-                    implicitTypes != null && implicitTypes.Contains(valueType.GetElementType());
+                Type e1Type = elementValueType.GetElementType(), e2Type = valueType.GetElementType();
+                if (e1Type.IsAssignableFrom(e2Type) || castTypes != null && castTypes.Contains(e2Type))
+                {
+                    return true;
+                }
             }
-            return false;
+            return IsImplicitAssignable(elementValueType, valueType);
+        }
+        /// <summary>
+        /// 是否可以隐式转换
+        /// </summary>
+        public static bool IsImplicitAssignable(Type targetType, Type valueType)
+        {
+            return GetImplicitAssignableMethod(targetType, valueType) != null;
         }
 
-        static Dictionary<Type, Func<object, object>> typeConvertFuncs = new Dictionary<Type, Func<object, object>>()
+        static Dictionary<Type, Func<object, object>> castConvertFuncs = new Dictionary<Type, Func<object, object>>()
         {
             { typeof(double), v => System.Convert.ToDouble(v)},
         };
         /// <summary>
         /// 进行类型转换(允许隐式转换分配)
         /// </summary>
-        public static object GetAssignableValue(Type valueType, object value)
+        public static object GetCastAssignableValue(Type targetType, object value)
         {
-            if (value == null || valueType.IsArray != value.GetType().IsArray)
+            if (value == null || targetType.IsArray != value.GetType().IsArray)
             {
                 return default;
             }
             //获取转化方法
             Func<object, object> convertFunc;
-            typeConvertFuncs.TryGetValue(valueType.IsArray ? valueType.GetElementType() : valueType, out convertFunc);
+            castConvertFuncs.TryGetValue(targetType.IsArray ? targetType.GetElementType() : targetType, out convertFunc);
             if (convertFunc == null)
             {
-                return default;
+                return GetImplicitAssignableValue(targetType, value);
             }
-            if (valueType.IsArray)
+            if (targetType.IsArray)
             {
                 Array array = (Array)value;
-                Array newArray = Array.CreateInstance(valueType.GetElementType(), array.Length);
+                Array newArray = Array.CreateInstance(targetType.GetElementType(), array.Length);
                 for (int i = 0; i < array.Length; i++)
                 {
                     var am = array.GetValue(i);
@@ -269,21 +279,75 @@ namespace XOR.Serializables
                 return convertFunc(value);
             }
         }
-
-        static Dictionary<Type, Type[]> cacheImplicitAssignableTypes = new Dictionary<Type, Type[]>();
-        static Type[] GetImplicitAssignableTypes(Type type)
+        /// <summary>
+        /// 进行隐式转化
+        /// </summary>
+        public static object GetImplicitAssignableValue(Type targetType, object value)
         {
-            Type[] implicitTypes;
-            if (!cacheImplicitAssignableTypes.TryGetValue(type, out implicitTypes))
+            if (value == null || targetType.IsArray != value.GetType().IsArray)
             {
-                ImplicitAttribute implicitDefine = type.GetCustomAttribute<ImplicitAttribute>(false);
-                if (implicitDefine != null)
-                {
-                    implicitTypes = implicitDefine.Types;
-                }
-                cacheImplicitAssignableTypes.Add(type, implicitTypes);
+                return default;
             }
-            return implicitTypes;
+            MethodInfo assignMethod = GetImplicitAssignableMethod(targetType, value.GetType());
+            if (assignMethod == null)
+            {
+                return default;
+            }
+            return assignMethod.Invoke(null, new object[] { value });
+        }
+
+        static Dictionary<Type, Type[]> cacheCastAssignableTypes = new Dictionary<Type, Type[]>();
+        static Type[] GetCastAssignableTypes(Type type)
+        {
+            Type[] types;
+            if (!cacheCastAssignableTypes.TryGetValue(type, out types))
+            {
+                CastAssignableAttribute castDefine = type.GetCustomAttribute<CastAssignableAttribute>(false);
+                if (castDefine != null)
+                {
+                    types = castDefine.Types;
+                }
+                cacheCastAssignableTypes.Add(type, types);
+            }
+            return types;
+        }
+
+        static Dictionary<Type, Tuple<Type, Type, MethodInfo>[]> cacheImpliciitAssignableTypes =
+            new Dictionary<Type, Tuple<Type, Type, MethodInfo>[]>();
+        static Tuple<Type, Type, MethodInfo>[] GetImplicitAssignableTypes(Type type)
+        {
+            Tuple<Type, Type, MethodInfo>[] types;
+            if (!cacheImpliciitAssignableTypes.TryGetValue(type, out types))
+            {
+                var methods = type.GetMethods(BindingFlags.Static | BindingFlags.Public);
+                if (methods != null)
+                {
+                    types = methods
+                        .Where(m => m.IsSpecialName && "op_Implicit".Equals(m.Name) && m.GetParameters().Length == 1)
+                        .Select(m => new Tuple<Type, Type, MethodInfo>(m.ReturnType, m.GetParameters()[0].ParameterType, m))
+                        .ToArray();
+                }
+                cacheImpliciitAssignableTypes.Add(type, types);
+            }
+            return types;
+        }
+        static MethodInfo GetImplicitAssignableMethod(Type targetType, Type valueType)
+        {
+            if (targetType.IsArray != valueType.IsArray)
+                return null;
+            if (targetType.IsArray)
+            {
+                return GetImplicitAssignableMethod(targetType.GetElementType(), valueType.GetElementType());
+            }
+
+            var assignMethod = GetImplicitAssignableTypes(targetType)?.FirstOrDefault(m =>
+                targetType.IsAssignableFrom(m.Item1) &&
+                m.Item2.IsAssignableFrom(valueType)
+            ) ?? GetImplicitAssignableTypes(valueType)?.FirstOrDefault(m =>
+                targetType.IsAssignableFrom(m.Item1) &&
+                m.Item2.IsAssignableFrom(valueType)
+            );
+            return assignMethod?.Item3;
         }
     }
 }
