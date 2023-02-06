@@ -1,5 +1,5 @@
-> xor d.ts声明目录: [projects/Assets/XOR/Typing](../projects/Assets/XOR/Typing)
-> ts示例目录: [projects/TsProject/src/samples](../projects/TsProject/src/samples)
+> - xor d.ts声明目录: [projects/Assets/XOR/Typing](../projects/Assets/XOR/Typing)
+> - ts示例目录: [projects/TsProject/src/samples](../projects/TsProject/src/samples)
 
 使用typescript的AST解析器, 分析ts脚本获取class声明及其成员信息, 然后传递到C# SerializedObject渲染使用.
 
@@ -11,8 +11,8 @@
 - AST解析器运行在子线程中, 指定value时的表达式必需要能在子线程中访问: `例如UnityEngine.Vector2.right是可以的, 而UnityEngine.Application.dataPath不可以`
 
 ## 定义
-[TsComponent](../projects/Assets/XOR/Runtime/Src/Components/TsComponent.cs) 
-> 继承: [TsBehaviour](./TsBehaviour.md)
+[XOR.TsComponent](../projects/Assets/XOR/Runtime/Src/Components/TsComponent.cs) 
+> 继承: [XOR.TsBehaviour](./TsBehaviour.md)
 
 ## 成员
 | 名称  | 描述  |

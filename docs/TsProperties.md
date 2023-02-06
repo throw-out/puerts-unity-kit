@@ -1,8 +1,8 @@
-> xor d.ts声明目录: [projects/Assets/XOR/Typing](../projects/Assets/XOR/Typing)
-> ts示例目录: [projects/TsProject/src/samples](../projects/TsProject/src/samples)
+> - xor d.ts声明目录: [projects/Assets/XOR/Typing](../projects/Assets/XOR/Typing)
+> - ts示例目录: [projects/TsProject/src/samples](../projects/TsProject/src/samples)
 
 ## 定义
-[TsProperties](../projects/Assets/XOR/Runtime/Src/Components/TsProperties.cs)
+[XOR.TsProperties](../projects/Assets/XOR/Runtime/Src/Components/TsProperties.cs)
 
 ## 方法
 | 名称  | 描述  |

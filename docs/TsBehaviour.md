@@ -1,11 +1,11 @@
-> xor d.ts声明目录: [projects/Assets/XOR/Typing](../projects/Assets/XOR/Typing)
-> ts示例目录: [projects/TsProject/src/samples](../projects/TsProject/src/samples)
+> - xor d.ts声明目录: [projects/Assets/XOR/Typing](../projects/Assets/XOR/Typing)
+> - ts示例目录: [projects/TsProject/src/samples](../projects/TsProject/src/samples)
 
 ## 使用需知
 - 只需要继承[xor.TsBehaviour](../projects/TsEditorProject/src/xor/components/behaviour.ts)就可以使用Unity的[生命周期](https://docs.unity3d.com/2021.3/Documentation/Manual/ExecutionOrder.html)方法 
 
 ## 定义
-[TsBehaviour](../projects/Assets/XOR/Runtime/Src/Components/TsBehaviour/TsBehaviour.cs)
+[XOR.TsBehaviour](../projects/Assets/XOR/Runtime/Src/Components/TsBehaviour/TsBehaviour.cs)
 
 ## 简单演示
 
