@@ -29,19 +29,19 @@ namespace XOR
             }
             using (new EditorGUI.DisabledScope(disable))
             {
-                if (GUILayout.Button("重置"))
+                if (GUILayout.Button(Language.Default.Get("reset")))
                 {
                     RenderReset();
                 }
                 GUILayout.Space(HeightSpace);
-                if (GUILayout.Button("启动服务"))
+                if (GUILayout.Button(Language.Component.Get("start_services")))
                 {
                     EditorApplicationUtil.Start();
                 }
             }
             using (new EditorGUI.DisabledScope(!disable))
             {
-                if (GUILayout.Button("停止服务"))
+                if (GUILayout.Button(Language.Component.Get("stop_services")))
                 {
                     EditorApplicationUtil.Stop();
                 }
@@ -49,7 +49,7 @@ namespace XOR
         }
         void RenderProject(Settings settings)
         {
-            GUILayout.Label("项目");
+            GUILayout.Label(Language.Default.Get("project_config_title"));
 
             using (new EditorGUI.DisabledScope(true))
             {
@@ -57,11 +57,11 @@ namespace XOR
             }
 
             GUILayout.BeginHorizontal();
-            if (GUILayout.Button("编辑"))
+            if (GUILayout.Button(Language.Default.Get("edit")))
             {
                 GUIUtil.RenderSelectProject(null);
             }
-            if (GUILayout.Button("查看"))
+            if (GUILayout.Button(Language.Default.Get("look")))
             {
                 string path = PathUtil.GetFullPath(settings.project);
                 if (File.Exists(path))
@@ -70,14 +70,14 @@ namespace XOR
                 }
                 else
                 {
-                    Debug.LogError("文件不存在: " + path);
+                    Debug.LogErrorFormat(Language.Default.Get("file_missing_details"), path);
                 }
             }
             GUILayout.EndHorizontal();
         }
         void RenderEditorProject(Settings settings)
         {
-            GUILayout.Label("XOR编辑器项目");
+            GUILayout.Label(Language.Default.Get("editor_project_config_title"));
 
             using (new EditorGUI.DisabledScope(true))
             {
@@ -85,11 +85,11 @@ namespace XOR
             }
 
             GUILayout.BeginHorizontal();
-            if (GUILayout.Button("编辑"))
+            if (GUILayout.Button(Language.Default.Get("edit")))
             {
                 GUIUtil.RenderSelectEditorProject(null);
             }
-            if (GUILayout.Button("查看"))
+            if (GUILayout.Button(Language.Default.Get("look")))
             {
                 string path = PathUtil.GetFullPath(settings.editorProject);
                 if (File.Exists(path))
@@ -98,7 +98,7 @@ namespace XOR
                 }
                 else
                 {
-                    Debug.LogError("文件不存在: " + path);
+                    Debug.LogErrorFormat(Language.Default.Get("file_missing_details"), path);
                 }
             }
             GUILayout.EndHorizontal();
@@ -121,7 +121,7 @@ namespace XOR
             GUILayout.Space(HeightSpace);
             GUILayout.BeginHorizontal("HelpBox");
             GUILayout.Label(string.Empty, Skin.infoIcon);
-            GUILayout.Label("System.IO.FileSystemWatcher在部分Unity版本上不能正常工作, 可更新至最新LTS版后再次尝试. 或使用nodejs fs.wacth来替代FileWacther功能.", Skin.labelArea, GUILayout.ExpandHeight(true));
+            GUILayout.Label(Language.Default.Get("file_watcher_tip"), Skin.labelArea, GUILayout.ExpandHeight(true));
             GUILayout.EndHorizontal();
 
             if (!PuertsUtil.IsSupportNodejs())
@@ -129,7 +129,7 @@ namespace XOR
                 GUILayout.Space(HeightSpace);
                 GUILayout.BeginHorizontal("HelpBox");
                 GUILayout.Label(string.Empty, Skin.warnIcon);
-                GUILayout.Label("nodejs在当前环境上不可用", Skin.labelArea, GUILayout.ExpandHeight(true));
+                GUILayout.Label(Language.Default.Get("nodejs_unsupport"), Skin.labelArea, GUILayout.ExpandHeight(true));
                 GUILayout.EndHorizontal();
             }
         }

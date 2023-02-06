@@ -27,6 +27,10 @@
         "zh_cn": "编辑",
         "en_us": "Edit"
     },
+    "look": {
+        "zh_cn": "查看",
+        "en_us": "Look"
+    },
     "config": {
         "zh_cn": "配置",
         "en_us": "Config"
@@ -64,15 +68,23 @@
         "en_us": "File Missing:\n{0}"
     },
     "project_config_title": {
-        "zh_cn": "编辑器项目",
+        "zh_cn": "游戏项目",
         "en_us": "Editor Project"
     },
     "editor_project_config_title": {
-        "zh_cn": "游戏项目",
+        "zh_cn": "编辑器项目",
         "en_us": "Game Project"
     },
     "select_tscofnig": {
         "zh_cn": "请选择typescript配置文件(tsconfig.json)",
         "en_us": "Please select the typescript configuration file (tsconfig. json)"
+    },
+    "file_watcher_tip": {
+        "zh_cn": "System.IO.FileSystemWatcher在部分Unity版本上不能正常工作, 可更新至最新LTS版后再次尝试. 或使用nodejs fs.wacth来替代FileSystemWatcher功能.",
+        "en_us": "System.IO.FileSystemWatcher does not work on some Unity versions.You should update Unity to the latest LTS version or use nodejs fs.watch to replace the FileSystemWatcher."
+    },
+    "nodejs_unsupport": {
+        "zh_cn": "nodejs在当前环境上不可用",
+        "en_us": "Nodejs is not available in the current environment"
     }
 }
