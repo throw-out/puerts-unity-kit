@@ -24,15 +24,15 @@
         "en_us": "Types: "
     },
     "start_services": {
-        "zh_cn": "启动服务:",
+        "zh_cn": "启动服务",
         "en_us": "Start Services"
     },
     "stop_services": {
-        "zh_cn": "停止服务:",
+        "zh_cn": "停止服务",
         "en_us": "Stop Services"
     },
     "restart_services": {
-        "zh_cn": "重启服务:",
+        "zh_cn": "重启服务",
         "en_us": "Restart Services"
     },
     "main_thread": {

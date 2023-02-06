@@ -23,7 +23,7 @@ namespace XOR
         /// <summary>
         /// 指定语言环境
         /// </summary>
-        internal static readonly Accessor<int> Language = new Accessor<int>("Language", (int)XOR.Language.Env.EN_US);
+        internal static readonly Accessor<int> Language = new Accessor<int>("Language", (int)XOR.Language.Env.ZH_CN);
 
         internal class Accessor<T>
         {

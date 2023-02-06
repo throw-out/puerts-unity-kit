@@ -50,8 +50,6 @@ namespace XOR
 
 
         #region Language菜单项
-        [MenuItem("Tools/XOR/Language/Refresh", false, 0)]
-        static void LanguageRefresh() => Language.Reload();
         [MenuItem("Tools/XOR/Language/简体中文", false, 0)]
         static void LanguageZHCN() => Prefs.Language.SetValue((int)Language.Env.ZH_CN);
         [MenuItem("Tools/XOR/Language/简体中文", true, 0)]
