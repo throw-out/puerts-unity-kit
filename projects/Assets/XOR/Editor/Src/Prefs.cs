@@ -25,6 +25,12 @@ namespace XOR
         /// </summary>
         internal static readonly Accessor<int> Language = new Accessor<int>("Language", (int)XOR.Language.Env.ZH_CN);
 
+        /// <summary>
+        /// puerts环境版本信息
+        /// </summary>
+        /// <typeparam name="int"></typeparam>
+        internal static readonly Accessor<int> PuertsVersion = new Accessor<int>("PuertsVersion", 0);
+
         internal class Accessor<T>
         {
             private readonly string key;

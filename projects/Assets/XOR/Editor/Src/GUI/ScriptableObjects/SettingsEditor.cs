@@ -13,6 +13,25 @@ namespace XOR
         const float HeaderWidth = 100f;
         const float HeightSpace = 10f;
 
+        void OnDisable()
+        {
+            if (!ScriptingDefineSymbols.Change)
+                return;
+            bool ok = EditorUtility.DisplayDialog(
+                Language.Default.Get("tip"),
+                Language.Default.Get("config_changed"),
+                Language.Default.Get("save"),
+                Language.Default.Get("cancel")
+            );
+            if (ok)
+            {
+                ScriptingDefineSymbols.Save();
+            }
+            else
+            {
+                ScriptingDefineSymbols.Read();
+            }
+        }
         public override void OnInspectorGUI()
         {
             bool disable = EditorApplicationUtil.IsRunning();
@@ -22,9 +41,11 @@ namespace XOR
                 GUILayout.Space(HeightSpace);
                 GUIUtil.RenderGroup(RenderEditorProject, Settings.Load(true, true));
                 GUILayout.Space(HeightSpace);
+                GUIUtil.RenderGroup(RenderOther, Settings.Load(true, true));
+                GUILayout.Space(HeightSpace);
                 GUIUtil.RenderGroup(RenderWatchType, Settings.Load(true, true));
                 GUILayout.Space(HeightSpace);
-                GUIUtil.RenderGroup(RenderOther, Settings.Load(true, true));
+                GUIUtil.RenderGroup(RenderScriptingDefine);
                 GUILayout.Space(HeightSpace);
             }
             using (new EditorGUI.DisabledScope(disable))
@@ -103,6 +124,26 @@ namespace XOR
             }
             GUILayout.EndHorizontal();
         }
+        void RenderOther(Settings settings)
+        {
+            GUILayout.BeginHorizontal();
+            GUILayout.Label("IsESM", GUILayout.Width(HeaderWidth));
+            bool on = GUILayout.Toggle(settings.isESM, string.Empty);
+            GUILayout.EndHorizontal();
+            if (on != settings.isESM)
+            {
+                settings.isESM = on;
+            }
+
+            GUILayout.BeginHorizontal();
+            GUILayout.Label("Logger", GUILayout.Width(HeaderWidth));
+            Settings.LOGGER logger = (Settings.LOGGER)EditorGUILayout.EnumFlagsField(settings.logger);
+            GUILayout.EndHorizontal();
+            if (logger != settings.logger)
+            {
+                settings.logger = logger;
+            }
+        }
         void RenderWatchType(Settings settings)
         {
             GUILayout.Label("File Wacther");
@@ -133,25 +174,49 @@ namespace XOR
                 GUILayout.EndHorizontal();
             }
         }
-        void RenderOther(Settings settings)
+        void RenderScriptingDefine()
+        {
+            GUILayout.Label("Scripting Define Symbols");
+            using (new EditorGUI.DisabledScope(UnityEngine.Application.isPlaying))
+            {
+                RenderScriptingDefineStatus("THREAD_SAFE");
+                RenderScriptingDefineStatus("MODULE_CHECKER");
+
+                GUILayout.Space(HeightSpace);
+                GUILayout.BeginHorizontal("HelpBox");
+                GUILayout.Label(string.Empty, Skin.infoIcon);
+                GUILayout.Label(Language.Default.Get("thread_safe_tip"), Skin.labelArea, GUILayout.ExpandHeight(true));
+                GUILayout.EndHorizontal();
+
+                using (new EditorGUI.DisabledScope(!ScriptingDefineSymbols.Change))
+                {
+                    GUILayout.Space(HeightSpace);
+
+                    GUILayout.BeginHorizontal();
+                    if (GUILayout.Button(Language.Default.Get("reset")))
+                    {
+                        ScriptingDefineSymbols.Read();
+                    }
+                    if (GUILayout.Button(Language.Default.Get("save")))
+                    {
+                        ScriptingDefineSymbols.Save();
+                        AssetDatabase.Refresh();
+                    }
+                    GUILayout.EndHorizontal();
+                }
+            }
+        }
+        void RenderScriptingDefineStatus(string symbol)
         {
             GUILayout.BeginHorizontal();
-            GUILayout.Label("IsESM", GUILayout.Width(HeaderWidth));
-            bool on = GUILayout.Toggle(settings.isESM, string.Empty);
-            GUILayout.EndHorizontal();
-            if (on != settings.isESM)
+            GUILayout.Label(new GUIContent(symbol, symbol), GUILayout.Width(HeaderWidth * 2));
+            bool exist = ScriptingDefineSymbols.HasSymbol(symbol);
+            if (GUILayout.Toggle(exist, string.Empty) != exist)
             {
-                settings.isESM = on;
+                if (exist) ScriptingDefineSymbols.RemoveSymbol(symbol);
+                else ScriptingDefineSymbols.AddSymbol(symbol);
             }
-
-            GUILayout.BeginHorizontal();
-            GUILayout.Label("Logger", GUILayout.Width(HeaderWidth));
-            Settings.LOGGER logger = (Settings.LOGGER)EditorGUILayout.EnumFlagsField(settings.logger);
             GUILayout.EndHorizontal();
-            if (logger != settings.logger)
-            {
-                settings.logger = logger;
-            }
         }
 
         void RenderReset()

@@ -21,11 +21,15 @@
     },
     "reset": {
         "zh_cn": "重置",
-        "en_us": "reset"
+        "en_us": "Reset"
     },
     "edit": {
         "zh_cn": "编辑",
         "en_us": "Edit"
+    },
+    "save": {
+        "zh_cn": "保存",
+        "en_us": "Save"
     },
     "look": {
         "zh_cn": "查看",
@@ -83,8 +87,16 @@
         "zh_cn": "System.IO.FileSystemWatcher在部分Unity版本上不能正常工作, 可更新至最新LTS版后再次尝试. 或使用nodejs fs.wacth来替代FileSystemWatcher功能.",
         "en_us": "System.IO.FileSystemWatcher does not work on some Unity versions.You should update Unity to the latest LTS version or use nodejs fs.watch to replace the FileSystemWatcher."
     },
+    "thread_safe_tip": {
+        "zh_cn": "当触发AppDomain Unload时(通常出现在C#编译或进入Play模式阶段), 此时如果TheradWorker正在运行中, 将导致Unity Crash.",
+        "en_us": "When AppDomain is unloaded (usually when compiling C # scripts or entering Play mode), if TheradWorker is running at this time, it will cause Unity Crash"
+    },
     "nodejs_unsupport": {
         "zh_cn": "nodejs在当前环境上不可用",
         "en_us": "Nodejs is not available in the current environment"
+    },
+    "config_changed": {
+        "zh_cn": "配置已更改, 是否保存?",
+        "en_us": "The configuration has been changed. Do you want to save it?"
     }
 }
