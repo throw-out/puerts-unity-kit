@@ -59,10 +59,12 @@ declare module "csharp" {
         interface GameObject {
             GetComponent<T extends UnityEngine.Component>(ctor: ConstructorType<T>): T;
             GetComponent<T extends TsComponentConstructor>(ctor: ConstructorType<T>): T;
+            GetComponents<T extends TsComponentConstructor = any>(onlyTsCompnent: true): T[];
         }
         interface Component {
             GetComponent<T extends UnityEngine.Component>(ctor: ConstructorType<T>): T;
             GetComponent<T extends TsComponentConstructor>(ctor: ConstructorType<T>): T;
+            GetComponents<T extends TsComponentConstructor = any>(onlyTsCompnent: true): T[];
         }
     }
 }

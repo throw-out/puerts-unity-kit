@@ -1127,8 +1127,8 @@ declare namespace CS {
         /** Base class for everything attached to GameObjects.
         */
         interface Component {
-            GetTsComponents(): System.Array$1<XOR.TsComponent>;
-            GetTsComponent($guid: string): XOR.TsComponent;
+            GetTsComponents(): System.Array$1<Puerts.JSObject>;
+            GetTsComponent($guid: string): Puerts.JSObject;
         }
         /** Behaviours are Components that can be enabled or disabled.
         */
@@ -3391,8 +3391,8 @@ declare namespace CS {
         /** Base class for all entities in Unity Scenes.
         */
         interface GameObject {
-            GetTsComponents(): System.Array$1<XOR.TsComponent>;
-            GetTsComponent($guid: string): XOR.TsComponent;
+            GetTsComponents(): System.Array$1<Puerts.JSObject>;
+            GetTsComponent($guid: string): Puerts.JSObject;
         }
         /** Store a collection of Keyframes that can be evaluated over time.
         */
@@ -25957,6 +25957,13 @@ declare namespace CS {
             public static GetType($fullName: string): System.Type
             public GetType(): System.Type
         }
+        class TsProperties extends UnityEngine.MonoBehaviour implements XOR.Serializables.IAccessor {
+            protected [__keep_incompatibility]: never;
+            public GetProperties(): System.Array$1<XOR.Serializables.ResultPair>
+            public SetProperty($key: string, $value: any): void
+            public SetPropertyListener($handler: System.Action$2<string, any>): void
+            public constructor()
+        }
         class TsBehaviour extends UnityEngine.MonoBehaviour implements System.IDisposable {
             protected [__keep_incompatibility]: never;
             public get Module(): XOR.ModuleInfo;
@@ -25986,7 +25993,11 @@ declare namespace CS {
             public GetProperties(): System.Array$1<XOR.Serializables.ResultPair>
             public SetProperty($key: string, $value: any): void
             public SetPropertyListener($handler: System.Action$2<string, any>): void
+            public TryInit(): boolean
+            public GetGuid(): string
+            public GetRoute(): string
             public static GC(): void
+            public static PrintStatus(): void
             public static Register($env: Puerts.JsEnv): void
             public constructor()
         }
@@ -26228,13 +26239,6 @@ declare namespace CS {
             Invoke?: (eventName: string, args: System.Array$1<string>) => void;
         }
         var ReceiveMessagesCallback: { new(func: (eventName: string, args: System.Array$1<string>) => void): ReceiveMessagesCallback; }
-        class TsProperties extends UnityEngine.MonoBehaviour implements XOR.Serializables.IAccessor {
-            protected [__keep_incompatibility]: never;
-            public GetProperties(): System.Array$1<XOR.Serializables.ResultPair>
-            public SetProperty($key: string, $value: any): void
-            public SetPropertyListener($handler: System.Action$2<string, any>): void
-            public constructor()
-        }
         class TsScriptableObject extends UnityEngine.ScriptableObject {
             protected [__keep_incompatibility]: never;
             public constructor()
@@ -26250,10 +26254,10 @@ declare namespace CS {
         }
         class TsComponentExtension extends System.Object {
             protected [__keep_incompatibility]: never;
-            public static GetTsComponents($gameObject: UnityEngine.GameObject): System.Array$1<XOR.TsComponent>
-            public static GetTsComponents($gameObject: UnityEngine.Component): System.Array$1<XOR.TsComponent>
-            public static GetTsComponent($gameObject: UnityEngine.GameObject, $guid: string): XOR.TsComponent
-            public static GetTsComponent($gameObject: UnityEngine.Component, $guid: string): XOR.TsComponent
+            public static GetTsComponents($gameObject: UnityEngine.GameObject): System.Array$1<Puerts.JSObject>
+            public static GetTsComponents($component: UnityEngine.Component): System.Array$1<Puerts.JSObject>
+            public static GetTsComponent($gameObject: UnityEngine.GameObject, $guid: string): Puerts.JSObject
+            public static GetTsComponent($component: UnityEngine.Component, $guid: string): Puerts.JSObject
         }
         class FileLoader extends System.Object implements Puerts.ILoader {
             protected [__keep_incompatibility]: never;
@@ -30405,7 +30409,20 @@ declare namespace CS {
         }
         var GetValueForCheck: { new(func: () => any): GetValueForCheck; }
     }
-    class TsComponentRegister extends UnityEngine.MonoBehaviour {
+    class Sample_02 extends UnityEngine.MonoBehaviour {
+        protected [__keep_incompatibility]: never;
+        public m_Target: XOR.TsProperties
+        public constructor()
+    }
+    class Sample_03 extends UnityEngine.MonoBehaviour {
+        protected [__keep_incompatibility]: never;
+        public constructor()
+    }
+    class Sample_04 extends UnityEngine.MonoBehaviour {
+        protected [__keep_incompatibility]: never;
+        public constructor()
+    }
+    class Starter extends UnityEngine.MonoBehaviour {
         protected [__keep_incompatibility]: never;
         public constructor()
     }
@@ -30416,15 +30433,6 @@ declare namespace CS {
     }
     class DelegateUtil extends System.Object {
         protected [__keep_incompatibility]: never;
-    }
-    namespace PuertsStaticWrap {
-        class AutoStaticCodeUsing extends System.Object {
-            protected [__keep_incompatibility]: never;
-            public static AutoUsing($jsEnv: Puerts.JsEnv): void
-            public static UsingAction($jsEnv: Puerts.JsEnv, ...args: string[]): void
-            public static UsingFunc($jsEnv: Puerts.JsEnv, ...args: string[]): void
-            public static UsingGeneric($jsEnv: Puerts.JsEnv, $usingAction: boolean, ...types: System.Type[]): void
-        }
     }
     namespace XOR.Serializables {
         interface IAccessor {
@@ -30570,16 +30578,27 @@ declare namespace CS {
             public constructor($path: string)
             public constructor()
         }
-        class ImplicitAttribute extends System.Attribute implements System.Runtime.InteropServices._Attribute {
+        class CastAssignableAttribute extends System.Attribute implements System.Runtime.InteropServices._Attribute {
             protected [__keep_incompatibility]: never;
             public get Types(): System.Array$1<System.Type>;
             public constructor($firstType: System.Type, ...types: System.Type[])
             public constructor()
         }
-        class ImplicitOperation extends System.Object {
+        class Convert extends System.Object {
             protected [__keep_incompatibility]: never;
-            public static IsImplicitAssignable($elementType: System.Type, $elementValueType: System.Type, $valueType: System.Type): boolean
-            public static GetAssignableValue($valueType: System.Type, $value: any): any
+            public static IsCastAssignable($elementType: System.Type, $elementValueType: System.Type, $valueType: System.Type): boolean
+            public static IsImplicitAssignable($targetType: System.Type, $valueType: System.Type): boolean
+            public static GetCastAssignableValue($targetType: System.Type, $value: any): any
+            public static GetImplicitAssignableValue($targetType: System.Type, $value: any): any
+        }
+    }
+    namespace PuertsStaticWrap {
+        class AutoStaticCodeUsing extends System.Object {
+            protected [__keep_incompatibility]: never;
+            public static AutoUsing($jsEnv: Puerts.JsEnv): void
+            public static UsingAction($jsEnv: Puerts.JsEnv, ...args: string[]): void
+            public static UsingFunc($jsEnv: Puerts.JsEnv, ...args: string[]): void
+            public static UsingGeneric($jsEnv: Puerts.JsEnv, $usingAction: boolean, ...types: System.Type[]): void
         }
     }
     namespace XOR.Settings {

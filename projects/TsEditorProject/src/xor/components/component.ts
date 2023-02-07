@@ -109,11 +109,27 @@ function overrideGetComponent() {
             let ctor: any = arguments[0];
             if (typeof (ctor) === "function") {
                 if (RegisterFlag in ctor) {
-                    return this.GetTsComponent(ctor[RegisterFlag] as string)?.JSObject;
+                    return this.GetTsComponent(ctor[RegisterFlag] as string);
                 }
                 if (ctor.prototype instanceof csharp.UnityEngine.Component) {
                     return original.call(this, $typeof(ctor));
                 }
+            }
+            return original.apply(this, arguments);
+        }
+    }
+    function createGetComponents(original: Function) {
+        return function (this: csharp.UnityEngine.GameObject | csharp.UnityEngine.Component) {
+            if (arguments[0] && typeof (arguments[0]) === "boolean") {
+                let components = this.GetTsComponents();
+                if (components) {
+                    let results = [];
+                    for (let i = 0; i < components.Length; i++) {
+                        results.push(components.get_Item(i));
+                    }
+                    return results;
+                }
+                return null;
             }
             return original.apply(this, arguments);
         }
@@ -124,6 +140,8 @@ function overrideGetComponent() {
 
     Component.prototype.GetComponent = createGetComponent(Component.prototype.GetComponent);
     GameObject.prototype.GetComponent = createGetComponent(GameObject.prototype.GetComponent);
+    Component.prototype.GetComponents = createGetComponents(Component.prototype.GetComponents);
+    GameObject.prototype.GetComponents = createGetComponents(GameObject.prototype.GetComponents);
 }
 overrideGetComponent();
 
@@ -133,12 +151,12 @@ declare module "csharp" {
         interface GameObject {
             GetComponent<T extends UnityEngine.Component>(ctor: ConstructorType<T>): T;
             GetComponent<T extends TsComponentConstructor>(ctor: ConstructorType<T>): T;
-            //GetTsComponents<T extends TsComponentConstructor=any>(): T[];
+            GetComponents<T extends TsComponentConstructor = any>(onlyTsCompnent: true): T[];
         }
         interface Component {
             GetComponent<T extends UnityEngine.Component>(ctor: ConstructorType<T>): T;
             GetComponent<T extends TsComponentConstructor>(ctor: ConstructorType<T>): T;
-            //GetTsComponents<T extends TsComponentConstructor=any>(): T[];
+            GetComponents<T extends TsComponentConstructor = any>(onlyTsCompnent: true): T[];
         }
     }
 }

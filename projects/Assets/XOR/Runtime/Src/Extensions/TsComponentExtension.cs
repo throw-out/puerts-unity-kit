@@ -7,25 +7,49 @@ namespace XOR
 {
     public static class TsComponentExtension
     {
-        public static TsComponent[] GetTsComponents(this GameObject gameObject)
+        public static Puerts.JSObject[] GetTsComponents(this GameObject gameObject)
         {
-            return TsComponentLifecycle.GetComponents(gameObject);
+            return TsComponentLifecycle.GetComponents(gameObject)
+                ?.Select(o => { o.TryInit(); return o.JSObject; })
+                .ToArray();
         }
-        public static TsComponent[] GetTsComponents(this Component gameObject)
+        public static Puerts.JSObject[] GetTsComponents(this Component component)
         {
-            return TsComponentLifecycle.GetComponents(gameObject);
+            return TsComponentLifecycle.GetComponents(component)
+                ?.Select(o => { o.TryInit(); return o.JSObject; })
+                .ToArray();
         }
-        public static TsComponent GetTsComponent(this GameObject gameObject, string guid)
+        public static Puerts.JSObject GetTsComponent(this GameObject gameObject, string guid)
         {
             if (string.IsNullOrEmpty(guid))
                 return null;
-            return GetTsComponents(gameObject)?.FirstOrDefault(component => guid.Equals(component.GetGuid()));
+            return TsComponentLifecycle.GetComponents(gameObject)
+                ?.FirstOrDefault(o =>
+                {
+                    if (guid.Equals(o.GetGuid()))
+                    {
+                        o.TryInit();
+                        return true;
+                    }
+                    return false;
+                })
+                ?.JSObject;
         }
-        public static TsComponent GetTsComponent(this Component gameObject, string guid)
+        public static Puerts.JSObject GetTsComponent(this Component component, string guid)
         {
             if (string.IsNullOrEmpty(guid))
                 return null;
-            return GetTsComponents(gameObject)?.FirstOrDefault(component => guid.Equals(component.GetGuid()));
+            return TsComponentLifecycle.GetComponents(component)
+                ?.FirstOrDefault(o =>
+                {
+                    if (guid.Equals(o.GetGuid()))
+                    {
+                        o.TryInit();
+                        return true;
+                    }
+                    return false;
+                })
+                ?.JSObject;
         }
     }
 }

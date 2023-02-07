@@ -47,7 +47,7 @@ function overrideGetComponent() {
             let ctor = arguments[0];
             if (typeof (ctor) === "function") {
                 if (RegisterFlag in ctor) {
-                    return this.GetTsComponent(ctor[RegisterFlag])?.JSObject;
+                    return this.GetTsComponent(ctor[RegisterFlag]);
                 }
                 if (ctor.prototype instanceof csharp.UnityEngine.Component) {
                     return original.call(this, (0, puerts_1.$typeof)(ctor));
@@ -56,9 +56,27 @@ function overrideGetComponent() {
             return original.apply(this, arguments);
         };
     }
+    function createGetComponents(original) {
+        return function () {
+            if (arguments[0] && typeof (arguments[0]) === "boolean") {
+                let components = this.GetTsComponents();
+                if (components) {
+                    let results = [];
+                    for (let i = 0; i < components.Length; i++) {
+                        results.push(components.get_Item(i));
+                    }
+                    return results;
+                }
+                return null;
+            }
+            return original.apply(this, arguments);
+        };
+    }
     const Component = csharp.UnityEngine.Component, GameObject = csharp.UnityEngine.GameObject;
     Component.prototype.GetComponent = createGetComponent(Component.prototype.GetComponent);
     GameObject.prototype.GetComponent = createGetComponent(GameObject.prototype.GetComponent);
+    Component.prototype.GetComponents = createGetComponents(Component.prototype.GetComponents);
+    GameObject.prototype.GetComponents = createGetComponents(GameObject.prototype.GetComponents);
 }
 overrideGetComponent();
 //# sourceMappingURL=component.js.map

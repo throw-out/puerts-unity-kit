@@ -45,9 +45,6 @@ namespace XOR
         private XOR.Serializables.ObjectArray[] ObjectArrayPairs;
         #endregion
 
-        internal string GetGuid() => guid;
-        internal string GetRoute() => route;
-
         private Action<string, object> onPropertyChange;
         public XOR.Serializables.ResultPair[] GetProperties()
         {
@@ -73,11 +70,14 @@ namespace XOR
         private Puerts.JSObject jsObject;
         private WeakReference<GameObject> reference;
 
+        ~TsComponent()
+        {
+            this.Release();
+        }
         protected override void Awake()
         {
             base.Awake();
-            this.reference = TsComponentLifecycle.GetReference(gameObject);
-            TsComponentLifecycle.AddComponent(this.reference, this);
+            this.Init();
         }
         protected override void OnDestroy()
         {
@@ -94,6 +94,13 @@ namespace XOR
             }
         }
         internal bool Registered { get => registered; }
+        internal void Init()
+        {
+            if (reference != null || registered)
+                return;
+            reference = TsComponentLifecycle.GetReference(gameObject);
+            TsComponentLifecycle.AddComponent(reference, this);
+        }
         internal void Release()
         {
             if (reference == null)
@@ -110,9 +117,26 @@ namespace XOR
                 TsComponentLifecycle.DestroyComponent(_reference, this);
             }
         }
+        /// <summary>
+        /// 初始化并创建JSObject对象;
+        /// 如果GameObject或其父节点的activeSelf一开始为false, 那么Awake就不会被执行, 直到activeSelf变为true时才会执行;
+        /// 如果Awake从未执行过, 那么其对应的OnDestroty也不会执行, 此时只能通过TsComponent.GC()释放对象
+        /// </summary>
+        /// <returns>是否成功</returns>
+        public bool TryInit()
+        {
+            if (this.IsActivated || this == null)
+                return false;
+            Init();
+            return true;
+        }
+        public string GetGuid() => guid;
+        public string GetRoute() => route;
 
         /// <summary>
         /// 回收无效的TsComponent实例
+        /// 如果使用Object.DestroyImmediate销毁资源, 其OnDestroy不会被调用.
+        /// 如果Awake方法从未调用过, 其OnDestroy也不会被调用.这通常出现在GameObject或其父节点的activeSelf一直为false
         /// </summary>
         public static void GC()
         {
