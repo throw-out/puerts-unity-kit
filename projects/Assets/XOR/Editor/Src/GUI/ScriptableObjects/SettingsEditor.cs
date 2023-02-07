@@ -159,19 +159,11 @@ namespace XOR
                     settings.watchType = wacthType;
                 }
             }
-            GUILayout.Space(HeightSpace);
-            GUILayout.BeginHorizontal("HelpBox");
-            GUILayout.Label(string.Empty, Skin.infoIcon);
-            GUILayout.Label(Language.Default.Get("file_watcher_tip"), Skin.labelArea, GUILayout.ExpandHeight(true));
-            GUILayout.EndHorizontal();
+            _RenderTooptip(Skin.infoIcon, Language.Default.Get("file_watcher_tip"));
 
             if (!PuertsUtil.IsSupportNodejs())
             {
-                GUILayout.Space(HeightSpace);
-                GUILayout.BeginHorizontal("HelpBox");
-                GUILayout.Label(string.Empty, Skin.warnIcon);
-                GUILayout.Label(Language.Default.Get("nodejs_unsupport"), Skin.labelArea, GUILayout.ExpandHeight(true));
-                GUILayout.EndHorizontal();
+                _RenderTooptip(Skin.warnIcon, Language.Default.Get("nodejs_unsupport"));
             }
         }
         void RenderScriptingDefine()
@@ -179,14 +171,11 @@ namespace XOR
             GUILayout.Label("Scripting Define Symbols");
             using (new EditorGUI.DisabledScope(UnityEngine.Application.isPlaying))
             {
-                RenderScriptingDefineStatus("THREAD_SAFE");
-                RenderScriptingDefineStatus("MODULE_CHECKER");
-
                 GUILayout.Space(HeightSpace);
-                GUILayout.BeginHorizontal("HelpBox");
-                GUILayout.Label(string.Empty, Skin.infoIcon);
-                GUILayout.Label(Language.Default.Get("thread_safe_tip"), Skin.labelArea, GUILayout.ExpandHeight(true));
-                GUILayout.EndHorizontal();
+                _RenderScriptingDefine("THREAD_SAFE");
+                _RenderScriptingDefine("MODULE_CHECKER");
+
+                _RenderTooptip(Skin.infoIcon, Language.Default.Get("thread_safe_tip"));
 
                 using (new EditorGUI.DisabledScope(!ScriptingDefineSymbols.Change))
                 {
@@ -206,7 +195,7 @@ namespace XOR
                 }
             }
         }
-        void RenderScriptingDefineStatus(string symbol)
+        void _RenderScriptingDefine(string symbol)
         {
             GUILayout.BeginHorizontal();
             GUILayout.Label(new GUIContent(symbol, symbol), GUILayout.Width(HeaderWidth * 2));
@@ -216,6 +205,14 @@ namespace XOR
                 if (exist) ScriptingDefineSymbols.RemoveSymbol(symbol);
                 else ScriptingDefineSymbols.AddSymbol(symbol);
             }
+            GUILayout.EndHorizontal();
+        }
+        void _RenderTooptip(GUIStyle icon, string tooltip)
+        {
+            GUILayout.Space(HeightSpace);
+            GUILayout.BeginHorizontal("HelpBox");
+            GUILayout.Label(string.Empty, icon);
+            GUILayout.Label(tooltip, Skin.labelArea, GUILayout.ExpandHeight(true));
             GUILayout.EndHorizontal();
         }
 

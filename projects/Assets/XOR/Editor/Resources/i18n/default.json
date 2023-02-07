@@ -88,8 +88,8 @@
         "en_us": "System.IO.FileSystemWatcher does not work on some Unity versions.You should update Unity to the latest LTS version or use nodejs fs.watch to replace the FileSystemWatcher."
     },
     "thread_safe_tip": {
-        "zh_cn": "当触发AppDomain Unload时(通常出现在C#编译或进入Play模式阶段), 此时如果TheradWorker正在运行中, 将导致Unity Crash.",
-        "en_us": "When AppDomain is unloaded (usually when compiling C # scripts or entering Play mode), if TheradWorker is running at this time, it will cause Unity Crash"
+        "zh_cn": "在C#脚本编译或进入Play模式时将会进行AppDomain Unload操作, 此时AppDomain将强制<b>跨线程</b>调用JsEnv.Dispose从而导致Unity Crash! 使用<b>[THREAD_SAFE]</b>宏定义能有效处理这种情况(Editor only).",
+        "en_us": "~~~~~~~"
     },
     "nodejs_unsupport": {
         "zh_cn": "nodejs在当前环境上不可用",
