@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 using UnityEngine;
 
 namespace XOR
@@ -141,6 +142,39 @@ namespace XOR
                     objectReferences.Remove(hashCodes[i]);
                 }
             }
+        }
+        public static void PrintStatus()
+        {
+            StringBuilder builder = new StringBuilder();
+
+            WeakReference<GameObject> reference = null;
+            int[] hashCodes = objectReferences.Keys.ToArray();
+            for (int i = 0; i < hashCodes.Length; i++)
+            {
+                objectReferences.TryGetValue(hashCodes[i], out var list);
+                for (int j = 0; j < list.Count; j++)
+                {
+                    builder.AppendLine();
+                    reference = list[j];
+                    if (reference.TryGetTarget(out var current) && componentReferences.TryGetValue(reference, out var components))
+                    {
+                        builder.Append($"-GameObject({current.GetHashCode()}): \t{current.name}");
+                        for (int k = 0; k < components.Count; k++)
+                        {
+                            builder.AppendLine();
+                            builder.Append("    -");
+                            builder.Append(components[k] == null ? "null" : nameof(TsComponent));
+                            builder.Append($"({components[k].GetHashCode()}): \t{components[k].GetGuid()}");
+                        }
+                    }
+                    else
+                    {
+                        builder.Append($"-UNKNWON({current.GetHashCode()}): \t{current.name}");
+                    }
+                }
+            }
+            string result = builder.ToString().TrimStart();
+            UnityEngine.Debug.Log(!string.IsNullOrEmpty(result) ? result : "Empty");
         }
 
         static bool IsNullPointer(object obj)

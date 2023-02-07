@@ -79,6 +79,8 @@ namespace XOR
         #endregion
 
 
+        [MenuItem("Tools/XOR/Component/PrintStatus", false, 0)]
+        static void TsComponentPrintStatus() => TsComponent.PrintStatus();
         [MenuItem("Tools/XOR/Component/SyncAll")]
         static void SyncTsComponents() => TsComponentHelper.SyncAssetsComponents(false);
         [MenuItem("Tools/XOR/Component/SyncAll[Force]")]

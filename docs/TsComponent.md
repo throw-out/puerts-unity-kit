@@ -1,14 +1,15 @@
 > - xor d.ts声明目录: [projects/Assets/XOR/Typing](../projects/Assets/XOR/Typing)
 > - ts示例目录: [projects/TsProject/src/samples](../projects/TsProject/src/samples)
 
-使用typescript的AST解析器, 分析ts脚本获取class声明及其成员信息, 然后传递到C# SerializedObject渲染使用.
+使用typescript的AST分析功能, 分析ts脚本获取class声明及其成员信息, 然后传递到C# SerializedObject渲染使用.
 
 ## 使用需知
-- ts类型必需继承自[xor.TsComponent](../projects/TsEditorProject/src/xor/components/component.ts)丶export且不是abstract才会被序列化:
-- ts类型成员必需使用declare修饰符或被[xor.field](../projects/TsEditorProject/src/xor/components/component.ts#87)修饰才能被序列化
-- AST分析和SerializedObject渲染只在UnityEditor环境下使用
-- 枚举类型如不指定value, 其默认值为0(`System.Int32`)或null(`System.String`)
-- AST解析器运行在子线程中, 指定value时的表达式必需要能在子线程中访问: `例如UnityEngine.Vector2.right是可以的, 而UnityEngine.Application.dataPath不可以`
+- ts类型必需继承自[xor.TsComponent](../projects/TsEditorProject/src/xor/components/component.ts)丶export且不是abstract才会被序列化;
+- ts类型成员必需使用declare修饰符或被[xor.field](../projects/TsEditorProject/src/xor/components/component.ts#87)修饰才能被序列;
+- 枚举类型如不指定value, 其默认值为0(`System.Int32`)或null(`System.String`);
+- AST分析服务和SerializedObject渲染只在Unity Editor环境下使用;
+- AST分析服务运行在子线程中([ThreadWorker](./ThreadWorker.md)), 请按照其[已知缺陷](./ThreadWorker.md#已知缺陷)进行设置, 否则可能导致crash;
+- AST分析服务运行在子线程中, 指定value时的表达式必需要能在子线程中访问: `例如UnityEngine.Vector2.right是可以的, 而UnityEngine.Application.dataPath不可以`.
 
 ## 定义
 [XOR.TsComponent](../projects/Assets/XOR/Runtime/Src/Components/TsComponent.cs) 
@@ -21,8 +22,9 @@
 ## 方法
 | 名称  | 描述  |
 | ------------ | ------------ |
-| GC   |  回收未正常释放的XOR.TsComponent对象(`例如Object.DestroyImmediate`) |
 | Register   |  注册TsCompoent使用的Puerts.JsEnv实例 |
+| GC   |  回收未正常释放的XOR.TsComponent对象(`例如使用Object.DestroyImmediate时, OnDestroy不会被正常调用`) |
+| PrintStatus   |  打印所有实例状态(先执行一次GC) |
 | GetProperties   |  获取所有序列化成员 |
 | SetProperty  | (EditorOnly)设置键值  |
 | SetPropertyListener | (EditorOnly)设置键值更新回调 |

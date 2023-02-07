@@ -119,6 +119,14 @@ namespace XOR
             TsComponentLifecycle.GC();
         }
         /// <summary>
+        /// 打印所有实例状态(先执行一次GC)
+        /// </summary>
+        public static void PrintStatus()
+        {
+            TsComponentLifecycle.GC();
+            TsComponentLifecycle.PrintStatus();
+        }
+        /// <summary>
         /// 注册Puerts.JsEnv实例
         /// </summary>
         /// <param name="env"></param>
