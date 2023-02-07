@@ -13,6 +13,10 @@
 
 
 ## 简单演示
+> - 示例场景:[projects/Assets/Samples/02_TsProperties](../projects/Assets/Samples/02_TsProperties)  
+> - 示例typescript代码: [projects/TsProject/src/samples/02_TsProperties.ts](../projects/TsProject/src/samples/02_TsProperties.ts)
+
+![image](https://user-images.githubusercontent.com/45587825/217222792-42495cf8-cec1-4ad2-92ea-6908d83f43af.png)
 ```typescript
 import * as csharp from "csharp";
 
@@ -30,3 +34,7 @@ export function init(target: csharp.XOR.TsProperties) {
     }
 }
 ```
+> 运行后将输出以下语句:  
+> key0: 12  
+> key1: false  
+> key2: null  

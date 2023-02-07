@@ -1,6 +1,3 @@
-> - xor d.ts声明目录: [projects/Assets/XOR/Typing](../projects/Assets/XOR/Typing)
-> - ts示例目录: [projects/TsProject/src/samples](../projects/TsProject/src/samples)
-
 使用typescript的AST分析功能, 分析ts脚本获取class声明及其成员信息, 然后传递到C# SerializedObject渲染使用.
 
 ## 使用需知
@@ -12,8 +9,7 @@
 - AST分析服务运行在子线程中, 指定value时的表达式必需要能在子线程中访问: `例如UnityEngine.Vector2.right是可以的, 而UnityEngine.Application.dataPath不可以`.
 
 ## 定义
-[XOR.TsComponent](../projects/Assets/XOR/Runtime/Src/Components/TsComponent.cs) 
-> 继承: [XOR.TsBehaviour](./TsBehaviour.md)
+> 继承: [XOR.TsComponent](../projects/Assets/XOR/Runtime/Src/Components/TsComponent.cs) →  [XOR.TsBehaviour](./TsBehaviour.md)
 
 ## 成员
 | 名称  | 描述  |
@@ -44,6 +40,9 @@
 > 其他类型请参照[自定义类型](./TsComponent.md#自定义扩展类型演示)
 
 ## 基础类型演示
+> - 示例场景:[projects/Assets/Samples/01_TsComponent](../projects/Assets/Samples/01_TsComponent)
+> - 示例typescript代码: [projects/TsProject/src/samples/01_TsComponent.ts](../projects/TsProject/src/samples/01_TsComponent.ts)
+
 ![image](https://user-images.githubusercontent.com/45587825/216535611-dddbc03e-d9d8-4f92-9b75-edb6a435b9f6.png)
 ## 数组类型演示
 ![image](https://user-images.githubusercontent.com/45587825/216535825-af29587e-ded5-43ba-bfdb-08d8f7ce67da.png)
