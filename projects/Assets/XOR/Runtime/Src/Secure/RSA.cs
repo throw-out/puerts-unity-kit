@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Security.Cryptography;
 using System.Text;
 using UnityEngine;
@@ -85,7 +86,8 @@ namespace XOR
             provider.FromXmlString(key);
             int offset = 0; //偏移值
             int length = src.Length;    //数据长度
-            List<byte> data = new List<byte>();
+            var stream = new MemoryStream();
+            var writer = new BinaryWriter(stream);
             while (length - offset > 0)
             {
                 byte[] cache;
@@ -97,10 +99,10 @@ namespace XOR
                 {
                     cache = provider.Encrypt(Select(src, offset, length - offset), false);
                 }
-                data.AddRange(cache);
+                writer.Write(cache);
                 offset += blockSize;
             }
-            return data.ToArray();
+            return stream.ToArray();
         }
         protected static byte[] DecryptOperation(byte[] src, string key, int blockSize)
         {
@@ -108,7 +110,8 @@ namespace XOR
             provider.FromXmlString(key);
             int offset = 0; //偏移值
             int length = src.Length;    //数据长度
-            List<byte> data = new List<byte>();
+            var stream = new MemoryStream();
+            var writer = new BinaryWriter(stream);
             while (length - offset > 0)
             {
                 byte[] cache;
@@ -120,10 +123,10 @@ namespace XOR
                 {
                     cache = provider.Decrypt(Select(src, offset, length - offset), false);
                 }
-                data.AddRange(cache);
+                writer.Write(cache);
                 offset += blockSize;
             }
-            return data.ToArray();
+            return stream.ToArray();
         }
         private static byte[] Select(byte[] src, int offset, int length)
         {

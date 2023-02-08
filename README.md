@@ -7,7 +7,7 @@
 ## 介绍
 > 本项目是基于[puerts](https://github.com/Tencent/puerts)开发的Unity模板项目,  默认使用[OpenUPM(cn)](https://openupm.cn/)作为Unity包管理器源;  
 > 本项目使用typescript脚本开发, 使用commonjs作为主要运行时;  
-> 集成常用的功能如[source-map-support](https://www.npmjs.com/package/source-map-support)丶[脚本打包](./docs/ScriptPacker.md)(`压缩`/`加密`/`验签`)等工具;
+> 集成常用的如[脚本打包](./docs/ScriptPacker.md)(`压缩`/`加密`/`验签`)丶[source-map-support](https://www.npmjs.com/package/source-map-support)丶[javascript-obfuscator](https://www.npmjs.com/package/javascript-obfuscator)等配置或工具, 这些都是可选的功能;
 >
 > 了解更多, 请查看[[文档页面]](./docs).
 
