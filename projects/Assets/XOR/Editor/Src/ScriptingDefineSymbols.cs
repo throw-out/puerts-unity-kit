@@ -54,6 +54,7 @@ namespace XOR
             }
             change = false;
             AssetDatabase.Refresh();
+            FileUtil.SyncIDE();
             //UnityEditor.PlayerSettings.SetScriptingDefineSymbolsForGroup(BuildTargetGroup.Unknown, "");
             //UnityEditor.PlayerSettings.GetScriptingDefineSymbolsForGroup(BuildTargetGroup.Unknown)
         }

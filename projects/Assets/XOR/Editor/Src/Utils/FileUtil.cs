@@ -16,7 +16,20 @@ namespace XOR
 #if UNITY_EDITOR && UNITY_2019_2_OR_NEWER
             return CodeEditor.CurrentEditor.OpenProject(filepath, line, column);
 #else
-            UnityEngine.Debug.LogWarning($"Unsupported unity version: {UnityEngine.Application.unityVersion}");
+            UnityEngine.Debug.LogWarning($"Unsupport unity version: {UnityEngine.Application.unityVersion}");
+            return false;
+#endif
+        }
+        /// <summary>
+        /// 同步.csproj文件
+        /// </summary>
+        public static bool SyncIDE()
+        {
+#if UNITY_EDITOR && UNITY_2019_2_OR_NEWER
+            Unity.CodeEditor.CodeEditor.CurrentEditor.SyncAll();
+            return true;
+#else
+            UnityEngine.Debug.LogWarning($"Unsupport unity version: {UnityEngine.Application.unityVersion}");
             return false;
 #endif
         }
