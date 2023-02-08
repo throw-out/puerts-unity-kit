@@ -5,30 +5,27 @@
 - **如果你有好想法或任何问题, 请提交[[PR]](https://github.com/throw-out/puerts-unity-kit/pulls)和[[ISSUES]](https://github.com/throw-out/puerts-unity-kit/issues).**
 
 ## 介绍
-> 本项目使用typescript脚本开发, 使用commonjs作为主要运行时;
-> 本项目是基于[puerts](https://github.com/Tencent/puerts)开发的Unity模板项目,  默认使用[OpenUPM(cn)](https://openupm.cn/)作为Unity包管理器源;
+> 本项目是基于[puerts](https://github.com/Tencent/puerts)开发的Unity模板项目,  默认使用[OpenUPM(cn)](https://openupm.cn/)作为Unity包管理器源;  
+> 本项目使用typescript脚本开发, 使用commonjs作为主要运行时;  
+> 集成常用的功能如[source-map-support](https://www.npmjs.com/package/source-map-support)丶[脚本打包](./docs/ScriptPacker.md)(`压缩`/`加密`/`验签`)等工具;
 >
 > 了解更多, 请查看[[文档页面]](./docs).
 
 主要功能:
 - TsBehaviour:
-  > 在ts脚本中使用Unity [MonoBehaviour生命周期](https://docs.unity3d.com/2021.3/Documentation/Manual/ExecutionOrder.html)方法;
-  >
+  > 在ts脚本中使用Unity [MonoBehaviour生命周期](https://docs.unity3d.com/2021.3/Documentation/Manual/ExecutionOrder.html)方法;  
   > [[查看文档]](./docs/TsBehaviour.md)
 
 - TsProperties:
-  > 一个单独的序列化类, 可用于保存数据丶挂载UnityEngine.Object对象等操作;
-  >
+  > 一个单独的序列化类, 可用于保存数据丶挂载UnityEngine.Object对象等操作;  
   > [[查看文档]](./docs/TsProperties.md)
 
 - TsComponent:
-  > 对TsBehaviour和TsProperties的结合实现, 可序列化ts脚本中的成员变量, 并实现ts对象的生命周期管理;
-  >
+  > 对TsBehaviour和TsProperties的结合实现, 可序列化ts脚本中的成员变量, 并实现ts对象的生命周期管理;  
   > [[查看文档]](./docs/TsComponent.md)
 
 - ThreadWorker:
-  > 提供`跨线程`&`跨Puerts.JsEnv实例`交互(基于C#类型传递数据);
-  >
+  > 提供`跨线程`&`跨Puerts.JsEnv实例`交互(基于C#类型传递数据);  
   > [[查看文档]](./docs/ThreadWorker.md)
 
 ## 环境

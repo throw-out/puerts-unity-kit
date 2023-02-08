@@ -1,7 +1,10 @@
-使用typescript的AST分析功能, 分析ts脚本获取class声明及其成员信息, 然后传递到C# SerializedObject渲染使用.
+## 介绍
+> 实现于类似于[UnityEngine.MonoBehaviour](https://docs.unity3d.com/ScriptReference/MonoBehaviour.html)功能的组件, 可用于挂载并序列化ts脚本成员声明, 将自动构建JSObject对象并实现其生命周期管理([TsComponentLifecycle](../projects/Assets/XOR/Runtime/Src/Components/Lifecycle/TsComponentLifecycle.cs)).
+>
+> 依赖typescript的AST分析功能, 分析ts脚本获取class声明及其成员信息, 然后传递到C# EditorGUI使用.
 
 ## 使用需知
-- ts类型必需继承自[xor.TsComponent](../projects/TsEditorProject/src/xor/components/component.ts)丶export且不是abstract才会被序列化;
+- ts类型必需继承自[xor.TsComponent](../projects/TsEditorProject/src/xor/components/component.ts)丶export且不是abstract才可以被TsComponent使用;
 - ts类型成员必需使用declare修饰符或被[xor.field](../projects/TsEditorProject/src/xor/components/component.ts#87)修饰才能被序列;
 - 枚举类型如不指定value, 其默认值为0(`System.Int32`)或null(`System.String`);
 - AST分析服务和SerializedObject渲染只在Unity Editor环境下使用;
@@ -12,10 +15,18 @@
 > 继承: [XOR.TsComponent](../projects/Assets/XOR/Runtime/Src/Components/TsComponent.cs) →  [XOR.TsBehaviour](./TsBehaviour.md)
 
 ## 成员
+<details>
+<summary>查看详情</summary>
+
 | 名称  | 描述  |
 | ------------ | ------------ |
-| JSObject   |  其创建的js object对象 |
+| JSObject   |  其创建的[Puerts.JSObject](./???)对象 |
+</details>
+
 ## 方法
+<details>
+<summary>查看详情</summary>
+
 | 名称  | 描述  |
 | ------------ | ------------ |
 | Register   |  注册TsCompoent使用的Puerts.JsEnv实例 |
@@ -24,9 +35,12 @@
 | GetProperties   |  获取所有序列化成员 |
 | SetProperty  | (EditorOnly)设置键值  |
 | SetPropertyListener | (EditorOnly)设置键值更新回调 |
-
+</details>
 
 ## 内置类型
+<details>
+<summary>查看详情</summary>
+
 |  类型   | 基础 | 数组|
 | ------- | --- | --- |
 | string  | √   | √   |
@@ -38,16 +52,20 @@
 | UnityEngine.Object及其子类型  | √   | √   |
 
 > 其他类型请参照[自定义类型](./TsComponent.md#自定义扩展类型演示)
+</details>
 
 ## 基础类型演示
 > - 示例场景:[projects/Assets/Samples/01_TsComponent](../projects/Assets/Samples/01_TsComponent)
 > - 示例typescript代码: [projects/TsProject/src/samples/01_TsComponent.ts](../projects/TsProject/src/samples/01_TsComponent.ts)
 
 ![image](https://user-images.githubusercontent.com/45587825/216535611-dddbc03e-d9d8-4f92-9b75-edb6a435b9f6.png)
+
 ## 数组类型演示
 ![image](https://user-images.githubusercontent.com/45587825/216535825-af29587e-ded5-43ba-bfdb-08d8f7ce67da.png)
+
 ## RawType丶默认值丶Range演示
 ![image](https://user-images.githubusercontent.com/45587825/216536133-24f36803-9318-4786-8ad9-7ec63280a2b4.png)
+
 ## 枚举类型演示
  > 枚举类型如不指定value, 其默认值为0(`System.Int32`)或null(`System.String`)
 

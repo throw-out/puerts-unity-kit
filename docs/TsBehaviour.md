@@ -1,12 +1,28 @@
-## 使用需知
-- 只需要继承[xor.TsBehaviour](../projects/TsEditorProject/src/xor/components/behaviour.ts)就可以使用Unity的[生命周期](https://docs.unity3d.com/2021.3/Documentation/Manual/ExecutionOrder.html)方法 
+## 介绍
+> 只需要继承[xor.TsBehaviour](../projects/TsEditorProject/src/xor/components/behaviour.ts)就可以使用Unity的[生命周期](https://docs.unity3d.com/2021.3/Documentation/Manual/ExecutionOrder.html)方法, 需要在调用构造函数时传参[UnityEngine.GameObject](https://docs.unity3d.com/ScriptReference/GameObject.html)对象;
 
 ## 定义
-继承: [XOR.TsBehaviour](../projects/Assets/XOR/Runtime/Src/Components/TsBehaviour/TsBehaviour.cs) → 无
+> 继承: [XOR.TsBehaviour](../projects/Assets/XOR/Runtime/Src/Components/TsBehaviour/TsBehaviour.cs) → [UnityEngine.MonoBehaviour](https://docs.unity3d.com/ScriptReference/MonoBehaviour.html)
+
+## 成员
+<details>
+<summary>查看详情</summary>
+
+| 名称  | 描述  |
+| ------------ | ------------ |
+</details>
+
+## 方法
+<details>
+<summary>查看详情</summary>
+
+| 名称  | 描述  |
+| ------------ | ------------ |
+</details>
 
 ## 简单演示
-> - 示例场景:[projects/Assets/Samples/03_Behaviour](../projects/Assets/Samples/03_Behaviour)
-> - 示例typescript代码: [projects/TsProject/src/samples/03_Behaviour.ts](../projects/TsProject/src/samples/03_Behaviour.ts)
+> - 示例场景:[projects/Assets/Samples/03_TsBehaviour](../projects/Assets/Samples/03_TsBehaviour)
+> - 示例typescript代码: [projects/TsProject/src/samples/03_Behaviour.ts](../projects/TsProject/src/samples/03_TsBehaviour.ts)
 ``` typescript
 import { GameObject, Time } from "csharp.UnityEngine";
 

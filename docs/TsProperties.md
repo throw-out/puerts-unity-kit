@@ -1,15 +1,19 @@
-> - xor d.ts声明目录: [projects/Assets/XOR/Typing](../projects/Assets/XOR/Typing)
-> - ts示例目录: [projects/TsProject/src/samples](../projects/TsProject/src/samples)
+## 介绍
+> 一个单独的序列化类, 可用于保存数据丶挂载UnityEngine.Object对象等操作;
 
 ## 定义
-[XOR.TsProperties](../projects/Assets/XOR/Runtime/Src/Components/TsProperties.cs)
+> 继承: [XOR.TsProperties](../projects/Assets/XOR/Runtime/Src/Components/TsProperties.cs) → [UnityEngine.MonoBehaviour](https://docs.unity3d.com/ScriptReference/MonoBehaviour.html)
 
 ## 方法
+<details>
+<summary>查看详情</summary>
+
 | 名称  | 描述  |
 | ------------ | ------------ |
 | GetProperties   |  获取所有序列化成员 |
 | SetProperty  | (EditorOnly)设置键值  |
 | SetPropertyListener | (EditorOnly)设置键值更新回调 |
+</details>
 
 
 ## 简单演示
