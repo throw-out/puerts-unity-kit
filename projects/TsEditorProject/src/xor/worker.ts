@@ -30,7 +30,7 @@ class ThreadWorkerConstructor {
             this.worker = loader;
             this.mainThread = false;
         } else {
-            this.worker = csharp.XOR.ThreadWorker.Create(loader, options);
+            this.worker = csharp.XOR.ThreadWorker.Create(loader, options ?? new csharp.XOR.ThreadOptions());
             this.mainThread = true;
         }
         this.worker.VerifyThread(this.mainThread);
@@ -189,7 +189,7 @@ class ThreadWorkerConstructor {
         let onmessage = (eventName: string, data: csharp.XOR.ThreadWorker.EventData, hasReturn: boolean = true): csharp.XOR.ThreadWorker.EventData => {
             if (this._isResultId(eventName)) {          //post return data event
                 let error: Error, result: any;
-                if (data.type === csharp.XOR.ThreadWorker.ValueType.Error) {
+                if (data && data.type === csharp.XOR.ThreadWorker.ValueType.Error) {
                     error = new Error(`${data.value}`);
                 } else {
                     result = getValue(data);
@@ -198,7 +198,7 @@ class ThreadWorkerConstructor {
                 return;
             }
             let result = this._emit(eventName, getValue(data));
-            if (hasReturn) {
+            if (hasReturn && result !== undefined && result !== null && result !== void 0) {
                 return this.pack(result);
             }
             return undefined;
@@ -232,7 +232,7 @@ class ThreadWorkerConstructor {
                         }
                         break;
                     default:
-                        return onmessage(eventName, data);
+                        return onmessage(eventName, data, true);
                         break;
                 }
             };

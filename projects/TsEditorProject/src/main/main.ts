@@ -91,8 +91,8 @@ class Workflow {
 
     private _createWorker(editorProject: string) {
         const debug = new csharp.XOR.ThreadDebuggerOptions();
-        debug.port = 9090;
-        debug.wait = false;
+        //debug.port = 9090;
+        //debug.wait = false;
         const options = new csharp.XOR.ThreadOptions();
         options.remote = false;
         options.isEditor = true;
