@@ -8,8 +8,8 @@ namespace XOR
 {
     internal static class ScriptingDefineSymbols
     {
+        private static readonly string cscRsp = Path.Combine(UnityEngine.Application.dataPath, "csc.rsp");
         private static HashSet<string> symbols;
-        private static Dictionary<BuildTargetGroup, HashSet<string>> groupSymbols;
         private static bool change;
         public static bool Change => change;
 
@@ -24,20 +24,12 @@ namespace XOR
             if (symbols.Contains(symbol))
                 return;
             symbols.Add(symbol);
-            foreach (var group in groupSymbols)
-            {
-                group.Value.Add(symbol);
-            }
             change = true;
         }
         public static void RemoveSymbol(string symbol)
         {
             if (symbols == null) Read();
             symbols.Remove(symbol);
-            foreach (var group in groupSymbols)
-            {
-                group.Value.Remove(symbol);
-            }
             change = true;
         }
         public static bool HasSymbol(string symbol)
@@ -48,27 +40,39 @@ namespace XOR
 
         public static void Save()
         {
-            if (groupSymbols == null)
+            if (symbols == null)
                 return;
-            change = false;
-            foreach (var group in groupSymbols)
+            if (symbols.Count > 0)
             {
-                UnityEditor.PlayerSettings.SetScriptingDefineSymbolsForGroup(group.Key, Serialize(group.Value));
+                File.WriteAllText(cscRsp, string.Format("-define:{0}", Serialize(symbols)));
             }
+            else if (File.Exists(cscRsp))
+            {
+                File.Delete(cscRsp);
+                var meta = cscRsp + ".meta";
+                if (File.Exists(meta)) File.Delete(meta);
+            }
+            change = false;
+            AssetDatabase.Refresh();
+            //UnityEditor.PlayerSettings.SetScriptingDefineSymbolsForGroup(BuildTargetGroup.Unknown, "");
+            //UnityEditor.PlayerSettings.GetScriptingDefineSymbolsForGroup(BuildTargetGroup.Unknown)
         }
         public static void Read()
         {
             change = false;
             symbols = new HashSet<string>();
-            groupSymbols = new Dictionary<BuildTargetGroup, HashSet<string>>();
-            foreach (var target in Enum.GetValues(typeof(BuildTargetGroup)))
+            if (File.Exists(cscRsp))
             {
-                var _target = (BuildTargetGroup)target;
-                if (_target == BuildTargetGroup.Unknown || groupSymbols.ContainsKey(_target))
-                    continue;
-                var ss = Deserialize(UnityEditor.PlayerSettings.GetScriptingDefineSymbolsForGroup(_target));
-                foreach (var s in ss) symbols.Add(s);
-                groupSymbols.Add(_target, new HashSet<string>(ss));
+                var lines = File.ReadAllText(cscRsp).Replace("\r\n", "\n").Split('\n');
+                foreach (var line in lines)
+                {
+                    if (!line.StartsWith("-define:") || line.Length == 8)
+                        continue;
+                    foreach (var symbol in Deserialize(line.Substring(8)))
+                    {
+                        symbols.Add(symbol);
+                    }
+                }
             }
         }
 
