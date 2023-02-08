@@ -1,5 +1,26 @@
+import * as csharp from "csharp";
 
+const ThreadId: number = csharp.System.Threading["Thread"]["CurrentThread"]["ManagedThreadId"];
 
-export function init() {
+export async function init(loader: csharp.Puerts.ILoader) {
+    const worker = new xor.ThreadWorker(loader);
+    worker.start("./samples/04_ThreadWorker/child");
+    xor.globalListener.quit.add(() => worker.stop());
 
+    worker.on("main_test1", (msg) => {
+        console.log(`thread(${ThreadId}) receive: ${msg}`);
+        return "ok";
+    });
+    //wait worker initialize completed.
+    while (!worker.isInitialized) {
+        await new Promise<void>(resovle => setTimeout(resovle, 1));
+    }
+
+    //send async message
+    worker.post<number>("child_test1", "main_thread_event_1").then((ret) => {
+        console.log(`result value: ${ret}`);
+    });
+    //send sync message
+    let ret = worker.postSync<number>("child_test2", "main_thread_event_2");
+    console.log(`result value: ${ret}`);
 }

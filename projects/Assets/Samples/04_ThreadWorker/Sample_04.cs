@@ -13,7 +13,7 @@ public class Sample_04 : MonoBehaviour
             Debug.LogWarning($"{nameof(XOR.Application)} not running");
             return;
         }
-        var func = app.Env.Eval<Action>("var m = require('./samples/03_ThreadWorker/main'); m.init;");
-        func();
+        var func = app.Env.Eval<Action<Puerts.ILoader>>("var m = require('./samples/04_ThreadWorker/main'); m.init;");
+        func(app.Loader);
     }
 }

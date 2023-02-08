@@ -29,4 +29,56 @@
 </details>
 
 ## 示例演示
-TODO
+> - 示例场景:[projects/Assets/Samples/04_ThreadWorker](../projects/Assets/Samples/04_ThreadWorker)  
+> - 示例typescript代码: [projects/TsProject/src/samples/04_ThreadWorker](../projects/TsProject/src/samples/04_ThreadWorker)
+
+- 主线程代码
+```typescript
+import * as csharp from "csharp";
+
+const ThreadId: number = csharp.System.Threading["Thread"]["CurrentThread"]["ManagedThreadId"];
+
+export async function init(loader: csharp.Puerts.ILoader) {
+    const worker = new xor.ThreadWorker(loader);
+    worker.start("./samples/04_ThreadWorker/child");
+    xor.globalListener.quit.add(() => worker.stop());
+
+    worker.on("main_test1", (msg) => {
+        console.log(`thread(${ThreadId}) receive: ${msg}`);
+        return "ok";
+    });
+    //wait worker initialize completed.
+    while (!worker.isInitialized) {
+        await new Promise<void>(resovle => setTimeout(resovle, 1));
+    }
+
+    //send async message
+    worker.post<number>("child_test1", "main_thread_event_1").then((ret) => {
+        console.log(`result value: ${ret}`);
+    });
+    //send sync message
+    let ret = worker.postSync<number>("child_test2", "main_thread_event_2");
+    console.log(`result value: ${ret}`);
+}
+```
+- 子线程代码
+```typescript
+import * as csharp from "csharp";
+
+const ThreadId: number = csharp.System.Threading["Thread"]["CurrentThread"]["ManagedThreadId"];
+
+xor.globalWorker.on("child_test1", (msg) => {
+    console.log(`thread(${ThreadId}) receive: ${msg}`);
+    return 1;
+});
+xor.globalWorker.on("child_test2", (msg) => {
+    console.log(`thread(${ThreadId}) receive: ${msg}`);
+    return 2;
+});
+
+setTimeout(() => {
+    xor.globalWorker.post("main_test1", "child_thread_event");
+}, 2000);
+```
+> 运行后将输出以下语句:  
+> ![image](https://user-images.githubusercontent.com/45587825/217461927-9e8a13fe-0195-4490-bc3e-7448a06c8ad9.png)
