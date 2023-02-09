@@ -98,5 +98,13 @@
     "config_changed": {
         "zh_cn": "配置已更改, 是否保存?",
         "en_us": "The configuration has been changed. Do you want to save it?"
+    },
+    "invail_tsconfig": {
+        "zh_cn": "没有找到package.json文件, 配置文件无效:\n{0}",
+        "en_us": "Not found package.json file, the configuration is invalid:\n{0}"
+    },
+    "dependents_uninstall": {
+        "zh_cn": "以下模块尚未安装, 请在目标路径中执行<npm install>或<yarn install>命令:\n{0}",
+        "en_us": "The modules have not been installed. Please execute <npm install>or<yarn install>command:\n{0}"
     }
 }

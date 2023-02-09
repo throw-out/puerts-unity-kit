@@ -111,6 +111,8 @@ namespace XOR
                     }
                     projectConfig = PathUtil.GetFullPath(newPath);
                 }
+                if (!Check(editorProjectConfig)) return;
+                if (!Check(projectConfig)) return;
 
                 string editorRoot = Path.GetDirectoryName(editorProjectConfig);
                 string editorOutput = Path.Combine(editorRoot, "output");
@@ -166,6 +168,27 @@ namespace XOR
             }
 
             if (print) Logger.Log($"<b>XOR.{nameof(EditorApplication)}: <color=red>Stoped</color>.</b>");
+        }
+
+
+        static bool Check(string tsconfigPath)
+        {
+            //check dependents install
+            string packagePath = Path.Combine(Path.GetDirectoryName(tsconfigPath), "package.json");
+            if (!File.Exists(packagePath))
+            {
+                GUIUtil.RenderInvailTsconfig(tsconfigPath);
+                return false;
+            }
+            string[] uninstallModules = NPMUtil.CheckDependentsInstall(packagePath);
+            if (uninstallModules != null && uninstallModules.Length > 0)
+            {
+                bool open = GUIUtil.RenderDependentsUninstall(tsconfigPath, uninstallModules);
+                if (open) UnityEditor.EditorUtility.RevealInFinder(tsconfigPath);
+                return false;
+            }
+            //check compile output
+            return true;
         }
     }
 }

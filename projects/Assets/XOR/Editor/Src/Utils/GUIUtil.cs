@@ -184,5 +184,31 @@ namespace XOR
             }
             return string.Empty;
         }
+
+        /// <summary>
+        /// 一个无效的tsconfig.json文件, 没有配套的package.json文件
+        /// </summary>
+        public static void RenderInvailTsconfig(string path)
+        {
+            UnityEditor.EditorUtility.DisplayDialog(
+                Language.Default.Get("warning"),
+                string.Format(Language.Default.Get("invail_tsconfig"), path),
+                Language.Default.Get("ok")
+            );
+        }
+        /// <summary>
+        /// 模块依赖未安装完整
+        /// </summary>
+        /// <param name="path"></param>
+        /// <param name="modules"></param>
+        public static bool RenderDependentsUninstall(string path, string[] modules)
+        {
+            return UnityEditor.EditorUtility.DisplayDialog(
+                Language.Default.Get("tip"),
+                string.Format(Language.Default.Get("dependents_uninstall"), string.Join("\n", modules)),
+                Language.Default.Get("ok"),
+                Language.Default.Get("cancel")
+            );
+        }
     }
 }
