@@ -10,13 +10,13 @@ namespace XOR
         public static Puerts.JSObject[] GetTsComponents(this GameObject gameObject)
         {
             return TsComponentLifecycle.GetComponents(gameObject)
-                ?.Select(o => { o.TryInit(); return o.JSObject; })
+                ?.Select(o => o.JSObject)
                 .ToArray();
         }
         public static Puerts.JSObject[] GetTsComponents(this Component component)
         {
             return TsComponentLifecycle.GetComponents(component)
-                ?.Select(o => { o.TryInit(); return o.JSObject; })
+                ?.Select(o => o.JSObject)
                 .ToArray();
         }
         public static Puerts.JSObject GetTsComponent(this GameObject gameObject, string guid)
@@ -24,15 +24,7 @@ namespace XOR
             if (string.IsNullOrEmpty(guid))
                 return null;
             return TsComponentLifecycle.GetComponents(gameObject)
-                ?.FirstOrDefault(o =>
-                {
-                    if (guid.Equals(o.GetGuid()))
-                    {
-                        o.TryInit();
-                        return true;
-                    }
-                    return false;
-                })
+                ?.FirstOrDefault(o => guid.Equals(o.GetGuid()))
                 ?.JSObject;
         }
         public static Puerts.JSObject GetTsComponent(this Component component, string guid)
@@ -40,15 +32,7 @@ namespace XOR
             if (string.IsNullOrEmpty(guid))
                 return null;
             return TsComponentLifecycle.GetComponents(component)
-                ?.FirstOrDefault(o =>
-                {
-                    if (guid.Equals(o.GetGuid()))
-                    {
-                        o.TryInit();
-                        return true;
-                    }
-                    return false;
-                })
+                ?.FirstOrDefault(o => guid.Equals(o.GetGuid()))
                 ?.JSObject;
         }
     }

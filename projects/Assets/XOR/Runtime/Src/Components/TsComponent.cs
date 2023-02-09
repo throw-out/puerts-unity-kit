@@ -89,14 +89,23 @@ namespace XOR
             get => jsObject;
             internal set
             {
+                if (!registered) Init();
                 jsObject = value;
-                registered = true;
             }
         }
         internal bool Registered { get => registered; }
+        /// <summary>
+        /// 初始化并创建JSObject对象;
+        /// 如果GameObject或其父节点的activeSelf一开始为false, 那么Awake就不会被执行, 直到activeSelf变为true时才会执行;
+        /// 如果Awake从未执行过, 那么其对应的OnDestroty也不会执行, 此时只能通过TsComponent.GC()释放对象
+        /// </summary>
+        /// <returns>是否成功</returns>
         internal void Init()
         {
-            if (reference != null || registered)
+            if (registered)
+                return;
+            registered = true;
+            if (reference != null || this.IsDestroyed || this == null)
                 return;
             reference = TsComponentLifecycle.GetReference(gameObject);
             TsComponentLifecycle.AddComponent(reference, this);
@@ -116,19 +125,6 @@ namespace XOR
             {
                 TsComponentLifecycle.DestroyComponent(_reference, this);
             }
-        }
-        /// <summary>
-        /// 初始化并创建JSObject对象;
-        /// 如果GameObject或其父节点的activeSelf一开始为false, 那么Awake就不会被执行, 直到activeSelf变为true时才会执行;
-        /// 如果Awake从未执行过, 那么其对应的OnDestroty也不会执行, 此时只能通过TsComponent.GC()释放对象
-        /// </summary>
-        /// <returns>是否成功</returns>
-        public bool TryInit()
-        {
-            if (this.IsActivated || this == null)
-                return false;
-            Init();
-            return true;
         }
         public string GetGuid() => guid;
         public string GetRoute() => route;

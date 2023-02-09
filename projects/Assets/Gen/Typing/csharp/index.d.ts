@@ -25993,7 +25993,6 @@ declare namespace CS {
             public GetProperties(): System.Array$1<XOR.Serializables.ResultPair>
             public SetProperty($key: string, $value: any): void
             public SetPropertyListener($handler: System.Action$2<string, any>): void
-            public TryInit(): boolean
             public GetGuid(): string
             public GetRoute(): string
             public static GC(): void
