@@ -39,7 +39,7 @@ class Sample01 extends xor.TsBehaviour {
         this._time += (deltaTime ?? Time.time);
         if (this._time > 1) {
             this._time -= 1;
-            console.log(`TsBehaviour ${Sample01.name}: OnEnable`);
+            console.log(`TsBehaviour ${Sample01.name}: Update`);
         }
     }
     protected OnEnable(): void {
