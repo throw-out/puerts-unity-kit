@@ -5,7 +5,7 @@ using Puerts;
 
 namespace XOR
 {
-    public class ThreadLoader : ILoader, ISyncProcess
+    public class ThreadLoader : ILoader, ISyncProcess, IModuleChecker
     {
         /// <summary>线程锁定超时(毫秒) </summary>
         private const int THREAD_LOCK_TIMEOUT = 1000;
@@ -17,10 +17,12 @@ namespace XOR
         private readonly RWLocker locker;
 
         //脚本缓存
+        private readonly Dictionary<string, bool> _cacheFileESM;
         private readonly Dictionary<string, bool> _cacheFileExists;
         private readonly Dictionary<string, Tuple<string, string>> _cacheReadFile;
 
         //跨线程同步数据
+        private SyncFileESM _syncFileESM;
         private SyncFileExists _syncFileExists;
         private SyncReadFile _syncReadFile;
 
@@ -33,6 +35,7 @@ namespace XOR
             this.locker = new RWLocker(THREAD_LOCK_TIMEOUT);
             this._cacheFileExists = new Dictionary<string, bool>();
             this._cacheReadFile = new Dictionary<string, Tuple<string, string>>();
+            this._cacheFileESM = new Dictionary<string, bool>();
         }
 
 
@@ -133,11 +136,58 @@ namespace XOR
                 worker.ReleaseSyncing();
             }
         }
+        public bool IsESM(string filepath)
+        {
+            if (this._cacheFileESM.TryGetValue(filepath, out bool _isESM))
+            {
+                return _isESM;
+            }
+            if (this.match != null && !this.match(filepath))
+            {
+                return false;
+            }
+            //锁定ThreadWorker同步状态
+            if (!worker.AcquireSyncing())
+            {
+                throw new ThreadStateException("Thread busy!");
+            }
+            try
+            {
+                //写入主线程
+                locker.AcquireWriter();
+                this._syncFileESM = new SyncFileESM(filepath);
+                locker.ReleaseWriter();
+                //等待主线程同步
+                bool isESM = false;
+                while (worker.IsAlive)
+                {
+                    locker.AcquireReader();
+                    bool isCompleted = this._syncFileESM == null || this._syncFileESM.completed;
+                    if (isCompleted)
+                    {
+                        isESM = this._syncFileESM != null && this._syncFileESM.isESM;
+                    }
+                    locker.ReleaseReader();
+
+                    if (isCompleted) break;
+                    Thread.Sleep(THREAD_SLEEP);
+                }
+
+                this._cacheFileESM.Add(filepath, isESM);
+
+                return isESM;
+            }
+            finally
+            {
+                worker.ReleaseSyncing();
+            }
+        }
 
         public void Process()
         {
             if (this._syncFileExists != null && !this._syncFileExists.completed ||
-                this._syncReadFile != null && !this._syncReadFile.completed)
+                this._syncReadFile != null && !this._syncReadFile.completed ||
+                this._syncFileESM != null && !this._syncFileESM.completed)
             {
                 locker.AcquireWriter();
                 try
@@ -159,11 +209,19 @@ namespace XOR
                         this._syncReadFile.debugpath = debugpath;
                         this._syncReadFile.content = content;
                     }
+                    if (this._syncFileESM != null && !this._syncFileESM.completed)
+                    {
+                        string filepath = this._syncFileESM.filepath;
+
+                        this._syncFileESM.completed = true;
+                        this._syncFileESM.isESM = source is IModuleChecker && ((IModuleChecker)source).IsESM(filepath);
+                    }
                 }
                 catch (Exception e)
                 {
                     this._syncFileExists = null;
                     this._syncReadFile = null;
+                    this._syncFileESM = null;
                     throw e;
                 }
                 finally
@@ -172,7 +230,17 @@ namespace XOR
                 }
             }
         }
+        class SyncFileESM
+        {
+            public readonly string filepath;
+            public bool completed;
+            public bool isESM;
 
+            public SyncFileESM(string filepath)
+            {
+                this.filepath = filepath;
+            }
+        }
         class SyncFileExists
         {
             public readonly string filepath;

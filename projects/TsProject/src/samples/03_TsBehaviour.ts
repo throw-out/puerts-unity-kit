@@ -1,4 +1,5 @@
-import { GameObject, Time } from "csharp.UnityEngine";
+import GameObject = CS.UnityEngine.GameObject;
+import Time = CS.UnityEngine.Time;
 
 //一个简单的TsBehaviour示例:
 class Sample01 extends xor.TsBehaviour {

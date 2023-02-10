@@ -94,28 +94,5 @@ namespace XOR
             System.GC.Collect();
             System.GC.WaitForPendingFinalizers();
         }
-        /// <summary>
-        /// puerts 1.4.0+ (apiLevel: 18+)
-        /// default use nodejs plugins, default unsupport common js
-        /// </summary>
-        static void SupportCommonJS(JsEnv env)
-        {
-            try
-            {
-                if (PuertsDLL.GetApiLevel() >= 18)
-                {
-                    env.Eval(@"(function(){
-var _g = global || globalThis || this;
-_g.nodeRequire = _g.nodeRequire || _g.require;
-})();
-");
-                    Puerts.ThirdParty.CommonJS.InjectSupportForCJS(env);
-                }
-            }
-            catch (Exception e)
-            {
-                Logger.LogWarning(e);
-            }
-        }
     }
 }

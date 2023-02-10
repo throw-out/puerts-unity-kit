@@ -1,6 +1,4 @@
-import * as csharp from "csharp";
-
-export function init(target: csharp.XOR.TsProperties) {
+export function init(target: CS.XOR.TsProperties) {
     let properties = target?.GetProperties();
     if (properties) {
         let stringBuilder: string[] = [];

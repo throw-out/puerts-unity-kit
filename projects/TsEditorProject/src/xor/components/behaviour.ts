@@ -1,23 +1,19 @@
-import * as csharp from "csharp";
-import { Module } from "module";
-import { $typeof } from "puerts";
+import Transform = CS.UnityEngine.Transform;
+import GameObject = CS.UnityEngine.GameObject;
+import RectTransform = CS.UnityEngine.RectTransform;
+import Application = CS.UnityEngine.Application;
+import PointerEventData = CS.UnityEngine.EventSystems.PointerEventData;
+import Collision = CS.UnityEngine.Collision;
+import Collision2D = CS.UnityEngine.Collision2D;
+import Collider = CS.UnityEngine.Collider;
+import Collider2D = CS.UnityEngine.Collider2D;
+import Time = CS.UnityEngine.Time;
 
-import Transform = csharp.UnityEngine.Transform;
-import GameObject = csharp.UnityEngine.GameObject;
-import RectTransform = csharp.UnityEngine.RectTransform;
-import Application = csharp.UnityEngine.Application;
-import PointerEventData = csharp.UnityEngine.EventSystems.PointerEventData;
-import Collision = csharp.UnityEngine.Collision;
-import Collision2D = csharp.UnityEngine.Collision2D;
-import Collider = csharp.UnityEngine.Collider;
-import Collider2D = csharp.UnityEngine.Collider2D;
-import Time = csharp.UnityEngine.Time;
-
-const { File, Path } = csharp.System.IO;
+const { File, Path } = CS.System.IO;
 const isEditor = Application.isEditor;
 
-type AccessorType = csharp.UnityEngine.Component & csharp.XOR.Serializables.IAccessor;
-type AccessorUnionType = AccessorType | AccessorType[] | csharp.System.Array$1<AccessorType>;
+type AccessorType = CS.UnityEngine.Component & CS.XOR.Serializables.IAccessor;
+type AccessorUnionType = AccessorType | AccessorType[] | CS.System.Array$1<AccessorType>;
 
 /**
  * 详情参阅: https://docs.unity3d.com/cn/current/ScriptReference/MonoBehaviour.html
@@ -105,31 +101,31 @@ abstract class IGizmos {
 abstract class IOnPointerHandler {
     /**
      * 实现C#接口: UnityEngine.EventSystems.IPointerClickHandler
-     * @see csharp.UnityEngine.EventSystems.IPointerClickHandler
+     * @see CS.UnityEngine.EventSystems.IPointerClickHandler
      * @param eventData 
      */
     protected OnPointerClick?(eventData: PointerEventData): void;
     /**
      * 实现C#接口: UnityEngine.EventSystems.IPointerDownHandler
-     * @see csharp.UnityEngine.EventSystems.IPointerDownHandler
+     * @see CS.UnityEngine.EventSystems.IPointerDownHandler
      * @param eventData 
      */
     protected OnPointerDown?(eventData: PointerEventData): void;
     /**
      * 实现C#接口: UnityEngine.EventSystems.IPointerUpHandler
-     * @see csharp.UnityEngine.EventSystems.IPointerUpHandler
+     * @see CS.UnityEngine.EventSystems.IPointerUpHandler
      * @param eventData 
      */
     protected OnPointerUp?(eventData: PointerEventData): void;
     /**
      * 实现C#接口: UnityEngine.EventSystems.IPointerEnterHandler
-     * @see csharp.UnityEngine.EventSystems.IPointerEnterHandler
+     * @see CS.UnityEngine.EventSystems.IPointerEnterHandler
      * @param eventData 
      */
     protected OnPointerEnter?(eventData: PointerEventData): void;
     /**
      * 实现C#接口: UnityEngine.EventSystems.IPointerExitHandler
-     * @see csharp.UnityEngine.EventSystems.IPointerExitHandler
+     * @see CS.UnityEngine.EventSystems.IPointerExitHandler
      * @param eventData 
      */
     protected OnPointerExit?(eventData: PointerEventData): void;
@@ -137,19 +133,19 @@ abstract class IOnPointerHandler {
 abstract class IOnDragHandler {
     /**
      * 实现C#接口: UnityEngine.EventSystems.IBeginDragHandler
-     * @see csharp.UnityEngine.EventSystems.IBeginDragHandler
+     * @see CS.UnityEngine.EventSystems.IBeginDragHandler
      * @param eventData 
      */
     protected OnBeginDrag?(eventData: PointerEventData): void;
     /**
      * 实现C#接口: UnityEngine.EventSystems.IDragHandler
-     * @see csharp.UnityEngine.EventSystems.IDragHandler
+     * @see CS.UnityEngine.EventSystems.IDragHandler
      * @param eventData 
      */
     protected OnDrag?(eventData: PointerEventData): void;
     /**
      * 实现C#接口: UnityEngine.EventSystems.IEndDragHandler
-     * @see csharp.UnityEngine.EventSystems.IEndDragHandler
+     * @see CS.UnityEngine.EventSystems.IEndDragHandler
      * @param eventData 
      */
     protected OnEndDrag?(eventData: PointerEventData): void;
@@ -274,13 +270,13 @@ abstract class IOnMouse {
 class TsBehaviourConstructor {
     private __transform__: Transform;
     private __gameObject__: GameObject;
-    private __component__: csharp.XOR.TsBehaviour;
+    private __component__: CS.XOR.TsBehaviour;
     private __listeners__: Map<string, Function[]>;
-    private __listenerProxy__: csharp.XOR.TsMessages;
+    private __listenerProxy__: CS.XOR.TsMessages;
 
-    public constructor(object: GameObject | Transform | csharp.XOR.TsBehaviour, accessor?: AccessorUnionType | boolean) {
+    public constructor(object: GameObject | Transform | CS.XOR.TsBehaviour, accessor?: AccessorUnionType | boolean) {
         let gameObject: GameObject;
-        if (object instanceof csharp.XOR.TsBehaviour) {
+        if (object instanceof CS.XOR.TsBehaviour) {
             gameObject = object.gameObject;
             this.__component__ = object;
         }
@@ -296,7 +292,7 @@ class TsBehaviourConstructor {
         if (accessor === undefined || accessor === true) {
             TsBehaviourConstructor.bindAccessor(
                 this,
-                object.GetComponents($typeof(csharp.XOR.TsProperties)) as csharp.System.Array$1<csharp.XOR.TsProperties>,
+                object.GetComponents(puerts.$typeof(CS.XOR.TsProperties)) as CS.System.Array$1<CS.XOR.TsProperties>,
                 true
             );
         }
@@ -324,12 +320,12 @@ class TsBehaviourConstructor {
         this._bindModuleOfEditor();
     }
     //协程
-    public StartCoroutine(routine: ((...args: any[]) => Generator) | Generator, ...args: any[]): csharp.UnityEngine.Coroutine {
+    public StartCoroutine(routine: ((...args: any[]) => Generator) | Generator, ...args: any[]): CS.UnityEngine.Coroutine {
         //传入了js Generator方法, 转为C#迭代器对象
         var iterator = cs_generator(routine, ...args);
         return this.component.StartCoroutine(iterator);
     }
-    public StopCoroutine(routine: csharp.UnityEngine.Coroutine) {
+    public StopCoroutine(routine: CS.UnityEngine.Coroutine) {
         this.component.StopCoroutine(routine);
     }
     public StopAllCoroutines() {
@@ -344,9 +340,9 @@ class TsBehaviourConstructor {
         //create message proxy
         if (!this.__listenerProxy__ || this.__listenerProxy__.Equals(null)) {
             this.__listenerProxy__ = (
-                this.__gameObject__.GetComponent($typeof(csharp.XOR.TsMessages)) ??
-                this.__gameObject__.AddComponent($typeof(csharp.XOR.TsMessages))
-            ) as csharp.XOR.TsMessages;
+                this.__gameObject__.GetComponent(puerts.$typeof(CS.XOR.TsMessages)) ??
+                this.__gameObject__.AddComponent(puerts.$typeof(CS.XOR.TsMessages))
+            ) as CS.XOR.TsMessages;
             this.__listenerProxy__.emptyCallback = () => this._invokeListeners('');
             this.__listenerProxy__.callback = (name, args) => this._invokeListeners(name, args);
         }
@@ -404,7 +400,7 @@ class TsBehaviourConstructor {
         this.__listenerProxy__.callback = null;
         this.__listenerProxy__.emptyCallback = null;
     }
-    private _invokeListeners(eventName: string, args?: Array<any> | csharp.System.Array$1<any>) {
+    private _invokeListeners(eventName: string, args?: Array<any> | CS.System.Array$1<any>) {
         if (!this.__listeners__) {
             console.warn(`invail invoke: ${eventName}`);
             return;
@@ -413,7 +409,7 @@ class TsBehaviourConstructor {
         if (!functions)
             return;
 
-        if (args instanceof csharp.System.Array) {
+        if (args instanceof CS.System.Array) {
             let _args = new Array<any>();
             for (let i = 0; i < args.Length; i++) {
                 _args.push(args.get_Item(i));
@@ -509,7 +505,7 @@ class TsBehaviourConstructor {
                 return null;
             }
             if (Metadata.isDefine(proto, funcname, TsBehaviourConstructor.standalone)) {
-                this.component.CreateProxy(funcname, func as csharp.System.Action);
+                this.component.CreateProxy(funcname, func as CS.System.Action);
                 return undefined
             }
             let frameskip = Metadata.getDefineData(proto, funcname, TsBehaviourConstructor.frameskip, 0);
@@ -529,24 +525,24 @@ class TsBehaviourConstructor {
                 proxies.forEach(([func, batch, frameskip]) => batch.removeListener(func, frameskip));
             };
             //生命周期管理
-            let proxy = this.component.GetProxy("OnEnable") as csharp.XOR.ProxyAction;
+            let proxy = this.component.GetProxy("OnEnable") as CS.XOR.ProxyAction;
             if (!proxy || proxy.Equals(null))
                 this.component.CreateProxy("OnEnable", enable);
             else {
-                proxy.callback = csharp.System.Delegate.Combine(proxy.callback, new csharp.System.Action(enable)) as csharp.System.Action;
+                proxy.callback = CS.System.Delegate.Combine(proxy.callback, new CS.System.Action(enable)) as CS.System.Action;
             }
-            proxy = this.component.GetProxy("OnDisable") as csharp.XOR.ProxyAction;
+            proxy = this.component.GetProxy("OnDisable") as CS.XOR.ProxyAction;
             if (!proxy || proxy.Equals(null))
                 this.component.CreateProxy("OnDisable", disable);
             else {
-                proxy.callback = csharp.System.Delegate.Combine(proxy.callback, new csharp.System.Action(disable)) as csharp.System.Action;
+                proxy.callback = CS.System.Delegate.Combine(proxy.callback, new CS.System.Action(disable)) as CS.System.Action;
             }
 
-            proxy = this.component.GetProxy("OnDestroy") as csharp.XOR.ProxyAction;
+            proxy = this.component.GetProxy("OnDestroy") as CS.XOR.ProxyAction;
             if (!proxy || proxy.Equals(null))
                 this.component.CreateProxy("OnDestroy", disable);
             else {
-                proxy.callback = csharp.System.Delegate.Combine(proxy.callback, new csharp.System.Action(disable)) as csharp.System.Action;
+                proxy.callback = CS.System.Delegate.Combine(proxy.callback, new CS.System.Action(disable)) as CS.System.Action;
             }
         };
     }
@@ -557,7 +553,7 @@ class TsBehaviourConstructor {
             if (!eventName)
                 continue;
             let waitAsyncComplete = Metadata.getDefineData(proto, funcname, TsBehaviourConstructor.throttle, false);
-            let func: csharp.System.Action = bind(this, funcname, waitAsyncComplete);
+            let func: CS.System.Action = bind(this, funcname, waitAsyncComplete);
             if (!func)
                 return undefined;
             this.addListener(eventName, func);
@@ -618,7 +614,7 @@ class TsBehaviourConstructor {
                 break;
             }
         }
-        let module = new csharp.XOR.ModuleInfo();
+        let module = new CS.XOR.ModuleInfo();
         module.className = className;
         if (modulePath) {
             module.moduleName = moduleName;
@@ -652,9 +648,9 @@ class TsBehaviourConstructor {
     }
     protected get component() {
         if (!this.__component__ || this.__component__.Equals(null)) {
-            this.__component__ = this.__gameObject__.GetComponent($typeof(csharp.XOR.TsBehaviour)) as csharp.XOR.TsBehaviour;
+            this.__component__ = this.__gameObject__.GetComponent(puerts.$typeof(CS.XOR.TsBehaviour)) as CS.XOR.TsBehaviour;
             if (!this.__component__ || this.__component__.Equals(null)) {
-                this.__component__ = this.__gameObject__.AddComponent($typeof(csharp.XOR.TsBehaviour)) as csharp.XOR.TsBehaviour;
+                this.__component__ = this.__gameObject__.AddComponent(puerts.$typeof(CS.XOR.TsBehaviour)) as CS.XOR.TsBehaviour;
             }
         }
         return this.__component__;
@@ -665,31 +661,31 @@ interface TsBehaviourConstructor extends IBehaviour, IGizmos, IOnPointerHandler,
 }
 
 namespace TsBehaviourConstructor {
-    function toCSharpArray<T>(array: Array<T>, checkMemberType: boolean = true): csharp.System.Array$1<T> {
+    function toCSharpArray<T>(array: Array<T>, checkMemberType: boolean = true): CS.System.Array$1<T> {
         if (!array || array.length === 0)
             return null;
         let firstIndex = array.findIndex(m => m !== undefined && m !== null && m !== void 0) ?? -1;
         if (firstIndex < 0)
             return null;
         let first = array[firstIndex];
-        let results: csharp.System.Array,
-            type = typeof first, memberType: csharp.System.Type;
+        let results: CS.System.Array,
+            type = typeof first, memberType: CS.System.Type;
         switch (type) {
             case "bigint":
-                results = csharp.System.Array.CreateInstance($typeof(csharp.System.Int64), array.length);
+                results = CS.System.Array.CreateInstance(puerts.$typeof(CS.System.Int64), array.length);
                 break;
             case "number":
-                results = csharp.System.Array.CreateInstance($typeof(csharp.System.Double), array.length);
+                results = CS.System.Array.CreateInstance(puerts.$typeof(CS.System.Double), array.length);
                 break;
             case "string":
-                results = csharp.System.Array.CreateInstance($typeof(csharp.System.String), array.length);
+                results = CS.System.Array.CreateInstance(puerts.$typeof(CS.System.String), array.length);
                 break;
             case "boolean":
-                results = csharp.System.Array.CreateInstance($typeof(csharp.System.Boolean), array.length);
+                results = CS.System.Array.CreateInstance(puerts.$typeof(CS.System.Boolean), array.length);
                 break;
             case "object":
-                if (first instanceof csharp.System.Object) {
-                    results = csharp.System.Array.CreateInstance(first.GetType(), array.length);
+                if (first instanceof CS.System.Object) {
+                    results = CS.System.Array.CreateInstance(first.GetType(), array.length);
                 }
                 break;
         }
@@ -701,7 +697,7 @@ namespace TsBehaviourConstructor {
                         continue;
                     }
                     if (memberType && (typeof (value) !== "object" ||
-                        !(value instanceof csharp.System.Object) ||
+                        !(value instanceof CS.System.Object) ||
                         !memberType.IsAssignableFrom(value.GetType())
                     )) {
                         continue;
@@ -710,12 +706,12 @@ namespace TsBehaviourConstructor {
                 results.SetValue(value, i);
             }
         }
-        return results as csharp.System.Array$1<T>;
+        return results as CS.System.Array$1<T>;
     }
-    function toArray<T>(array: csharp.System.Array$1<T>): T[];
-    function toArray(array: csharp.System.Array): any[];
+    function toArray<T>(array: CS.System.Array$1<T>): T[];
+    function toArray(array: CS.System.Array): any[];
     function toArray() {
-        let array: csharp.System.Array = arguments[0];
+        let array: CS.System.Array = arguments[0];
         if (!array)
             return null;
         let results = new Array<any>();
@@ -735,7 +731,7 @@ namespace TsBehaviourConstructor {
             return;
 
         let list: AccessorType[] =
-            accessor instanceof csharp.System.Array ? toArray(accessor) :
+            accessor instanceof CS.System.Array ? toArray(accessor) :
                 Array.isArray(accessor) ? accessor : [accessor];
         for (let accessor of list) {
             if (!accessor || accessor.Equals(null))
@@ -747,7 +743,7 @@ namespace TsBehaviourConstructor {
             let values: { [key: string]: any } = {};
             for (let i = 0; i < properties.Length; i++) {
                 let { key, value } = properties.get_Item(i);
-                if (value && value instanceof csharp.System.Array) {
+                if (value && value instanceof CS.System.Array) {
                     value = toArray(value);
                 }
                 values[key] = value;
@@ -755,7 +751,7 @@ namespace TsBehaviourConstructor {
             if (isEditor) {
                 if (bind) {
                     accessor.SetPropertyListener((key, newValue) => {
-                        if (newValue && newValue instanceof csharp.System.Array) {
+                        if (newValue && newValue instanceof CS.System.Array) {
                             newValue = toArray(newValue);
                         }
                         values[key] = newValue;
@@ -836,7 +832,7 @@ namespace TsBehaviourConstructor {
         };
     }
     /**注册侦听器
-     * 适用于@see csharp.XOR.TsMessages 回调
+     * 适用于@see CS.XOR.TsMessages 回调
      * @param eventName 
      * @returns 
      */
@@ -858,35 +854,35 @@ class BatchProxy {
     private static fixedDeltaTime() { return Time.fixedDeltaTime; }
 
     public static get Update() {
-        return this._getter("__Update", csharp.XOR.UpdateProxy, this.deltaTime)
+        return this._getter("__Update", CS.XOR.UpdateProxy, this.deltaTime)
     };
     public static get FixedUpdate() {
-        return this._getter("__FixedUpdate", csharp.XOR.FixedUpdateProxy, this.fixedDeltaTime)
+        return this._getter("__FixedUpdate", CS.XOR.FixedUpdateProxy, this.fixedDeltaTime)
     };
     public static get LateUpdate() {
-        return this._getter("__LateUpdate", csharp.XOR.LateUpdateProxy, this.deltaTime)
+        return this._getter("__LateUpdate", CS.XOR.LateUpdateProxy, this.deltaTime)
     };
 
-    private static _getter(key: string, type: { new(...args: any[]): csharp.XOR.ProxyAction }, timeGetter?: () => number) {
+    private static _getter(key: string, type: { new(...args: any[]): CS.XOR.ProxyAction }, timeGetter?: () => number) {
         let proxy: BatchProxy = this[key];
         if (!proxy) {
-            let gameObject: csharp.UnityEngine.GameObject = this["_gameObject_"];
+            let gameObject: CS.UnityEngine.GameObject = this["_gameObject_"];
             if (!gameObject || gameObject.Equals(null)) {
-                gameObject = new csharp.UnityEngine.GameObject("SingletonUpdater");
-                gameObject.transform.SetParent((csharp.XOR.Application.GetInstance() as csharp.XOR.Application).transform);
+                gameObject = new CS.UnityEngine.GameObject("SingletonUpdater");
+                gameObject.transform.SetParent((CS.XOR.Application.GetInstance() as CS.XOR.Application).transform);
                 this["_gameObject_"] = gameObject;
             }
-            proxy = new BatchProxy(gameObject.AddComponent($typeof(type)) as any, timeGetter);
+            proxy = new BatchProxy(gameObject.AddComponent(puerts.$typeof(type)) as any, timeGetter);
             this[key] = proxy;
         }
         return proxy;
     }
 
-    private readonly caller: csharp.XOR.ProxyAction;
+    private readonly caller: CS.XOR.ProxyAction;
     private readonly efHanlders: Function[] = [];
     private readonly sfHandlers: Map<number, { tick: number, dt: number, readonly methods: Function[], readonly frameskip: number }> = new Map();
 
-    private constructor(caller: csharp.XOR.ProxyAction, timeGetter: () => number) {
+    private constructor(caller: CS.XOR.ProxyAction, timeGetter: () => number) {
         this.caller = caller;
         this.caller.callback = (...args: any[]) => {
             let dt = timeGetter ? timeGetter() : 0;
@@ -961,7 +957,7 @@ function bind(thisArg: object, funcname: string | Function, waitAsyncComplete?: 
 }
 
 /**创建C#迭代器 */
-function cs_generator(func: ((...args: any[]) => Generator) | Generator, ...args: any[]): csharp.System.Collections.IEnumerator {
+function cs_generator(func: ((...args: any[]) => Generator) | Generator, ...args: any[]): CS.System.Collections.IEnumerator {
     let generator: Generator = undefined;
     if (typeof (func) === "function") {
         generator = func(...args);
@@ -972,13 +968,13 @@ function cs_generator(func: ((...args: any[]) => Generator) | Generator, ...args
         generator = func;
     }
 
-    return csharp.XOR.IEnumeratorUtil.Generator(function () {
-        let tick: csharp.XOR.IEnumeratorUtil.Tick;
+    return CS.XOR.IEnumeratorUtil.Generator(function () {
+        let tick: CS.XOR.IEnumeratorUtil.Tick;
         try {
             let next = generator.next();
-            tick = new csharp.XOR.IEnumeratorUtil.Tick(next.value, next.done);
+            tick = new CS.XOR.IEnumeratorUtil.Tick(next.value, next.done);
         } catch (e) {
-            tick = new csharp.XOR.IEnumeratorUtil.Tick(null, true);
+            tick = new CS.XOR.IEnumeratorUtil.Tick(null, true);
             console.error(e.message + "\n" + e.stack);
         }
         return tick;
@@ -1039,3 +1035,4 @@ declare global {
         class TsBehaviour extends TsBehaviourConstructor { }
     }
 }
+export { };

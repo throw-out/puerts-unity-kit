@@ -1,13 +1,10 @@
-import * as csharp from "csharp";
-import { $generic, $typeof } from "puerts";
-
-import CSObject = csharp.System.Object;
-import CSArray = csharp.System.Array;
-import CSArray$1 = csharp.System.Array$1;
-import CSList$1 = csharp.System.Collections.Generic.List$1;
-import CSDictionary$2 = csharp.System.Collections.Generic.Dictionary$2;
-import CSIEnumerator = csharp.System.Collections.IEnumerator;
-import CSIEnumerator$1 = csharp.System.Collections.Generic.IEnumerator$1;
+import CSObject = CS.System.Object;
+import CSArray = CS.System.Array;
+import CSArray$1 = CS.System.Array$1;
+import CSList$1 = CS.System.Collections.Generic.List$1;
+import CSDictionary$2 = CS.System.Collections.Generic.Dictionary$2;
+import CSIEnumerator = CS.System.Collections.IEnumerator;
+import CSIEnumerator$1 = CS.System.Collections.Generic.IEnumerator$1;
 
 type Array$1Iterator<T> = {
     /**
@@ -220,7 +217,7 @@ export function iterator(): object {
     const prototype = Object.getPrototypeOf(instance);
     if (!(ITERATOR_DEFINE in prototype)) {
         const Type = instance.GetType();
-        if ($typeof(CSArray).IsAssignableFrom(Type)) {
+        if (puer.$typeof(CSArray).IsAssignableFrom(Type)) {
             defineArrayIterator(prototype);
         }
         else {
@@ -250,73 +247,4 @@ export function iterator(): object {
         prototype[ITERATOR_DEFINE] = true;
     }
     return instance;
-}
-
-
-function test() {
-    const execute = (title: string, fn: () => void) => {
-        try {
-            console.log(`=====================${title}=====================`);
-            fn();
-            console.log(`===================== success ====================`);
-        } catch (e) {
-            console.log(`=====================  <color=red>fail</color>  =====================\n${e}`);
-        }
-    };
-
-    execute(`Array`, () => {
-        let obj = csharp.System.Array.CreateInstance($typeof(csharp.System.Int32), 5) as csharp.System.Array$1<number>;
-        obj.set_Item(0, 1);
-        obj.set_Item(1, 2);
-        obj.set_Item(2, 3);
-
-        console.log(JSON.stringify([...iterator(obj)]));
-        iterator(obj).forEach((value, index) => {
-            console.log(index, value);
-        });
-    });
-    execute(`List`, () => {
-        const List_Number = $generic(csharp.System.Collections.Generic.List$1, csharp.System.Int32) as {
-            new(): csharp.System.Collections.Generic.List$1<number>;
-        };
-        let obj = new List_Number();
-        obj.Add(4);
-        obj.Add(5);
-        obj.Add(6);
-
-        console.log(JSON.stringify([...iterator(obj)]));
-        iterator(obj).forEach((value, index) => {
-            console.log(index, value);
-        });
-    });
-    execute(`Dictionary`, () => {
-        const Dictionary_Number_String = $generic(csharp.System.Collections.Generic.Dictionary$2, csharp.System.Int32, csharp.System.String) as {
-            new(): csharp.System.Collections.Generic.Dictionary$2<number, string>;
-        };
-        let obj = new Dictionary_Number_String();
-        obj.set_Item(1, `message 1`);
-        obj.set_Item(2, `message 2`);
-        obj.set_Item(3, `message 3`);
-
-        console.log(JSON.stringify(iterator(obj).getKeys()));
-        console.log(JSON.stringify(iterator(obj).getValues()));
-        console.log(JSON.stringify([...iterator(obj)]));
-        iterator(obj).forEach((value, key) => {
-            console.log(key, value);
-        });
-        for (let [key, value] of iterator(obj)) {
-            console.log(key, value);
-        }
-    });
-    execute(`Hashtable`, () => {
-        let obj = new csharp.System.Collections.Hashtable();
-        obj.Add(`key1`, `message 1`);
-        obj.Add(`key2`, `message 2`);
-        obj.Add(`key3`, `message 3`);
-
-        console.log(JSON.stringify([...iterator(obj)]));
-        iterator(obj).forEach((value, key) => {
-            console.log(key, value);
-        });
-    });
 }

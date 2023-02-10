@@ -1,5 +1,3 @@
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
 class Listener {
     constructor() {
         this.handlers = [];
@@ -33,4 +31,5 @@ function register() {
     };
 }
 register();
+export {};
 //# sourceMappingURL=listener.js.map

@@ -1,14 +1,14 @@
-import * as csharp from "csharp";
-import Transform = csharp.UnityEngine.Transform;
-import GameObject = csharp.UnityEngine.GameObject;
-import RectTransform = csharp.UnityEngine.RectTransform;
-import PointerEventData = csharp.UnityEngine.EventSystems.PointerEventData;
-import Collision = csharp.UnityEngine.Collision;
-import Collision2D = csharp.UnityEngine.Collision2D;
-import Collider = csharp.UnityEngine.Collider;
-import Collider2D = csharp.UnityEngine.Collider2D;
-type AccessorType = csharp.UnityEngine.Component & csharp.XOR.Serializables.IAccessor;
-type AccessorUnionType = AccessorType | AccessorType[] | csharp.System.Array$1<AccessorType>;
+/// <reference path="component.d.ts" />
+import Transform = CS.UnityEngine.Transform;
+import GameObject = CS.UnityEngine.GameObject;
+import RectTransform = CS.UnityEngine.RectTransform;
+import PointerEventData = CS.UnityEngine.EventSystems.PointerEventData;
+import Collision = CS.UnityEngine.Collision;
+import Collision2D = CS.UnityEngine.Collision2D;
+import Collider = CS.UnityEngine.Collider;
+import Collider2D = CS.UnityEngine.Collider2D;
+type AccessorType = CS.UnityEngine.Component & CS.XOR.Serializables.IAccessor;
+type AccessorUnionType = AccessorType | AccessorType[] | CS.System.Array$1<AccessorType>;
 /**
  * 详情参阅: https://docs.unity3d.com/cn/current/ScriptReference/MonoBehaviour.html
  */
@@ -90,31 +90,31 @@ declare abstract class IGizmos {
 declare abstract class IOnPointerHandler {
     /**
      * 实现C#接口: UnityEngine.EventSystems.IPointerClickHandler
-     * @see csharp.UnityEngine.EventSystems.IPointerClickHandler
+     * @see CS.UnityEngine.EventSystems.IPointerClickHandler
      * @param eventData
      */
     protected OnPointerClick?(eventData: PointerEventData): void;
     /**
      * 实现C#接口: UnityEngine.EventSystems.IPointerDownHandler
-     * @see csharp.UnityEngine.EventSystems.IPointerDownHandler
+     * @see CS.UnityEngine.EventSystems.IPointerDownHandler
      * @param eventData
      */
     protected OnPointerDown?(eventData: PointerEventData): void;
     /**
      * 实现C#接口: UnityEngine.EventSystems.IPointerUpHandler
-     * @see csharp.UnityEngine.EventSystems.IPointerUpHandler
+     * @see CS.UnityEngine.EventSystems.IPointerUpHandler
      * @param eventData
      */
     protected OnPointerUp?(eventData: PointerEventData): void;
     /**
      * 实现C#接口: UnityEngine.EventSystems.IPointerEnterHandler
-     * @see csharp.UnityEngine.EventSystems.IPointerEnterHandler
+     * @see CS.UnityEngine.EventSystems.IPointerEnterHandler
      * @param eventData
      */
     protected OnPointerEnter?(eventData: PointerEventData): void;
     /**
      * 实现C#接口: UnityEngine.EventSystems.IPointerExitHandler
-     * @see csharp.UnityEngine.EventSystems.IPointerExitHandler
+     * @see CS.UnityEngine.EventSystems.IPointerExitHandler
      * @param eventData
      */
     protected OnPointerExit?(eventData: PointerEventData): void;
@@ -122,19 +122,19 @@ declare abstract class IOnPointerHandler {
 declare abstract class IOnDragHandler {
     /**
      * 实现C#接口: UnityEngine.EventSystems.IBeginDragHandler
-     * @see csharp.UnityEngine.EventSystems.IBeginDragHandler
+     * @see CS.UnityEngine.EventSystems.IBeginDragHandler
      * @param eventData
      */
     protected OnBeginDrag?(eventData: PointerEventData): void;
     /**
      * 实现C#接口: UnityEngine.EventSystems.IDragHandler
-     * @see csharp.UnityEngine.EventSystems.IDragHandler
+     * @see CS.UnityEngine.EventSystems.IDragHandler
      * @param eventData
      */
     protected OnDrag?(eventData: PointerEventData): void;
     /**
      * 实现C#接口: UnityEngine.EventSystems.IEndDragHandler
-     * @see csharp.UnityEngine.EventSystems.IEndDragHandler
+     * @see CS.UnityEngine.EventSystems.IEndDragHandler
      * @param eventData
      */
     protected OnEndDrag?(eventData: PointerEventData): void;
@@ -258,9 +258,9 @@ declare class TsBehaviourConstructor {
     private __component__;
     private __listeners__;
     private __listenerProxy__;
-    constructor(object: GameObject | Transform | csharp.XOR.TsBehaviour, accessor?: AccessorUnionType | boolean);
-    StartCoroutine(routine: ((...args: any[]) => Generator) | Generator, ...args: any[]): csharp.UnityEngine.Coroutine;
-    StopCoroutine(routine: csharp.UnityEngine.Coroutine): void;
+    constructor(object: GameObject | Transform | CS.XOR.TsBehaviour, accessor?: AccessorUnionType | boolean);
+    StartCoroutine(routine: ((...args: any[]) => Generator) | Generator, ...args: any[]): CS.UnityEngine.Coroutine;
+    StopCoroutine(routine: CS.UnityEngine.Coroutine): void;
     StopAllCoroutines(): void;
     /**添加Unity Message listener
      * @param eventName
@@ -294,7 +294,7 @@ declare class TsBehaviourConstructor {
     get name(): string;
     set name(value: string);
     get rectTransform(): RectTransform;
-    protected get component(): csharp.XOR.TsBehaviour;
+    protected get component(): import("csharp").XOR.TsBehaviour;
 }
 interface TsBehaviourConstructor extends IBehaviour, IGizmos, IOnPointerHandler, IOnDragHandler, IOnMouse, IOnCollision, IOnCollision2D, IOnTrigger, IOnTrigger2D {
 }
@@ -324,7 +324,7 @@ declare namespace TsBehaviourConstructor {
      */
     function throttle(enable: boolean): PropertyDecorator;
     /**注册侦听器
-     * 适用于@see csharp.XOR.TsMessages 回调
+     * 适用于@see CS.XOR.TsMessages 回调
      * @param eventName
      * @returns
      */

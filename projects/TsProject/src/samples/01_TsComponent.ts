@@ -1,5 +1,9 @@
-import * as csharp from "csharp";
-import { Color, GameObject, GUILayout, Transform, Vector2, Vector3 } from "csharp.UnityEngine";
+import Color = CS.UnityEngine.Color;
+import GameObject = CS.UnityEngine.GameObject;
+import GUILayout = CS.UnityEngine.GUILayout;
+import Transform = CS.UnityEngine.Transform;
+import Vector2 = CS.UnityEngine.Vector2;
+import Vector3 = CS.UnityEngine.Vector3;
 
 /**
  * 基础类型演示
@@ -37,9 +41,9 @@ export class Sample02 extends xor.TsComponent {
  */
 @xor.guid("d2ea683a-0e55-41a2-b837-b7e7c2a1fee4")
 export class Sample03 extends xor.TsComponent {
-    @xor.field(csharp.System.Byte)
+    @xor.field(CS.System.Byte)
     declare private _prop1: number;
-    @xor.field(csharp.System.Int16)
+    @xor.field(CS.System.Int16)
     declare private _prop2: number;
 
     @xor.field({ range: [0, 100], value: 50 })
@@ -49,7 +53,7 @@ export class Sample03 extends xor.TsComponent {
     @xor.field({ value: new Vector2(1, 10) })
     declare private _prop5: Vector2;
 
-    @xor.field({ type: csharp.System.Int16, value: [1, 15] })
+    @xor.field({ type: CS.System.Int16, value: [1, 15] })
     declare private _prop6: number[];
     @xor.field({ range: [0, 100], value: [1, 33.333, 67.67] })
     declare private _prop7: number[];
@@ -92,17 +96,17 @@ export class Sample04 extends xor.TsComponent {
 }
 
 /**
- * 自定义序列化类型: Color和csharp.MyData不属于XOR内置类型
+ * 自定义序列化类型: Color和CS.MyData不属于XOR内置类型
  */
 @xor.guid("36102130-2db9-4d62-9221-98c51c3c138c")
 export class Sample05 extends xor.TsComponent {
     @xor.field({ value: Color.white })
     declare private _prop1: Color;
-    declare private _prop2: csharp.MyData;
+    declare private _prop2: CS.MyData;
 
     @xor.field({ value: [Color.white] })
     declare private _prop3: Color[];
-    declare private _prop4: csharp.MyData[];
+    declare private _prop4: CS.MyData[];
 }
 
 /**

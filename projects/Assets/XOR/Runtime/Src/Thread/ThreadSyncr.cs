@@ -34,7 +34,7 @@ namespace XOR
         /// <returns></returns>
         public ThreadWorker.EventData PostToMainThread(string eventName, ThreadWorker.EventData data, bool throwOnError = true)
         {
-            worker.VerifyThread(false, true);
+            ThreadWorker.VerifyThread(false, true);
             //检查worker是否初始化完成
             if (!worker.IsInitialized)
             {
@@ -96,7 +96,7 @@ namespace XOR
         /// <returns></returns>
         public ThreadWorker.EventData PostToChildThread(string eventName, ThreadWorker.EventData data, bool throwOnError = true)
         {
-            worker.VerifyThread(true, true);
+            ThreadWorker.VerifyThread(true, true);
             //检查worker是否初始化完成
             if (!worker.IsInitialized)
             {

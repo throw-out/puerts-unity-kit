@@ -13,8 +13,8 @@ declare class ThreadWorkerConstructor {
     /**线程是否已初始化完成 */
     get isInitialized(): boolean;
     get source(): csharp.XOR.ThreadWorker;
-    constructor(loader: csharp.Puerts.ILoader, options?: csharp.XOR.ThreadOptions);
-    start(filepath: string): void;
+    constructor(loader: CS.Puerts.ILoader, options?: CS.XOR.ThreadOptions);
+    start(filepath: string, isESM?: boolean): void;
     stop(): void;
     /**异步调用事件, 无返回值
      * @param eventName
@@ -85,4 +85,5 @@ declare global {
         const globalWorker: ThreadWorker;
     }
 }
+export declare function bind(worker: CS.XOR.ThreadWorker): void;
 export {};

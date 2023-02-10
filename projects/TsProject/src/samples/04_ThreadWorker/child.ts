@@ -1,6 +1,4 @@
-import * as csharp from "csharp";
-
-const ThreadId: number = csharp.System.Threading["Thread"]["CurrentThread"]["ManagedThreadId"];
+const ThreadId: number = CS.System.Threading["Thread"]["CurrentThread"]["ManagedThreadId"];
 
 xor.globalWorker.on("child_test1", (msg) => {
     console.log(`thread(${ThreadId}) receive: ${msg}`);
@@ -14,3 +12,5 @@ xor.globalWorker.on("child_test2", (msg) => {
 setTimeout(() => {
     xor.globalWorker.post("main_test1", "child_thread_event");
 }, 2000);
+
+export { };

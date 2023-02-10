@@ -14,7 +14,10 @@ public class Sample_02 : MonoBehaviour
             Debug.LogWarning($"{nameof(XOR.Application)} not running");
             return;
         }
-        var func = app.Env.Eval<Action<XOR.TsProperties>>("var m = require('./samples/02_TsProperties'); m.init;");
+        string module = "samples/02_TsProperties";
+        var func = app.Loader.IsESM(module) ?
+            app.Env.ExecuteModule<Action<XOR.TsProperties>>(module, "init") :
+            app.Env.Eval<Action<XOR.TsProperties>>($"var m = require('{module}'); m.init;");
         func(m_Target);
     }
 }

@@ -1,7 +1,7 @@
 import * as csharp from "csharp";
-import { $generic } from "puerts";
-let List_Object = $generic(csharp.System.Collections.Generic.List$1, csharp.System.Object) as {
-    new(): csharp.System.Collections.Generic.List$1<csharp.System.Object>
+
+let List_Object = puer.$generic(CS.System.Collections.Generic.List$1, CS.System.Object) as {
+    new(): CS.System.Collections.Generic.List$1<CS.System.Object>
 };
 
 const INVOKE_TICK = Symbol("INVOKE_TICK");
@@ -15,7 +15,7 @@ const CLOSE_EVENT = "__e_close__",
  */
 class ThreadWorkerConstructor {
     private readonly mainThread: boolean;
-    private readonly worker: csharp.XOR.ThreadWorker;
+    private readonly worker: CS.XOR.ThreadWorker;
     private readonly events: Map<string, Function[]>;
     private _postIndex: number;
 
@@ -25,22 +25,22 @@ class ThreadWorkerConstructor {
     public get isInitialized() { return this.worker.IsInitialized; }
     public get source() { return this.worker; }
 
-    constructor(loader: csharp.Puerts.ILoader, options?: csharp.XOR.ThreadOptions) {
-        if (loader instanceof csharp.XOR.ThreadWorker) {
+    constructor(loader: CS.Puerts.ILoader, options?: CS.XOR.ThreadOptions) {
+        if (loader instanceof CS.XOR.ThreadWorker) {
             this.worker = loader;
             this.mainThread = false;
         } else {
-            this.worker = csharp.XOR.ThreadWorker.Create(loader, options ?? new csharp.XOR.ThreadOptions());
+            this.worker = CS.XOR.ThreadWorker.Create(loader, options ?? new CS.XOR.ThreadOptions());
             this.mainThread = true;
         }
-        this.worker.VerifyThread(this.mainThread);
+        CS.XOR.ThreadWorker.VerifyThread(this.mainThread);
         this.events = new Map();
         this.register();
     }
-    public start(filepath: string) {
+    public start(filepath: string, isESM?: boolean) {
         if (!this.mainThread || xor.globalWorker && xor.globalWorker.worker === this.worker)
             throw new Error("Invalid operation ");
-        this.worker.Run(filepath);
+        this.worker.Run(filepath, !!isESM);
     }
     public stop() {
         if (this.mainThread) {
@@ -56,7 +56,7 @@ class ThreadWorkerConstructor {
      * @param notResult 不获取返回值 
      */
     public post<TResult = void>(eventName: string, data?: any, notResult?: true): Promise<TResult> {
-        let edata: csharp.XOR.ThreadWorker.EventData;
+        let edata: CS.XOR.ThreadWorker.EventData;
         if (data !== undefined && data !== null && data !== void 0) {
             edata = this.pack(data);
         }
@@ -82,7 +82,7 @@ class ThreadWorkerConstructor {
      * @returns 
      */
     public postSync<TResult = any>(eventName: string, data?: any, throwOnError: boolean = true): TResult {
-        let edata: csharp.XOR.ThreadWorker.EventData;
+        let edata: CS.XOR.ThreadWorker.EventData;
         if (data !== undefined && data !== null && data !== void 0) {
             edata = this.pack(data);
         }
@@ -180,16 +180,16 @@ class ThreadWorkerConstructor {
     }
 
     private register() {
-        let getValue = (data: csharp.XOR.ThreadWorker.EventData) => {
+        let getValue = (data: CS.XOR.ThreadWorker.EventData) => {
             if (data !== undefined && data !== null && data !== void 0) {
                 return this.unpack(data);
             }
             return undefined;
         };
-        let onmessage = (eventName: string, data: csharp.XOR.ThreadWorker.EventData, hasReturn: boolean = true): csharp.XOR.ThreadWorker.EventData => {
+        let onmessage = (eventName: string, data: CS.XOR.ThreadWorker.EventData, hasReturn: boolean = true): CS.XOR.ThreadWorker.EventData => {
             if (this._isResultId(eventName)) {          //post return data event
                 let error: Error, result: any;
-                if (data && data.type === csharp.XOR.ThreadWorker.ValueType.Error) {
+                if (data && data.type === CS.XOR.ThreadWorker.ValueType.Error) {
                     error = new Error(`${data.value}`);
                 } else {
                     result = getValue(data);
@@ -261,7 +261,7 @@ class ThreadWorkerConstructor {
                                 target[property] = createProxy(fullName);
                             }
                         } else {
-                            let value = csharp;
+                            let value = CS;
                             fullName.split(".").forEach(name => {
                                 if (value && name) { value = value[name]; }
                             });
@@ -286,14 +286,13 @@ class ThreadWorkerConstructor {
                 //*/
             });
         }
-        let puerts = require("puerts");
-        puerts.registerBuildinModule('csharp', createProxy(undefined));
+        puer["registerBuildinModule"]('csharp', createProxy(undefined));
     }
     //处理remote request, 由主线程调用
     private executeRemoteResolver(data: string): any {
         if (typeof data !== "string")
             return undefined;
-        let result = csharp;
+        let result = CS;
         data.split(".").forEach(name => {
             if (result && name) result = result[name];
         });
@@ -304,16 +303,16 @@ class ThreadWorkerConstructor {
         return result;
     }
 
-    private pack(data: any): csharp.XOR.ThreadWorker.EventData {
+    private pack(data: any): CS.XOR.ThreadWorker.EventData {
         switch (this._validate(data)) {
             case PackValidate.Json:
                 {
-                    let result = new csharp.XOR.ThreadWorker.EventData();
+                    let result = new CS.XOR.ThreadWorker.EventData();
                     if (typeof (data) === "object") {
-                        result.type = csharp.XOR.ThreadWorker.ValueType.Json;
+                        result.type = CS.XOR.ThreadWorker.ValueType.Json;
                         result.value = JSON.stringify(data);
                     } else {
-                        result.type = csharp.XOR.ThreadWorker.ValueType.Value;
+                        result.type = CS.XOR.ThreadWorker.ValueType.Value;
                         result.value = data;
                     }
                     return result;
@@ -328,9 +327,9 @@ class ThreadWorkerConstructor {
         }
         return undefined;
     }
-    private unpack(data: csharp.XOR.ThreadWorker.EventData): any {
+    private unpack(data: CS.XOR.ThreadWorker.EventData): any {
         switch (data.type) {
-            case csharp.XOR.ThreadWorker.ValueType.Json:
+            case CS.XOR.ThreadWorker.ValueType.Json:
                 return JSON.parse(data.value);
                 break;
             default:
@@ -339,12 +338,12 @@ class ThreadWorkerConstructor {
         }
         return undefined;
     }
-    private _packByRefs(data: any, refs: { readonly mapping: WeakMap<object, number>, id: number }): csharp.XOR.ThreadWorker.EventData {
-        let result = new csharp.XOR.ThreadWorker.EventData();
+    private _packByRefs(data: any, refs: { readonly mapping: WeakMap<object, number>, id: number }): CS.XOR.ThreadWorker.EventData {
+        let result = new CS.XOR.ThreadWorker.EventData();
 
         let t = typeof (data);
         if (t === "object" && refs.mapping.has(data)) {
-            result.type = csharp.XOR.ThreadWorker.ValueType.RefObject;
+            result.type = CS.XOR.ThreadWorker.ValueType.RefObject;
             result.value = refs.mapping.get(data) ?? -1;
         } else {
             switch (t) {
@@ -354,13 +353,13 @@ class ThreadWorkerConstructor {
                     refs.mapping.set(data, id);
                     //创建对象引用
                     result.id = id;
-                    if (data instanceof csharp.System.Object) {
-                        result.type = csharp.XOR.ThreadWorker.ValueType.Value;
+                    if (data instanceof CS.System.Object) {
+                        result.type = CS.XOR.ThreadWorker.ValueType.Value;
                         result.value = data;
                     }
                     else if (data instanceof ArrayBuffer) {
-                        result.type = csharp.XOR.ThreadWorker.ValueType.ArrayBuffer;
-                        result.value = csharp.XOR.BufferUtil.ToBytes(data);
+                        result.type = CS.XOR.ThreadWorker.ValueType.ArrayBuffer;
+                        result.value = CS.XOR.BufferUtil.ToBytes(data);
                     }
                     else if (Array.isArray(data)) {
                         let list = new List_Object();
@@ -369,7 +368,7 @@ class ThreadWorkerConstructor {
                             member.key = i;
                             list.Add(member);
                         }
-                        result.type = csharp.XOR.ThreadWorker.ValueType.Array;
+                        result.type = CS.XOR.ThreadWorker.ValueType.Array;
                         result.value = list;
                     } else {
                         let list = new List_Object();
@@ -378,7 +377,7 @@ class ThreadWorkerConstructor {
                             item.key = key;
                             list.Add(item);
                         });
-                        result.type = csharp.XOR.ThreadWorker.ValueType.Object;
+                        result.type = CS.XOR.ThreadWorker.ValueType.Object;
                         result.value = list;
                     }
                     break;
@@ -386,55 +385,55 @@ class ThreadWorkerConstructor {
                 case "number":
                 case "bigint":
                 case "boolean":
-                    result.type = csharp.XOR.ThreadWorker.ValueType.Value;
+                    result.type = CS.XOR.ThreadWorker.ValueType.Value;
                     result.value = data;
                     break;
                 default:
-                    result.type = csharp.XOR.ThreadWorker.ValueType.Unknown;
+                    result.type = CS.XOR.ThreadWorker.ValueType.Unknown;
                     break;
             }
         }
         return result;
     }
-    private _unpackByRefs(data: csharp.XOR.ThreadWorker.EventData, refs: Map<number, object>) {
+    private _unpackByRefs(data: CS.XOR.ThreadWorker.EventData, refs: Map<number, object>) {
         const { type: Type, value: Value, id: Id } = data;
 
         let result: any;
         switch (Type) {
-            case csharp.XOR.ThreadWorker.ValueType.Object:
+            case CS.XOR.ThreadWorker.ValueType.Object:
                 {
                     result = {};
                     if (Id > 0) refs.set(Id, result);                   //add object ref
-                    let list = Value as csharp.System.Collections.Generic.List$1<csharp.XOR.ThreadWorker.EventData>;
+                    let list = Value as CS.System.Collections.Generic.List$1<CS.XOR.ThreadWorker.EventData>;
                     for (let i = 0; i < list.Count; i++) {
                         let member = list.get_Item(i);
                         result[member.key] = this._unpackByRefs(member, refs);
                     }
                 }
                 break;
-            case csharp.XOR.ThreadWorker.ValueType.Array:
+            case CS.XOR.ThreadWorker.ValueType.Array:
                 {
                     result = [];
                     if (Id > 0) refs.set(Id, result);                   //add object ref
-                    let list = Value as csharp.System.Collections.Generic.List$1<csharp.XOR.ThreadWorker.EventData>;
+                    let list = Value as CS.System.Collections.Generic.List$1<CS.XOR.ThreadWorker.EventData>;
                     for (let i = 0; i < list.Count; i++) {
                         let member = list.get_Item(i);
                         result[member.key] = this._unpackByRefs(member, refs);
                     }
                 }
                 break;
-            case csharp.XOR.ThreadWorker.ValueType.ArrayBuffer:
-                result = csharp.XOR.BufferUtil.ToBuffer(Value);
+            case CS.XOR.ThreadWorker.ValueType.ArrayBuffer:
+                result = CS.XOR.BufferUtil.ToBuffer(Value);
                 if (Id > 0) refs.set(Id, result);                       //add object ref
                 break;
-            case csharp.XOR.ThreadWorker.ValueType.RefObject:
+            case CS.XOR.ThreadWorker.ValueType.RefObject:
                 if (refs.has(Value)) {
                     result = refs.get(Value);
                 } else {
                     result = `Error: ref id ${Value} not found`;
                 }
                 break;
-            case csharp.XOR.ThreadWorker.ValueType.Json:
+            case CS.XOR.ThreadWorker.ValueType.Json:
                 result = JSON.parse(data.value);
                 if (Id > 0) refs.set(Id, result);                       //add object ref
                 break;
@@ -456,7 +455,7 @@ class ThreadWorkerConstructor {
                 if (data === null) {
                     return PackValidate.Json;
                 }
-                if (data instanceof csharp.System.Object ||
+                if (data instanceof CS.System.Object ||
                     data instanceof ArrayBuffer
                 ) {
                     return PackValidate.Reference;
@@ -522,4 +521,11 @@ declare global {
          */
         const globalWorker: ThreadWorker;
     }
+}
+
+//export to csharp
+export function bind(worker: CS.XOR.ThreadWorker) {
+    let _g = (global || globalThis || this);
+    _g.xor = _g.xor || {};
+    _g.xor.globalWorker = new ThreadWorkerConstructor(<any>worker);
 }

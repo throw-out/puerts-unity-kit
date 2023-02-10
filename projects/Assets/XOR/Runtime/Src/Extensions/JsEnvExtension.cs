@@ -10,14 +10,23 @@ namespace XOR
     {
         public static void GlobalListenerQuit(this JsEnv env)
         {
-            env.Eval(@"
-(function(){
-    let _g = (global || globalThis || this);
-    let listener = _g?.xor?.globalListener;
-    if( listener && listener.quit){
-        listener.quit.invoke();
-    }
-})();");
+            ILoader loader = Helper.GetLoader(env, false);
+            if (loader == null || !loader.FileExists(XORListener))
+            {
+                Logger.LogWarning($"Module missing: {XORListener}");
+                return;
+            }
+            Action quit = Helper.IsESM(loader, XORListener) ?
+                env.ExecuteModule<Action>(XORListener, "quit") :
+                env.Eval<Action>($"var m = require('{XORListener}'); m.quit;");
+            if (quit != null)
+            {
+                quit();
+            }
+            else
+            {
+                Logger.LogWarning($"Module function missing: {XORListener}");
+            }
         }
 
         public static void TryAutoUsing(this JsEnv env, bool printWarning = true)
@@ -33,7 +42,7 @@ namespace XOR
             }
             else if (printWarning)
             {
-                Logger.LogWarning($"AutoUsingCode Not Generate.");
+                Logger.LogWarning($"AutoUsingCode not generate.");
             }
         }
         public static void SupportCommonJS(this JsEnv env)
@@ -57,9 +66,11 @@ namespace XOR
             }
         }
 
+        static readonly string XORWorker = "puerts/xor/worker.js";
+        static readonly string XORListener = "puerts/xor/listener.js";
         static readonly string[] XORModules = new string[] {
-            "puerts/xor/listener.js",
-            "puerts/xor/worker.js",
+            XORWorker,
+            XORListener,
             "puerts/xor/components/behaviour.js",
             "puerts/xor/components/component.js",
         };
@@ -70,22 +81,11 @@ namespace XOR
         public static void RequireXORModules(this JsEnv env, bool isESM) => RequireXORModules(env, isESM, true);
         public static void RequireXORModules(this JsEnv env, bool isESM, bool throwOnFailure)
         {
-            if (Helper.GetLoader == null)
-            {
-                if (throwOnFailure)
-                    throw Helper.NullReferenceException();
-                Debug.LogWarning(Helper.NullReferenceException().Message);
-                return;
-            }
-            ILoader loader = Helper.GetLoader(env);
+            ILoader loader = Helper.GetLoader(env, throwOnFailure);
             if (loader == null)
             {
-                if (throwOnFailure)
-                    throw Helper.NullReferenceException();
-                Debug.LogWarning(Helper.NullReferenceException().Message);
                 return;
             }
-
             foreach (string module in XORModules)
             {
                 if (!loader.FileExists(module))
@@ -95,13 +95,13 @@ namespace XOR
                     Debug.LogWarning(Helper.ModuleMissingException(module).Message);
                     continue;
                 }
-                if (isESM)
+                if (Helper.IsESM(loader, module))
                 {
                     env.ExecuteModule(module);
                 }
                 else
                 {
-                    env.Eval($"require('./{module}')");
+                    env.Eval($"require('{module}')");
                 }
             }
         }
@@ -111,21 +111,53 @@ namespace XOR
         /// <param name="env"></param>
         internal static void BindXORThreadWorker(this JsEnv env, ThreadWorker worker)
         {
-            string script = @"
-function func(worker){ 
-    let _g = (function(){ return global || globalThis || this; })();
-    _g.xor = _g.xor ?? {};
-    _g.xor.globalWorker = new xor.ThreadWorker(worker);
-}
-func
-";
-            env.Eval<Action<ThreadWorker>>(script)(worker);
+            ILoader loader = Helper.GetLoader(env, false);
+            if (loader == null || !loader.FileExists(XORWorker))
+            {
+                Logger.LogWarning($"Module missing: {XORWorker}");
+                return;
+            }
+            Action<ThreadWorker> bind = Helper.IsESM(loader, XORWorker) ?
+                env.ExecuteModule<Action<ThreadWorker>>(XORWorker, "bind") :
+                env.Eval<Action<ThreadWorker>>($"var m = require('{XORWorker}'); m.bind;");
+            if (bind != null)
+            {
+                bind(worker);
+            }
+            else
+            {
+                Logger.LogWarning($"Module function missing: {XORWorker}");
+            }
         }
 
         static class Helper
         {
+
+            public static ILoader GetLoader(JsEnv env, bool throwOnFailure)
+            {
+                if (Helper.Loader == null)
+                {
+                    if (throwOnFailure)
+                        throw Helper.NullReferenceException();
+                    Debug.LogWarning(Helper.NullReferenceException().Message);
+                    return null;
+                }
+                ILoader loader = Helper.Loader(env);
+                if (loader == null)
+                {
+                    if (throwOnFailure)
+                        throw Helper.NullReferenceException();
+                    Debug.LogWarning(Helper.NullReferenceException().Message);
+                    return null;
+                }
+                return loader;
+            }
+            public static bool IsESM(ILoader loader, string module)
+            {
+                return loader is IModuleChecker && ((IModuleChecker)loader).IsESM(module);
+            }
             static Func<JsEnv, ILoader> _loader = null;
-            public static Func<JsEnv, ILoader> GetLoader
+            static Func<JsEnv, ILoader> Loader
             {
                 get
                 {
@@ -140,7 +172,6 @@ func
                     return _loader;
                 }
             }
-
             public static Exception NullReferenceException()
             {
                 return new NullReferenceException("Object reference null");

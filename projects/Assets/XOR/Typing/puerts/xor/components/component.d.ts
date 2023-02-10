@@ -1,8 +1,7 @@
-import * as csharp from "csharp";
 type ConstructorType<T> = Function & {
     prototype: T;
 };
-type NumberConstructor = typeof csharp.System.Byte | typeof csharp.System.SByte | typeof csharp.System.Char | typeof csharp.System.Int16 | typeof csharp.System.UInt16 | typeof csharp.System.Int32 | typeof csharp.System.UInt32 | typeof csharp.System.Int64 | typeof csharp.System.UInt64;
+type NumberConstructor = typeof CS.System.Byte | typeof CS.System.SByte | typeof CS.System.Char | typeof CS.System.Int16 | typeof CS.System.UInt16 | typeof CS.System.Int32 | typeof CS.System.UInt32 | typeof CS.System.Int64 | typeof CS.System.UInt64;
 type FieldOptions = NumberConstructor | Partial<{
     /**指定RawType(原始类型: System.Int16/System.Int32等类型都对应number) */
     type: NumberConstructor;
@@ -16,7 +15,7 @@ type FieldOptions = NumberConstructor | Partial<{
     value: any;
 }>;
 declare class TsComponentConstructor extends xor.TsBehaviour {
-    constructor(component: csharp.XOR.TsComponent);
+    constructor(component: CS.XOR.TsComponent);
 }
 /**接口声明 */
 declare global {

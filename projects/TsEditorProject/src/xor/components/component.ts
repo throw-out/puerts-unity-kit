@@ -1,16 +1,13 @@
-import * as csharp from "csharp";
-import { $typeof } from "puerts";
-
 type ConstructorType<T> = Function & { prototype: T };
-type NumberConstructor = typeof csharp.System.Byte |
-    typeof csharp.System.SByte |
-    typeof csharp.System.Char |
-    typeof csharp.System.Int16 |
-    typeof csharp.System.UInt16 |
-    typeof csharp.System.Int32 |
-    typeof csharp.System.UInt32 |
-    typeof csharp.System.Int64 |
-    typeof csharp.System.UInt64;
+type NumberConstructor = typeof CS.System.Byte |
+    typeof CS.System.SByte |
+    typeof CS.System.Char |
+    typeof CS.System.Int16 |
+    typeof CS.System.UInt16 |
+    typeof CS.System.Int32 |
+    typeof CS.System.UInt32 |
+    typeof CS.System.Int64 |
+    typeof CS.System.UInt64;
 
 type FieldOptions = NumberConstructor | Partial<{
     /**指定RawType(原始类型: System.Int16/System.Int32等类型都对应number) */
@@ -26,7 +23,7 @@ type FieldOptions = NumberConstructor | Partial<{
 }>;
 
 class TsComponentConstructor extends xor.TsBehaviour {
-    constructor(component: csharp.XOR.TsComponent) {
+    constructor(component: CS.XOR.TsComponent) {
         super(component, component);
     }
 }
@@ -105,21 +102,21 @@ declare global {
 /**重写GetComponent事件, 用于获取 */
 function overrideGetComponent() {
     function createGetComponent(original: Function) {
-        return function (this: csharp.UnityEngine.GameObject | csharp.UnityEngine.Component) {
+        return function (this: CS.UnityEngine.GameObject | CS.UnityEngine.Component) {
             let ctor: any = arguments[0];
             if (typeof (ctor) === "function") {
                 if (RegisterFlag in ctor) {
                     return this.GetTsComponent(ctor[RegisterFlag] as string);
                 }
-                if (ctor.prototype instanceof csharp.UnityEngine.Component) {
-                    return original.call(this, $typeof(ctor));
+                if (ctor.prototype instanceof CS.UnityEngine.Component) {
+                    return original.call(this, puerts.$typeof(ctor));
                 }
             }
             return original.apply(this, arguments);
         }
     }
     function createGetComponents(original: Function) {
-        return function (this: csharp.UnityEngine.GameObject | csharp.UnityEngine.Component) {
+        return function (this: CS.UnityEngine.GameObject | CS.UnityEngine.Component) {
             if (arguments[0] && typeof (arguments[0]) === "boolean") {
                 let components = this.GetTsComponents();
                 if (components) {
@@ -135,8 +132,8 @@ function overrideGetComponent() {
         }
     }
 
-    const Component = csharp.UnityEngine.Component,
-        GameObject = csharp.UnityEngine.GameObject;
+    const Component = CS.UnityEngine.Component,
+        GameObject = CS.UnityEngine.GameObject;
 
     Component.prototype.GetComponent = createGetComponent(Component.prototype.GetComponent);
     GameObject.prototype.GetComponent = createGetComponent(GameObject.prototype.GetComponent);
@@ -160,3 +157,4 @@ declare module "csharp" {
         }
     }
 }
+export { };

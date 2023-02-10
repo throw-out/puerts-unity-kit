@@ -25942,8 +25942,8 @@ declare namespace CS {
             public get Loader(): Puerts.ILoader;
             public get Options(): XOR.ThreadOptions;
             public Tick(): void
-            public Run($filepath: string): void
-            public VerifyThread($isMainThread: boolean, $throwError?: boolean): boolean
+            public Run($filepath: string, $isESM: boolean): void
+            public static VerifyThread($isMainThread: boolean, $throwError?: boolean): boolean
             public PostToMainThread($eventName: string, $data: XOR.ThreadWorker.EventData, $resultEventName?: string): void
             public PostToChildThread($eventName: string, $data: XOR.ThreadWorker.EventData, $resultEventName?: string): void
             public PostEvalToChildThread($chunk: string, $chunkName?: string): void
@@ -26008,11 +26008,14 @@ declare namespace CS {
             public get Loader(): XOR.MergeLoader;
             public constructor()
         }
-        class MergeLoader extends System.Object implements Puerts.ILoader, System.IDisposable {
+        class MergeLoader extends System.Object implements Puerts.ILoader, Puerts.IModuleChecker, System.IDisposable {
             protected [__keep_incompatibility]: never;
+            public get AppendExtensionName(): string;
+            public set AppendExtensionName(value: string);
             public Dispose(): void
             public FileExists($filepath: string): boolean
             public ReadFile($filepath: string, $debugpath: $Ref<string>): string
+            public IsESM($filepath: string): boolean
             public AddLoader($loader: Puerts.ILoader, $index?: number): void
             public RemoveLoader($type: System.Type): boolean
             public RemoveLoader($loader: Puerts.ILoader): boolean
@@ -26416,10 +26419,11 @@ declare namespace CS {
             public constructor($millisecondsTimeout: number)
             public constructor()
         }
-        class ThreadLoader extends System.Object implements Puerts.ILoader, XOR.ISyncProcess {
+        class ThreadLoader extends System.Object implements Puerts.ILoader, Puerts.IModuleChecker, XOR.ISyncProcess {
             protected [__keep_incompatibility]: never;
             public FileExists($filepath: string): boolean
             public ReadFile($filepath: string, $debugpath: $Ref<string>): string
+            public IsESM($filepath: string): boolean
             public Process(): void
             public constructor($worker: XOR.ThreadWorker, $source: Puerts.ILoader)
             public constructor($worker: XOR.ThreadWorker, $source: Puerts.ILoader, $match: System.Func$2<string, boolean>)
@@ -26441,6 +26445,7 @@ declare namespace CS {
             public remote: boolean
             public stopOnError: boolean
             public isEditor: boolean
+            public isESM: boolean
             public debugger: XOR.ThreadDebuggerOptions
         }
         class ThreadDebuggerOptions extends System.ValueType {

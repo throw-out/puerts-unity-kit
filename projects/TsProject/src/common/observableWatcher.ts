@@ -1,19 +1,18 @@
-import * as csharp from "csharp";
 import { Observable, Subscription } from "./observable";
 
-import UnityObject = csharp.UnityEngine.Object;
-import Sprite = csharp.UnityEngine.Sprite;
-import Texture2D = csharp.UnityEngine.Texture2D;
+import UnityObject = CS.UnityEngine.Object;
+import Sprite = CS.UnityEngine.Sprite;
+import Texture2D = CS.UnityEngine.Texture2D;
 
 //UnityEngine.UI Component
-import Text = csharp.UnityEngine.UI.Text;
-import Image = csharp.UnityEngine.UI.Image;
-import RawImage = csharp.UnityEngine.UI.RawImage;
-import Slider = csharp.UnityEngine.UI.Slider;
-import Toggle = csharp.UnityEngine.UI.Toggle;
-import Dropdown = csharp.UnityEngine.UI.Dropdown;
-import Scrollbar = csharp.UnityEngine.UI.Scrollbar;
-import InputField = csharp.UnityEngine.UI.InputField;
+import Text = CS.UnityEngine.UI.Text;
+import Image = CS.UnityEngine.UI.Image;
+import RawImage = CS.UnityEngine.UI.RawImage;
+import Slider = CS.UnityEngine.UI.Slider;
+import Toggle = CS.UnityEngine.UI.Toggle;
+import Dropdown = CS.UnityEngine.UI.Dropdown;
+import Scrollbar = CS.UnityEngine.UI.Scrollbar;
+import InputField = CS.UnityEngine.UI.InputField;
 
 type Descriptor<TInput, TOutput> = {
     setter?: (val: TInput) => TOutput,

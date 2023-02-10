@@ -1,13 +1,21 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Text.RegularExpressions;
 using Puerts;
 
 namespace XOR
 {
-    public class MergeLoader : ILoader, IDisposable
+    public class MergeLoader : ILoader, IDisposable, IModuleChecker
     {
+        private static readonly Regex ESMImport = new Regex(@"(^import [\S ]+|\r?\nimport [\S ]+)");
+        private static readonly Regex ESMExport = new Regex(@"(^export [\S ]+|\r?\nexport [\S ]+)");
         private readonly List<PLoader> loaders;
+        /// <summary>
+        /// 如果filepath不是合法的js文件名, 则为其追加此后缀名(默认:.js, 如为空表示不作处理)
+        /// </summary>
+        public string AppendExtensionName { get; set; } = ".js";
+
         public MergeLoader() : this(null) { }
         public MergeLoader(MergeLoader other)
         {
@@ -29,6 +37,7 @@ namespace XOR
 
         public bool FileExists(string filepath)
         {
+            ExtensionValidate(ref filepath);
             foreach (var ploader in loaders)
             {
                 if (ploader.loader.FileExists(filepath))
@@ -36,9 +45,9 @@ namespace XOR
             }
             return false;
         }
-
         public string ReadFile(string filepath, out string debugpath)
         {
+            ExtensionValidate(ref filepath);
             foreach (var ploader in loaders)
             {
                 string script = ploader.loader.ReadFile(filepath, out debugpath);
@@ -48,7 +57,23 @@ namespace XOR
             debugpath = filepath;
             return null;
         }
-
+        public bool IsESM(string filepath)
+        {
+            ExtensionValidate(ref filepath);
+            foreach (var ploader in loaders)
+            {
+                if (!ploader.loader.FileExists(filepath))
+                    continue;
+                if (ploader.loader is IModuleChecker && ((IModuleChecker)ploader.loader).IsESM(filepath))
+                {
+                    return true;
+                }
+                string script = ploader.loader.ReadFile(filepath, out string debugpath);
+                //UnityEngine.Debug.Log("ExecuteModule: " + filepath + ", IsESM: " + (script != null && (ESMImport.IsMatch(script) || ESMExport.IsMatch(script))));
+                return script != null && (ESMImport.IsMatch(script) || ESMExport.IsMatch(script));
+            }
+            return false;
+        }
         public void AddLoader(ILoader loader, int index = 0)
         {
             if (typeof(MergeLoader).IsAssignableFrom(loader.GetType()))
@@ -116,6 +141,16 @@ namespace XOR
                     ((IDisposable)loader).Dispose();
             }
         }
+
+        void ExtensionValidate(ref string filepath)
+        {
+            if (string.IsNullOrEmpty(AppendExtensionName))
+                return;
+            if (!filepath.EndsWith(".js") && !filepath.EndsWith(".cjs") && !filepath.EndsWith(".mjs") && !filepath.EndsWith(".json"))
+            {
+                filepath += AppendExtensionName;
+            }
+        }
     }
 
     public class FileLoader : ILoader
@@ -148,7 +183,9 @@ namespace XOR
 #if UNITY_EDITOR
             var path = filepath;
             if (!path.EndsWith(".js") && !path.EndsWith(".cjs") && !path.EndsWith(".mjs") && !path.EndsWith(".json"))
-                Logger.LogWarning("unknown file extension: " + filepath);
+            {
+                //Logger.LogWarning("unknown file extension: " + filepath);
+            }
 
             if (path.StartsWith("node_modules/"))
                 path = Path.Combine(projectRoot, path);

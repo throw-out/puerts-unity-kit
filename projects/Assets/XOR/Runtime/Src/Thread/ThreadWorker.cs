@@ -88,23 +88,21 @@ namespace XOR
             ProcessMainThreadProcesses();
         }
 
-        public void Run(string filepath)
+        public void Run(string filepath, bool isESM)
         {
             if (this.Env != null || this._thread != null || this._running)
                 throw new Exception("Thread is running");
             if (this.Loader == null)
                 throw new Exception("Thread cannot work, loader instance required.");
 
-            bool isESM = Settings.Load().isESM;
-
             this.IsInitialized = false;
             this._running = true;
             this._syncing = false;
-            this._thread = new Thread(new ThreadStart(() => ThreadExecute(isESM, filepath)));
+            this._thread = new Thread(new ThreadStart(() => ThreadExecute(filepath, isESM)));
             this._thread.IsBackground = true;
             this._thread.Start();
         }
-        public bool VerifyThread(bool isMainThread, bool throwError = true)
+        public static bool VerifyThread(bool isMainThread, bool throwError = true)
         {
             var id = Thread.CurrentThread.ManagedThreadId;
             if (isMainThread && id != MAIN_THREAD_ID || !isMainThread && id == MAIN_THREAD_ID)
@@ -212,7 +210,7 @@ namespace XOR
             GC.SuppressFinalize(this);
         }
 
-        void ThreadExecute(bool isESM, string filepath)
+        void ThreadExecute(string filepath, bool isESM)
         {
             ThreadId = Thread.CurrentThread.ManagedThreadId;
             int port =
@@ -241,7 +239,7 @@ namespace XOR
 #if UNITY_EDITOR
                 if (waitDebugger) env.WaitDebugger();
 #endif
-                ThreadExecuteRun(env, filepath, !Options.stopOnError);
+                ThreadExecuteRun(env, filepath, isESM, !Options.stopOnError);
 
                 this.IsInitialized = true;
                 Logger.Log($"<b>XOR.{nameof(ThreadWorker)}({ThreadId}): <color=green>Started</color></b>");
@@ -277,14 +275,14 @@ namespace XOR
 #endif
             }
         }
-        void ThreadExecuteRun(JsEnv env, string filepath, bool catchException)
+        void ThreadExecuteRun(JsEnv env, string filepath, bool isESM, bool catchException)
         {
             if (catchException)
             {
                 try
                 {
-                    //env.Eval(string.Format("require(\"{0}\")", filepath));
-                    env.Eval($"require('{filepath}');");
+                    if (isESM) env.ExecuteModule(filepath);
+                    else env.Eval(string.Format("require(\"{0}\")", filepath));
                 }
                 catch (Exception e)
                 {
@@ -293,7 +291,8 @@ namespace XOR
             }
             else
             {
-                env.Eval(string.Format("require(\"{0}\")", filepath));
+                if (isESM) env.ExecuteModule(filepath);
+                else env.Eval(string.Format("require(\"{0}\")", filepath));
             }
         }
         void ThreadExecuteTick(JsEnv env, bool catchException)
@@ -542,7 +541,7 @@ namespace XOR
 
             if (!string.IsNullOrEmpty(options.filepath))
             {
-                worker.Run(options.filepath);
+                worker.Run(options.filepath, options.isESM);
             }
             return worker;
         }
@@ -589,6 +588,10 @@ namespace XOR
         /// 是否为Editor环境(线程将使用EditorApplication.update调用Tick/不会随stop play销毁线程)
         /// </summary>
         public bool isEditor;
+        /// <summary>
+        /// 是否为esm模块
+        /// </summary>
+        public bool isESM;
 
         public ThreadDebuggerOptions debugger;
     }
