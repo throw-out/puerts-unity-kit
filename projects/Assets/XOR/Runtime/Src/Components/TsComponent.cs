@@ -66,6 +66,7 @@ namespace XOR
 #endif
         }
 
+        private bool initialized;
         private bool registered;
         private Puerts.JSObject jsObject;
         private WeakReference<GameObject> reference;
@@ -89,11 +90,13 @@ namespace XOR
             get => jsObject;
             internal set
             {
-                if (!registered) Init();
+                if (!initialized) Init();
                 jsObject = value;
+                registered = true;
             }
         }
         internal bool Registered { get => registered; }
+        internal bool Initialized { get => initialized; }
         /// <summary>
         /// 初始化并创建JSObject对象;
         /// 如果GameObject或其父节点的activeSelf一开始为false, 那么Awake就不会被执行, 直到activeSelf变为true时才会执行;
@@ -102,9 +105,8 @@ namespace XOR
         /// <returns>是否成功</returns>
         internal void Init()
         {
-            if (registered)
-                return;
-            registered = true;
+            if (initialized) return;
+            initialized = true;
             if (reference != null || this.IsDestroyed || this == null)
                 return;
             reference = TsComponentLifecycle.GetReference(gameObject);
