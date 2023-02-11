@@ -18,11 +18,11 @@ namespace XOR
             {
                 BinaryWriter writer = new BinaryWriter(stream);
                 //write data
-                writer.Write(encrypt != null);
+                writer.Write((bool)(encrypt != null));
                 writer.WriteBlock(encrypt != null ? encrypt.Encode(data) : data);
 
                 //write sign
-                writer.Write(auth != null);
+                writer.Write((bool)(auth != null));
                 if (auth != null)
                 {
                     writer.WriteBlock(auth.Sign(data));
@@ -41,7 +41,7 @@ namespace XOR
             ISignature auth = decorators.FirstOrDefault(d => d is ISignature) as ISignature;
             IEncrypt encrypt = decorators.FirstOrDefault(d => d is IEncrypt) as IEncrypt;
 
-            using (MemoryStream stream = new MemoryStream())
+            using (MemoryStream stream = new MemoryStream(data))
             {
                 BinaryReader reader = new BinaryReader(stream);
 
@@ -101,12 +101,12 @@ namespace XOR
             string[] files = GetFiles(outputPath, extNames);
             if (files != null)
             {
-                outputPath = outputPath.Replace("\"", "/");
+                outputPath = outputPath.Replace("\\", "/");
                 if (!outputPath.EndsWith("/")) outputPath += "/";
 
                 foreach (string filePath in files)
                 {
-                    string localName = filePath.Replace("\"", "/").Replace(outputPath, "");
+                    string localName = filePath.Replace("\\", "/").Replace(outputPath, "");
                     string content = File.ReadAllText(filePath);
                     scripts.Add(localName, content);
                 }
@@ -128,7 +128,7 @@ namespace XOR
             }
             HashSet<string> extNames = new HashSet<string>(fileExtNames);
 
-            rootPath = rootPath.Replace("\"", "/");
+            rootPath = rootPath.Replace("\\", "/");
             if (!rootPath.EndsWith("/")) rootPath += "/";
 
             Dictionary<string, string> scripts = new Dictionary<string, string>();
@@ -142,7 +142,7 @@ namespace XOR
                 }
                 foreach (string filePath in files)
                 {
-                    string localName = filePath.Replace("\"", "/").Replace(rootPath, "");
+                    string localName = filePath.Replace("\\", "/").Replace(rootPath, "");
                     string content = File.ReadAllText(filePath);
                     scripts.Add(localName, content);
                 }
