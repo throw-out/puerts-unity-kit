@@ -22,15 +22,13 @@ namespace XOR
         {
             base.Init();
 
-            bool isESM = Settings.Load().isESM;
-
             Loader = new MergeLoader();
             Loader.AddLoader(new DefaultLoader(), int.MaxValue);
 
             Env = new JsEnv(Loader);
             Env.TryAutoUsing();
+            Env.RequireXORModules();
             Env.SupportCommonJS();
-            Env.RequireXORModules(false);
 
             this.RegisterHandlers();
         }

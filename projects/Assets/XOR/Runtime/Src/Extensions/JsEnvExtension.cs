@@ -77,9 +77,8 @@ namespace XOR
         /// <summary>
         /// 初始化XOR依赖模块
         /// </summary>
-        public static void RequireXORModules(this JsEnv env) => RequireXORModules(env, false, true);
-        public static void RequireXORModules(this JsEnv env, bool isESM) => RequireXORModules(env, isESM, true);
-        public static void RequireXORModules(this JsEnv env, bool isESM, bool throwOnFailure)
+        public static void RequireXORModules(this JsEnv env) => RequireXORModules(env, true);
+        public static void RequireXORModules(this JsEnv env, bool throwOnFailure)
         {
             ILoader loader = Helper.GetLoader(env, throwOnFailure);
             if (loader == null)

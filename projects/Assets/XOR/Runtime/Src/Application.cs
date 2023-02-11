@@ -47,11 +47,11 @@ namespace XOR
 
             Loader = new MergeLoader();
             Loader.AddLoader(new DefaultLoader(), int.MaxValue);
-            
+
             Env = new JsEnv(Loader, debugPort);
             Env.TryAutoUsing();
-            Env.SupportCommonJS();
-            Env.RequireXORModules(isESM);
+            Env.RequireXORModules();
+            if (!isESM) Env.SupportCommonJS();
 #if UNITY_EDITOR
             if (IsWaitDebugger && debugPort > 0)
             {

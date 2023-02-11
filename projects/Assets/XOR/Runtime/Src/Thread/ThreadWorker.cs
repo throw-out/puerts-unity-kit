@@ -233,9 +233,9 @@ namespace XOR
                 // JsEnv初始化时将调用ThreadLoader接口
                 env = this.Env = new JsEnv(Loader, port);
                 env.TryAutoUsing();
-                env.SupportCommonJS();
-                env.RequireXORModules(isESM);
+                env.RequireXORModules();
                 env.BindXORThreadWorker(this);
+                if (!isESM) env.SupportCommonJS();
 #if UNITY_EDITOR
                 if (waitDebugger) env.WaitDebugger();
 #endif
