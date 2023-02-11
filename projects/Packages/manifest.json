@@ -1,5 +1,6 @@
 {
   "dependencies": {
+    "com.tencent.puerts.webgl": "1.0.0-rc.1",
     "com.tencent.puerts.commonjs": "1.0.1",
     "com.tencent.puerts.core": "1.4.0",
     "com.unity.collab-proxy": "1.14.18",

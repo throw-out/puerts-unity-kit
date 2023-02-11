@@ -65,31 +65,74 @@ public class Starter : MonoBehaviour
     static readonly string[] moduleNames = new string[0];
 
 #if UNITY_EDITOR
-    [UnityEditor.MenuItem("Tools/Samples/Publish")]
+    [UnityEditor.MenuItem("Tools/XOR-Samples/Publish")]
     static void Publish()
     {
         string output = GetOutputPath(), root = Path.GetDirectoryName(output);
 
         Action<string, byte[]> WriteBinaryFile = (name, data) =>
         {
-            string path = Path.Combine(UnityEngine.Application.dataPath, "Resources", name);
+            string path = Path.Combine(UnityEngine.Application.dataPath, "XOR-Publish/Resources", name);
             if (!path.EndsWith(".bytes")) path += ".bytes";
             var dir = Path.GetDirectoryName(path);
             if (!Directory.Exists(dir)) Directory.CreateDirectory(dir);
             File.WriteAllBytes(path, data);
         };
         //使用GZip压缩文件
-        var scriptData = ScriptPacker.Pack(ScriptPacker.Scan(output), new GZipEncrypt());
-        WriteBinaryFile(scriptPath, scriptData);
+        var scripts = ScriptPacker.Scan(output);
+        WriteBinaryFile(scriptPath, ScriptPacker.Pack(scripts, new GZipEncrypt()));
+        Debug.Log($"Publish Scripts: {scripts.Count}\n{string.Join("\n", scripts.Keys)}");
         if (moduleNames != null && moduleNames.Length > 0)
         {
-            var moduleData = ScriptPacker.Pack(ScriptPacker.ScanModule(root, moduleNames), new GZipEncrypt());
-            WriteBinaryFile(moduleScriptPath, moduleData);
+            scripts = ScriptPacker.ScanModule(root, moduleNames);
+            WriteBinaryFile(moduleScriptPath, ScriptPacker.Pack(scripts, new GZipEncrypt()));
+            Debug.Log($"Publish Module Scripts: {scripts.Count}\n{string.Join("\n", scripts.Keys)}");
         }
 
         UnityEditor.AssetDatabase.Refresh();
     }
+    [UnityEditor.MenuItem("Tools/XOR-Samples/Publish-WebGL")]
+    static void PublishWebGL()
+    {
+        int index = UnityEditor.EditorUtility.DisplayDialogComplex("提示", "请选择脚本风格ESM模块(.mjs)和CommonJS(.cjs)", "取消", "ESM", "CommonJS");
+        if (index == 0)
+            return;
+        string extName = index == 1 ? ".mjs" : ".cjs";
+        string output = GetOutputPath(), root = Path.GetDirectoryName(output);
+        Action<string, string> WriteTextFile = (name, data) =>
+        {
+            string path = Path.Combine(UnityEngine.Application.dataPath, "XOR-Publish/Resources", name);
+            var dir = Path.GetDirectoryName(path);
+            if (!Directory.Exists(dir)) Directory.CreateDirectory(dir);
+            File.WriteAllText(path, data);
+        };
 
+        var scripts = ScriptPacker.Scan(output);
+        foreach (var script in scripts)
+        {
+            WriteTextFile(script.Key.Replace(Path.GetExtension(script.Key), extName), script.Value);
+        }
+        Debug.Log($"Publish Scripts: {scripts.Count}\n{string.Join("\n", scripts.Keys)}");
+        if (moduleNames != null && moduleNames.Length > 0)
+        {
+            scripts = ScriptPacker.ScanModule(root, moduleNames);
+            foreach (var script in scripts)
+            {
+                WriteTextFile(script.Key.Replace(Path.GetExtension(script.Key), extName), script.Value);
+            }
+            Debug.Log($"Publish Module Scripts: {scripts.Count}\n{string.Join("\n", scripts.Keys)}");
+        }
+
+        UnityEditor.AssetDatabase.Refresh();
+    }
+    [UnityEditor.MenuItem("Tools/XOR-Samples/Clear")]
+    static void Clear()
+    {
+        string path = Path.Combine(UnityEngine.Application.dataPath, "XOR-Publish/Resources");
+        if (!Directory.Exists(path))
+            return;
+        Directory.Delete(path, true);
+    }
     static string GetOutputPath()
     {
         string configFilePath = Settings.Load().project;

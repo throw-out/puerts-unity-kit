@@ -5,7 +5,6 @@ declare class Listener {
     removeAll(): void;
     invoke(...args: any[]): void;
 }
-export {};
 /**
  * 接口声明
  */
@@ -17,3 +16,5 @@ declare global {
         };
     }
 }
+export declare function quit(): void;
+export {};

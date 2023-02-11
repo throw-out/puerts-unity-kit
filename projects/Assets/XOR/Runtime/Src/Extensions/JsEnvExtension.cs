@@ -66,13 +66,13 @@ namespace XOR
             }
         }
 
-        static readonly string XORWorker = "puerts/xor/worker.js";
-        static readonly string XORListener = "puerts/xor/listener.js";
+        static readonly string XORWorker = "puerts/xor/worker";
+        static readonly string XORListener = "puerts/xor/listener";
         static readonly string[] XORModules = new string[] {
             XORWorker,
             XORListener,
-            "puerts/xor/components/behaviour.js",
-            "puerts/xor/components/component.js",
+            "puerts/xor/components/behaviour",
+            "puerts/xor/components/component",
         };
         /// <summary>
         /// 初始化XOR依赖模块

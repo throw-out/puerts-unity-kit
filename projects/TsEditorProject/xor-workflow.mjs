@@ -7,11 +7,25 @@ import minimist from "minimist";
  */
 
 const commands = new class {
+    /**删除文件夹
+     * @param {minimist.ParsedArgs} options 
+     */
+    rmdir(options) {
+        let { target } = options;
+
+        let __dirname = path.dirname(import.meta.url.replace("file:///", ""));
+        if (target.startsWith(".")) {
+            target = path.join(__dirname, target);
+        }
+        if (!fs.existsSync(target) || !fs.statSync(target).isDirectory())
+            return;
+        this.#_rmdir(target);
+    }
     /**复制文件夹
      * @param {minimist.ParsedArgs} options 
      */
     copydir(options) {
-        let { source, target, append = '' } = options;
+        let { source, target, extname } = options;
         if (!source || !target)
             throw new Error("必须传入--source和--target参数");
 
@@ -28,7 +42,7 @@ const commands = new class {
         /**@type {string[]} 选中的文件扩展名 */
         let extnames = ("filter" in options) ? options.filter.split("/") : null;
         //如何处理文件
-        let resolve = (path) => `${path}${append}`;
+        let resolve = extname ? (_p) => _p.replace(path.extname(_p), extname) : (_p) => _p;
 
         this.#_copydir(source, target, {
             recursion,
@@ -71,6 +85,20 @@ const commands = new class {
                 this.#_copydir(_source, _target, options);
             }
         }
+    }
+    /**递归删除文件夹
+     * @param {string} dirpath 
+     */
+    #_rmdir(dirpath) {
+        for (let file of fs.readdirSync(dirpath)) {
+            let _path = path.join(dirpath, file);
+            if (fs.statSync(_path).isDirectory()) {
+                this.#_rmdir(_path);
+            } else {
+                fs.unlinkSync(_path);
+            }
+        }
+        fs.rmdirSync(dirpath);
     }
 }
 

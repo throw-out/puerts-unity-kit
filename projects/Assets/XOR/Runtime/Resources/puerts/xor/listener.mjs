@@ -31,5 +31,11 @@ function register() {
     };
 }
 register();
-export {};
+export function quit() {
+    let _g = global ?? globalThis ?? this;
+    let listener = _g?.xor?.globalListener;
+    if (listener && listener.quit) {
+        listener.quit.invoke();
+    }
+}
 //# sourceMappingURL=listener.js.map

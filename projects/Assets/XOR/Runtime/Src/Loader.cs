@@ -12,9 +12,14 @@ namespace XOR
         private static readonly Regex ESMExport = new Regex(@"(^export [\S ]+|\r?\nexport [\S ]+)");
         private readonly List<PLoader> loaders;
         /// <summary>
-        /// 如果filepath不是合法的js文件名, 则为其追加此后缀名(默认:.js, 如为空表示不作处理)
+        /// 如果filepath不是合法的js文件名, 则为其追加后缀名后重试
         /// </summary>
-        public string AppendExtensionName { get; set; } = ".js";
+        /// <value></value>
+        private readonly string[] AppendExtensionNames = new string[]{
+            ".mjs",
+            ".cjs",
+            ".js",
+        };
 
         public MergeLoader() : this(null) { }
         public MergeLoader(MergeLoader other)
@@ -37,40 +42,59 @@ namespace XOR
 
         public bool FileExists(string filepath)
         {
-            ExtensionValidate(ref filepath);
-            foreach (var ploader in loaders)
+            if (InnerFileExists(filepath))
             {
-                if (ploader.loader.FileExists(filepath))
-                    return true;
+                return true;
+            }
+            if (!ExtensionNameValidate(filepath))
+            {
+                foreach (string extName in AppendExtensionNames)
+                {
+                    string newFilepath = filepath + extName;
+                    if (InnerFileExists(newFilepath))
+                    {
+                        return true;
+                    }
+                }
             }
             return false;
         }
         public string ReadFile(string filepath, out string debugpath)
         {
-            ExtensionValidate(ref filepath);
-            foreach (var ploader in loaders)
+            string script = InnerReadFile(filepath, out debugpath);
+            if (!string.IsNullOrEmpty(script))
+                return script;
+            if (!ExtensionNameValidate(filepath))
             {
-                string script = ploader.loader.ReadFile(filepath, out debugpath);
-                if (!string.IsNullOrEmpty(script))
-                    return script; ;
+                foreach (string extName in AppendExtensionNames)
+                {
+                    string newFilepath = filepath + extName;
+                    if (!InnerFileExists(newFilepath))
+                        continue;
+                    script = InnerReadFile(newFilepath, out debugpath);
+                    if (!string.IsNullOrEmpty(script))
+                        return script;
+                }
             }
             debugpath = filepath;
             return null;
         }
         public bool IsESM(string filepath)
         {
-            ExtensionValidate(ref filepath);
-            foreach (var ploader in loaders)
+            if (InnerIsESM(filepath))
             {
-                if (!ploader.loader.FileExists(filepath))
-                    continue;
-                if (ploader.loader is IModuleChecker && ((IModuleChecker)ploader.loader).IsESM(filepath))
+                return true;
+            }
+            if (!ExtensionNameValidate(filepath))
+            {
+                foreach (string extName in AppendExtensionNames)
                 {
-                    return true;
+                    string newFilepath = filepath + extName;
+                    if (InnerIsESM(newFilepath))
+                    {
+                        return true;
+                    }
                 }
-                string script = ploader.loader.ReadFile(filepath, out string debugpath);
-                //UnityEngine.Debug.Log("ExecuteModule: " + filepath + ", IsESM: " + (script != null && (ESMImport.IsMatch(script) || ESMExport.IsMatch(script))));
-                return script != null && (ESMImport.IsMatch(script) || ESMExport.IsMatch(script));
             }
             return false;
         }
@@ -141,15 +165,48 @@ namespace XOR
                     ((IDisposable)loader).Dispose();
             }
         }
-
-        void ExtensionValidate(ref string filepath)
+        bool InnerFileExists(string filepath)
         {
-            if (string.IsNullOrEmpty(AppendExtensionName))
-                return;
-            if (!filepath.EndsWith(".js") && !filepath.EndsWith(".cjs") && !filepath.EndsWith(".mjs") && !filepath.EndsWith(".json"))
+            foreach (var ploader in loaders)
             {
-                filepath += AppendExtensionName;
+                if (ploader.loader.FileExists(filepath))
+                    return true;
             }
+            return false;
+        }
+        string InnerReadFile(string filepath, out string debugpath)
+        {
+            foreach (var ploader in loaders)
+            {
+                string script = ploader.loader.ReadFile(filepath, out debugpath);
+                if (!string.IsNullOrEmpty(script))
+                    return script; ;
+            }
+            debugpath = filepath;
+            return null;
+        }
+        bool InnerIsESM(string filepath)
+        {
+            foreach (var ploader in loaders)
+            {
+                if (!ploader.loader.FileExists(filepath))
+                    continue;
+                if (ploader.loader is IModuleChecker && ((IModuleChecker)ploader.loader).IsESM(filepath))
+                {
+                    return true;
+                }
+                string script = ploader.loader.ReadFile(filepath, out string debugpath);
+                //UnityEngine.Debug.Log("ExecuteModule: " + filepath + ", IsESM: " + (script != null && (ESMImport.IsMatch(script) || ESMExport.IsMatch(script))));
+                return script != null && (ESMImport.IsMatch(script) || ESMExport.IsMatch(script));
+            }
+            return false;
+        }
+        bool ExtensionNameValidate(string filepath)
+        {
+            return filepath.EndsWith(".js") ||
+                filepath.EndsWith(".cjs") ||
+                filepath.EndsWith(".mjs") ||
+                filepath.EndsWith(".json");
         }
     }
 
@@ -196,7 +253,7 @@ namespace XOR
 #if UNITY_STANDALONE_WIN
                 path = path.Replace("/", "\\");
 #else
-            path = path.Replace("\\", "/");
+                path = path.Replace("\\", "/");
 #endif
                 return path;
             }

@@ -3,9 +3,6 @@ using System.IO;
 using Puerts;
 using UnityEngine;
 using System.Linq;
-#if UNITY_EDITOR
-using UnityEditor;
-#endif
 
 namespace XOR
 {
@@ -19,16 +16,16 @@ namespace XOR
 #if UNITY_EDITOR
         private static bool IsWaitDebugger
         {
-            get { return EditorPrefs.GetBool("Editor.DebugEnable"); }
-            set { EditorPrefs.SetBool("Editor.DebugEnable", value); }
+            get { return UnityEditor.EditorPrefs.GetBool("Editor.DebugEnable"); }
+            set { UnityEditor.EditorPrefs.SetBool("Editor.DebugEnable", value); }
         }
-        [MenuItem("PuerTS/Enable WaitDebugger")]
+        [UnityEditor.MenuItem("PuerTS/Enable WaitDebugger")]
         private static void Enable() { IsWaitDebugger = true; }
-        [MenuItem("PuerTS/Enable WaitDebugger", true)]
+        [UnityEditor.MenuItem("PuerTS/Enable WaitDebugger", true)]
         private static bool EnableValidate() { return !IsWaitDebugger; }
-        [MenuItem("PuerTS/Disable WaitDebugger")]
+        [UnityEditor.MenuItem("PuerTS/Disable WaitDebugger")]
         private static void Disable() { IsWaitDebugger = false; }
-        [MenuItem("PuerTS/Disable WaitDebugger", true)]
+        [UnityEditor.MenuItem("PuerTS/Disable WaitDebugger", true)]
         private static bool DisableValidate() { return IsWaitDebugger; }
 #endif
         #endregion
@@ -43,15 +40,19 @@ namespace XOR
             }
             __instance = this;
 
-            bool isESM = Settings.Load().isESM;
-
             Loader = new MergeLoader();
             Loader.AddLoader(new DefaultLoader(), int.MaxValue);
 
+#if UNITY_EDITOR || !UNITY_WEBGL
             Env = new JsEnv(Loader, debugPort);
+#else
+            Env = Puerts.WebGL.GetBrowserEnv(Loader);
+#endif
             Env.TryAutoUsing();
             Env.RequireXORModules();
-            if (!isESM) Env.SupportCommonJS();
+#if !UNITY_EDITOR && UNITY_WEBGL
+            Env.SupportCommonJS();
+#endif
 #if UNITY_EDITOR
             if (IsWaitDebugger && debugPort > 0)
             {

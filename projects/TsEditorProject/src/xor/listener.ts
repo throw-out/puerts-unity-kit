@@ -31,7 +31,6 @@ function register() {
 }
 register();
 
-export { }
 /**
  * 接口声明
  */
@@ -39,7 +38,15 @@ declare global {
     namespace xor {
         /**全局监听器 */
         const globalListener: {
-            readonly quit: Listener
+            readonly quit: Listener;
         }
+    }
+}
+
+export function quit() {
+    let _g = global ?? globalThis ?? this;
+    let listener: typeof xor.globalListener = _g?.xor?.globalListener;
+    if (listener && listener.quit) {
+        listener.quit.invoke();
     }
 }

@@ -2,6 +2,7 @@ projects/obj
 projects/Logs
 projects/Temp
 projects/Debug
+projects/Build
 projects/Library
 projects/ProjectSettings/*.asset
 projects/*.sln
@@ -14,3 +15,5 @@ projects/TsProject/output
 projects/TsProject/output-obfuscated
 projects/TsProject/node_modules
 projects/TsProject/yarn.lock
+projects/Assets/XOR-Publish.meta
+projects/Assets/XOR-Publish/**
