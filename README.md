@@ -35,6 +35,12 @@
 | [puerts](https://github.com/Tencent/puerts/releases) |  1.4.0 + |
 | [nodejs](https://nodejs.org/) | `unknown`|
 
+| OpenUPM     |  版本           |
+| ------------ | ------------ |
+| [puerts](https://openupm.com/packages/com.tencent.puerts.core/) | 1.4.0 |
+| [puerts-webgl-support](https://openupm.com/packages/com.tencent.puerts.webgl/) | 1.0.0-rc.1 |
+| [puerts-commonjs-support](https://openupm.com/packages/com.tencent.puerts.commonjs/) |  1.0.1 |
+
 ## 开始使用
 1. 下载本模板项目;
 2. 进入目录`projects/TsEditorProject`和`projects/TsProject`安装依赖, 使用`npm install` or `yarn install`命令; 
