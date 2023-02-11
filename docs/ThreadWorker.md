@@ -34,13 +34,12 @@
 
 - 主线程代码
 ```typescript
-import * as csharp from "csharp";
+const ThreadId: number = CS.System.Threading["Thread"]["CurrentThread"]["ManagedThreadId"];
 
-const ThreadId: number = csharp.System.Threading["Thread"]["CurrentThread"]["ManagedThreadId"];
-
-export async function init(loader: csharp.Puerts.ILoader) {
+export async function init(loader: CS.Puerts.ILoader) {
+    const module = "./samples/04_ThreadWorker/child";
     const worker = new xor.ThreadWorker(loader);
-    worker.start("./samples/04_ThreadWorker/child");
+    worker.start(module, loader["IsESM"] ? loader["IsESM"](module) : false);
     xor.globalListener.quit.add(() => worker.stop());
 
     worker.on("main_test1", (msg) => {
@@ -63,9 +62,7 @@ export async function init(loader: csharp.Puerts.ILoader) {
 ```
 - 子线程代码
 ```typescript
-import * as csharp from "csharp";
-
-const ThreadId: number = csharp.System.Threading["Thread"]["CurrentThread"]["ManagedThreadId"];
+const ThreadId: number = CS.System.Threading["Thread"]["CurrentThread"]["ManagedThreadId"];
 
 xor.globalWorker.on("child_test1", (msg) => {
     console.log(`thread(${ThreadId}) receive: ${msg}`);

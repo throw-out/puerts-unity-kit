@@ -22,9 +22,7 @@
 
 ![image](https://user-images.githubusercontent.com/45587825/217222792-42495cf8-cec1-4ad2-92ea-6908d83f43af.png)
 ```typescript
-import * as csharp from "csharp";
-
-export function init(target: csharp.XOR.TsProperties) {
+export function init(target: CS.XOR.TsProperties) {
     let properties = target?.GetProperties();
     if (properties) {
         let stringBuilder: string[] = [];

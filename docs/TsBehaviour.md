@@ -24,7 +24,8 @@
 > - 示例场景:[projects/Assets/Samples/03_TsBehaviour](../projects/Assets/Samples/03_TsBehaviour)
 > - 示例typescript代码: [projects/TsProject/src/samples/03_Behaviour.ts](../projects/TsProject/src/samples/03_TsBehaviour.ts)
 ``` typescript
-import { GameObject, Time } from "csharp.UnityEngine";
+import GameObject = CS.UnityEngine.GameObject;
+import Time = CS.UnityEngine.Time;
 
 //一个简单的TsBehaviour示例:
 class Sample01 extends xor.TsBehaviour {
