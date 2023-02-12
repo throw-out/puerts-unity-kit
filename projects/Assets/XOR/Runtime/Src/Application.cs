@@ -9,7 +9,7 @@ namespace XOR
     public class Application : SingletonMonoBehaviour<Application>
     {
         public JsEnv Env { get; private set; } = null;
-        public MergeLoader Loader { get; private set; }
+        public MixerLoader Loader { get; private set; }
         public ushort debugPort = 9090;
 
         #region  Editor Debugger
@@ -30,6 +30,39 @@ namespace XOR
 #endif
         #endregion
 
+        public void Load(string filepath)
+        {
+#if !UNITY_EDITOR && UNITY_WEBGL
+            this.Env.ExecuteModule(filepath);
+#else
+            if (this.Loader.IsESM(filepath))
+            {
+                this.Env.ExecuteModule(filepath);
+            }
+            else
+            {
+                this.Env.Eval($"require('{filepath}')");
+            }
+#endif
+        }
+        public TResult Load<TResult>(string filepath, string exportee = "")
+        {
+#if !UNITY_EDITOR && UNITY_WEBGL
+            return this.Env.ExecuteModule<TResult>(filepath, exportee);
+#else
+            if (this.Loader.IsESM(filepath))
+            {
+                return this.Env.ExecuteModule<TResult>(filepath, exportee);
+            }
+            else
+            {
+                return string.IsNullOrEmpty(exportee) ?
+                    this.Env.Eval<TResult>($"require('{filepath}');") :
+                    this.Env.Eval<TResult>($"require('{filepath}').{exportee};");
+            }
+#endif
+        }
+
         void Awake()
         {
             if (__instance != null && __instance != this)
@@ -40,7 +73,7 @@ namespace XOR
             }
             __instance = this;
 
-            Loader = new MergeLoader();
+            Loader = new MixerLoader();
             Loader.AddLoader(new DefaultLoader(), int.MaxValue);
 
 #if UNITY_EDITOR || !UNITY_WEBGL

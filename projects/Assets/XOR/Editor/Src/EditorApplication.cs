@@ -8,7 +8,7 @@ namespace XOR
     internal class EditorApplication : Singleton<EditorApplication>, IDisposable
     {
         internal JsEnv Env { get; private set; }
-        internal MergeLoader Loader { get; private set; }
+        internal MixerLoader Loader { get; private set; }
         internal ThreadWorker Worker { get; private set; }
         internal Program Program { get; private set; }
         internal TSInterfaces Interfaces { get; private set; }
@@ -22,7 +22,7 @@ namespace XOR
         {
             base.Init();
 
-            Loader = new MergeLoader();
+            Loader = new MixerLoader();
             Loader.AddLoader(new DefaultLoader(), int.MaxValue);
 
             Env = new JsEnv(Loader);

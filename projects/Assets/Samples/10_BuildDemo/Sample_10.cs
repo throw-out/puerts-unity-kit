@@ -14,10 +14,7 @@ public class Sample_10 : MonoBehaviour
             Debug.LogWarning($"{nameof(XOR.Application)} not running");
             return;
         }
-        string module = "samples/10_BuildDemo";
-        var func = app.Loader.IsESM(module) ?
-            app.Env.ExecuteModule<Action<GameObject>>(module, "init") :
-            app.Env.Eval<Action<GameObject>>($"var m = require('{module}'); m.init;");
+        var func = app.Load<Action<GameObject>>("samples/10_BuildDemo", "init");
         func(m_Target);
     }
 }

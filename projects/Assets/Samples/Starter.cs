@@ -9,6 +9,7 @@ public class Starter : MonoBehaviour
 {
     void Awake()
     {
+        Debug.Log("XOR.Application: init");
         var app = XOR.Application.GetInstance();
 
 #if UNITY_EDITOR
@@ -39,6 +40,7 @@ public class Starter : MonoBehaviour
         }
         app.Loader.AddLoader(loader);
 #endif
+        Debug.Log("XOR.Application: Ready");
         var modules = new string[]{
             "main",
             "samples/01_TsComponent",
@@ -47,14 +49,7 @@ public class Starter : MonoBehaviour
         };
         foreach (var module in modules)
         {
-            if (app.Loader.IsESM(module))
-            {
-                app.Env.ExecuteModule(module);
-            }
-            else
-            {
-                app.Env.Eval($"require('{module}')");
-            }
+            app.Load(module);
         }
 
         TsComponent.Register(app.Env);
@@ -132,6 +127,7 @@ public class Starter : MonoBehaviour
         if (!Directory.Exists(path))
             return;
         Directory.Delete(path, true);
+        UnityEditor.AssetDatabase.Refresh();
     }
     static string GetOutputPath()
     {

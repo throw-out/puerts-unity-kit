@@ -10,15 +10,20 @@ namespace XOR
     {
         public static void GlobalListenerQuit(this JsEnv env)
         {
+            Action quit = null;
+#if UNITY_EDITOR || !UNITY_WEBGL
             ILoader loader = Helper.GetLoader(env, false);
             if (loader == null || !loader.FileExists(XORListener))
             {
                 Logger.LogWarning($"Module missing: {XORListener}");
                 return;
             }
-            Action quit = Helper.IsESM(loader, XORListener) ?
+            quit = Helper.IsESM(loader, XORListener) ?
                 env.ExecuteModule<Action>(XORListener, "quit") :
                 env.Eval<Action>($"var m = require('{XORListener}'); m.quit;");
+#else
+            quit = env.ExecuteModule<Action>(XORListener, "quit");
+#endif
             if (quit != null)
             {
                 quit();
@@ -66,13 +71,13 @@ namespace XOR
             }
         }
 
-        static readonly string XORWorker = "puerts/xor/worker";
-        static readonly string XORListener = "puerts/xor/listener";
+        static readonly string XORWorker = "puerts/xor/worker.mjs";
+        static readonly string XORListener = "puerts/xor/listener.mjs";
         static readonly string[] XORModules = new string[] {
             XORWorker,
             XORListener,
-            "puerts/xor/components/behaviour",
-            "puerts/xor/components/component",
+            "puerts/xor/components/behaviour.mjs",
+            "puerts/xor/components/component.mjs",
         };
         /// <summary>
         /// 初始化XOR依赖模块
@@ -80,6 +85,7 @@ namespace XOR
         public static void RequireXORModules(this JsEnv env) => RequireXORModules(env, true);
         public static void RequireXORModules(this JsEnv env, bool throwOnFailure)
         {
+#if UNITY_EDITOR || !UNITY_WEBGL
             ILoader loader = Helper.GetLoader(env, throwOnFailure);
             if (loader == null)
             {
@@ -103,6 +109,12 @@ namespace XOR
                     env.Eval($"require('{module}')");
                 }
             }
+#else
+            foreach (string module in XORModules)
+            {
+                env.ExecuteModule(module);
+            }
+#endif
         }
         /// <summary>
         /// 绑定ThreadWorker实例(仅ThreadWorker子线程可调用)
@@ -110,15 +122,20 @@ namespace XOR
         /// <param name="env"></param>
         internal static void BindXORThreadWorker(this JsEnv env, ThreadWorker worker)
         {
+            Action<ThreadWorker> bind = null;
+#if UNITY_EDITOR || !UNITY_WEBGL
             ILoader loader = Helper.GetLoader(env, false);
             if (loader == null || !loader.FileExists(XORWorker))
             {
                 Logger.LogWarning($"Module missing: {XORWorker}");
                 return;
             }
-            Action<ThreadWorker> bind = Helper.IsESM(loader, XORWorker) ?
+            bind = Helper.IsESM(loader, XORWorker) ?
                 env.ExecuteModule<Action<ThreadWorker>>(XORWorker, "bind") :
                 env.Eval<Action<ThreadWorker>>($"var m = require('{XORWorker}'); m.bind;");
+#else
+            bind = env.ExecuteModule<Action<ThreadWorker>>(XORWorker, "bind");
+#endif
             if (bind != null)
             {
                 bind(worker);
