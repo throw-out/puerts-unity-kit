@@ -30,6 +30,9 @@ namespace XOR
 #endif
         #endregion
 
+        /// <summary>
+        /// 加载模块(通过IsESM判定使用ExecuteModule或者Eval)
+        /// </summary>
         public void Load(string filepath)
         {
 #if !UNITY_EDITOR && UNITY_WEBGL
@@ -45,6 +48,9 @@ namespace XOR
             }
 #endif
         }
+        /// <summary>
+        /// 加载模块并获取export(通过IsESM判定使用ExecuteModule或者Eval)
+        /// </summary>
         public TResult Load<TResult>(string filepath, string exportee = "")
         {
 #if !UNITY_EDITOR && UNITY_WEBGL
