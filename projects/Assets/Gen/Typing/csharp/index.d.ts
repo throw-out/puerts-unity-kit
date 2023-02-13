@@ -1024,7 +1024,7 @@ declare namespace CS {
             * @returns A component of the matching type, if found. 
             */
             public GetComponentInChildren($t: System.Type): UnityEngine.Component
-            /** Returns all components of Type type in the GameObject or any of its children using depth first search. Works recursively.
+            /** Returns all components of Type type in the GameObject or any of its children. Works recursively.
             * @param t The type of Component to retrieve.
             * @param includeInactive Should Components on inactive GameObjects be included in the found set? includeInactive decides which children of the GameObject will be searched.  The GameObject that you call GetComponentsInChildren on is always searched regardless. Default is false.
             */
@@ -3291,12 +3291,12 @@ declare namespace CS {
             */
             public GetComponents($type: System.Type): System.Array$1<UnityEngine.Component>
             public GetComponents($type: System.Type, $results: System.Collections.Generic.List$1<UnityEngine.Component>): void
-            /** Returns all components of Type type in the GameObject or any of its children children using depth first search. Works recursively.
+            /** Returns all components of Type type in the GameObject or any of its children.
             * @param type The type of Component to retrieve.
             * @param includeInactive Should Components on inactive GameObjects be included in the found set?
             */
             public GetComponentsInChildren($type: System.Type): System.Array$1<UnityEngine.Component>
-            /** Returns all components of Type type in the GameObject or any of its children children using depth first search. Works recursively.
+            /** Returns all components of Type type in the GameObject or any of its children.
             * @param type The type of Component to retrieve.
             * @param includeInactive Should Components on inactive GameObjects be included in the found set?
             */
@@ -4130,10 +4130,6 @@ declare namespace CS {
             /** Return true if the AssetBundle is a streamed Scene AssetBundle.
             */
             public get isStreamedSceneAssetBundle(): boolean;
-            /** Controls the size of the shared AssetBundle loading cache. Default value is 1MB. 
-            */
-            public static get memoryBudgetKB(): number;
-            public static set memoryBudgetKB(value: number);
             /** Unloads all currently loaded AssetBundles.
             * @param unloadAllObjects Determines whether the current instances of objects loaded from AssetBundles will also be unloaded.
             */
@@ -5121,7 +5117,7 @@ declare namespace CS {
             */
             public get dimension(): UnityEngine.Rendering.TextureDimension;
             public set dimension(value: UnityEngine.Rendering.TextureDimension);
-            /** Whether Unity stores an additional copy of this texture's pixel data in CPU-addressable memory.
+            /** Returns true if the Read/Write Enabled checkbox was checked when the Texture was imported; otherwise returns false. For a dynamic Texture created from script, always returns true. For additional information, see TextureImporter.isReadable.
             */
             public get isReadable(): boolean;
             /** Texture coordinate wrapping mode.
@@ -5265,14 +5261,12 @@ declare namespace CS {
             /** Get a block of pixel colors.
             */
             public GetPixels($x: number, $y: number, $blockWidth: number, $blockHeight: number): System.Array$1<UnityEngine.Color>
-            /** Retrieves a copy of the the pixel color data. The colors are represented by Color32 structs.
+            /** Returns the pixels data in raw format.
             * @param colors Optional array to receive pixel data.
-            * @returns An array that contains a copy of the requested pixel colors, represented by Color32 structs. 
             */
             public GetPixels32($colors: System.Array$1<UnityEngine.Color32>): System.Array$1<UnityEngine.Color32>
-            /** Retrieves a copy of the the pixel color data. The colors are represented by Color32 structs.
+            /** Returns the pixels data in raw format.
             * @param colors Optional array to receive pixel data.
-            * @returns An array that contains a copy of the requested pixel colors, represented by Color32 structs. 
             */
             public GetPixels32(): System.Array$1<UnityEngine.Color32>
             public constructor($deviceName: string, $requestedWidth: number, $requestedHeight: number, $requestedFPS: number)
@@ -6640,17 +6634,13 @@ declare namespace CS {
             /** Finds a shader with the given name.
             */
             public static Find($name: string): UnityEngine.Shader
-            /** Enables a global shader keyword.
-            * @param keyword The name of the local shader keyword to enable.
+            /** Set a global shader keyword.
             */
             public static EnableKeyword($keyword: string): void
-            /** Disables a global shader keyword.
-            * @param keyword The name of the local shader keyword to disable.
+            /** Unset a global shader keyword.
             */
             public static DisableKeyword($keyword: string): void
-            /** Checks whether a global shader keyword is enabled for this material.
-            * @param keyword The name of the global shader keyword to check.
-            * @returns Returns true if the given global shader keyword is enabled. Otherwise, returns false. 
+            /** Is global shader keyword enabled?
             */
             public static IsKeywordEnabled($keyword: string): boolean
             public static WarmupAllShaders(): void
@@ -7134,7 +7124,7 @@ declare namespace CS {
             */
             public get enableRandomWrite(): boolean;
             public set enableRandomWrite(value: boolean);
-            /** Is the render texture marked to be scaled by the.
+            /** Is the render texture marked to be scaled by the Dynamic Resolution system.
             */
             public get useDynamicScale(): boolean;
             public set useDynamicScale(value: boolean);
@@ -7404,10 +7394,9 @@ declare namespace CS {
             */
             public SmoothEdges($smoothRegionWidthInPixels: number): void
             public SmoothEdges(): void
-            /** Retrieves a copy of the pixel color data for a given mip level of a given face. The colors are represented by Color structs.
-            * @param face The cubemap face to read pixel data from.
-            * @param miplevel The mip level to read pixel data from. The default is 0.
-            * @returns An array that contains a copy of the requested pixel colors, represented by Color structs. 
+            /** Returns pixel colors of a cubemap face.
+            * @param face The face from which pixel data is taken.
+            * @param miplevel Mipmap level for the chosen face.
             */
             public GetPixels($face: UnityEngine.CubemapFace, $miplevel: number): System.Array$1<UnityEngine.Color>
             public GetPixels($face: UnityEngine.CubemapFace): System.Array$1<UnityEngine.Color>
@@ -7435,7 +7424,7 @@ declare namespace CS {
             public GetPixel($face: UnityEngine.CubemapFace, $x: number, $y: number): UnityEngine.Color
             /** Actually apply all previous SetPixel and SetPixels changes.
             * @param updateMipmaps When set to true, mipmap levels are recalculated.
-            * @param makeNoLongerReadable When set to true, Unity discards the copy of pixel data in CPU-addressable memory after this operation.
+            * @param makeNoLongerReadable When set to true, system memory copy of a texture is released.
             */
             public Apply($updateMipmaps: boolean, $makeNoLongerReadable: boolean): void
             public Apply($updateMipmaps: boolean): void
@@ -8609,7 +8598,7 @@ declare namespace CS {
             */
             public static get indirectScale(): number;
             public static set indirectScale(value: number);
-            /** Determines the percentage change in lighting intensity that triggers Unity to recalculate the real-time lightmap.
+            /** Threshold for limiting updates of realtime GI. The unit of measurement is "percentage intensity change".
             */
             public static get updateThreshold(): number;
             public static set updateThreshold(value: number);
@@ -8966,35 +8955,35 @@ declare namespace CS {
             */
             public get tangents(): System.Array$1<UnityEngine.Vector4>;
             public set tangents(value: System.Array$1<UnityEngine.Vector4>);
-            /** The texture coordinates (UVs) in the first channel.
+            /** The base texture coordinates of the Mesh.
             */
             public get uv(): System.Array$1<UnityEngine.Vector2>;
             public set uv(value: System.Array$1<UnityEngine.Vector2>);
-            /** The texture coordinates (UVs) in the second channel.
+            /** The second texture coordinate set of the mesh, if present.
             */
             public get uv2(): System.Array$1<UnityEngine.Vector2>;
             public set uv2(value: System.Array$1<UnityEngine.Vector2>);
-            /** The texture coordinates (UVs) in the third channel.
+            /** The third texture coordinate set of the mesh, if present.
             */
             public get uv3(): System.Array$1<UnityEngine.Vector2>;
             public set uv3(value: System.Array$1<UnityEngine.Vector2>);
-            /** The texture coordinates (UVs) in the fourth channel.
+            /** The fourth texture coordinate set of the mesh, if present.
             */
             public get uv4(): System.Array$1<UnityEngine.Vector2>;
             public set uv4(value: System.Array$1<UnityEngine.Vector2>);
-            /** The texture coordinates (UVs) in the fifth channel.
+            /** The fifth texture coordinate set of the mesh, if present.
             */
             public get uv5(): System.Array$1<UnityEngine.Vector2>;
             public set uv5(value: System.Array$1<UnityEngine.Vector2>);
-            /** The texture coordinates (UVs) in the sixth channel.
+            /** The sixth texture coordinate set of the mesh, if present.
             */
             public get uv6(): System.Array$1<UnityEngine.Vector2>;
             public set uv6(value: System.Array$1<UnityEngine.Vector2>);
-            /** The texture coordinates (UVs) in the seventh channel.
+            /** The seventh texture coordinate set of the mesh, if present.
             */
             public get uv7(): System.Array$1<UnityEngine.Vector2>;
             public set uv7(value: System.Array$1<UnityEngine.Vector2>);
-            /** The texture coordinates (UVs) in the eighth channel.
+            /** The eighth texture coordinate set of the mesh, if present.
             */
             public get uv8(): System.Array$1<UnityEngine.Vector2>;
             public set uv8(value: System.Array$1<UnityEngine.Vector2>);
@@ -9176,19 +9165,19 @@ declare namespace CS {
             public SetUVs($channel: number, $uvs: System.Collections.Generic.List$1<UnityEngine.Vector2>, $start: number, $length: number): void
             public SetUVs($channel: number, $uvs: System.Collections.Generic.List$1<UnityEngine.Vector3>, $start: number, $length: number): void
             public SetUVs($channel: number, $uvs: System.Collections.Generic.List$1<UnityEngine.Vector4>, $start: number, $length: number): void
-            /** Sets the texture coordinates (UVs) stored in a given channel.
-            * @param channel The channel, in [0..7] range.
-            * @param uvs The UV data to set.
+            /** Sets the UVs of the Mesh.
+            * @param channel The UV channel, in [0..7] range. Indices start at 0, which corresponds to uv. Note that 1 corresponds to uv2.
+            * @param uvs UVs to set for the given index.
             */
             public SetUVs($channel: number, $uvs: System.Array$1<UnityEngine.Vector2>): void
-            /** Sets the texture coordinates (UVs) stored in a given channel.
-            * @param channel The channel, in [0..7] range.
-            * @param uvs The UV data to set.
+            /** Sets the UVs of the Mesh.
+            * @param channel The UV channel, in [0..7] range. Indices start at 0, which corresponds to uv. Note that 1 corresponds to uv2.
+            * @param uvs UVs to set for the given index.
             */
             public SetUVs($channel: number, $uvs: System.Array$1<UnityEngine.Vector3>): void
-            /** Sets the texture coordinates (UVs) stored in a given channel.
-            * @param channel The channel, in [0..7] range.
-            * @param uvs The UV data to set.
+            /** Sets the UVs of the Mesh.
+            * @param channel The UV channel, in [0..7] range. Indices start at 0, which corresponds to uv. Note that 1 corresponds to uv2.
+            * @param uvs UVs to set for the given index.
             */
             public SetUVs($channel: number, $uvs: System.Array$1<UnityEngine.Vector4>): void
             /** Sets the UVs of the Mesh, using a part of the input array.
@@ -9452,7 +9441,7 @@ declare namespace CS {
             /** How many passes are in this material (Read Only).
             */
             public get passCount(): number;
-            /** An array containing the names of the local shader keywords that are currently enabled for this material.
+            /** Additional shader keywords set by this material.
             */
             public get shaderKeywords(): System.Array$1<string>;
             public set shaderKeywords(value: System.Array$1<string>);
@@ -9466,17 +9455,13 @@ declare namespace CS {
             * @param name The name of the property.
             */
             public HasProperty($name: string): boolean
-            /** Enables a local shader keyword for this material.
-            * @param keyword The name of the local shader keyword to enable.
+            /** Sets a shader keyword that is enabled by this material.
             */
             public EnableKeyword($keyword: string): void
-            /** Disables a local shader keyword for this material.
-            * @param keyword The name of the local shader keyword to disable.
+            /** Unset a shader keyword.
             */
             public DisableKeyword($keyword: string): void
-            /** Checks whether a local shader keyword is enabled for this material.
-            * @param keyword The name of the local shader keyword to check.
-            * @returns Returns true if the given local shader keyword is enabled for this material. Otherwise, returns false. 
+            /** Is the shader keyword enabled on this material?
             */
             public IsKeywordEnabled($keyword: string): boolean
             /** Enables or disables a Shader pass on a per-Material level.
@@ -10000,7 +9985,7 @@ declare namespace CS {
             public static SystemSetting: number
             public constructor()
         }
-        /** Provides access to display information.
+        /** Access to display information.
         */
         class Screen extends System.Object {
             protected [__keep_incompatibility]: never;
@@ -10016,10 +10001,10 @@ declare namespace CS {
             /** The current screen resolution (Read Only).
             */
             public static get currentResolution(): UnityEngine.Resolution;
-            /** Returns all full-screen resolutions that the monitor supports (Read Only).
+            /** All full-screen resolutions supported by the monitor (Read Only).
             */
             public static get resolutions(): System.Array$1<UnityEngine.Resolution>;
-            /** Enables full-screen mode for the application.
+            /** Is the game running full-screen?
             */
             public static get fullScreen(): boolean;
             public static set fullScreen(value: boolean);
@@ -10033,19 +10018,19 @@ declare namespace CS {
             /** Returns a list of screen areas that are not functional for displaying content (Read Only).
             */
             public static get cutouts(): System.Array$1<UnityEngine.Rect>;
-            /** Enables auto-rotation to portrait.
+            /** Allow auto-rotation to portrait?
             */
             public static get autorotateToPortrait(): boolean;
             public static set autorotateToPortrait(value: boolean);
-            /** Enables auto-rotation to portrait, upside down.
+            /** Allow auto-rotation to portrait, upside down?
             */
             public static get autorotateToPortraitUpsideDown(): boolean;
             public static set autorotateToPortraitUpsideDown(value: boolean);
-            /** Enables auto-rotation to landscape left
+            /** Allow auto-rotation to landscape left?
             */
             public static get autorotateToLandscapeLeft(): boolean;
             public static set autorotateToLandscapeLeft(value: boolean);
-            /** Enables auto-rotation to landscape right.
+            /** Allow auto-rotation to landscape right?
             */
             public static get autorotateToLandscapeRight(): boolean;
             public static set autorotateToLandscapeRight(value: boolean);
@@ -10086,7 +10071,8 @@ declare namespace CS {
             /** Returns the currently active color gamut.
             */
             public static get activeColorGamut(): UnityEngine.ColorGamut;
-            /** The GraphicsTier for the current device.
+            /** The GraphicsTier classification for the current device.
+            Changing this value affects any subsequently loaded shaders. Initially Unity auto-detects this value from the hardware in use. Graphics Tiers are only available in the Built-in Render Pipeline.
             */
             public static get activeTier(): UnityEngine.Rendering.GraphicsTier;
             public static set activeTier(value: UnityEngine.Rendering.GraphicsTier);
@@ -11451,6 +11437,8 @@ declare namespace CS {
             /** Gets a small Texture with pixels that represent surface normal vectors at a neutral position.
             */
             public static get normalTexture(): UnityEngine.Texture2D;
+            /** Returns true if the Read/Write Enabled checkbox was checked when the texture was imported; otherwise returns false. For a dynamic Texture created from script, always returns true. For additional information, see TextureImporter.isReadable.
+            */
             public get isReadable(): boolean;
             /** Determines whether mipmap streaming is enabled for this Texture.
             */
@@ -11489,19 +11477,18 @@ declare namespace CS {
             */
             public UpdateExternalTexture($nativeTex: System.IntPtr): void
             public GetRawTextureData(): System.Array$1<number>
-            /** Retrieves a copy of the the pixel color data for a given area of a given mip level. The colors are represented by Color structs.
+            /** Get a block of pixel colors.
             * @param x The x position of the pixel array to fetch.
             * @param y The y position of the pixel array to fetch.
             * @param blockWidth The width length of the pixel array to fetch.
             * @param blockHeight The height length of the pixel array to fetch.
-            * @param miplevel The mip level to read pixel data from. The default is 0.
-            * @returns An array that contains a copy of the requested pixel colors. 
+            * @param miplevel The mipmap level to fetch the pixels. Defaults to zero, and is
+            optional.
+            * @returns The array of pixels in the texture that have been selected. 
             */
             public GetPixels($x: number, $y: number, $blockWidth: number, $blockHeight: number, $miplevel: number): System.Array$1<UnityEngine.Color>
             public GetPixels($x: number, $y: number, $blockWidth: number, $blockHeight: number): System.Array$1<UnityEngine.Color>
-            /** Retrieves a copy of the pixel color data at a given mip level. The colors are represented by lower-precision Color32 structs.
-            * @param miplevel The mip level to read pixel data from. The default is 0.
-            * @returns An array that contains a copy of the requested pixel colors. 
+            /** Get a block of pixel colors in Color32 format.
             */
             public GetPixels32($miplevel: number): System.Array$1<UnityEngine.Color32>
             public GetPixels32(): System.Array$1<UnityEngine.Color32>
@@ -11558,7 +11545,7 @@ declare namespace CS {
             public LoadRawTextureData($data: System.Array$1<number>): void
             /** Actually apply all previous SetPixel and SetPixels changes.
             * @param updateMipmaps When set to true, mipmap levels are recalculated.
-            * @param makeNoLongerReadable When set to true, Unity discards the copy of pixel data in CPU-addressable memory after this operation.
+            * @param makeNoLongerReadable When set to true, system memory copy of a texture is released.
             */
             public Apply($updateMipmaps: boolean, $makeNoLongerReadable: boolean): void
             public Apply($updateMipmaps: boolean): void
@@ -11569,11 +11556,11 @@ declare namespace CS {
             /** Resizes the texture.
             */
             public Resize($width: number, $height: number, $format: UnityEngine.TextureFormat, $hasMipMap: boolean): boolean
-            /** Reads the pixels from the current render target (the screen, or a RenderTexture), and writes them to the texture.
-            * @param source The region of the render target to read from.
-            * @param destX The horizontal pixel position in the texture to write the pixels to.
-            * @param destY The vertical pixel position in the texture to write the pixels to.
-            * @param recalculateMipMaps If this parameter is true, Unity automatically recalculates the mipmaps for the texture after writing the pixel data. Otherwise, Unity does not do this automatically.
+            /** Read pixels from screen into the saved texture data.
+            * @param source Rectangular region of the view to read from. Pixels are read from current render target.
+            * @param destX Horizontal pixel position in the texture to place the pixels that are read.
+            * @param destY Vertical pixel position in the texture to place the pixels that are read.
+            * @param recalculateMipMaps Should the texture's mipmaps be recalculated after reading?
             */
             public ReadPixels($source: UnityEngine.Rect, $destX: number, $destY: number, $recalculateMipMaps: boolean): void
             public ReadPixels($source: UnityEngine.Rect, $destX: number, $destY: number): void
@@ -11586,9 +11573,9 @@ declare namespace CS {
             */
             public SetPixels32($x: number, $y: number, $blockWidth: number, $blockHeight: number, $colors: System.Array$1<UnityEngine.Color32>, $miplevel: number): void
             public SetPixels32($x: number, $y: number, $blockWidth: number, $blockHeight: number, $colors: System.Array$1<UnityEngine.Color32>): void
-            /** Retrieves a copy of the the pixel color data for a given mip level. The colors are represented by Color structs.
-            * @param miplevel The mip level to read pixel data from. The default is 0.
-            * @returns An array that contains a copy of the requested pixel colors. 
+            /** Get the pixel colors from the texture.
+            * @param miplevel The mipmap level to fetch the pixels from. Defaults to zero.
+            * @returns The array of all pixels in the mipmap level of the texture. 
             */
             public GetPixels($miplevel: number): System.Array$1<UnityEngine.Color>
             public GetPixels(): System.Array$1<UnityEngine.Color>
@@ -11781,7 +11768,7 @@ declare namespace CS {
             */
             public static get vSyncCount(): number;
             public static set vSyncCount(value: number);
-            /** Choose the level of Multi-Sample Anti-aliasing (MSAA) that the GPU performs.
+            /** Set The AA Filtering option.
             */
             public static get antiAliasing(): number;
             public static set antiAliasing(value: number);
@@ -11815,7 +11802,7 @@ declare namespace CS {
             */
             public static get resolutionScalingFixedDPIFactor(): number;
             public static set resolutionScalingFixedDPIFactor(value: number);
-            /** The RenderPipelineAsset that defines the override render pipeline for the current quality level.
+            /** The RenderPipelineAsset for this quality level
             */
             public static get renderPipeline(): UnityEngine.Rendering.RenderPipelineAsset;
             public static set renderPipeline(value: UnityEngine.Rendering.RenderPipelineAsset);
@@ -11867,9 +11854,9 @@ declare namespace CS {
             public static SetQualityLevel($index: number): void
             public static IncreaseLevel(): void
             public static DecreaseLevel(): void
-            /** Provides a reference to the RenderPipelineAsset that defines the override render pipeline for a given quality level. 
-            * @param index Index of the quality level.
-            * @returns Returns null if the quality level does not exist, or if no asset is assigned to that quality level. Otherwise, returns the RenderPipelineAsset that defines the override render pipeline for the quality level. 
+            /** Get the Render Pipeline Asset assigned at the specified quality level.
+            * @param index Index of the quality level to check.
+            * @returns Null if the quality level was not found or there is no assigned SRP Asset for this level, otherwise the SRP Asset assigned for this quality level. 
             */
             public static GetRenderPipelineAssetAt($index: number): UnityEngine.Rendering.RenderPipelineAsset
             public static GetQualityLevel(): number
@@ -12840,7 +12827,7 @@ declare namespace CS {
             public static Simplify($points: System.Collections.Generic.List$1<UnityEngine.Vector2>, $tolerance: number, $simplifiedPoints: System.Collections.Generic.List$1<UnityEngine.Vector2>): void
             public constructor()
         }
-        /** The LOD (level of detail) fade modes. Modes other than LODFadeMode.None will result in Unity calculating a blend factor for blending/interpolating between two neighbouring LODs and pass it to your shader.
+        /** The LOD fade modes. Modes other than LODFadeMode.None will result in Unity calculating a blend factor for blending/interpolating between two neighbouring LODs and pass it to your shader.
         */
         enum LODFadeMode { None = 0, CrossFade = 1, SpeedTree = 2 }
         /** Structure for building a LOD for passing to the SetLODs function.
@@ -12911,16 +12898,18 @@ declare namespace CS {
             /** The format of the pixel data in the texture (Read Only).
             */
             public get format(): UnityEngine.TextureFormat;
+            /** Returns true if this 3D texture is Read/Write Enabled; otherwise returns false. For dynamic textures created from script, always returns true.
+            */
             public get isReadable(): boolean;
-            /** Retrieves a copy of the the pixel color data for a given mip level. The colors are represented by Color structs.
-            * @param miplevel The mip level to read pixel data from. The default is 0.
-            * @returns An array that contains a copy of the requested pixel colors, represented by Color structs. 
+            /** Returns an array of pixel colors representing one mip level of the 3D texture.
+            * @param miplevel The mipmap level to be accessed.
+            * @returns The colors to get the array of pixels. 
             */
             public GetPixels($miplevel: number): System.Array$1<UnityEngine.Color>
             public GetPixels(): System.Array$1<UnityEngine.Color>
-            /** Retrieves a copy of the pixel color data at a given mip level. The colors are represented by lower-precision Color32 structs.
-            * @param miplevel The mip level to read pixel data from. The default is 0.
-            * @returns An array that contains a copy of the requested pixel colors. 
+            /** Returns an array of pixel colors representing one mip level of the 3D texture.
+            * @param miplevel The mipmap level to be accessed.
+            * @returns The colors to get the array of pixels. 
             */
             public GetPixels32($miplevel: number): System.Array$1<UnityEngine.Color32>
             public GetPixels32(): System.Array$1<UnityEngine.Color32>
@@ -12938,7 +12927,7 @@ declare namespace CS {
             public SetPixels32($colors: System.Array$1<UnityEngine.Color32>): void
             /** Actually apply all previous SetPixels changes.
             * @param updateMipmaps When set to true, mipmap levels are recalculated.
-            * @param makeNoLongerReadable Whether to discard the copy of pixel data in CPU-addressable memory after this operation.
+            * @param makeNoLongerReadable When set to true, system memory copy of a texture is released.
             */
             public Apply($updateMipmaps: boolean, $makeNoLongerReadable: boolean): void
             public Apply($updateMipmaps: boolean): void
@@ -12990,18 +12979,20 @@ declare namespace CS {
             /** Texture format (Read Only).
             */
             public get format(): UnityEngine.TextureFormat;
+            /** Returns true if this texture array is Read/Write Enabled; otherwise returns false. For dynamic textures created from script, always returns true.
+            */
             public get isReadable(): boolean;
-            /** Retrieves a copy of the pixel color data for a given mip level of a given slice. The colors are represented by Color structs.
-            * @param arrayElement The array slice to read pixel data from.
-            * @param miplevel The mip level to read pixel data from. The default is 0.
-            * @returns An array that contains a copy of the requested pixel colors. 
+            /** Returns pixel colors of a single array slice.
+            * @param arrayElement Array slice to read pixels from.
+            * @param miplevel Mipmap level to read pixels from.
+            * @returns Array of pixel colors. 
             */
             public GetPixels($arrayElement: number, $miplevel: number): System.Array$1<UnityEngine.Color>
             public GetPixels($arrayElement: number): System.Array$1<UnityEngine.Color>
-            /** Retrieves a copy of the pixel color data for a given slice, at a given mip level. The colors are represented by lower-precision Color32 structs.
-            * @param arrayElement The array slice to read pixel data from.
-            * @param miplevel The mip level to read pixel data from. The default is 0.
-            * @returns An array that contains a copy of the requested pixel colors. 
+            /** Returns pixel colors of a single array slice.
+            * @param arrayElement Array slice to read pixels from.
+            * @param miplevel Mipmap level to read pixels from.
+            * @returns Array of pixel colors in low precision (8 bits/channel) format. 
             */
             public GetPixels32($arrayElement: number, $miplevel: number): System.Array$1<UnityEngine.Color32>
             public GetPixels32($arrayElement: number): System.Array$1<UnityEngine.Color32>
@@ -13021,7 +13012,7 @@ declare namespace CS {
             public SetPixels32($colors: System.Array$1<UnityEngine.Color32>, $arrayElement: number): void
             /** Actually apply all previous SetPixels changes.
             * @param updateMipmaps When set to true, mipmap levels are recalculated.
-            * @param makeNoLongerReadable When set to true, Unity discards the copy of pixel data in CPU-addressable memory after this operation.
+            * @param makeNoLongerReadable When set to true, system memory copy of a texture is released.
             */
             public Apply($updateMipmaps: boolean, $makeNoLongerReadable: boolean): void
             public Apply($updateMipmaps: boolean): void
@@ -13045,19 +13036,19 @@ declare namespace CS {
             */
             public get format(): UnityEngine.TextureFormat;
             public get isReadable(): boolean;
-            /** Retrieves a copy of the pixel color data for a given mip level of a given face of a given slice. The colors are represented by Color structs.
-            * @param face The cubemap face to read pixel data from.
-            * @param arrayElement The array element ("slice") to read pixel data from.
-            * @param miplevel The mip level to read pixel data from. The default is 0.
-            * @returns An array that contains a copy of the requested pixel colors, represented by Color structs. 
+            /** Returns pixel colors of a single array slice/face.
+            * @param face Cubemap face to read pixels from.
+            * @param arrayElement Array slice to read pixels from.
+            * @param miplevel Mipmap level to read pixels from.
+            * @returns Array of pixel colors. 
             */
             public GetPixels($face: UnityEngine.CubemapFace, $arrayElement: number, $miplevel: number): System.Array$1<UnityEngine.Color>
             public GetPixels($face: UnityEngine.CubemapFace, $arrayElement: number): System.Array$1<UnityEngine.Color>
-            /** Retrieves a copy of the pixel color data for a given face of a given slice, at a given mip level. The colors are represented by lower-precision Color32 structs.
-            * @param face The cubemap face to read pixel data from.
-            * @param arrayElement The array element ("slice") to read pixel data from.
-            * @param miplevel The mip level to read pixel data from. The default is 0.
-            * @returns An array that contains a copy of the requested pixel colors, represented by lower-precision Color32 structs. 
+            /** Returns pixel colors of a single array slice/face.
+            * @param face Cubemap face to read pixels from.
+            * @param arrayElement Array slice to read pixels from.
+            * @param miplevel Mipmap level to read pixels from.
+            * @returns Array of pixel colors in low precision (8 bits/channel) format. 
             */
             public GetPixels32($face: UnityEngine.CubemapFace, $arrayElement: number, $miplevel: number): System.Array$1<UnityEngine.Color32>
             public GetPixels32($face: UnityEngine.CubemapFace, $arrayElement: number): System.Array$1<UnityEngine.Color32>
@@ -13079,7 +13070,7 @@ declare namespace CS {
             public SetPixels32($colors: System.Array$1<UnityEngine.Color32>, $face: UnityEngine.CubemapFace, $arrayElement: number): void
             /** Actually apply all previous SetPixels changes.
             * @param updateMipmaps When set to true, mipmap levels are recalculated.
-            * @param makeNoLongerReadable When set to true, Unity discards the copy of pixel data in CPU-addressable memory after this operation.
+            * @param makeNoLongerReadable When set to true, system memory copy of a texture is released.
             */
             public Apply($updateMipmaps: boolean, $makeNoLongerReadable: boolean): void
             public Apply($updateMipmaps: boolean): void
@@ -14504,7 +14495,7 @@ declare namespace CS {
             protected [__keep_incompatibility]: never;
             public constructor()
         }
-        /** A that instructs Unity to serialize a field as a reference instead of as a value.
+        /** Instruct Unity to serialize a field as a reference.
         */
         class SerializeReference extends System.Attribute implements System.Runtime.InteropServices._Attribute {
             protected [__keep_incompatibility]: never;
@@ -14519,6 +14510,26 @@ declare namespace CS {
         interface ISerializationCallbackReceiver {
             OnBeforeSerialize(): void
             OnAfterDeserialize(): void
+        }
+        /** ShaderVariantCollection records which shader variants are actually used in each shader.
+        */
+        class ShaderVariantCollection extends UnityEngine.Object {
+            protected [__keep_incompatibility]: never;
+            /** Number of shaders in this collection (Read Only).
+            */
+            public get shaderCount(): number;
+            /** Number of total varians in this collection (Read Only).
+            */
+            public get variantCount(): number;
+            /** Is this ShaderVariantCollection already warmed up? (Read Only)
+            */
+            public get isWarmedUp(): boolean;
+            public Clear(): void
+            public WarmUp(): void
+            public Add($variant: UnityEngine.ShaderVariantCollection.ShaderVariant): boolean
+            public Remove($variant: UnityEngine.ShaderVariantCollection.ShaderVariant): boolean
+            public Contains($variant: UnityEngine.ShaderVariantCollection.ShaderVariant): boolean
+            public constructor()
         }
         /** Compute Shader asset.
         */
@@ -14747,26 +14758,6 @@ declare namespace CS {
             */
             public DispatchIndirect($kernelIndex: number, $argsBuffer: UnityEngine.ComputeBuffer, $argsOffset: number): void
             public DispatchIndirect($kernelIndex: number, $argsBuffer: UnityEngine.ComputeBuffer): void
-        }
-        /** ShaderVariantCollection records which shader variants are actually used in each shader.
-        */
-        class ShaderVariantCollection extends UnityEngine.Object {
-            protected [__keep_incompatibility]: never;
-            /** Number of shaders in this collection (Read Only).
-            */
-            public get shaderCount(): number;
-            /** Number of total varians in this collection (Read Only).
-            */
-            public get variantCount(): number;
-            /** Is this ShaderVariantCollection already warmed up? (Read Only)
-            */
-            public get isWarmedUp(): boolean;
-            public Clear(): void
-            public WarmUp(): void
-            public Add($variant: UnityEngine.ShaderVariantCollection.ShaderVariant): boolean
-            public Remove($variant: UnityEngine.ShaderVariantCollection.ShaderVariant): boolean
-            public Contains($variant: UnityEngine.ShaderVariantCollection.ShaderVariant): boolean
-            public constructor()
         }
         /** Defines the axes that can be snapped.
         */
@@ -15078,11 +15069,6 @@ declare namespace CS {
             * @param format The DefaultFormat format to look up.
             */
             public static GetGraphicsFormat($format: UnityEngine.Experimental.Rendering.DefaultFormat): UnityEngine.Experimental.Rendering.GraphicsFormat
-            /** Checks if the target platform supports the MSAA samples count in the RenderTextureDescriptor argument.
-            * @param desc The RenderTextureDescriptor to check.
-            * @returns If the target platform supports the given MSAA samples count of RenderTextureDescriptor, returns the given MSAA samples count. Otherwise returns a lower fallback MSAA samples count value that the target platform supports. 
-            */
-            public static GetRenderTextureSupportedMSAASampleCount($desc: UnityEngine.RenderTextureDescriptor): number
             public constructor()
         }
         /** Provides an interface to get time information from Unity.
@@ -18476,30 +18462,8 @@ declare namespace CS {
             */
             public static LoadImage($tex: UnityEngine.Texture2D, $data: System.Array$1<number>, $markNonReadable: boolean): boolean
             public static LoadImage($tex: UnityEngine.Texture2D, $data: System.Array$1<number>): boolean
-            /** Encodes this array into TGA format.
-            * @param array The byte array to convert.
-            * @param format The pixel format of the image data.
-            * @param width The width of the image data in pixels.
-            * @param height The height of the image data in pixels.
-            * @param rowBytes The length of a single row in bytes.
-            */
             public static EncodeArrayToTGA($array: System.Array, $format: UnityEngine.Experimental.Rendering.GraphicsFormat, $width: number, $height: number, $rowBytes?: number): System.Array$1<number>
-            /** Encodes this array into PNG format.
-            * @param array The byte array to convert.
-            * @param format The pixel format of the image data.
-            * @param width The width of the image data in pixels.
-            * @param height The height of the image data in pixels.
-            * @param rowBytes The length of a single row in bytes.
-            */
             public static EncodeArrayToPNG($array: System.Array, $format: UnityEngine.Experimental.Rendering.GraphicsFormat, $width: number, $height: number, $rowBytes?: number): System.Array$1<number>
-            /** Encodes this array into JPG format.
-            * @param array The byte array to convert.
-            * @param format The pixel format of the image data.
-            * @param width The width of the image data in pixels.
-            * @param height The height of the image data in pixels.
-            * @param rowBytes The length of a single row in bytes.
-            * @param quality JPG quality to encode with, 1..100 (default 75).
-            */
             public static EncodeArrayToJPG($array: System.Array, $format: UnityEngine.Experimental.Rendering.GraphicsFormat, $width: number, $height: number, $rowBytes?: number, $quality?: number): System.Array$1<number>
             public static EncodeArrayToEXR($array: System.Array, $format: UnityEngine.Experimental.Rendering.GraphicsFormat, $width: number, $height: number, $rowBytes?: number, $flags?: UnityEngine.Texture2D.EXRFlags): System.Array$1<number>
         }
@@ -18622,7 +18586,7 @@ declare namespace CS {
             /** Geographical device location latitude.
             */
             public get latitude(): number;
-            /** Geographical device location longitude.
+            /** Geographical device location latitude.
             */
             public get longitude(): number;
             /** Geographical device location altitude.
@@ -18638,36 +18602,26 @@ declare namespace CS {
             */
             public get timestamp(): number;
         }
-        /** Describes the location service status for a device.
+        /** Describes location service status.
         */
         enum LocationServiceStatus { Stopped = 0, Initializing = 1, Running = 2, Failed = 3 }
-        /** Provides methods that allow an application to access the device's location.
+        /** Interface into location functionality.
         */
         class LocationService extends System.Object {
             protected [__keep_incompatibility]: never;
-            /** Indicates whether the device allows access the application to access the location service.
+            /** Specifies whether location service is enabled in user settings.
             */
             public get isEnabledByUser(): boolean;
-            /** Returns the location service status.
+            /** Returns location service status.
             */
             public get status(): UnityEngine.LocationServiceStatus;
-            /** The last geographical location that the device registered.
+            /** Last measured device geographical location.
             */
             public get lastData(): UnityEngine.LocationInfo;
-            /** Starts location service updates.
-            * @param desiredAccuracyInMeters 
-            The service accuracy you want to use, in meters. This determines the accuracy of the device's last location coordinates. Higher values like 500 don't require the device to use its GPS chip and
-            thus save battery power. Lower values like 5-10 provide the best accuracy but require the GPS chip and thus use more battery power. The default value is 10 meters.
-            * @param updateDistanceInMeters 
-            The minimum distance, in meters, that the device must move laterally before Unity updates Input.location. Higher values like 500 produce fewer updates and are less resource intensive to process. The default is 10 meters.
+            /** Starts location service updates.  Last location coordinates could be.
             */
             public Start($desiredAccuracyInMeters: number, $updateDistanceInMeters: number): void
-            /** Starts location service updates.
-            * @param desiredAccuracyInMeters 
-            The service accuracy you want to use, in meters. This determines the accuracy of the device's last location coordinates. Higher values like 500 don't require the device to use its GPS chip and
-            thus save battery power. Lower values like 5-10 provide the best accuracy but require the GPS chip and thus use more battery power. The default value is 10 meters.
-            * @param updateDistanceInMeters 
-            The minimum distance, in meters, that the device must move laterally before Unity updates Input.location. Higher values like 500 produce fewer updates and are less resource intensive to process. The default is 10 meters.
+            /** Starts location service updates.  Last location coordinates could be.
             */
             public Start($desiredAccuracyInMeters: number): void
             public Start(): void
@@ -25617,11 +25571,6 @@ declare namespace CS {
             public GetGroundHit($hit: $Ref<UnityEngine.WheelHit>): boolean
             public constructor()
         }
-        class WebGLInput extends System.Object {
-            protected [__keep_incompatibility]: never;
-            public static get captureAllKeyboardInput(): boolean;
-            public static set captureAllKeyboardInput(value: boolean);
-        }
         /** Modes a Wind Zone can have, either Spherical or Directional.
         */
         enum WindZoneMode { Directional = 0, Spherical = 1 }
@@ -25971,8 +25920,6 @@ declare namespace CS {
         }
         class TsBehaviour extends UnityEngine.MonoBehaviour implements System.IDisposable {
             protected [__keep_incompatibility]: never;
-            public get Module(): XOR.ModuleInfo;
-            public set Module(value: XOR.ModuleInfo);
             public get IsActivated(): boolean;
             public get IsStarted(): boolean;
             public get IsDestroyed(): boolean;
@@ -26010,11 +25957,16 @@ declare namespace CS {
             protected [__keep_incompatibility]: never;
             public debugPort: number
             public get Env(): Puerts.JsEnv;
-            public get Loader(): XOR.MergeLoader;
+            public get Loader(): XOR.MixerLoader;
+            public Load($filepath: string): void
             public constructor()
         }
-        class MergeLoader extends System.Object implements Puerts.ILoader, Puerts.IModuleChecker, System.IDisposable {
+        class MixerLoader extends System.Object implements Puerts.ILoader, Puerts.IModuleChecker, System.IDisposable {
             protected [__keep_incompatibility]: never;
+            public get AppendExtension(): boolean;
+            public set AppendExtension(value: boolean);
+            public get Mode(): XOR.MixerLoader.RegexMode;
+            public set Mode(value: XOR.MixerLoader.RegexMode);
             public Dispose(): void
             public FileExists($filepath: string): boolean
             public ReadFile($filepath: string, $debugpath: $Ref<string>): string
@@ -26024,7 +25976,7 @@ declare namespace CS {
             public RemoveLoader($loader: Puerts.ILoader): boolean
             public GetLoaders($type: System.Type): System.Array$1<Puerts.ILoader>
             public constructor()
-            public constructor($other: XOR.MergeLoader)
+            public constructor($other: XOR.MixerLoader)
         }
         class Subscription extends System.Object {
             protected [__keep_incompatibility]: never;
@@ -26255,6 +26207,7 @@ declare namespace CS {
             public static SupportCommonJS($env: Puerts.JsEnv): void
             public static RequireXORModules($env: Puerts.JsEnv): void
             public static RequireXORModules($env: Puerts.JsEnv, $throwOnFailure: boolean): void
+            public static ComponentJSObjectCreator($env: Puerts.JsEnv): System.Func$3<XOR.TsComponent, string, Puerts.JSObject>
         }
         class TsComponentExtension extends System.Object {
             protected [__keep_incompatibility]: never;
@@ -26772,8 +26725,6 @@ declare namespace CS {
             public SetValue($obj: any, $value: any): void
             public static GetFieldFromHandle($handle: System.RuntimeFieldHandle): System.Reflection.FieldInfo
             public static GetFieldFromHandle($handle: System.RuntimeFieldHandle, $declaringType: System.RuntimeTypeHandle): System.Reflection.FieldInfo
-            public GetValueDirect($obj: System.TypedReference): any
-            public SetValueDirect($obj: System.TypedReference, $value: any): void
             public GetOptionalCustomModifiers(): System.Array$1<System.Type>
             public GetRequiredCustomModifiers(): System.Array$1<System.Type>
             public GetRawConstantValue(): any
@@ -26873,7 +26824,8 @@ declare namespace CS {
     namespace UnityEngine.Animations {
         /** An implementation of IPlayable that controls an animation RuntimeAnimatorController.
         */
-        class AnimatorControllerPlayable extends System.ValueType implements System.IEquatable$1<UnityEngine.Animations.AnimatorControllerPlayable>, UnityEngine.Playables.IPlayable {
+        class AnimatorControllerPlayable extends System.ValueType implements UnityEngine.Playables.IPlayable, System.IEquatable$1<UnityEngine.Animations.AnimatorControllerPlayable>
+        {
             protected [__keep_incompatibility]: never;
         }
     }
@@ -26917,10 +26869,6 @@ declare namespace CS {
             public Write($buffer: System.Array$1<number>, $offset: number, $count: number): void
             public WriteByte($value: number): void
             public static Synchronized($stream: System.IO.Stream): System.IO.Stream
-            public Read($destination: System.Span$1<number>): number
-            public Write($source: System.ReadOnlySpan$1<number>): void
-            public ReadAsync($destination: System.Memory$1<number>, $cancellationToken?: System.Threading.CancellationToken): System.Threading.Tasks.ValueTask$1<number>
-            public WriteAsync($source: System.ReadOnlyMemory$1<number>, $cancellationToken?: System.Threading.CancellationToken): $Task<any>
         }
         class File extends System.Object {
             protected [__keep_incompatibility]: never;
@@ -27241,7 +27189,7 @@ declare namespace CS {
             * @param call Callback function.
             */
             public AddListener($call: UnityEngine.Events.UnityAction): void
-            /** Remove a non persistent listener from the UnityEvent. If you have added the same listener multiple times, this method will remove all occurrences of it.
+            /** Remove a non persistent listener from the UnityEvent.
             * @param call Callback function.
             */
             public RemoveListener($call: UnityEngine.Events.UnityAction): void
@@ -27337,7 +27285,8 @@ declare namespace CS {
         Updating a probe's cubemap is a costly operation. Unity needs to render the entire Scene for each face of the cubemap, as well as perform special blurring in order to get glossy reflections. The impact on frame rate can be significant. Time-slicing helps maintaning a more constant frame rate during these updates by performing the rendering over several frames.
         */
         enum ReflectionProbeTimeSlicingMode { AllFacesAtOnce = 0, IndividualFaces = 1, NoTimeSlicing = 2 }
-        /** An enum that represents.
+        /**  The Graphics Tier Unity uses. You can only set a GraphicsTier in the Built-in Render Pipeline.
+        See Also: Graphics.activeTier.
         */
         enum GraphicsTier { Tier1 = 0, Tier2 = 1, Tier3 = 2 }
         /** Used to manage synchronisation between tasks on async compute queues and the graphics queue.
@@ -27613,12 +27562,6 @@ declare namespace CS {
     }
     namespace UnityEngine.TouchScreenKeyboard {
         enum Status { Visible = 0, Done = 1, Canceled = 2, LostFocus = 3 }
-        class Android extends System.Object {
-            protected [__keep_incompatibility]: never;
-            public static get closeKeyboardOnOutsideTap(): boolean;
-            public static set closeKeyboardOnOutsideTap(value: boolean);
-            public constructor()
-        }
     }
     namespace UnityEngine.RectTransform {
         interface ReapplyDrivenProperties {
@@ -28963,7 +28906,7 @@ declare namespace CS {
             CalculateLayoutInputHorizontal(): void
             CalculateLayoutInputVertical(): void
         }
-        class Image extends UnityEngine.UI.MaskableGraphic implements UnityEngine.UI.IMaterialModifier, UnityEngine.UI.IMaskable, UnityEngine.ICanvasRaycastFilter, UnityEngine.ISerializationCallbackReceiver, UnityEngine.UI.ICanvasElement, UnityEngine.UI.ILayoutElement, UnityEngine.UI.IClippable {
+        class Image extends UnityEngine.UI.MaskableGraphic implements UnityEngine.UI.IMaterialModifier, UnityEngine.UI.IMaskable, UnityEngine.ICanvasRaycastFilter, UnityEngine.UI.ICanvasElement, UnityEngine.ISerializationCallbackReceiver, UnityEngine.UI.ILayoutElement, UnityEngine.UI.IClippable {
             protected [__keep_incompatibility]: never;
             public get sprite(): UnityEngine.Sprite;
             public set sprite(value: UnityEngine.Sprite);
@@ -29775,49 +29718,6 @@ declare namespace CS {
         }
     }
     namespace Puerts {
-        class WebGL extends System.Object {
-            protected [__keep_incompatibility]: never;
-            public static GetBrowserEnv(): Puerts.JsEnv
-            public static GetBrowserEnv($loader: Puerts.ILoader, $debugPort?: number): Puerts.JsEnv
-        }
-        class JsEnv extends System.Object implements System.IDisposable {
-            protected [__keep_incompatibility]: never;
-            public static jsEnvs: System.Collections.Generic.List$1<Puerts.JsEnv>
-            public Backend: Puerts.Backend
-            public get Index(): number;
-            public ExecuteModule($filename: string): void
-            public Eval($chunk: string, $chunkName?: string): void
-            public ClearModuleCache(): void
-            public static ClearAllModuleCaches(): void
-            public AddLazyStaticWrapLoader($type: System.Type, $lazyStaticWrapLoader: System.Func$1<Puerts.TypeRegisterInfo>): void
-            public AddLazyStaticWrapLoaderGenericDefinition($typeDefinition: System.Type, $genericArgumentsType: System.Array$1<System.Type>, $wrapperDefinition: System.Type): void
-            public RegisterGeneralGetSet($type: System.Type, $getter: Puerts.GeneralGetter, $setter: Puerts.GeneralSetter): void
-            public GetTypeId($type: System.Type): number
-            public Tick(): void
-            public WaitDebugger(): void
-            public WaitDebuggerAsync(): $Task<any>
-            public Dispose(): void
-            public constructor()
-            public constructor($loader: Puerts.ILoader, $debugPort?: number)
-            public constructor($loader: Puerts.ILoader, $externalRuntime: System.IntPtr, $externalContext: System.IntPtr)
-            public constructor($loader: Puerts.ILoader, $debugPort: number, $externalRuntime: System.IntPtr, $externalContext: System.IntPtr)
-        }
-        interface JsEnv {
-            AutoUsing(): void;
-            UsingAction(...args: string[]): void;
-            UsingFunc(...args: string[]): void;
-            UsingGeneric($usingAction: boolean, ...types: System.Type[]): void;
-            GlobalListenerQuit(): void;
-            TryAutoUsing($printWarning?: boolean): void;
-            SupportCommonJS(): void;
-            RequireXORModules(): void;
-            RequireXORModules($throwOnFailure: boolean): void;
-            UsingTick(): void;
-        }
-        interface ILoader {
-            FileExists($filepath: string): boolean
-            ReadFile($filepath: string, $debugpath: $Ref<string>): string
-        }
         class ArrayBuffer extends System.Object {
             protected [__keep_incompatibility]: never;
             public Bytes: System.Array$1<number>
@@ -29908,10 +29808,49 @@ declare namespace CS {
             Invoke?: (isolate: System.IntPtr, info: System.IntPtr, argumentsLen: number) => any;
         }
         var JSConstructorCallback: { new(func: (isolate: System.IntPtr, info: System.IntPtr, argumentsLen: number) => any): JSConstructorCallback; }
+        class JsEnv extends System.Object implements System.IDisposable {
+            protected [__keep_incompatibility]: never;
+            public static jsEnvs: System.Collections.Generic.List$1<Puerts.JsEnv>
+            public Backend: Puerts.Backend
+            public get Index(): number;
+            public ExecuteModule($filename: string): void
+            public Eval($chunk: string, $chunkName?: string): void
+            public ClearModuleCache(): void
+            public static ClearAllModuleCaches(): void
+            public AddLazyStaticWrapLoader($type: System.Type, $lazyStaticWrapLoader: System.Func$1<Puerts.TypeRegisterInfo>): void
+            public AddLazyStaticWrapLoaderGenericDefinition($typeDefinition: System.Type, $genericArgumentsType: System.Array$1<System.Type>, $wrapperDefinition: System.Type): void
+            public RegisterGeneralGetSet($type: System.Type, $getter: Puerts.GeneralGetter, $setter: Puerts.GeneralSetter): void
+            public GetTypeId($type: System.Type): number
+            public Tick(): void
+            public WaitDebugger(): void
+            public WaitDebuggerAsync(): $Task<any>
+            public Dispose(): void
+            public constructor()
+            public constructor($loader: Puerts.ILoader, $debugPort?: number)
+            public constructor($loader: Puerts.ILoader, $externalRuntime: System.IntPtr, $externalContext: System.IntPtr)
+            public constructor($loader: Puerts.ILoader, $debugPort: number, $externalRuntime: System.IntPtr, $externalContext: System.IntPtr)
+        }
+        interface JsEnv {
+            AutoUsing(): void;
+            UsingAction(...args: string[]): void;
+            UsingFunc(...args: string[]): void;
+            UsingGeneric($usingAction: boolean, ...types: System.Type[]): void;
+            GlobalListenerQuit(): void;
+            TryAutoUsing($printWarning?: boolean): void;
+            SupportCommonJS(): void;
+            RequireXORModules(): void;
+            RequireXORModules($throwOnFailure: boolean): void;
+            ComponentJSObjectCreator(): System.Func$3<XOR.TsComponent, string, Puerts.JSObject>;
+            UsingTick(): void;
+        }
         class Backend extends System.Object {
             protected [__keep_incompatibility]: never;
             public constructor($env: Puerts.JsEnv)
             public constructor()
+        }
+        interface ILoader {
+            FileExists($filepath: string): boolean
+            ReadFile($filepath: string, $debugpath: $Ref<string>): string
         }
         class TypeRegisterInfo extends System.Object {
             protected [__keep_incompatibility]: never;
@@ -30432,6 +30371,11 @@ declare namespace CS {
         protected [__keep_incompatibility]: never;
         public constructor()
     }
+    class Sample_10 extends UnityEngine.MonoBehaviour {
+        protected [__keep_incompatibility]: never;
+        public m_Target: UnityEngine.GameObject
+        public constructor()
+    }
     class Starter extends UnityEngine.MonoBehaviour {
         protected [__keep_incompatibility]: never;
         public constructor()
@@ -30610,6 +30554,9 @@ declare namespace CS {
             public static UsingFunc($jsEnv: Puerts.JsEnv, ...args: string[]): void
             public static UsingGeneric($jsEnv: Puerts.JsEnv, $usingAction: boolean, ...types: System.Type[]): void
         }
+    }
+    namespace XOR.MixerLoader {
+        enum RegexMode { Original = 1, CommonJS = 2, ESM = 4, FileExtension = 8, Content = 16 }
     }
     namespace XOR.Settings {
         enum LOGGER { NONE = 0, INFO = 1, LOG = 2, WARN = 4, ERROR = 8 }

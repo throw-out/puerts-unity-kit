@@ -31,6 +31,7 @@ function register() {
     };
 }
 register();
+//export to csharp
 export function quit() {
     let _g = global ?? globalThis ?? this;
     let listener = _g?.xor?.globalListener;

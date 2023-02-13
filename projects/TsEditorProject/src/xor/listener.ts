@@ -43,6 +43,7 @@ declare global {
     }
 }
 
+//export to csharp
 export function quit() {
     let _g = global ?? globalThis ?? this;
     let listener: typeof xor.globalListener = _g?.xor?.globalListener;

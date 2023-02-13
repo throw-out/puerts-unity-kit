@@ -45,12 +45,6 @@ function field(options?: FieldOptions): PropertyDecorator {
     return (target, key) => {
     };
 }
-function getConstructor(guid: string): Function {
-    return RegisterTypes[guid];
-}
-function getGuid(type: Function): string {
-    return type[RegisterFlag];
-}
 
 function register() {
     let _g = (global ?? globalThis ?? this);
@@ -59,8 +53,6 @@ function register() {
     _g.xor.guid = guid;
     _g.xor.route = route;
     _g.xor.field = field;
-    _g.xor.getConstructor = getConstructor;
-    _g.xor.getGuid = getGuid;
 }
 register();
 
@@ -157,4 +149,12 @@ declare module "csharp" {
         }
     }
 }
-export { };
+
+//export to csharp
+export function create(component: CS.XOR.TsComponent, guid: string): TsComponentConstructor {
+    let ctor = (guid ? RegisterTypes[guid] : null) as new (...args: any[]) => TsComponentConstructor;
+    if (ctor && typeof (ctor) === "function") {
+        return new ctor(component);
+    }
+    return null;
+}

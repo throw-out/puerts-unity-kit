@@ -19,12 +19,6 @@ function field(options) {
     return (target, key) => {
     };
 }
-function getConstructor(guid) {
-    return RegisterTypes[guid];
-}
-function getGuid(type) {
-    return type[RegisterFlag];
-}
 function register() {
     let _g = (global ?? globalThis ?? this);
     _g.xor = _g.xor || {};
@@ -32,8 +26,6 @@ function register() {
     _g.xor.guid = guid;
     _g.xor.route = route;
     _g.xor.field = field;
-    _g.xor.getConstructor = getConstructor;
-    _g.xor.getGuid = getGuid;
 }
 register();
 /**重写GetComponent事件, 用于获取 */
@@ -75,5 +67,12 @@ function overrideGetComponent() {
     GameObject.prototype.GetComponents = createGetComponents(GameObject.prototype.GetComponents);
 }
 overrideGetComponent();
-export {};
+//export to csharp
+export function create(component, guid) {
+    let ctor = (guid ? RegisterTypes[guid] : null);
+    if (ctor && typeof (ctor) === "function") {
+        return new ctor(component);
+    }
+    return null;
+}
 //# sourceMappingURL=component.js.map

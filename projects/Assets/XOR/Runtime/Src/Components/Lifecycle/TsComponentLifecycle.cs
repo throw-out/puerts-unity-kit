@@ -246,21 +246,11 @@ namespace XOR
                     return null;
                 if (create == null)
                 {
-                    create = this.env.Eval<Func<TsComponent, string, Puerts.JSObject>>(@"
-(function () {
-    let _g = (global ?? globalThis ?? this);
-    return function (component, guid) {
-        if (!_g || !_g.xor || !_g.xor.getConstructor)
-            return null;
-        let ctor = _g.xor.getConstructor(guid);
-        if (typeof (ctor) === 'function') {
-            return new ctor(component);
-        }
-        return null;
-    }
-})();
-");
-                    if (create == null) Logger.LogWarning($"XOR Modules Unregisted.");
+                    create = this.env.ComponentJSObjectCreator();
+                    if (create == null)
+                    {
+                        Logger.LogWarning($"XOR Modules Unregisted.");
+                    }
                 }
                 return create?.Invoke(component, guid);
             }

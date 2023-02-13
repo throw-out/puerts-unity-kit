@@ -67,4 +67,5 @@ declare module "csharp" {
         }
     }
 }
+export declare function create(component: CS.XOR.TsComponent, guid: string): TsComponentConstructor;
 export {};

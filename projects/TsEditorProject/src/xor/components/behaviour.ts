@@ -625,7 +625,7 @@ class TsBehaviourConstructor {
         } else {
             console.warn(`Unresolved Module: ${className}\n${stack}`);
         }
-        this.component.Module = module;
+        this.component["Module"] = module;
     }
 
     //Getter 丶 Setter
