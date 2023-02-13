@@ -7,6 +7,7 @@
 ## 介绍
 > 本项目是基于[puerts](https://github.com/Tencent/puerts)开发的Unity模板项目,  默认使用[OpenUPM(cn)](https://openupm.cn/)作为Unity包管理器源;  
 > 本项目使用typescript脚本开发, 支持`commonjs`和`ESM`模块(`ESM`模块通过正则表达式匹配, 无需额外设置);  
+> 本项目支持webgl构建(`ESM`), 需注意webgl-support在OpenUMP中的版本`1.0.0-rc.1`不支持自动附加后缀名匹配, 需等待后续更新;  
 > 集成常用配置或工具(可选), 如[ScriptPacker](./docs/ScriptPacker.md)(`脚本打包`/`压缩`/`加密`/`验签`)丶[source-map-support](https://www.npmjs.com/package/source-map-support)丶[javascript-obfuscator](https://www.npmjs.com/package/javascript-obfuscator)等;
 >
 > 了解更多, 请查看[[文档页面]](./docs).
