@@ -54,7 +54,7 @@ namespace XOR
         public int ThreadId { get; private set; }
 
         public JsEnv Env { get; private set; }
-        public ILoader Loader { get; private set; }
+        public MixerLoader Loader { get; private set; }
         public ThreadOptions Options { get; private set; }
         private bool _running = false;
         private bool _disposed = false;
