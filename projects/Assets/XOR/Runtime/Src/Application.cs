@@ -80,7 +80,10 @@ namespace XOR
             __instance = this;
 
             Loader = new MixerLoader();
-            Loader.AddLoader(new DefaultLoader(), int.MaxValue);
+            Loader.AddLoader(new DefaultLoader(), int.MaxValue, filepath => !string.IsNullOrEmpty(filepath) && (
+                filepath.StartsWith("puerts/") ||
+                filepath.StartsWith("puer-commonjs/")
+            ));
 
 #if UNITY_EDITOR || !UNITY_WEBGL
             Env = new JsEnv(Loader, debugPort);

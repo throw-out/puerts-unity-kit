@@ -23,7 +23,10 @@ namespace XOR
             base.Init();
 
             Loader = new MixerLoader();
-            Loader.AddLoader(new DefaultLoader(), int.MaxValue);
+            Loader.AddLoader(new DefaultLoader(), int.MaxValue, filepath => !string.IsNullOrEmpty(filepath) && (
+                filepath.StartsWith("puerts/") ||
+                filepath.StartsWith("puer-commonjs/")
+            ));
 
             Env = new JsEnv(Loader);
             Env.TryAutoUsing();

@@ -108,14 +108,26 @@ namespace XOR
             return false;
         }
 
-        public void AddLoader(ILoader loader, int index = 0)
+        public void AddLoader(ILoader loader)
+        {
+            AddLoader(loader, 0, null);
+        }
+        public void AddLoader(ILoader loader, int index)
+        {
+            AddLoader(loader, index, null);
+        }
+        public void AddLoader(ILoader loader, Func<string, bool> match)
+        {
+            AddLoader(loader, 0, match);
+        }
+        public void AddLoader(ILoader loader, int index, Func<string, bool> match)
         {
             if (typeof(MixerLoader).IsAssignableFrom(loader.GetType()))
             {
                 throw new ArgumentException("Nested instance is not allowed");
             }
-            loaders.Add(new LoaderWraper(loader, index));
-            loaders.Sort((v1, v2) => v1.index > v2.index ? 1 : v1.index < v2.index ? -1 : 0);
+            loaders.Add(new LoaderWraper(loader, index, match));
+            loaders.Sort((v1, v2) => v1.Index > v2.Index ? 1 : v1.Index < v2.Index ? -1 : 0);
         }
         public bool RemoveLoader<T>() where T : ILoader
         {
@@ -134,7 +146,7 @@ namespace XOR
         {
             for (int i = loaders.Count - 1; i >= 0; i--)
             {
-                if (loaders[i].loader == loader)
+                if (loaders[i].Loader == loader)
                 {
                     loaders.RemoveAt(i);
                     return true;
@@ -151,9 +163,9 @@ namespace XOR
             var results = new List<ILoader>();
             foreach (var package in this.loaders)
             {
-                if (type.IsAssignableFrom(package.loader.GetType()))
+                if (type.IsAssignableFrom(package.Loader.GetType()))
                 {
-                    results.Add(package.loader);
+                    results.Add(package.Loader);
                 }
             }
             return results.ToArray();
@@ -229,29 +241,44 @@ namespace XOR
 
         private class LoaderWraper
         {
-            public readonly int index;
-            public readonly ILoader loader;
-            public LoaderWraper(ILoader loader, int index)
+            public int Index { get; private set; }
+            public ILoader Loader { get; private set; }
+            private Func<string, bool> match;
+            public LoaderWraper(ILoader loader, int index, Func<string, bool> match)
             {
-                this.loader = loader;
-                this.index = index;
+                this.Loader = loader;
+                this.match = match;
+                this.Index = index;
             }
             public bool FileExists(string filepath)
             {
-                return loader.FileExists(filepath);
+                if (this.match != null && !this.match(filepath))
+                {
+                    return false;
+                }
+                return Loader.FileExists(filepath);
             }
             public string ReadFile(string filepath, out string debugpath)
             {
-                return loader.ReadFile(filepath, out debugpath);
+                if (this.match != null && !this.match(filepath))
+                {
+                    debugpath = filepath;
+                    return null;
+                }
+                return Loader.ReadFile(filepath, out debugpath);
             }
             public bool IsESM(string filepath)
             {
-                return loader is IModuleChecker && ((IModuleChecker)loader).IsESM(filepath);
+                if (this.match != null && !this.match(filepath))
+                {
+                    return false;
+                }
+                return Loader is IModuleChecker && ((IModuleChecker)Loader).IsESM(filepath);
             }
             public void Dispose()
             {
-                if (typeof(IDisposable).IsAssignableFrom(loader.GetType()))
-                    ((IDisposable)loader).Dispose();
+                if (typeof(IDisposable).IsAssignableFrom(Loader.GetType()))
+                    ((IDisposable)Loader).Dispose();
             }
         }
         public enum RegexMode

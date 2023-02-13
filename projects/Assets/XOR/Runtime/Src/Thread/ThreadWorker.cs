@@ -529,11 +529,11 @@ namespace XOR
             }
             mloader.RemoveLoader<DefaultLoader>();
             //Create ThreadLoader
-            ThreadLoader tloader = new ThreadLoader(worker, new DefaultLoader(), filepath => !string.IsNullOrEmpty(filepath) && (
+            ThreadLoader tloader = new ThreadLoader(worker, new DefaultLoader());
+            mloader.AddLoader(tloader, int.MaxValue, filepath => !string.IsNullOrEmpty(filepath) && (
                 filepath.StartsWith("puerts/") ||
                 filepath.StartsWith("puer-commonjs/")
             ));
-            mloader.AddLoader(tloader, int.MaxValue);
 
             worker.Loader = mloader;
             worker.syncProcesses.Add(tloader);
