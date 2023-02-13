@@ -4,14 +4,16 @@
     "description": "ts project assets",
     "scripts": {
         "tsc:watch": "tsc -watch -p tsconfig.json",
-        "webpack:debug": "webpack --config webpack.config.js --watch",
-        "webpack:publish": "webpack --config webpack.config.js",
         "xor:compile": "tsc -p tsconfig.json",
         "xor:compile-esm": "tsc -p tsconfig.json --module ES6",
-        "xor:copy-js": "node ./xor-workflow.mjs copydir --filter=.js/.mjs --append=.txt --source=./output/xor --target=../Assets/XOR/Runtime/Resources/puerts/xor",
+        "xor:rm-js": "node ./xor-workflow.mjs rmdir --target=../Assets/XOR/Runtime/Resources/puerts/xor",
+        "xor:copy-cjs": "node ./xor-workflow.mjs copydir --filter=.js/.mjs/.cjs --extname=.cjs --source=./output/xor --target=../Assets/XOR/Runtime/Resources/puerts/xor",
+        "xor:copy-mjs": "node ./xor-workflow.mjs copydir --filter=.js/.mjs/.cjs --extname=.mjs --source=./output/xor --target=../Assets/XOR/Runtime/Resources/puerts/xor",
         "xor:copy-dts": "node ./xor-workflow.mjs copydir --filter=.ts --source=./output/xor --target=../Assets/XOR/Typing/puerts/xor",
-        "xor:publish": "npm run xor:compile && npm run xor:copy-js && npm run xor:copy-dts",
-        "xor:publish-esm": "npm run xor:compile-esm && npm run xor:copy-js && npm run xor:copy-dts && npm run xor:compile"
+        "xor:publish": 
+            "npm run xor:compile && npm run xor:rm-js && npm run xor:copy-cjs && npm run xor:copy-dts",
+        "xor:publish-esm": 
+            "npm run xor:compile-esm && npm run xor:rm-js && npm run xor:copy-mjs && npm run xor:copy-dts && npm run xor:compile"
     },
     "dependencies": {},
     "devDependencies": {

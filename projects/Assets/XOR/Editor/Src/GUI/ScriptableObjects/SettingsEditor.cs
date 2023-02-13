@@ -173,7 +173,6 @@ namespace XOR
             {
                 GUILayout.Space(HeightSpace);
                 _RenderScriptingDefine("THREAD_SAFE");
-                _RenderScriptingDefine("MODULE_CHECKER");
 
                 _RenderTooptip(Skin.infoIcon, Language.Default.Get("thread_safe_tip"));
 

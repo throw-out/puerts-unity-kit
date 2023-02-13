@@ -3,8 +3,9 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class Sample_03 : MonoBehaviour
+public class Sample_10 : MonoBehaviour
 {
+    public GameObject m_Target;
     void Start()
     {
         var app = XOR.Application.Instance;
@@ -13,7 +14,7 @@ public class Sample_03 : MonoBehaviour
             Debug.LogWarning($"{nameof(XOR.Application)} not running");
             return;
         }
-        var func = app.Load<Action>("samples/03_TsBehaviour", "init");
-        func();
+        var func = app.Load<Action<GameObject>>("samples/10_BuildDemo", "init");
+        func(m_Target);
     }
 }

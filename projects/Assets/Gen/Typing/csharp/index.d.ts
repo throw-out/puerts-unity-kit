@@ -25617,6 +25617,11 @@ declare namespace CS {
             public GetGroundHit($hit: $Ref<UnityEngine.WheelHit>): boolean
             public constructor()
         }
+        class WebGLInput extends System.Object {
+            protected [__keep_incompatibility]: never;
+            public static get captureAllKeyboardInput(): boolean;
+            public static set captureAllKeyboardInput(value: boolean);
+        }
         /** Modes a Wind Zone can have, either Spherical or Directional.
         */
         enum WindZoneMode { Directional = 0, Spherical = 1 }
@@ -26010,8 +26015,6 @@ declare namespace CS {
         }
         class MergeLoader extends System.Object implements Puerts.ILoader, Puerts.IModuleChecker, System.IDisposable {
             protected [__keep_incompatibility]: never;
-            public get AppendExtensionName(): string;
-            public set AppendExtensionName(value: string);
             public Dispose(): void
             public FileExists($filepath: string): boolean
             public ReadFile($filepath: string, $debugpath: $Ref<string>): string
@@ -26251,8 +26254,7 @@ declare namespace CS {
             public static TryAutoUsing($env: Puerts.JsEnv, $printWarning?: boolean): void
             public static SupportCommonJS($env: Puerts.JsEnv): void
             public static RequireXORModules($env: Puerts.JsEnv): void
-            public static RequireXORModules($env: Puerts.JsEnv, $isESM: boolean): void
-            public static RequireXORModules($env: Puerts.JsEnv, $isESM: boolean, $throwOnFailure: boolean): void
+            public static RequireXORModules($env: Puerts.JsEnv, $throwOnFailure: boolean): void
         }
         class TsComponentExtension extends System.Object {
             protected [__keep_incompatibility]: never;
@@ -29773,6 +29775,49 @@ declare namespace CS {
         }
     }
     namespace Puerts {
+        class WebGL extends System.Object {
+            protected [__keep_incompatibility]: never;
+            public static GetBrowserEnv(): Puerts.JsEnv
+            public static GetBrowserEnv($loader: Puerts.ILoader, $debugPort?: number): Puerts.JsEnv
+        }
+        class JsEnv extends System.Object implements System.IDisposable {
+            protected [__keep_incompatibility]: never;
+            public static jsEnvs: System.Collections.Generic.List$1<Puerts.JsEnv>
+            public Backend: Puerts.Backend
+            public get Index(): number;
+            public ExecuteModule($filename: string): void
+            public Eval($chunk: string, $chunkName?: string): void
+            public ClearModuleCache(): void
+            public static ClearAllModuleCaches(): void
+            public AddLazyStaticWrapLoader($type: System.Type, $lazyStaticWrapLoader: System.Func$1<Puerts.TypeRegisterInfo>): void
+            public AddLazyStaticWrapLoaderGenericDefinition($typeDefinition: System.Type, $genericArgumentsType: System.Array$1<System.Type>, $wrapperDefinition: System.Type): void
+            public RegisterGeneralGetSet($type: System.Type, $getter: Puerts.GeneralGetter, $setter: Puerts.GeneralSetter): void
+            public GetTypeId($type: System.Type): number
+            public Tick(): void
+            public WaitDebugger(): void
+            public WaitDebuggerAsync(): $Task<any>
+            public Dispose(): void
+            public constructor()
+            public constructor($loader: Puerts.ILoader, $debugPort?: number)
+            public constructor($loader: Puerts.ILoader, $externalRuntime: System.IntPtr, $externalContext: System.IntPtr)
+            public constructor($loader: Puerts.ILoader, $debugPort: number, $externalRuntime: System.IntPtr, $externalContext: System.IntPtr)
+        }
+        interface JsEnv {
+            AutoUsing(): void;
+            UsingAction(...args: string[]): void;
+            UsingFunc(...args: string[]): void;
+            UsingGeneric($usingAction: boolean, ...types: System.Type[]): void;
+            GlobalListenerQuit(): void;
+            TryAutoUsing($printWarning?: boolean): void;
+            SupportCommonJS(): void;
+            RequireXORModules(): void;
+            RequireXORModules($throwOnFailure: boolean): void;
+            UsingTick(): void;
+        }
+        interface ILoader {
+            FileExists($filepath: string): boolean
+            ReadFile($filepath: string, $debugpath: $Ref<string>): string
+        }
         class ArrayBuffer extends System.Object {
             protected [__keep_incompatibility]: never;
             public Bytes: System.Array$1<number>
@@ -29863,49 +29908,10 @@ declare namespace CS {
             Invoke?: (isolate: System.IntPtr, info: System.IntPtr, argumentsLen: number) => any;
         }
         var JSConstructorCallback: { new(func: (isolate: System.IntPtr, info: System.IntPtr, argumentsLen: number) => any): JSConstructorCallback; }
-        class JsEnv extends System.Object implements System.IDisposable {
-            protected [__keep_incompatibility]: never;
-            public static jsEnvs: System.Collections.Generic.List$1<Puerts.JsEnv>
-            public Backend: Puerts.Backend
-            public get Index(): number;
-            public ExecuteModule($filename: string): void
-            public Eval($chunk: string, $chunkName?: string): void
-            public ClearModuleCache(): void
-            public static ClearAllModuleCaches(): void
-            public AddLazyStaticWrapLoader($type: System.Type, $lazyStaticWrapLoader: System.Func$1<Puerts.TypeRegisterInfo>): void
-            public AddLazyStaticWrapLoaderGenericDefinition($typeDefinition: System.Type, $genericArgumentsType: System.Array$1<System.Type>, $wrapperDefinition: System.Type): void
-            public RegisterGeneralGetSet($type: System.Type, $getter: Puerts.GeneralGetter, $setter: Puerts.GeneralSetter): void
-            public GetTypeId($type: System.Type): number
-            public Tick(): void
-            public WaitDebugger(): void
-            public WaitDebuggerAsync(): $Task<any>
-            public Dispose(): void
-            public constructor()
-            public constructor($loader: Puerts.ILoader, $debugPort?: number)
-            public constructor($loader: Puerts.ILoader, $externalRuntime: System.IntPtr, $externalContext: System.IntPtr)
-            public constructor($loader: Puerts.ILoader, $debugPort: number, $externalRuntime: System.IntPtr, $externalContext: System.IntPtr)
-        }
-        interface JsEnv {
-            AutoUsing(): void;
-            UsingAction(...args: string[]): void;
-            UsingFunc(...args: string[]): void;
-            UsingGeneric($usingAction: boolean, ...types: System.Type[]): void;
-            GlobalListenerQuit(): void;
-            TryAutoUsing($printWarning?: boolean): void;
-            SupportCommonJS(): void;
-            RequireXORModules(): void;
-            RequireXORModules($isESM: boolean): void;
-            RequireXORModules($isESM: boolean, $throwOnFailure: boolean): void;
-            UsingTick(): void;
-        }
         class Backend extends System.Object {
             protected [__keep_incompatibility]: never;
             public constructor($env: Puerts.JsEnv)
             public constructor()
-        }
-        interface ILoader {
-            FileExists($filepath: string): boolean
-            ReadFile($filepath: string, $debugpath: $Ref<string>): string
         }
         class TypeRegisterInfo extends System.Object {
             protected [__keep_incompatibility]: never;

@@ -3,35 +3,65 @@ using System.IO;
 using Puerts;
 using UnityEngine;
 using System.Linq;
-#if UNITY_EDITOR
-using UnityEditor;
-#endif
 
 namespace XOR
 {
     public class Application : SingletonMonoBehaviour<Application>
     {
         public JsEnv Env { get; private set; } = null;
-        public MergeLoader Loader { get; private set; }
+        public MixerLoader Loader { get; private set; }
         public ushort debugPort = 9090;
 
         #region  Editor Debugger
 #if UNITY_EDITOR
         private static bool IsWaitDebugger
         {
-            get { return EditorPrefs.GetBool("Editor.DebugEnable"); }
-            set { EditorPrefs.SetBool("Editor.DebugEnable", value); }
+            get { return UnityEditor.EditorPrefs.GetBool("Editor.DebugEnable"); }
+            set { UnityEditor.EditorPrefs.SetBool("Editor.DebugEnable", value); }
         }
-        [MenuItem("PuerTS/Enable WaitDebugger")]
+        [UnityEditor.MenuItem("PuerTS/Enable WaitDebugger")]
         private static void Enable() { IsWaitDebugger = true; }
-        [MenuItem("PuerTS/Enable WaitDebugger", true)]
+        [UnityEditor.MenuItem("PuerTS/Enable WaitDebugger", true)]
         private static bool EnableValidate() { return !IsWaitDebugger; }
-        [MenuItem("PuerTS/Disable WaitDebugger")]
+        [UnityEditor.MenuItem("PuerTS/Disable WaitDebugger")]
         private static void Disable() { IsWaitDebugger = false; }
-        [MenuItem("PuerTS/Disable WaitDebugger", true)]
+        [UnityEditor.MenuItem("PuerTS/Disable WaitDebugger", true)]
         private static bool DisableValidate() { return IsWaitDebugger; }
 #endif
         #endregion
+
+        public void Load(string filepath)
+        {
+#if !UNITY_EDITOR && UNITY_WEBGL
+            this.Env.ExecuteModule(filepath);
+#else
+            if (this.Loader.IsESM(filepath))
+            {
+                this.Env.ExecuteModule(filepath);
+            }
+            else
+            {
+                this.Env.Eval($"require('{filepath}')");
+            }
+#endif
+        }
+        public TResult Load<TResult>(string filepath, string exportee = "")
+        {
+#if !UNITY_EDITOR && UNITY_WEBGL
+            return this.Env.ExecuteModule<TResult>(filepath, exportee);
+#else
+            if (this.Loader.IsESM(filepath))
+            {
+                return this.Env.ExecuteModule<TResult>(filepath, exportee);
+            }
+            else
+            {
+                return string.IsNullOrEmpty(exportee) ?
+                    this.Env.Eval<TResult>($"require('{filepath}');") :
+                    this.Env.Eval<TResult>($"require('{filepath}').{exportee};");
+            }
+#endif
+        }
 
         void Awake()
         {
@@ -43,15 +73,19 @@ namespace XOR
             }
             __instance = this;
 
-            bool isESM = Settings.Load().isESM;
-
-            Loader = new MergeLoader();
+            Loader = new MixerLoader();
             Loader.AddLoader(new DefaultLoader(), int.MaxValue);
 
+#if UNITY_EDITOR || !UNITY_WEBGL
             Env = new JsEnv(Loader, debugPort);
+#else
+            Env = Puerts.WebGL.GetBrowserEnv(Loader);
+#endif
             Env.TryAutoUsing();
             Env.RequireXORModules();
-            if (!isESM) Env.SupportCommonJS();
+#if !UNITY_EDITOR && UNITY_WEBGL
+            Env.SupportCommonJS();
+#endif
 #if UNITY_EDITOR
             if (IsWaitDebugger && debugPort > 0)
             {

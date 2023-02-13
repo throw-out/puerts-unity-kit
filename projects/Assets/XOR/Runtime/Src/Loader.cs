@@ -6,20 +6,34 @@ using Puerts;
 
 namespace XOR
 {
-    public class MergeLoader : ILoader, IDisposable, IModuleChecker
+    public class MixerLoader : ILoader, IDisposable, IModuleChecker
     {
         private static readonly Regex ESMImport = new Regex(@"(^import [\S ]+|\r?\nimport [\S ]+)");
         private static readonly Regex ESMExport = new Regex(@"(^export [\S ]+|\r?\nexport [\S ]+)");
-        private readonly List<PLoader> loaders;
         /// <summary>
-        /// 如果filepath不是合法的js文件名, 则为其追加此后缀名(默认:.js, 如为空表示不作处理)
+        /// 如果filepath不是合法的js文件名, 则为其追加后缀名后重试
         /// </summary>
-        public string AppendExtensionName { get; set; } = ".js";
+        /// <value></value>
+        private readonly string[] AppendExtensionNames = new string[]{
+            ".js",
+            ".cjs",
+            ".mjs",
+        };
+        private readonly List<LoaderWraper> loaders;
+        /// <summary>
+        /// 如果文件不是合法的扩展名, 自动追加扩展名重试
+        /// </summary>
+        /// <value></value>
+        public bool AppendExtension { get; set; } = true;
+        /// <summary>
+        /// 模块匹配规则
+        /// </summary>
+        public RegexMode Mode { get; set; } = RegexMode.Original | RegexMode.Content;
 
-        public MergeLoader() : this(null) { }
-        public MergeLoader(MergeLoader other)
+        public MixerLoader() : this(null) { }
+        public MixerLoader(MixerLoader other)
         {
-            this.loaders = new List<PLoader>();
+            this.loaders = new List<LoaderWraper>();
             if (other != null)
             {
                 this.loaders.AddRange(other.loaders);
@@ -37,53 +51,72 @@ namespace XOR
 
         public bool FileExists(string filepath)
         {
-            ExtensionValidate(ref filepath);
-            foreach (var ploader in loaders)
+            if (InnerFileExists(filepath))
             {
-                if (ploader.loader.FileExists(filepath))
-                    return true;
+                return true;
+            }
+            if (AppendExtension && !ExtensionNameValidate(filepath))
+            {
+                foreach (string extName in AppendExtensionNames)
+                {
+                    string newFilepath = filepath + extName;
+                    if (InnerFileExists(newFilepath))
+                    {
+                        return true;
+                    }
+                }
             }
             return false;
         }
         public string ReadFile(string filepath, out string debugpath)
         {
-            ExtensionValidate(ref filepath);
-            foreach (var ploader in loaders)
+            string script = InnerReadFile(filepath, out debugpath);
+            if (!string.IsNullOrEmpty(script))
+                return script;
+            if (AppendExtension && !ExtensionNameValidate(filepath))
             {
-                string script = ploader.loader.ReadFile(filepath, out debugpath);
-                if (!string.IsNullOrEmpty(script))
-                    return script; ;
+                foreach (string extName in AppendExtensionNames)
+                {
+                    string newFilepath = filepath + extName;
+                    if (!InnerFileExists(newFilepath))
+                        continue;
+                    script = InnerReadFile(newFilepath, out debugpath);
+                    if (!string.IsNullOrEmpty(script))
+                        return script;
+                }
             }
             debugpath = filepath;
             return null;
         }
         public bool IsESM(string filepath)
         {
-            ExtensionValidate(ref filepath);
-            foreach (var ploader in loaders)
+            if (InnerIsESM(filepath))
             {
-                if (!ploader.loader.FileExists(filepath))
-                    continue;
-                if (ploader.loader is IModuleChecker && ((IModuleChecker)ploader.loader).IsESM(filepath))
+                return true;
+            }
+            if (AppendExtension && !ExtensionNameValidate(filepath))
+            {
+                foreach (string extName in AppendExtensionNames)
                 {
-                    return true;
+                    string newFilepath = filepath + extName;
+                    if (InnerIsESM(newFilepath))
+                    {
+                        return true;
+                    }
                 }
-                string script = ploader.loader.ReadFile(filepath, out string debugpath);
-                //UnityEngine.Debug.Log("ExecuteModule: " + filepath + ", IsESM: " + (script != null && (ESMImport.IsMatch(script) || ESMExport.IsMatch(script))));
-                return script != null && (ESMImport.IsMatch(script) || ESMExport.IsMatch(script));
             }
             return false;
         }
+
         public void AddLoader(ILoader loader, int index = 0)
         {
-            if (typeof(MergeLoader).IsAssignableFrom(loader.GetType()))
+            if (typeof(MixerLoader).IsAssignableFrom(loader.GetType()))
             {
                 throw new ArgumentException("Nested instance is not allowed");
             }
-            loaders.Add(new PLoader(loader, index));
+            loaders.Add(new LoaderWraper(loader, index));
             loaders.Sort((v1, v2) => v1.index > v2.index ? 1 : v1.index < v2.index ? -1 : 0);
         }
-
         public bool RemoveLoader<T>() where T : ILoader
         {
             return RemoveLoader(typeof(T));
@@ -109,7 +142,6 @@ namespace XOR
             }
             return false;
         }
-
         public T[] GetLoaders<T>() where T : ILoader
         {
             return GetLoaders(typeof(T)) as T[];
@@ -126,14 +158,95 @@ namespace XOR
             }
             return results.ToArray();
         }
-        internal class PLoader
+
+        bool InnerFileExists(string filepath)
         {
-            public readonly ILoader loader;
+            foreach (var loader in loaders)
+            {
+                if (loader.FileExists(filepath))
+                    return true;
+            }
+            return false;
+        }
+        string InnerReadFile(string filepath, out string debugpath)
+        {
+            foreach (var loader in loaders)
+            {
+                string script = loader.ReadFile(filepath, out debugpath);
+                if (!string.IsNullOrEmpty(script))
+                    return script; ;
+            }
+            debugpath = filepath;
+            return null;
+        }
+        bool InnerIsESM(string filepath)
+        {
+            foreach (var loader in loaders)
+            {
+                if (!loader.FileExists(filepath))
+                    continue;
+                if (IsSupportMode(RegexMode.Original) && loader.IsESM(filepath))
+                {
+                    return true;
+                }
+                if (IsSupportMode(RegexMode.CommonJS))
+                {
+                    return false;
+                }
+                if (IsSupportMode(RegexMode.ESM))
+                {
+                    return true;
+                }
+                if (IsSupportMode(RegexMode.FileExtension))
+                {
+                    if (filepath.EndsWith(".mjs"))
+                        return true;
+                    if (filepath.EndsWith(".cjs"))
+                        return false;
+                }
+                if (IsSupportMode(RegexMode.Content))
+                {
+                    string script = loader.ReadFile(filepath, out string debugpath);
+                    return script != null && (ESMImport.IsMatch(script) || ESMExport.IsMatch(script));
+                }
+                break;
+            }
+            return false;
+        }
+        bool ExtensionNameValidate(string filepath)
+        {
+            return filepath.EndsWith(".js") ||
+                filepath.EndsWith(".cjs") ||
+                filepath.EndsWith(".mjs") ||
+                filepath.EndsWith(".json");
+        }
+
+
+        bool IsSupportMode(RegexMode mode)
+        {
+            return (this.Mode & mode) == mode;
+        }
+
+        private class LoaderWraper
+        {
             public readonly int index;
-            public PLoader(ILoader loader, int index)
+            public readonly ILoader loader;
+            public LoaderWraper(ILoader loader, int index)
             {
                 this.loader = loader;
                 this.index = index;
+            }
+            public bool FileExists(string filepath)
+            {
+                return loader.FileExists(filepath);
+            }
+            public string ReadFile(string filepath, out string debugpath)
+            {
+                return loader.ReadFile(filepath, out debugpath);
+            }
+            public bool IsESM(string filepath)
+            {
+                return loader is IModuleChecker && ((IModuleChecker)loader).IsESM(filepath);
             }
             public void Dispose()
             {
@@ -141,15 +254,28 @@ namespace XOR
                     ((IDisposable)loader).Dispose();
             }
         }
-
-        void ExtensionValidate(ref string filepath)
+        public enum RegexMode
         {
-            if (string.IsNullOrEmpty(AppendExtensionName))
-                return;
-            if (!filepath.EndsWith(".js") && !filepath.EndsWith(".cjs") && !filepath.EndsWith(".mjs") && !filepath.EndsWith(".json"))
-            {
-                filepath += AppendExtensionName;
-            }
+            /// <summary>
+            /// 优先使用原始IModuleChecker接口, 如未实现走默认逻辑
+            /// </summary>
+            Original = 1,
+            /// <summary>
+            /// 统一处理为commonjs模块
+            /// </summary>
+            CommonJS = 2,
+            /// <summary>
+            /// 统一处理为esm模块
+            /// </summary>
+            ESM = 4,
+            /// <summary>
+            /// 文件后缀名为mjs时为esm模块, 否则为commonjs模块
+            /// </summary>
+            FileExtension = 8,
+            /// <summary>
+            /// 通过内容匹配, 存在import或export时为esm模块, 否则为commonjs模块
+            /// </summary>
+            Content = 16,
         }
     }
 
@@ -196,7 +322,7 @@ namespace XOR
 #if UNITY_STANDALONE_WIN
                 path = path.Replace("/", "\\");
 #else
-            path = path.Replace("\\", "/");
+                path = path.Replace("\\", "/");
 #endif
                 return path;
             }

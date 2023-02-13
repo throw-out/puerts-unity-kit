@@ -89,6 +89,15 @@ public class PuertsFilter : Editor
                 new List<string>(){"System.IO.File", "GetAccessControl", "System.String"},
                 new List<string>(){"System.IO.File", "GetAccessControl", "System.String", "System.Security.AccessControl.AccessControlSections"},
                 new List<string>(){"System.IO.File", "Create", "System.String", "System.Int32", "System.IO.FileOptions", "System.Security.AccessControl.FileSecurity"},
+                new List<string>(){"System.IO.Stream", "Read", "System.Span<System.Byte>" },
+                new List<string>(){"System.IO.Stream", "Write", "System.ReadOnlySpan<System.Byte>" },
+                new List<string>(){"System.IO.Stream", "ReadAsync", "System.Memory<System.Byte>", "System.Threading.CancellationToken" },
+                new List<string>(){"System.IO.Stream", "WriteAsync", "System.ReadOnlyMemory<System.Byte>", "System.Threading.CancellationToken" },
+                //System.Reflection
+                new List<string>(){"System.Reflection.FieldInfo", "GetValueDirect", "System.TypedReference"},
+                new List<string>(){"System.Reflection.FieldInfo", "SetValueDirect", "System.TypedReference", "System.Object" },
+                //XOR
+                new List<string>(){"XOR.TsBehaviour", "Module"},
                 //Puerts
                 new List<string>(){"Puerts.JsEnv", "debugPort"},
                 new List<string>(){"Puerts.JsEnv", "OnJsEnvCreate"},

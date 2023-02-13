@@ -57,9 +57,6 @@ public class PuertsConfig
             return new List<Type>()
             {
                 //Unity Engine
-#if !UNITY_STANDALONE_WIN
-                typeof(Handheld), //Windows平台无法调用
-#endif
                 typeof(IEnumerator),
                 typeof(Coroutine),
                 typeof(UnityEventBase),
@@ -228,7 +225,9 @@ public class PuertsConfig
         "UnityEngine.AnimationInfo",
         "UnityEngine.UI.IMask",
         "UnityEngine.Caching",
+#if UNITY_WEBGL || UNITY_STANDALONE_WIN
         "UnityEngine.Handheld",
+#endif
         "UnityEngine.MeshRenderer",
         "UnityEngine.UI.DefaultControls",
         "UnityEngine.AnimationClipPair", //Obsolete
@@ -267,5 +266,9 @@ public class PuertsConfig
         "UnityEngine.GUITexture",
         "UnityEngine.ClusterInput",
         "UnityEngine.ClusterNetwork",
+#if UNITY_WEBGL
+        "UnityEngine.Ping",
+        "UnityEngine.Microphone",
+#endif
     };
 }

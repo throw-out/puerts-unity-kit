@@ -517,14 +517,14 @@ namespace XOR
             }
 
             //Create MergeLoader
-            MergeLoader mloader;
-            if (typeof(MergeLoader).IsAssignableFrom(loader.GetType()))
+            MixerLoader mloader;
+            if (typeof(MixerLoader).IsAssignableFrom(loader.GetType()))
             {
-                mloader = new MergeLoader((MergeLoader)loader);
+                mloader = new MixerLoader((MixerLoader)loader);
             }
             else
             {
-                mloader = new MergeLoader();
+                mloader = new MixerLoader();
                 mloader.AddLoader(loader);
             }
             mloader.RemoveLoader<DefaultLoader>();
