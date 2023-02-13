@@ -98,7 +98,7 @@ class Workflow {
         options.isEditor = true;
         options.debugger = debug;
 
-        const loader = new csharp.XOR.MergeLoader();
+        const loader = new csharp.XOR.MixerLoader();
         loader.AddLoader(new csharp.XOR.FileLoader(editorProject, Path.GetDirectoryName(editorProject)));
         const worker = new xor.ThreadWorker(loader, options);
         worker.start("./child/main");
