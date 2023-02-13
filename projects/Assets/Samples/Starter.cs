@@ -9,7 +9,6 @@ public class Starter : MonoBehaviour
 {
     void Awake()
     {
-        Debug.Log("XOR.Application: init");
         var app = XOR.Application.GetInstance();
 
 #if UNITY_EDITOR
@@ -40,7 +39,6 @@ public class Starter : MonoBehaviour
         }
         app.Loader.AddLoader(loader);
 #endif
-        Debug.Log("XOR.Application: Ready");
         var modules = new string[]{
             "main",
             "samples/01_TsComponent",
