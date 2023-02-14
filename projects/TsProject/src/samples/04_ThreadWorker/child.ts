@@ -13,4 +13,33 @@ setTimeout(() => {
     xor.globalWorker.post("main_test1", "child_thread_event");
 }, 2000);
 
+//test remote call
+function testRemote() {
+    console.log(`<b>==THREAD_REMOTE(${ThreadId}) BEGINE=============</b>`);
+    function remoteCall(title: string, fn: () => any) {
+        try {
+            let result = fn();
+            console.log(`${title}: success ->${result}`);
+        } catch (e) {
+            console.error(`${title}: failure ->\n${e}`);
+        }
+    }
+    let gameObject: CS.UnityEngine.GameObject;
+    //test static call
+    remoteCall("static getter", () => CS.UnityEngine.Application.dataPath);
+    remoteCall("static setter", () => CS.UnityEngine.Application.targetFrameRate = 60);
+    remoteCall("static construct", () => !!(gameObject = new CS.UnityEngine.GameObject("RemoteConstruct")));
+    remoteCall("static apply", () => !!CS.UnityEngine.GameObject.Find("RemoteConstruct"));
+
+    if (gameObject) {
+        //test instance call
+        gameObject = xor.globalWorker.remote(gameObject);
+        remoteCall("instance getter", () => gameObject.name);
+        remoteCall("instance setter", () => gameObject.name += "(1)");
+        remoteCall("instance apply", () => gameObject.GetComponent("Image"));
+    }
+    console.log(`<b>==THREAD_REMOTE(${ThreadId}) END=============</b>`);
+}
+setTimeout(testRemote, 3000);
+
 export { };

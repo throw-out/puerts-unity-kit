@@ -1,5 +1,5 @@
-import * as csharp from "csharp";
-declare const CLOSE_EVENT = "__e_close__";
+import $CS = CS;
+declare const CLOSE_EVENT = "close";
 /**
  * 跨JsEnv实例交互封装
  */
@@ -12,8 +12,8 @@ declare class ThreadWorkerConstructor {
     get isAlive(): boolean;
     /**线程是否已初始化完成 */
     get isInitialized(): boolean;
-    get source(): csharp.XOR.ThreadWorker;
-    constructor(loader: CS.Puerts.ILoader, options?: CS.XOR.ThreadOptions);
+    get source(): $CS.XOR.ThreadWorker;
+    constructor(loader: $CS.Puerts.ILoader, options?: $CS.XOR.ThreadOptions);
     start(filepath: string, isESM?: boolean): void;
     stop(): void;
     /**异步调用事件, 无返回值
@@ -34,6 +34,8 @@ declare class ThreadWorkerConstructor {
      * @param chunkName
      */
     eval(chunk: string, chunkName?: string): void;
+    /**将一个C#对象通过Remote进行调用 */
+    remote<T extends $CS.System.Object>(instance: T): T;
     /**监听ThreadWorker close消息(从子线程中请求), 只能由主线程处理, 返回flase将阻止ThreadWorker实例销毁
      * @param eventName
      * @param fn
@@ -73,6 +75,11 @@ declare class ThreadWorkerConstructor {
      */
     private _getResultId;
     private _isResultId;
+    /**remote proxy方法 */
+    private _isProxyType;
+    private _createTypeProxy;
+    private _createMethodProxy;
+    private _createInstanceProxy;
 }
 /**接口声明 */
 declare global {
@@ -85,5 +92,5 @@ declare global {
         const globalWorker: ThreadWorker;
     }
 }
-export declare function bind(worker: CS.XOR.ThreadWorker): void;
+export declare function bind(worker: $CS.XOR.ThreadWorker): void;
 export {};
