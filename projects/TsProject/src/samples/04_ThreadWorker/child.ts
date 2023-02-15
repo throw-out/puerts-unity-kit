@@ -28,15 +28,18 @@ function testRemote() {
     //test static call
     remoteCall("static getter", () => CS.UnityEngine.Application.dataPath);
     remoteCall("static setter", () => CS.UnityEngine.Application.targetFrameRate = 60);
-    remoteCall("static construct", () => !!(gameObject = new CS.UnityEngine.GameObject("RemoteConstruct")));
-    remoteCall("static apply", () => !!CS.UnityEngine.GameObject.Find("RemoteConstruct"));
+    remoteCall("static construct", () => {
+        gameObject = new CS.UnityEngine.GameObject("RemoteConstruct");
+        return gameObject?.GetType().FullName;
+    });
+    remoteCall("static apply", () => CS.UnityEngine.GameObject.Find("RemoteConstruct")?.GetType().FullName);
 
     if (gameObject) {
         //test instance call
         gameObject = xor.globalWorker.remote(gameObject);
         remoteCall("instance getter", () => gameObject.name);
         remoteCall("instance setter", () => gameObject.name += "(1)");
-        remoteCall("instance apply", () => gameObject.GetComponent("Image"));
+        remoteCall("instance apply", () => gameObject.SetActive(false));
     }
     console.log(`<b>==THREAD_REMOTE(${ThreadId}) END=============</b>`);
 }
