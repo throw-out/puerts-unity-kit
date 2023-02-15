@@ -1,5 +1,6 @@
 ## 介绍
-> 提供跨线程&跨Puerts.JsEnv实例交互(基于C#类型传递数据);
+> 提供`跨线程`&`跨Puerts.JsEnv实例`交互(基于C#类型传递数据);  
+> 允许子线程通过remote方式调用UnityEngine Api;
 
 ## 已知缺陷
 > 在C#脚本编译或进入Play模式时将会进行AppDomain Unload操作, 此时AppDomain将强制**跨线程**调用JsEnv.Dispose从而导致Unity Crash!
