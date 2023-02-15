@@ -1,5 +1,8 @@
 import $CS = CS;
 declare const CLOSE_EVENT = "close";
+type Construct<T = any> = Function & {
+    new (...args: any[]): T;
+};
 /**
  * 跨JsEnv实例交互封装
  */
@@ -8,6 +11,7 @@ declare class ThreadWorkerConstructor {
     private readonly worker;
     private readonly events;
     private _postIndex;
+    private _remoteRegistered;
     /**线程是否正在工作 */
     get isAlive(): boolean;
     /**线程是否已初始化完成 */
@@ -34,7 +38,13 @@ declare class ThreadWorkerConstructor {
      * @param chunkName
      */
     eval(chunk: string, chunkName?: string): void;
-    /**将一个C#对象通过Remote进行调用 */
+    /**创建Type Construct的remote Proxy对象, 以便于在子线程中调用(仅)主线程方法(仅限受支持的C#类型, 仅限子线程调用)
+     * @param construct
+     */
+    remote<T extends $CS.System.Object>(construct: Construct): Construct;
+    /**创建C#对象的Remote Proxy对象, 以便于在子线程中调用(仅)主线程方法(仅限受支持的C#类型, 仅限子线程调用)
+     * @param instance
+     */
     remote<T extends $CS.System.Object>(instance: T): T;
     /**监听ThreadWorker close消息(从子线程中请求), 只能由主线程处理, 返回flase将阻止ThreadWorker实例销毁
      * @param eventName

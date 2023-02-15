@@ -99,13 +99,30 @@ class ThreadWorkerConstructor {
             throw new Error("Invalid operation ");
         this.worker.PostEvalToChildThread(chunk, chunkName);
     }
-    /**将一个C#对象通过Remote进行调用 */
-    remote(instance) {
+    remote() {
         if (this.mainThread || !xor.globalWorker || xor.globalWorker.worker !== this.worker)
             throw new Error("Invalid operation ");
-        if (!instance || !(instance instanceof $CS.System.Object))
-            throw new Error("Invalid parameter exception");
-        return this._createInstanceProxy(instance);
+        if (typeof (arguments[0]) === "function") {
+            if (this._remoteRegistered) {
+                return arguments[0];
+            }
+            let cls = arguments[0], fullName = puer.$typeof(cls).FullName.replace(/\+/g, ".");
+            if (!this._isProxyType(fullName, cls)) {
+                return cls;
+            }
+            return this._createTypeProxy(fullName, cls);
+        }
+        else {
+            let instance = arguments[0];
+            if (!instance || !(instance instanceof $CS.System.Object)) {
+                return instance;
+            }
+            let fullName = instance.GetType().FullName.replace(/\+/g, "."), cls = Object.getPrototypeOf(instance).constructor;
+            if (!this._isProxyType(fullName, cls)) {
+                return instance;
+            }
+            return this._createInstanceProxy(fullName, cls, instance);
+        }
     }
     on() {
         let eventName = arguments[0], fn = arguments[1];
@@ -229,6 +246,7 @@ class ThreadWorkerConstructor {
         else {
             this.worker.ChildThreadHandler = (eventName, data) => onmessage(eventName, data, true);
             if (this.worker.Options && this.worker.Options.remote) {
+                this._remoteRegistered = true;
                 this.registerRemoteProxy();
             }
         }
@@ -272,46 +290,44 @@ class ThreadWorkerConstructor {
         if (!data) {
             return undefined;
         }
-        let result = CS;
+        let cls = CS;
         data.type?.split(".").forEach(name => {
-            if (result && name)
-                result = result[name];
+            if (cls && name)
+                cls = cls[name];
         });
-        if (result) {
-            switch (data.method) {
-                case "getter":
-                    if (data.instance) {
-                        result = data.instance[data.key];
-                    }
-                    else {
-                        result = result[data.key];
-                    }
-                    break;
-                case "setter":
-                    if (data.instance) {
-                        data.instance[data.key] = data.value;
-                    }
-                    else {
-                        result[data.key] = data.value;
-                    }
-                    result = undefined;
-                    break;
-                case "apply":
-                    let fn = data.instance ? data.instance[data.key] : result[data.key];
-                    if (fn) {
-                        result = fn.apply(data.instance, data.args);
-                    }
-                    else {
-                        result = undefined;
-                    }
-                    break;
-                case "construct":
-                    result = data.args ? new result(...data.args) : new result();
-                    break;
-                default:
-                    console.error('无效的参数调用');
-                    break;
-            }
+        if (!cls || typeof (cls) !== "function") {
+            return undefined;
+        }
+        let result;
+        switch (data.method) {
+            case "getter":
+                if (data.instance) {
+                    result = data.instance[data.key];
+                }
+                else {
+                    result = cls[data.key];
+                }
+                break;
+            case "setter":
+                if (data.instance) {
+                    data.instance[data.key] = data.value;
+                }
+                else {
+                    cls[data.key] = data.value;
+                }
+                break;
+            case "apply":
+                let fn = data.instance ? cls.prototype[data.key] : cls[data.key];
+                if (fn) {
+                    result = fn.apply(data.instance, data.args);
+                }
+                break;
+            case "construct":
+                result = data.args ? new cls(...data.args) : new cls();
+                break;
+            default:
+                console.error('无效的参数调用');
+                break;
         }
         if ( /**typeof (result) === "object" && */this._validate(result) === PackValidate.Unsupport) {
             result = undefined;
@@ -413,17 +429,20 @@ class ThreadWorkerConstructor {
         return result;
     }
     _unpackByRefs(data, refs) {
-        const { type: Type, value: Value, id: Id } = data;
+        const { type, value, id } = data;
         let result;
-        switch (Type) {
+        switch (type) {
             case $CS.XOR.ThreadWorker.ValueType.Object:
                 {
                     result = {};
-                    if (Id > 0)
-                        refs.set(Id, result); //add object ref
-                    let list = Value;
+                    if (id > 0)
+                        refs.set(id, result); //add object ref
+                    let list = value;
                     for (let i = 0; i < list.Count; i++) {
                         let member = list.get_Item(i);
+                        if (member.key == "type") {
+                            debugger;
+                        }
                         result[member.key] = this._unpackByRefs(member, refs);
                     }
                 }
@@ -431,9 +450,9 @@ class ThreadWorkerConstructor {
             case $CS.XOR.ThreadWorker.ValueType.Array:
                 {
                     result = [];
-                    if (Id > 0)
-                        refs.set(Id, result); //add object ref
-                    let list = Value;
+                    if (id > 0)
+                        refs.set(id, result); //add object ref
+                    let list = value;
                     for (let i = 0; i < list.Count; i++) {
                         let member = list.get_Item(i);
                         result[member.key] = this._unpackByRefs(member, refs);
@@ -441,27 +460,27 @@ class ThreadWorkerConstructor {
                 }
                 break;
             case $CS.XOR.ThreadWorker.ValueType.ArrayBuffer:
-                result = $CS.XOR.BufferUtil.ToBuffer(Value);
-                if (Id > 0)
-                    refs.set(Id, result); //add object ref
+                result = $CS.XOR.BufferUtil.ToBuffer(value);
+                if (id > 0)
+                    refs.set(id, result); //add object ref
                 break;
             case $CS.XOR.ThreadWorker.ValueType.RefObject:
-                if (refs.has(Value)) {
-                    result = refs.get(Value);
+                if (refs.has(value)) {
+                    result = refs.get(value);
                 }
                 else {
-                    result = `Error: ref id ${Value} not found`;
+                    result = `Error: ref id ${value} not found`;
                 }
                 break;
             case $CS.XOR.ThreadWorker.ValueType.Json:
                 result = JSON.parse(data.value);
-                if (Id > 0)
-                    refs.set(Id, result); //add object ref
+                if (id > 0)
+                    refs.set(id, result); //add object ref
                 break;
             default:
-                result = Value;
-                if (Id > 0)
-                    refs.set(Id, result); //add object ref
+                result = value;
+                if (id > 0)
+                    refs.set(id, result); //add object ref
                 break;
         }
         return result;
@@ -588,7 +607,7 @@ class ThreadWorkerConstructor {
             }
         });
     }
-    _createMethodProxy(fullName, name, fn) {
+    _createMethodProxy(fullName, name, fn, instance) {
         return new Proxy(fn, {
             apply: (target, thisArg, argArray) => {
                 let event = {
@@ -596,7 +615,7 @@ class ThreadWorkerConstructor {
                     key: name,
                     args: argArray,
                     type: fullName,
-                    instance: thisArg instanceof $CS.System.Object ? thisArg : undefined,
+                    instance: instance,
                 };
                 if (this._validate(event) === PackValidate.Unsupport) {
                     throw new Error("Invalid parameter exception");
@@ -605,26 +624,20 @@ class ThreadWorkerConstructor {
             }
         });
     }
-    _createInstanceProxy(instance) {
-        let methodProxies, fullName, cls;
+    _createInstanceProxy(fullName, cls, instance) {
+        let methodProxies;
         return new Proxy(instance, {
             get: (target, name) => {
                 if (typeof (name) !== "string") {
                     return instance[name];
                 }
                 //create method proxy
-                if (!cls)
-                    cls = Object.getPrototypeOf(instance).constructor;
                 let d = Object.getOwnPropertyDescriptor(cls.prototype, name);
                 if (d && !d.set && !d.get && typeof (d.value) === "function") {
-                    if (fullName === undefined) {
-                        fullName = puer.$typeof(cls)?.FullName?.replace(/\+/g, ".") || "";
-                    }
                     if (!methodProxies)
                         methodProxies = {};
                     if (!(name in methodProxies)) {
-                        methodProxies[name] = this._createMethodProxy(fullName, name, d.value);
-                        methodProxies[name] = null; //TODO 死循环??
+                        methodProxies[name] = this._createMethodProxy(fullName, name, d.value, instance);
                     }
                     return methodProxies[name];
                 }
@@ -632,7 +645,8 @@ class ThreadWorkerConstructor {
                 let event = {
                     method: "getter",
                     instance: instance,
-                    key: name
+                    key: name,
+                    type: fullName,
                 };
                 if (this._validate(event) === PackValidate.Unsupport) {
                     throw new Error("Invalid parameter exception");
@@ -644,7 +658,8 @@ class ThreadWorkerConstructor {
                     method: "setter",
                     instance: instance,
                     key: name,
-                    value: newValue
+                    value: newValue,
+                    type: fullName,
                 };
                 if (this._validate(event) === PackValidate.Unsupport) {
                     throw new Error("Invalid parameter exception");
