@@ -139,7 +139,7 @@ class ThreadWorkerConstructor {
     /**创建Type Construct的remote Proxy对象, 以便于在子线程中调用(仅)主线程方法(仅限受支持的C#类型, 仅限子线程调用)
      * @param construct 
      */
-    public remote<T extends $CS.System.Object>(construct: Construct): Construct;
+    public remote<T extends Construct<$CS.System.Object>>(construct: T): T;
     /**创建C#对象的Remote Proxy对象, 以便于在子线程中调用(仅)主线程方法(仅限受支持的C#类型, 仅限子线程调用)
      * @param instance 
      */

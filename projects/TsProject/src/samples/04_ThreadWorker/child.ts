@@ -26,13 +26,15 @@ function testRemote() {
     }
     let gameObject: CS.UnityEngine.GameObject;
     //test static call
-    remoteCall("static getter", () => CS.UnityEngine.Application.dataPath);
-    remoteCall("static setter", () => CS.UnityEngine.Application.targetFrameRate = 60);
+    const Application = xor.globalWorker.remote(CS.UnityEngine.Application),
+        GameObject = xor.globalWorker.remote(CS.UnityEngine.GameObject);
+    remoteCall("static getter", () => Application.targetFrameRate);
+    remoteCall("static setter", () => Application.targetFrameRate = 60);
     remoteCall("static construct", () => {
-        gameObject = new CS.UnityEngine.GameObject("RemoteConstruct");
+        gameObject = new GameObject("RemoteConstruct");
         return gameObject?.GetType().FullName;
     });
-    remoteCall("static apply", () => CS.UnityEngine.GameObject.Find("RemoteConstruct")?.GetType().FullName);
+    remoteCall("static apply", () => GameObject.Find("RemoteConstruct")?.GetType().FullName);
 
     if (gameObject) {
         //test instance call
