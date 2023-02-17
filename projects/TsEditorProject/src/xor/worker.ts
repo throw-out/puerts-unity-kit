@@ -597,33 +597,47 @@ class ThreadWorkerConstructor {
         return fullName.startsWith("UnityEngine") && fullName !== "UnityEngine.Debug";
     }
     private _createTypeProxy(fullName: string, cls: Construct) {
-        let methodProxies: { [key: string]: Function };
+        let methodProxies: { [key: string]: Function } = {};
+        let descriptors = Object.getOwnPropertyDescriptors(cls);
+        Object.keys(descriptors).forEach(key => {
+            let d = descriptors[key];
+            if (!d || d.set || d.get || typeof (d.value) !== "function")
+                return;
+            methodProxies[key] = null;
+        });
+
         return new Proxy(cls, {
             get: (target, name) => {
                 if (typeof (name) !== "string") {
                     return cls[name];
                 }
-                //create method proxy
-                let d = Object.getOwnPropertyDescriptor(cls, name);
-                if (d && !d.set && !d.get && typeof (d.value) === "function") {
-                    if (!methodProxies) methodProxies = {};
-                    if (!(name in methodProxies)) {
-                        methodProxies[name] = this._createMethodProxy(fullName, name, d.value);
+                //get method proxy
+                if (name in methodProxies) {
+                    let func = methodProxies[name];
+                    if (!func) {
+                        func = Object.getOwnPropertyDescriptor(cls, name).value;
+                        func = methodProxies[name] = this._createMethodProxy(fullName, name, func);
                     }
-                    return methodProxies[name];
+                    return func;
                 }
                 //getter
-                let event: RemoteRequest = {
-                    method: "getter",
-                    type: fullName,
-                    key: name as string
-                };
-                if (this._validate(event) === PackValidate.Unsupport) {
-                    throw new Error("Invalid parameter exception");
+                else {
+                    let event: RemoteRequest = {
+                        method: "getter",
+                        type: fullName,
+                        key: name as string
+                    };
+                    if (this._validate(event) === PackValidate.Unsupport) {
+                        throw new Error("Invalid parameter exception");
+                    }
+                    return this.postSync(REMOTE_EVENT, event);
                 }
-                return this.postSync(REMOTE_EVENT, event);
             },
             set: (target, name, newValue) => {
+                if (typeof (name) !== "string") {
+                    cls[name] = newValue;
+                    return true;
+                }
                 let event: RemoteRequest = {
                     method: "setter",
                     type: fullName,
@@ -667,34 +681,47 @@ class ThreadWorkerConstructor {
         })
     }
     private _createInstanceProxy<T extends $CS.System.Object>(fullName: string, cls: Construct, instance: T): T {
-        let methodProxies: { [key: string]: Function };
+        let methodProxies: { [key: string]: Function } = {};
+        let descriptors = Object.getOwnPropertyDescriptors(cls.prototype);
+        Object.keys(descriptors).forEach(key => {
+            let d = descriptors[key];
+            if (!d || d.set || d.get || typeof (d.value) !== "function")
+                return;
+            methodProxies[key] = null;
+        });
         return new Proxy(instance, {
             get: (target, name) => {
                 if (typeof (name) !== "string") {
                     return instance[name];
                 }
-                //create method proxy
-                let d = Object.getOwnPropertyDescriptor(cls.prototype, name);
-                if (d && !d.set && !d.get && typeof (d.value) === "function") {
-                    if (!methodProxies) methodProxies = {};
-                    if (!(name in methodProxies)) {
-                        methodProxies[name] = this._createMethodProxy(fullName, name, d.value, instance);
+                //get method proxy
+                if (name in methodProxies) {
+                    let func = methodProxies[name];
+                    if (!func) {
+                        func = Object.getOwnPropertyDescriptor(cls.prototype, name).value;
+                        func = methodProxies[name] = this._createMethodProxy(fullName, name, func, instance);
                     }
-                    return methodProxies[name];
+                    return func;
                 }
                 //getter
-                let event: RemoteRequest = {
-                    method: "getter",
-                    instance: instance,
-                    key: name as string,
-                    type: fullName,
-                };
-                if (this._validate(event) === PackValidate.Unsupport) {
-                    throw new Error("Invalid parameter exception");
+                else {
+                    let event: RemoteRequest = {
+                        method: "getter",
+                        instance: instance,
+                        key: name as string,
+                        type: fullName,
+                    };
+                    if (this._validate(event) === PackValidate.Unsupport) {
+                        throw new Error("Invalid parameter exception");
+                    }
+                    return this.postSync(REMOTE_EVENT, event);
                 }
-                return this.postSync(REMOTE_EVENT, event);
             },
             set: (target, name, newValue) => {
+                if (typeof (name) !== "string") {
+                    instance[name] = newValue;
+                    return true;
+                }
                 let event: RemoteRequest = {
                     method: "setter",
                     instance: instance,
