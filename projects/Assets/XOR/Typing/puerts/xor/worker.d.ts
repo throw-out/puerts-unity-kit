@@ -46,6 +46,11 @@ declare class ThreadWorkerConstructor {
      * @param instance
      */
     remote<T extends $CS.System.Object>(instance: T): T;
+    /**从remote对象上获取原始对象
+     * @param instance
+     * @returns
+     */
+    local<T extends $CS.System.Object>(instance: T): T;
     /**监听ThreadWorker close消息(从子线程中请求), 只能由主线程处理, 返回flase将阻止ThreadWorker实例销毁
      * @param eventName
      * @param fn

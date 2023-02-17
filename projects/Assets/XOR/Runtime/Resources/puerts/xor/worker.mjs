@@ -1,7 +1,7 @@
 var $CS = CS;
 let List_Object = puer.$generic($CS.System.Collections.Generic.List$1, $CS.System.Object);
 const INVOKE_TICK = Symbol("INVOKE_TICK");
-const CLOSE_EVENT = "close", RESULT_EVENT = "##__result__##", REMOTE_EVENT = "##__remote__##";
+const CLOSE_EVENT = "close", RESULT_EVENT = "##__result__##", REMOTE_EVENT = "##__remote__##", REMOTE_REMOTE_OBJECT = Symbol("__remote_object__"), REMOTE_LOCAL_OBJECT = Symbol("__local_object__");
 /**
  * 跨JsEnv实例交互封装
  */
@@ -117,12 +117,38 @@ class ThreadWorkerConstructor {
             if (!instance || !(instance instanceof $CS.System.Object)) {
                 return instance;
             }
-            let fullName = instance.GetType().FullName.replace(/\+/g, "."), cls = Object.getPrototypeOf(instance).constructor;
-            if (!this._isProxyType(fullName, cls)) {
-                return instance;
+            let remoteObject = instance[REMOTE_REMOTE_OBJECT];
+            if (!remoteObject) {
+                let fullName = instance.GetType().FullName.replace(/\+/g, "."), cls = Object.getPrototypeOf(instance).constructor;
+                if (!this._isProxyType(fullName, cls)) {
+                    return instance;
+                }
+                remoteObject = this._createInstanceProxy(fullName, cls, instance);
+                Object.defineProperty(instance, REMOTE_REMOTE_OBJECT, {
+                    configurable: false,
+                    enumerable: false,
+                    writable: false,
+                    value: remoteObject,
+                });
+                Object.defineProperty(instance, REMOTE_LOCAL_OBJECT, {
+                    configurable: false,
+                    enumerable: false,
+                    writable: false,
+                    value: instance,
+                });
             }
-            return this._createInstanceProxy(fullName, cls, instance);
+            return remoteObject;
         }
+    }
+    /**从remote对象上获取原始对象
+     * @param instance
+     * @returns
+     */
+    local(instance) {
+        if (!instance) {
+            return instance;
+        }
+        return instance[REMOTE_LOCAL_OBJECT] ?? instance;
     }
     on() {
         let eventName = arguments[0], fn = arguments[1];

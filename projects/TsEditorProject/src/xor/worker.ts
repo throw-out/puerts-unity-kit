@@ -8,7 +8,9 @@ const INVOKE_TICK = Symbol("INVOKE_TICK");
 
 const CLOSE_EVENT = "close",
     RESULT_EVENT = "##__result__##",
-    REMOTE_EVENT = "##__remote__##";
+    REMOTE_EVENT = "##__remote__##",
+    REMOTE_REMOTE_OBJECT = Symbol("__remote_object__"),
+    REMOTE_LOCAL_OBJECT = Symbol("__local_object__");
 
 type Construct<T = any> = Function & { new(...args: any[]): T };
 
@@ -161,13 +163,39 @@ class ThreadWorkerConstructor {
             if (!instance || !(instance instanceof $CS.System.Object)) {
                 return instance;
             }
-            let fullName: string = instance.GetType().FullName.replace(/\+/g, "."),
-                cls: Construct = Object.getPrototypeOf(instance).constructor;
-            if (!this._isProxyType(fullName, cls)) {
-                return instance;
+            let remoteObject = instance[REMOTE_REMOTE_OBJECT];
+            if (!remoteObject) {
+                let fullName: string = instance.GetType().FullName.replace(/\+/g, "."),
+                    cls: Construct = Object.getPrototypeOf(instance).constructor;
+                if (!this._isProxyType(fullName, cls)) {
+                    return instance;
+                }
+                remoteObject = this._createInstanceProxy(fullName, cls, instance);
+                Object.defineProperty(instance, REMOTE_REMOTE_OBJECT, {
+                    configurable: false,
+                    enumerable: false,
+                    writable: false,
+                    value: remoteObject,
+                });
+                Object.defineProperty(instance, REMOTE_LOCAL_OBJECT, {
+                    configurable: false,
+                    enumerable: false,
+                    writable: false,
+                    value: instance,
+                });
             }
-            return this._createInstanceProxy(fullName, cls, instance);
+            return remoteObject;
         }
+    }
+    /**从remote对象上获取原始对象
+     * @param instance 
+     * @returns 
+     */
+    public local<T extends $CS.System.Object>(instance: T): T {
+        if (!instance) {
+            return instance;
+        }
+        return instance[REMOTE_LOCAL_OBJECT] ?? instance;
     }
 
     /**监听ThreadWorker close消息(从子线程中请求), 只能由主线程处理, 返回flase将阻止ThreadWorker实例销毁

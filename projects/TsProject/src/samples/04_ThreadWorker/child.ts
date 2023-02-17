@@ -37,9 +37,17 @@ function testRemote() {
     if (gameObject) {
         //test instance call
         gameObject = xor.globalWorker.remote(gameObject);
+        gameObject = xor.globalWorker.remote(gameObject);       //duplicate creation remote object, but return the same instance.
         remoteCall("instance getter", () => gameObject.name);
         remoteCall("instance setter", () => gameObject.name += "(1)");
-        remoteCall("instance apply", () => gameObject.SetActive(false));
+        remoteCall("instance apply", () => {
+            gameObject.SetActive(false);
+            return "ok";
+        });
+
+        //test instance restore
+        gameObject = xor.globalWorker.local(gameObject);
+        remoteCall("restore getter", () => gameObject.name);
     }
     console.log(`<b>==THREAD_REMOTE(${ThreadId}) END=============</b>`);
 }
