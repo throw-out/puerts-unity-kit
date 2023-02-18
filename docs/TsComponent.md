@@ -39,7 +39,7 @@
 | 装饰器  | 描述  |
 | ------------ | ------------ |
 | `@xor.guid(string): ClassDecorator`   |  定义组件guid(⚠⚠⚠此语句应由xor生成和管理, 与class声明绑定, 用户不应该手动创建丶修改) |
-| `@xor.route(string): ClassDecorator`   |  定义组件路由(唯一值), 后续可使用此值获取j组件实例(相比较guid更符合人类阅读和记忆) |
+| `@xor.route(string): ClassDecorator`   |  定义组件路由(唯一值), 后续可使用此值获取j组件实例(相比较guid更符合人类阅读和记忆的习惯) |
 | `@xor.field({...}): PropertyDecorator`   |  定义序列化字段详情, 可设置RawType丶默认值丶Range(仅限number) |
 
 </details>
