@@ -2,23 +2,24 @@
 > 一个单独的序列化类, 可用于保存数据丶挂载UnityEngine.Object对象等操作;
 
 ## 定义
-> 继承: [XOR.TsProperties](../projects/Assets/XOR/Runtime/Src/Components/TsProperties.cs) → [UnityEngine.MonoBehaviour](https://docs.unity3d.com/ScriptReference/MonoBehaviour.html)
+> [`C#`]继承: [XOR.TsProperties](../projects/Assets/XOR/Runtime/Src/Components/TsProperties.cs) → [UnityEngine.MonoBehaviour](https://docs.unity3d.com/ScriptReference/MonoBehaviour.html)  
 
-## 方法
 <details>
-<summary>查看详情</summary>
+<summary>接口详情</summary>
 
-| 名称  | 描述  |
+| 方法  | 描述  |
 | ------------ | ------------ |
-| GetProperties   |  获取所有序列化成员 |
-| SetProperty  | (EditorOnly)设置键值  |
-| SetPropertyListener | (EditorOnly)设置键值更新回调 |
+| `XOR.Serializables.ResultPair[] GetProperties()`   |  获取所有序列化成员 |
+| `void SetProperty(string, object)`  | (EditorOnly)设置键值  |
+| `void SetPropertyListener(Action<string, object>)` | (EditorOnly)设置键值更新回调 |
 </details>
 
+## 内置类型
+> 请参照[TsComponent内置类型](./TsComponent.md#内置类型)
 
 ## 简单演示
-> - 示例场景:[projects/Assets/Samples/02_TsProperties](../projects/Assets/Samples/02_TsProperties)  
-> - 示例typescript代码: [projects/TsProject/src/samples/02_TsProperties.ts](../projects/TsProject/src/samples/02_TsProperties.ts)
+> 示例场景:[projects/Assets/Samples/02_TsProperties](../projects/Assets/Samples/02_TsProperties)  
+> 示例typescript代码: [projects/TsProject/src/samples/02_TsProperties.ts](../projects/TsProject/src/samples/02_TsProperties.ts)  
 
 ![image](https://user-images.githubusercontent.com/45587825/217222792-42495cf8-cec1-4ad2-92ea-6908d83f43af.png)
 ```typescript
