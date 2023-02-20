@@ -12,30 +12,38 @@
 - AST分析服务运行在子线程中, 指定value时的表达式必需要能在子线程中访问: `例如UnityEngine.Vector2.right是可以的, 而UnityEngine.Application.dataPath不可以`.
 
 ## 定义
-> 继承: [XOR.TsComponent](../projects/Assets/XOR/Runtime/Src/Components/TsComponent.cs) →  [XOR.TsBehaviour](./TsBehaviour.md)
+> [`C#`]继承: [XOR.TsComponent](../projects/Assets/XOR/Runtime/Src/Components/TsComponent.cs) →  [XOR.TsBehaviour](./TsBehaviour.md)  
 
-## 成员
 <details>
-<summary>查看详情</summary>
+<summary>接口详情</summary>
 
-| 名称  | 描述  |
+| 成员  | 描述  |
 | ------------ | ------------ |
-| JSObject   |  其创建的[Puerts.JSObject](./???)对象 |
+| `Puerts.JSObject JSObject{ get; }`   |  其创建的[Puerts.JSObject](./???)对象 |
+
+| 方法  | 描述  |
+| ------------ | ------------ |
+| `static void Register(Puerts.JsEnv)`   |  注册TsCompoent使用的Puerts.JsEnv实例 |
+| `static void GC()`   |  回收未正常释放的XOR.TsComponent对象(`例如使用Object.DestroyImmediate时, OnDestroy不会被正常调用`) |
+| `static void PrintStatus()`   |  打印所有实例状态(先执行一次GC) |
+| `XOR.Serializables.ResultPair[] GetProperties()`   |  获取所有序列化成员 |
+| `void SetProperty(string, object)`  | (EditorOnly)设置键值  |
+| `void SetPropertyListener(Action<string, object>)` | (EditorOnly)设置键值更新回调 |
 </details>
 
-## 方法
-<details>
-<summary>查看详情</summary>
+> [`ts`]继承: [xor.TsComponent](../projects/TsEditorProject/src/xor/components/component.ts) →  [xor.TsBehaviour](./TsBehaviour.md)  
 
-| 名称  | 描述  |
+<details>
+<summary>接口详情</summary>
+
+| 装饰器  | 描述  |
 | ------------ | ------------ |
-| Register   |  注册TsCompoent使用的Puerts.JsEnv实例 |
-| GC   |  回收未正常释放的XOR.TsComponent对象(`例如使用Object.DestroyImmediate时, OnDestroy不会被正常调用`) |
-| PrintStatus   |  打印所有实例状态(先执行一次GC) |
-| GetProperties   |  获取所有序列化成员 |
-| SetProperty  | (EditorOnly)设置键值  |
-| SetPropertyListener | (EditorOnly)设置键值更新回调 |
+| `@xor.guid(string): ClassDecorator`   |  定义组件guid(⚠⚠⚠此语句应由xor生成和管理, 与class声明绑定, 用户不应该手动创建丶修改) |
+| `@xor.route(string): ClassDecorator`   |  定义组件路由(唯一值), 后续可使用此值获取j组件实例(相比较guid更符合人类阅读和记忆的习惯) |
+| `@xor.field({...}): PropertyDecorator`   |  定义序列化字段详情, 可设置RawType丶默认值丶Range(仅限number) |
+
 </details>
+
 
 ## 内置类型
 <details>
@@ -55,8 +63,8 @@
 </details>
 
 ## 基础类型演示
-> - 示例场景:[projects/Assets/Samples/01_TsComponent](../projects/Assets/Samples/01_TsComponent)
-> - 示例typescript代码: [projects/TsProject/src/samples/01_TsComponent.ts](../projects/TsProject/src/samples/01_TsComponent.ts)
+> 示例场景:[projects/Assets/Samples/01_TsComponent](../projects/Assets/Samples/01_TsComponent)  
+> 示例typescript代码: [projects/TsProject/src/samples/01_TsComponent.ts](../projects/TsProject/src/samples/01_TsComponent.ts)  
 
 ![image](https://user-images.githubusercontent.com/45587825/216535611-dddbc03e-d9d8-4f92-9b75-edb6a435b9f6.png)
 
@@ -72,7 +80,7 @@
 ![image](https://user-images.githubusercontent.com/45587825/216808157-d8eaeee8-bcf9-410f-895f-c20ecf04901d.png)
 
 ## 自定义扩展类型演示
-> 此处演示实现请查看[示例](../projects/Assets/Samples/01_TsComponent/CustomTypes)中的[TsComponent](../projects/Assets/Samples/01_TsComponent/CustomTypes/Runtime/TsComponent.cs)和[SerializablesEditor](../projects/Assets/Samples/01_TsComponent/CustomTypes/Editor/SerializablesEditor.cs)
+> 相关代码请查看[示例](../projects/Assets/Samples/01_TsComponent/CustomTypes)中的[TsComponent](../projects/Assets/Samples/01_TsComponent/CustomTypes/Runtime/TsComponent.cs)和[SerializablesEditor](../projects/Assets/Samples/01_TsComponent/CustomTypes/Editor/SerializablesEditor.cs)
 
 ![image](https://user-images.githubusercontent.com/45587825/216751394-12e34267-cee4-40ed-9269-8efa5e10320a.png)
 

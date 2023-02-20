@@ -7,6 +7,12 @@ namespace XOR
 {
     public static class ScriptPacker
     {
+        /// <summary>
+        /// 将Dictionary<相对路径, 脚本内容>打包为二进制数据, 此时可进行压缩丶加密丶加签等操作
+        /// </summary>
+        /// <param name="scripts"></param>
+        /// <param name="decorators"></param>
+        /// <returns></returns>
         public static byte[] Pack(Dictionary<string, string> scripts, params object[] decorators)
         {
             ISignature auth = decorators.FirstOrDefault(d => d is ISignature) as ISignature;
@@ -32,6 +38,12 @@ namespace XOR
             }
         }
 
+        /// <summary>
+        /// Pack的逆操作, 按需进行解压丶解密丶验签等操作
+        /// </summary>
+        /// <param name="data"></param>
+        /// <param name="decorators"></param>
+        /// <returns></returns>
         public static Dictionary<string, string> Unpack(byte[] data, params object[] decorators)
         {
             return Unpack(data, true, decorators);
