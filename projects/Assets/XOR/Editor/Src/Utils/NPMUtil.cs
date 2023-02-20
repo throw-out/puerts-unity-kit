@@ -23,12 +23,12 @@ namespace XOR
             if (package.dependencies != null)
                 modules.AddRange(package.dependencies.Keys);
             if (package.devDependencies != null)
-                modules.AddRange(package.dependencies.Keys);
+                modules.AddRange(package.devDependencies.Keys);
 
             var dirpath = Path.GetDirectoryName(packagePath);
             for (int i = modules.Count - 1; i >= 0; i--)
             {
-                if (Directory.Exists(Path.Combine(dirpath, modules[i])))
+                if (Directory.Exists(Path.Combine(dirpath, "node_modules", modules[i])))
                 {
                     modules.RemoveAt(i);
                 }
@@ -43,7 +43,7 @@ namespace XOR
         {
             return true;
         }
-        
+
         [System.Serializable]
         private class Package
         {
