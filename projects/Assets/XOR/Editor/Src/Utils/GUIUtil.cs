@@ -206,7 +206,7 @@ namespace XOR
             return UnityEditor.EditorUtility.DisplayDialog(
                 Language.Default.Get("tip"),
                 string.Format(Language.Default.Get("dependents_uninstall"), string.Join("\n", modules)),
-                Language.Default.Get("ok"),
+                Language.Default.Get("confirm"),
                 Language.Default.Get("cancel")
             );
         }
