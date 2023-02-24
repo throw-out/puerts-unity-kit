@@ -48,7 +48,7 @@ namespace XOR
             TextAsset asset = Resources.Load<TextAsset>(path);
             if (asset == null || string.IsNullOrEmpty(asset.text))
                 return null;
-            return Unity.Plastic.Newtonsoft.Json.JsonConvert.DeserializeObject<Dictionary<string, I18nData>>(asset.text);
+            return Newtonsoft.Json.JsonConvert.DeserializeObject<Dictionary<string, I18nData>>(asset.text);
         }
 
         public static void Reload()

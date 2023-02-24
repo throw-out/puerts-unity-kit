@@ -15,7 +15,7 @@ namespace XOR
         public static string[] CheckDependentsInstall(string packagePath)
         {
             var content = File.ReadAllText(packagePath);
-            var package = Unity.Plastic.Newtonsoft.Json.JsonConvert.DeserializeObject<Package>(content);
+            var package = Newtonsoft.Json.JsonConvert.DeserializeObject<Package>(content);
             if (package == null)
                 return null;
 
