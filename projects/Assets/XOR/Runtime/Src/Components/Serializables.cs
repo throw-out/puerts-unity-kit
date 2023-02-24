@@ -134,6 +134,7 @@ namespace XOR.Serializables
                 List<IPair> results = new List<IPair>();
                 foreach (var m in GetAccessor().Select(func => func(component)))
                 {
+                    if (m == null) continue;
                     results.AddRange(m);
                 }
                 return results;
