@@ -431,9 +431,9 @@ namespace XOR
                 {
                     filepath = filepath?.ToLower();
                 }
-                if (scripts.ContainsKey(filepath))
+                if (this.scripts.ContainsKey(filepath))
                 {
-                    scripts.Remove(filepath);
+                    this.scripts.Remove(filepath);
                 }
                 this.scripts.Add(filepath, _script.Value);
             }
