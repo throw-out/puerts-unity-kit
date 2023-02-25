@@ -158,5 +158,12 @@ namespace XOR
                 throw new ArgumentNullException();
             TsComponentLifecycle.Register(env);
         }
+        /// <summary>
+        /// 移除已注册的Puerts.JsEnv实例
+        /// </summary>
+        public static void Unregister()
+        {
+            TsComponentLifecycle.Unregister();
+        }
     }
 }

@@ -31,6 +31,10 @@ namespace XOR
                 CreateJSObject(components);
             }
         }
+        public static void Unregister()
+        {
+            runtime = null;
+        }
 
         public static WeakReference<GameObject> GetReference(GameObject gameObject)
         {

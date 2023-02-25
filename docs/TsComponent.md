@@ -24,6 +24,7 @@
 | 方法  | 描述  |
 | ------------ | ------------ |
 | `static void Register(Puerts.JsEnv)`   |  注册TsCompoent使用的Puerts.JsEnv实例 |
+| `static void Unregister()`   |  移除已注册的Puerts.JsEnv实例 |
 | `static void GC()`   |  回收未正常释放的XOR.TsComponent对象(`例如使用Object.DestroyImmediate时, OnDestroy不会被正常调用`) |
 | `static void PrintStatus()`   |  打印所有实例状态(先执行一次GC) |
 | `XOR.Serializables.ResultPair[] GetProperties()`   |  获取所有序列化成员 |
