@@ -96,15 +96,15 @@ namespace XOR
                     "public",
                     "protected",
                     "private",
-                    "FullType/public",
-                    "FullType/protected",
-                    "FullType/private",
+                    "[FullName]/public",
+                    "[FullName]/protected",
+                    "[FullName]/private",
                 }, null, null, null, selectIndex =>
                 {
                     string code = XOR.Serializables.TsProperties.Utility.GenerateDeclareCode(
                         component.GetProperties(),
                         (selectIndex % 3) == 0 ? "declare public" : (selectIndex % 3) == 1 ? "declare protected" : "declare private",
-                        selectIndex >= 0
+                        selectIndex >= 3
                     );
                     var editor = new TextEditor();
                     editor.text = code;
