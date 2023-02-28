@@ -1,18 +1,19 @@
 [![license](https://img.shields.io/badge/license-MIT-blue.svg)](./LICENSE)
 [![](https://img.shields.io/github/issues/throw-out/puerts-unity-kit.svg)](https://github.com/throw-out/puerts-unity-kit/issues)
 
-- **请悉知: 当前项目处于预览期, 其功能并不完善, 其中部分代码可能会在未来版本中进行修改或删除.**
-- **如果你有好想法或任何问题, 请提交[[PR]](https://github.com/throw-out/puerts-unity-kit/pulls)和[[ISSUES]](https://github.com/throw-out/puerts-unity-kit/issues).**
+- **如果你对本项目感兴趣, 请点击`star`支持.**  
+- **如果你有任何想法或疑问, 请提交[[PR]](https://github.com/throw-out/puerts-unity-kit/pulls)和[[ISSUES]](https://github.com/throw-out/puerts-unity-kit/issues)反馈.**  
+- **请悉知: 当前项目中的`TsComponent`丶`ThreadWorker`模块尚未经广泛验证, 其功能或许存在缺陷, 如果你在使用中遇到任何问题请及时通过[[ISSUES]](https://github.com/throw-out/puerts-unity-kit/issues)反馈.**
 
 ## 介绍
-> 本项目是基于[puerts](https://github.com/Tencent/puerts)开发的Unity模板项目,  默认使用[OpenUPM(cn)](https://openupm.cn/)作为Unity包管理器源;  
-> 本项目使用typescript脚本开发, 运行时支持`commonjs`和`ESM`模块(匹配规则请查看[MixerLoader.Mode](./projects/Assets/XOR/Runtime/Src/Loader.cs));  
-> 本项目支持webgl构建(`ESM`), 使用webgl构建请务必先翻阅[源仓库](https://github.com/zombieyang/puerts_unity_webgl_demo)中[《如何从原有的PuerTS项目中迁移过来？》](https://github.com/zombieyang/puerts_unity_webgl_demo/wiki/%E5%A6%82%E4%BD%95%E4%BB%8E%E5%8E%9F%E6%9C%89%E7%9A%84PuerTS%E9%A1%B9%E7%9B%AE%E4%B8%AD%E8%BF%81%E7%A7%BB%E8%BF%87%E6%9D%A5%EF%BC%9F)一文;  
-> 集成常用配置或工具(可选), 如[ScriptPacker](./docs/ScriptPacker.md)(`脚本打包`/`压缩`/`加密`/`验签`)丶[source-map-support](https://www.npmjs.com/package/source-map-support)丶[javascript-obfuscator](https://www.npmjs.com/package/javascript-obfuscator)等;
+> - 本项目是基于[puerts](https://github.com/Tencent/puerts)开发的Unity模板项目,  默认使用[OpenUPM(cn)](https://openupm.cn/)作为Unity包管理器源;  
+> - 本项目使用typescript脚本开发, 运行时支持`commonjs`和`ESM`模块(匹配规则请查看[MixerLoader.Mode](./projects/Assets/XOR/Runtime/Src/Loader.cs));  
+> - 本项目支持webgl构建(`ESM`), 使用webgl构建请务必先翻阅[源仓库](https://github.com/zombieyang/puerts_unity_webgl_demo)中[《如何从原有的PuerTS项目中迁移过来？》](https://github.com/zombieyang/puerts_unity_webgl_demo/wiki/%E5%A6%82%E4%BD%95%E4%BB%8E%E5%8E%9F%E6%9C%89%E7%9A%84PuerTS%E9%A1%B9%E7%9B%AE%E4%B8%AD%E8%BF%81%E7%A7%BB%E8%BF%87%E6%9D%A5%EF%BC%9F)一文;  
+> - 集成常用配置或工具(可选), 如[ScriptPacker](./docs/ScriptPacker.md)(`脚本打包`/`压缩`/`加密`/`验签`)丶[source-map-support](https://www.npmjs.com/package/source-map-support)丶[javascript-obfuscator](https://www.npmjs.com/package/javascript-obfuscator)等;
 >
 > 了解更多, 请查看[[文档页面]](./docs).
 
->`[2023/02/13]`需注意webgl-support在OpenUMP中的版本`1.0.0-rc.1`不支持自动附加后缀名匹配, 需等待后续更新
+> `[2023/02/13]`需注意webgl-support在OpenUMP中的最新版本`1.0.0-rc.1`不支持自动附加后缀名匹配, 需等待后续更新
 
 主要功能:
 - TsBehaviour:
