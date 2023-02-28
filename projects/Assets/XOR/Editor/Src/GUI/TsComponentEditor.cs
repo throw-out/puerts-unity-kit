@@ -54,8 +54,8 @@ namespace XOR
                 return;
             }
             program = EditorApplicationUtil.GetProgram();
-            statement = program?.GetStatement(TsComponentHelper.GetGuid(component));
-            if (statement != null && statement.version != TsComponentHelper.GetVersion(component))
+            statement = program?.GetStatement(TsComponentHelper.Guid.Get(component));
+            if (statement != null && statement.version != TsComponentHelper.Version.Get(component))
             {
                 TsComponentHelper.RebuildProperties(component, statement);
             }
@@ -127,9 +127,9 @@ namespace XOR
 
         void _RenderModule()
         {
-            string guid = component != null ? TsComponentHelper.GetGuid(component) : string.Empty;
-            string route = component != null ? TsComponentHelper.GetRoute(component) : string.Empty;
-            string version = component != null ? TsComponentHelper.GetVersion(component) : string.Empty;
+            string guid = component != null ? TsComponentHelper.Guid.Get(component) : string.Empty;
+            string route = component != null ? TsComponentHelper.Route.Get(component) : string.Empty;
+            string version = component != null ? TsComponentHelper.Version.Get(component) : string.Empty;
 
             using (new EditorGUI.DisabledScope(true))
             {
@@ -211,79 +211,22 @@ namespace XOR
             if (component == null)
                 return;
             TsComponentHelper.ClearProperties(component);
-            TsComponentHelper.SetGuid(component, guid);
+            TsComponentHelper.Guid.Set(component, guid);
             TsComponentHelper.SetDirty(component);
         }
 
     }
     internal static class TsComponentHelper
     {
-        const BindingFlags Flags = BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic;
-        static FieldInfo _guidField;
-        static FieldInfo _routeField;
-        static FieldInfo _versionField;
-        static FieldInfo _onPropertyChange;
-        static FieldInfo guidField
-        {
-            get
-            {
-                if (_guidField == null) _guidField = typeof(TsComponent).GetField("guid", Flags);
-                return _guidField;
-            }
-        }
-        static FieldInfo routeField
-        {
-            get
-            {
-                if (_routeField == null) _routeField = typeof(TsComponent).GetField("route", Flags);
-                return _routeField;
-            }
-        }
-        static FieldInfo versionField
-        {
-            get
-            {
-                if (_versionField == null) _versionField = typeof(TsComponent).GetField("version", Flags);
-                return _versionField;
-            }
-        }
-        static FieldInfo onPropertyChange
-        {
-            get
-            {
-                if (_onPropertyChange == null) _onPropertyChange = typeof(TsComponent).GetField("onPropertyChange", Flags);
-                return _onPropertyChange;
-            }
-        }
+        public static readonly PropertyAccessor<TsComponent, string> Guid = new PropertyAccessor<TsComponent, string>("guid");
+        public static readonly PropertyAccessor<TsComponent, string> Route = new PropertyAccessor<TsComponent, string>("route");
+        public static readonly PropertyAccessor<TsComponent, string> Version = new PropertyAccessor<TsComponent, string>("version");
 
-        public static string GetGuid(TsComponent component)
-        {
-            return guidField.GetValue(component) as string;
-        }
-        public static string GetRoute(TsComponent component)
-        {
-            return routeField.GetValue(component) as string;
-        }
-        public static string GetVersion(TsComponent component)
-        {
-            return versionField.GetValue(component) as string;
-        }
-        public static void SetGuid(TsComponent component, string value)
-        {
-            guidField.SetValue(component, value);
-        }
-        public static void SetRoute(TsComponent component, string value)
-        {
-            routeField.SetValue(component, value);
-        }
-        public static void SetVersion(TsComponent component, string value)
-        {
-            versionField.SetValue(component, value);
-        }
+        static readonly PropertyAccessor<TsComponent, Action<string, object>> OnPropertyChange = new PropertyAccessor<TsComponent, Action<string, object>>("onPropertyChange");
 
         public static void ChangePropertyEvent(RootWrap root, TsComponent component, string key)
         {
-            Action<string, object> func = onPropertyChange?.GetValue(component) as Action<string, object>;
+            Action<string, object> func = OnPropertyChange.Get(component);
             if (func == null)
             {
                 return;
@@ -409,7 +352,7 @@ namespace XOR
                 index++;
             }
 
-            TsComponentHelper.SetVersion(component, statement.version);
+            TsComponentHelper.Version.Set(component, statement.version);
             TsComponentHelper.SetDirty(component);
         }
         public static void ClearProperties(TsComponent component)
@@ -417,7 +360,7 @@ namespace XOR
             ComponentWrap<TsComponent> cw = ComponentWrap<TsComponent>.Create();
             cw.ClearProperties(component);
 
-            TsComponentHelper.SetVersion(component, default);
+            TsComponentHelper.Version.Set(component, default);
             TsComponentHelper.SetDirty(component);
         }
 
@@ -522,7 +465,7 @@ namespace XOR
             var components = gameObject.GetComponentsInChildren<XOR.TsComponent>();
             for (int i = 0; i < components.Length; i++)
             {
-                var guid = TsComponentHelper.GetGuid(components[i]);
+                var guid = TsComponentHelper.Guid.Get(components[i]);
                 if (string.IsNullOrEmpty(guid))
                     continue;
                 var statement = program.GetStatement(guid);
@@ -531,7 +474,7 @@ namespace XOR
                     if (unknwonGuids != null) unknwonGuids.Add(guid);
                     continue;
                 }
-                if (isForce || TsComponentHelper.GetVersion(components[i]) != statement.version)
+                if (isForce || TsComponentHelper.Version.Get(components[i]) != statement.version)
                 {
                     TsComponentHelper.RebuildProperties(components[i], statement);
                     dirty |= true;
