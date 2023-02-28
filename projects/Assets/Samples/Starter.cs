@@ -41,9 +41,6 @@ public class Starter : MonoBehaviour
 #endif
         var modules = new string[]{
             "main",
-            "samples/01_TsComponent",
-            "samples/02_TsProperties",
-            "samples/03_TsBehaviour",
         };
         foreach (var module in modules)
         {

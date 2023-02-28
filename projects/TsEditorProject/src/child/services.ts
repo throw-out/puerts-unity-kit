@@ -619,6 +619,7 @@ export class Program {
             ctd = new csharp.XOR.Services.TypeDeclaration();
             ctd.name = name;
             ctd.module = module;
+            ctd.path = node.getSourceFile().fileName;
             ctd.guid = declaration.guid;
             ctd.version = version;
             ctd.path = node.getSourceFile().fileName;

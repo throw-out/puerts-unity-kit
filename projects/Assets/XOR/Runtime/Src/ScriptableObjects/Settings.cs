@@ -71,9 +71,7 @@ namespace XOR
 #endif
         }
     }
-#if UNITY_EDITOR
     [UnityEditor.InitializeOnLoad]
-#endif
     public class Settings : ScriptableObject<Settings>
     {
         static Settings() => resourceAssetPath = "XOR/Settings";
@@ -84,6 +82,8 @@ namespace XOR
         public string editorProject = "../TsEditorProject/tsconfig.json";
         /// <summary>是否使用ESM模块 </summary>
         public bool isESM = false;
+        /// <summary>启用模块路径 </summary>
+        public bool autoLoadScript = true;
 
         /// <summary>Wacther类型 </summary>
         public WacthType watchType = WacthType.Nodejs;

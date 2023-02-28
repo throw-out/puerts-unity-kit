@@ -91,6 +91,10 @@
         "zh_cn": "在C#脚本编译或进入Play模式时将会进行AppDomain Unload操作, 此时AppDomain将强制<b>跨线程</b>调用JsEnv.Dispose从而导致Unity Crash! 使用<b>[THREAD_SAFE]</b>宏定义能有效处理这种情况(Editor only).",
         "en_us": "~~~~~~~"
     },
+    "script_path_tip": {
+        "zh_cn": "自动加载TsComponent依赖的脚本, 如使用webpack丶esbuild等构建工具合并脚本则不应启用此选项. 修改此选项后应重新同步所有组件, 它只在Editor环境下生效.",
+        "en_us": "~~~~~~~"
+    },
     "nodejs_unsupport": {
         "zh_cn": "nodejs在当前环境上不可用",
         "en_us": "Nodejs is not available in the current environment"

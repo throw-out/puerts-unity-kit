@@ -128,11 +128,11 @@ namespace XOR
         {
             GUILayout.BeginHorizontal();
             GUILayout.Label("IsESM", GUILayout.Width(HeaderWidth));
-            bool on = GUILayout.Toggle(settings.isESM, string.Empty);
+            bool isESM = GUILayout.Toggle(settings.isESM, string.Empty);
             GUILayout.EndHorizontal();
-            if (on != settings.isESM)
+            if (isESM != settings.isESM)
             {
-                settings.isESM = on;
+                settings.isESM = isESM;
             }
 
             GUILayout.BeginHorizontal();
@@ -143,6 +143,17 @@ namespace XOR
             {
                 settings.logger = logger;
             }
+
+            GUILayout.BeginHorizontal();
+            GUILayout.Label("Auto Script", GUILayout.Width(HeaderWidth));
+            bool autoLoadScript = GUILayout.Toggle(settings.autoLoadScript, string.Empty);
+            GUILayout.EndHorizontal();
+            if (autoLoadScript != settings.autoLoadScript)
+            {
+                settings.autoLoadScript = autoLoadScript;
+            }
+
+            _RenderTooptip(Skin.infoIcon, Language.Default.Get("script_path_tip"));
         }
         void RenderWatchType(Settings settings)
         {

@@ -38,7 +38,7 @@ RenderSettings:
   m_ReflectionIntensity: 1
   m_CustomReflection: {fileID: 0}
   m_Sun: {fileID: 0}
-  m_IndirectSpecularColor: {r: 0.44657898, g: 0.4964133, b: 0.5748178, a: 1}
+  m_IndirectSpecularColor: {r: 0.44657874, g: 0.49641258, b: 0.5748172, a: 1}
   m_UseRadianceAmbientProbe: 0
 --- !u!157 &3
 LightmapSettings:
@@ -171,6 +171,7 @@ MonoBehaviour:
     value: []
   guid: 36102130-2db9-4d62-9221-98c51c3c138c
   route: 
+  path: samples/01_TsComponent
   version: 4969A2E55E482A200A2085373AB33219554436CF92872B6D38DA87B6CC907174
   StringPairs: []
   NumberPairs: []
@@ -235,6 +236,7 @@ MonoBehaviour:
   MyDataArrayPairs: []
   guid: 7984a4b8-de57-4af6-a572-6c159bc6dce3
   route: 
+  path: samples/01_TsComponent
   version: 89B5DE880F729995603233C1EDA288F950C0E6AA6C00AE30DE272A36985FEFEE
   StringPairs: []
   NumberPairs:
@@ -302,6 +304,7 @@ MonoBehaviour:
   MyDataArrayPairs: []
   guid: e1cb6fde-b4dd-4fba-b08d-aed2f2bea1f2
   route: 
+  path: samples/01_TsComponent
   version: 960F7F8D1E4D198B494362FC261FD8C4E54E299F8E82E9EECFBB80F23B8C0287
   StringPairs:
   - index: 0
@@ -525,6 +528,7 @@ MonoBehaviour:
   MyDataArrayPairs: []
   guid: d2ea683a-0e55-41a2-b837-b7e7c2a1fee4
   route: 
+  path: samples/01_TsComponent
   version: 30C390646D3D7D9C75EC01B5E15D1E37F2C2D43362D6C69D1AF848E72355060F
   StringPairs:
   - index: 3
@@ -615,6 +619,7 @@ MonoBehaviour:
   MyDataArrayPairs: []
   guid: 70292285-10d5-44e0-9031-e12b14a05d15
   route: 
+  path: samples/01_TsComponent
   version: 3C80A9E71C248430B6DB2694222AF282CB4DBEF9B4334103E0A5407DC45C71A0
   StringPairs:
   - index: 1
@@ -706,6 +711,7 @@ MonoBehaviour:
   MyDataArrayPairs: []
   guid: a071b597-ff11-420a-b7d5-cd586ee4b1a1
   route: 
+  path: samples/01_TsComponent
   version: D1C637C7882EC5DECBAE7473D8679991E6B6E95DDA7DA1F293E31EDC16D38BF0
   StringPairs: []
   NumberPairs: []

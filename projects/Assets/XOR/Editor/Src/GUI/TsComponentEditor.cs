@@ -55,7 +55,7 @@ namespace XOR
             }
             program = EditorApplicationUtil.GetProgram();
             statement = program?.GetStatement(TsComponentHelper.Guid.Get(component));
-            if (statement != null && statement.version != TsComponentHelper.Version.Get(component))
+            if (statement != null && !TsComponentHelper.IsSynchronized(statement, component))
             {
                 TsComponentHelper.RebuildProperties(component, statement);
             }
@@ -146,9 +146,7 @@ namespace XOR
 
                 GUILayout.BeginHorizontal();
                 GUILayout.Label("Module:", GUILayout.Width(ModuleHeaderWidth));
-                if (statement != null) GUILayout.Label(new GUIContent(
-                    statement.module.Contains("\\") || statement.module.Contains("/") ? PathUtil.GetLocalPath(statement.module, program.root) : statement.module, statement.module
-                ), Skin.label);
+                if (statement != null) GUILayout.Label(new GUIContent(statement.GetLocalModule(), statement.module), Skin.label);
                 else GUILayout.Label("module missing", Skin.label);
                 GUILayout.EndHorizontal();
             }
@@ -219,6 +217,7 @@ namespace XOR
     internal static class TsComponentHelper
     {
         public static readonly PropertyAccessor<TsComponent, string> Guid = new PropertyAccessor<TsComponent, string>("guid");
+        public static readonly PropertyAccessor<TsComponent, string> Path = new PropertyAccessor<TsComponent, string>("path");
         public static readonly PropertyAccessor<TsComponent, string> Route = new PropertyAccessor<TsComponent, string>("route");
         public static readonly PropertyAccessor<TsComponent, string> Version = new PropertyAccessor<TsComponent, string>("version");
 
@@ -240,6 +239,31 @@ namespace XOR
                 return;
             }
             func(pair.Key, pair.Value);
+        }
+        public static string GetComponentPath(Statement statement)
+        {
+            if (!Settings.Load().autoLoadScript)
+            {
+                return string.Empty;
+            }
+            string path = statement.GetLocalPath();
+            if (string.IsNullOrEmpty(path))
+                return string.Empty;
+            if (path.StartsWith("src/"))
+            {
+                path = path.Substring(4);
+            }
+            int extnameIndex = path.LastIndexOf(".");
+            if (extnameIndex > 0)
+            {
+                path = path.Substring(0, extnameIndex);
+            }
+            return path;
+        }
+        public static bool IsSynchronized(Statement statement, TsComponent component)
+        {
+            return statement.version == TsComponentHelper.Version.Get(component) &&
+                TsComponentHelper.GetComponentPath(statement) == TsComponentHelper.Path.Get(component);
         }
 
         public static void RebuildNodes(RootWrap root, List<NodeWrap> outputNodes, Statement statement)
@@ -352,6 +376,7 @@ namespace XOR
                 index++;
             }
 
+            TsComponentHelper.Path.Set(component, TsComponentHelper.GetComponentPath(statement));
             TsComponentHelper.Version.Set(component, statement.version);
             TsComponentHelper.SetDirty(component);
         }
@@ -474,7 +499,7 @@ namespace XOR
                     if (unknwonGuids != null) unknwonGuids.Add(guid);
                     continue;
                 }
-                if (isForce || TsComponentHelper.Version.Get(components[i]) != statement.version)
+                if (isForce || !TsComponentHelper.IsSynchronized(statement, components[i]))
                 {
                     TsComponentHelper.RebuildProperties(components[i], statement);
                     dirty |= true;

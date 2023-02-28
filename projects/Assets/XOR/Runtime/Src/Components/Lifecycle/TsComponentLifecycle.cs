@@ -226,37 +226,57 @@ namespace XOR
             {
                 if (component == null)
                     continue;
-                component.JSObject = runtime.Create(component, component.GetGuid());
-                if (component.JSObject == null && !string.IsNullOrEmpty(component.GetGuid()))
+                if (string.IsNullOrEmpty(component.GetGuid()))
+                    continue;
+                component.JSObject = runtime.Create(component);
+                if (component.JSObject == null)
                 {
-                    Logger.LogWarning($"{nameof(XOR.TsComponent)} JSObject create fail: {component.GetGuid()}");
+                    Logger.LogWarning($"{component.name} {nameof(XOR.TsComponent)} JSObject create fail: {component.GetGuid()}");
                 }
             }
         }
 
         private class Runtime
         {
-            private Puerts.JsEnv env;
+            private readonly Puerts.JsEnv env;
+            private readonly HashSet<string> resolvePaths;
             private Func<TsComponent, string, Puerts.JSObject> create;
             public bool IsAlive => true;
             public Runtime(Puerts.JsEnv env)
             {
                 this.env = env;
+                this.resolvePaths = new HashSet<string>();
                 this.env.UsingFunc<TsComponent, string, Puerts.JSObject>();
             }
-            public Puerts.JSObject Create(TsComponent component, string guid)
+            /// <summary>
+            /// 创建JSObject对象
+            /// </summary>
+            /// <param name="component"></param>
+            /// <returns></returns>
+            public Puerts.JSObject Create(TsComponent component)
             {
-                if (string.IsNullOrEmpty(guid))
-                    return null;
                 if (create == null)
                 {
                     create = this.env.ComponentJSObjectCreator();
                     if (create == null)
                     {
                         Logger.LogWarning($"XOR Modules Unregisted.");
+                        return null;
                     }
                 }
-                return create?.Invoke(component, guid);
+                Puerts.JSObject result = create.Invoke(component, component.GetGuid());
+
+                //execute module, after retry create js object
+                if (result == null && !resolvePaths.Contains(component.GetPath()))
+                {
+                    resolvePaths.Add(component.GetPath());
+                    if (!string.IsNullOrEmpty(component.GetPath()))
+                    {
+                        env.Load(component.GetPath());
+                        result = create.Invoke(component, component.GetGuid());
+                    }
+                }
+                return result;
             }
         }
     }

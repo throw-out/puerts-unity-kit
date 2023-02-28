@@ -48,6 +48,7 @@ namespace XOR.Services
         }
         public void AddStatement(Statement statement)
         {
+            statement.parent = this;
             this.RemoveStatement(statement);
             this.Statements.Add(statement.guid, statement);
         }
@@ -79,6 +80,7 @@ namespace XOR.Services
 
     public abstract class Statement
     {
+        internal Program parent;
         /// <summary>类Id(全局唯一标识符) </summary>
         public string guid;
         /// <summary>源文件路径 </summary>
@@ -92,6 +94,16 @@ namespace XOR.Services
 
         public string path;
         public int line;
+        public string GetLocalPath()
+        {
+            if (string.IsNullOrEmpty(path))
+                return string.Empty;
+            return PathUtil.GetLocalPath(path, parent.root);
+        }
+        public string GetLocalModule()
+        {
+            return module.Contains("\\") || module.Contains("/") ? PathUtil.GetLocalPath(module, parent.root) : module;
+        }
     }
 
     public class EnumDeclaration : Statement

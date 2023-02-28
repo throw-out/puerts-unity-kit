@@ -11,6 +11,8 @@ namespace XOR
         [SerializeField]
         protected string route;
         [SerializeField]
+        protected string path;
+        [SerializeField]
         protected string version;
 
         #region 序列化字段
@@ -130,6 +132,7 @@ namespace XOR
         }
         public string GetGuid() => guid;
         public string GetRoute() => route;
+        public string GetPath() => path;
 
         /// <summary>
         /// 回收无效的TsComponent实例
