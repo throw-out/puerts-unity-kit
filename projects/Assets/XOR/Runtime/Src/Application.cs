@@ -35,38 +35,14 @@ namespace XOR
         /// </summary>
         public void Load(string filepath)
         {
-#if !UNITY_EDITOR && UNITY_WEBGL
-            this.Env.ExecuteModule(filepath);
-#else
-            if (this.Loader.IsESM(filepath))
-            {
-                this.Env.ExecuteModule(filepath);
-            }
-            else
-            {
-                this.Env.Eval($"require('{filepath}')");
-            }
-#endif
+            this.Env.Load(filepath);
         }
         /// <summary>
         /// 加载模块并获取export(通过IsESM判定使用ExecuteModule或者Eval)
         /// </summary>
         public TResult Load<TResult>(string filepath, string exportee = "")
         {
-#if !UNITY_EDITOR && UNITY_WEBGL
-            return this.Env.ExecuteModule<TResult>(filepath, exportee);
-#else
-            if (this.Loader.IsESM(filepath))
-            {
-                return this.Env.ExecuteModule<TResult>(filepath, exportee);
-            }
-            else
-            {
-                return string.IsNullOrEmpty(exportee) ?
-                    this.Env.Eval<TResult>($"require('{filepath}');") :
-                    this.Env.Eval<TResult>($"require('{filepath}').{exportee};");
-            }
-#endif
+            return this.Env.Load<TResult>(filepath, exportee);
         }
 
         void Awake()

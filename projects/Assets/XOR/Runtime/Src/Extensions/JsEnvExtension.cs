@@ -169,6 +169,58 @@ namespace XOR
                 Logger.LogWarning($"Module function missing: {XORWorker}");
             }
         }
+        /// <summary>
+        /// 加载模块(通过IsESM判定使用ExecuteModule或者Eval)
+        /// </summary>
+        /// <param name="env"></param>
+        /// <param name="filepath"></param>
+        internal static void Load(this JsEnv env, string filepath)
+        {
+#if UNITY_EDITOR || !UNITY_WEBGL
+            ILoader loader = Helper.GetLoader(env, false);
+            if (loader == null || !loader.FileExists(filepath))
+            {
+                Logger.LogWarning($"Module missing: {filepath}");
+                return;
+            }
+            if (Helper.IsESM(loader, filepath))
+            {
+                env.ExecuteModule(filepath);
+            }
+            else
+            {
+                env.Eval($"require('{filepath}');");
+            }
+#else
+           env.ExecuteModule(filepath);
+#endif
+        }
+        /// <summary>
+        /// 加载模块并获取export(通过IsESM判定使用ExecuteModule或者Eval)
+        /// </summary>
+        public static TResult Load<TResult>(this JsEnv env, string filepath, string exportee = "")
+        {
+#if UNITY_EDITOR || !UNITY_WEBGL
+            ILoader loader = Helper.GetLoader(env, false);
+            if (loader == null || !loader.FileExists(filepath))
+            {
+                Logger.LogWarning($"Module missing: {filepath}");
+                return default;
+            }
+            if (Helper.IsESM(loader, filepath))
+            {
+                return env.ExecuteModule<TResult>(filepath, exportee);
+            }
+            else
+            {
+                return string.IsNullOrEmpty(exportee) ?
+                    env.Eval<TResult>($"require('{filepath}');") :
+                    env.Eval<TResult>($"require('{filepath}').{exportee};");
+            }
+#else
+            return env.ExecuteModule<TResult>(filepath, exportee);
+#endif
+        }
 
         static class Helper
         {
