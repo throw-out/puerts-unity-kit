@@ -198,7 +198,7 @@ namespace XOR
         /// <summary>
         /// 加载模块并获取export(通过IsESM判定使用ExecuteModule或者Eval)
         /// </summary>
-        public static TResult Load<TResult>(this JsEnv env, string filepath, string exportee = "")
+        internal static TResult Load<TResult>(this JsEnv env, string filepath, string exportee = "")
         {
 #if UNITY_EDITOR || !UNITY_WEBGL
             ILoader loader = Helper.GetLoader(env, false);
@@ -220,6 +220,36 @@ namespace XOR
 #else
             return env.ExecuteModule<TResult>(filepath, exportee);
 #endif
+        }
+
+
+        static readonly string XORUtils = "puerts/xor/utils.mjs";
+        /// <summary>
+        /// 创建工具类方法
+        /// </summary>
+        /// <param name="env"></param>
+        /// <param name="methodName"></param>
+        /// <typeparam name="TDelegate"></typeparam>
+        /// <returns></returns>
+        internal static TDelegate XORUtilMethod<TDelegate>(this JsEnv env, string methodName)
+            where TDelegate : Delegate
+        {
+
+            TDelegate func = null;
+#if UNITY_EDITOR || !UNITY_WEBGL
+            ILoader loader = Helper.GetLoader(env, false);
+            if (loader == null || !loader.FileExists(XORUtils))
+            {
+                Logger.LogWarning($"Module missing: {XORUtils}");
+                return null;
+            }
+            func = Helper.IsESM(loader, XORUtils) ?
+                env.ExecuteModule<TDelegate>(XORUtils, methodName) :
+                env.Eval<TDelegate>($"require('{XORUtils}').{methodName};");
+#else
+            func = env.ExecuteModule<TDelegate>(XORUtils, methodName);
+#endif
+            return func;
         }
 
         static class Helper

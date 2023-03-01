@@ -311,7 +311,7 @@ declare namespace TsBehaviourConstructor {
      */
     function standalone(): PropertyDecorator;
     /**跨帧调用(全局共用/非单独的frameskip分区)
-     * 适用于Update丶LateUpdate和FixedUpdate方法, 仅允许BatchProxy管理调用(与Standalone组件冲突)
+     * 适用于Update丶LateUpdate和FixedUpdate方法, 仅允许BatchProxy管理调用(与standalone组件冲突)
      * (如你需要处理Input等事件, 那么就不应该使用它)
      * @param value  每n帧调用一次(<不包含>大于1时才有效)
      * @returns
