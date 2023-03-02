@@ -67,6 +67,7 @@ namespace XOR
             Env = Puerts.WebGL.GetBrowserEnv(Loader);
 #endif
             Env.TryAutoUsing();
+            Env.TryAutoInterfaceBridge();
             Env.RequireXORModules();
 #if !UNITY_EDITOR && UNITY_WEBGL
             Env.SupportCommonJS();

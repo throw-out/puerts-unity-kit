@@ -30,6 +30,7 @@ namespace XOR
 
             Env = new JsEnv(Loader);
             Env.TryAutoUsing();
+            Env.TryAutoInterfaceBridge();
             Env.RequireXORModules();
             Env.SupportCommonJS();
 
