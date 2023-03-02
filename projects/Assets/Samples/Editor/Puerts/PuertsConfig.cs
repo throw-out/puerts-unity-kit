@@ -143,7 +143,7 @@ public class PuertsConfig
             var customTypes = (from assembly in customAssemblys.Select(s => Assembly.Load(s))
                                where !(assembly.ManifestModule is System.Reflection.Emit.ModuleBuilder)
                                from type in assembly.GetExportedTypes()
-                               where !IsExcluded(type)
+                               where !IsExcluded(type) && type.Namespace != "PuertsStaticWrap"
                                select type);
 
             return selectTypes
