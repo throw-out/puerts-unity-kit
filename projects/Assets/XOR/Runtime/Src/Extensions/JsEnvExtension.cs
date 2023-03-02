@@ -47,7 +47,23 @@ namespace XOR
             }
             else if (printWarning)
             {
-                Logger.LogWarning($"AutoUsingCode not generate.");
+                Logger.LogWarning($"AutoUsing code not generate.");
+            }
+        }
+        public static void TryAutoInterfaceBridge(this JsEnv env, bool printWarning = true)
+        {
+            const string typeName = "PuertsStaticWrap.AutoStaticCodeInterfaceBridge";
+            Type type = (from _assembly in AppDomain.CurrentDomain.GetAssemblies()
+                         let _type = _assembly.GetType(typeName, false)
+                         where _type != null
+                         select _type).FirstOrDefault();
+            if (type != null)
+            {
+                type.GetMethod("Register").Invoke(null, new object[] { env });
+            }
+            else if (printWarning)
+            {
+                Logger.LogWarning($"AutoInterfaceBridge code not generate.");
             }
         }
         public static void SupportCommonJS(this JsEnv env)

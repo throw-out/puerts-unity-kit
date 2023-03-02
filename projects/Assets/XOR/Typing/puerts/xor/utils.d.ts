@@ -9,3 +9,4 @@ export declare function getKeys(obj: object): import("csharp").System.Array$1<st
 export declare function length(obj: object): number;
 export declare function forEach(obj: object, action: CS.System.Delegate & ((key: any, value: any) => void)): void;
 export declare function call(obj: object, methodName: string, args: CS.System.Array$1<any>): any;
+export declare function cast(obj: object): object;

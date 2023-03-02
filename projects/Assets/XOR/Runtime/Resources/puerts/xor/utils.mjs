@@ -72,4 +72,7 @@ export function call(obj, methodName, args) {
     }
     return func.apply(obj, _args);
 }
+export function cast(obj) {
+    return obj;
+}
 //# sourceMappingURL=utils.js.map

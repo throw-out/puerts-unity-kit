@@ -72,3 +72,6 @@ export function call(obj: object, methodName: string, args: CS.System.Array$1<an
     }
     return func.apply(obj, _args);
 }
+export function cast(obj: object) {
+    return obj;
+}

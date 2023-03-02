@@ -107,6 +107,17 @@ namespace XOR
             return (TResult)(call(obj, methodName, args));
         }
 
+        public static T Cast<T>(this Puerts.JSObject obj)
+            where T : class
+        {
+            if (typeof(T).IsInterface)
+            {
+                return JsTranslator.CreateInterfaceBridge(obj, typeof(T)) as T;
+            }
+            var accessor = Accessor.GetOrCreate(obj);
+            var cast = accessor.Get<Func<Puerts.JSObject, T>>("cast");
+            return cast(obj);
+        }
 
         class Accessor : IDisposable
         {
