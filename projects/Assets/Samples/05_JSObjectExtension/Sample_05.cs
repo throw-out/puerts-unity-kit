@@ -15,13 +15,96 @@ public class Sample_05 : MonoBehaviour
     {
         using (var env = new Puerts.JsEnv())
         {
+            env.TryAutoInterfaceBridge();
             env.UsingFunc<Puerts.JSObject, int>();
             env.UsingFunc<Puerts.JSObject, string, int>();
             env.UsingFunc<Puerts.JSObject, string, bool>();
             env.UsingAction<Puerts.JSObject, string>();
             env.UsingAction<Puerts.JSObject, string, int>();
 
-            var obj = env.Eval<Puerts.JSObject>(@"
+            var obj = env.Eval<Puerts.JSObject>(jsCode);
+            TestGetter(obj);
+            TestSetter(obj);
+            TestForEach(obj);
+            TestInterface(obj);
+        }
+    }
+    void TestGetter(Puerts.JSObject obj)
+    {
+        Debug.Log("===============Getter Start=============================");
+
+        Debug.Log("a= " + obj.Get<int>("a"));           //a= 111
+        Debug.Log("b= " + obj.Get<string>("b"));        //b= 222
+
+        var methodC = obj.Get<Action>("c");
+        methodC();                                      //call member method: 111
+        obj.Call("c");                                  //call member method: 111
+
+        Debug.Log("d.length= " + obj.Get<Puerts.JSObject>("d").Length());   //d.length= 3
+        Debug.Log("e.value= " + obj.GetInPath<string>("e.value"));          //e.value= this is e member
+
+        Debug.Log("keys= " + string.Join(",", obj.GetKeys()));              //keys= a,b,c,d,e
+
+        Debug.Log("===============Getter End=============================");
+    }
+    void TestSetter(Puerts.JSObject obj)
+    {
+        Debug.Log("===============Setter Start=============================");
+
+        obj.Set("a", 1111);
+        Debug.Log("a= " + obj.Get<int>("a"));           //a= 1111
+
+        obj.Set("b", 222);
+        Debug.Log("b= " + obj.Get<int>("b"));           //b= 222
+
+        obj.Set("f", 1);
+        obj.RemoveKey("a");
+        Debug.Log("keys= " + string.Join(",", obj.GetKeys()));              //keys= b,c,d,e,f
+
+        Debug.Log("===============Setter End=============================");
+    }
+    void TestForEach(Puerts.JSObject obj)
+    {
+        Debug.Log("===============ForEach Start=============================");
+
+        Debug.Log("foreach(string, object)");
+        obj.ForEach((k, v) =>
+        {
+            Debug.Log($"{k}= {v}");
+            //b= 222
+            //c= 2349589027088 [function object address]
+            //d= Puerts.JSObject
+            //e= Puerts.JSObject
+            //f= 1
+        });
+        Debug.Log("foreach(string, int)");
+        obj.ForEach<int>((k, v) =>
+        {
+            Debug.Log($"{k}= {v}");
+            //b= 222
+            //f= 1
+        });
+        Debug.Log("===============ForEach End=============================");
+    }
+    void TestInterface(Puerts.JSObject obj)
+    {
+        //env.TryAutoInterfaceBridge();
+
+        Debug.Log("===============Interface Start=============================");
+
+        var iobj = obj.Cast<ITest>();
+        Debug.Log("a= " + iobj.a);          //a= -2147483648 [key has been deleted]
+        Debug.Log("b= " + iobj.b);          //b= 222
+
+        iobj.c();                           //call member method: 111
+
+        Debug.Log("d.length= " + iobj.d.Length());                  //d.length= 3
+        Debug.Log("e.value= " + iobj.e.Get<string>("value"));       //e.value= this is e member
+        Debug.Log("f= " + iobj.f);                                  //f= 1
+
+        Debug.Log("===============Interface End=============================");
+    }
+    const string jsCode = @"
 (function(){
     return {
         a: 111,
@@ -34,46 +117,14 @@ public class Sample_05 : MonoBehaviour
             value: 'this is e member'
         }
     };
-})();");
-            //============================================================
-            Debug.Log("===============Getter=============================");
-            Debug.Log("a= " + obj.Get<int>("a"));
-            Debug.Log("b= " + obj.Get<string>("b"));
-
-            var c = obj.Get<Action>("c");
-            c();
-            obj.Call("c");
-
-            Debug.Log("d.length= " + obj.Get<Puerts.JSObject>("d").Length());
-            Debug.Log("e.value= " + obj.GetInPath<string>("e.value"));
-
-            Debug.Log("keys= " + string.Join(",", obj.GetKeys()));
-
-            //=============================================================
-            Debug.Log("===============Setter=============================");
-            obj.Set("a", 1111);
-            Debug.Log("a= " + obj.Get<int>("a"));
-
-            obj.Set("b", 222);
-            Debug.Log("b= " + obj.Get<int>("b"));
-
-            obj.Set("f", 1);
-            obj.RemoveKey("a");
-            Debug.Log("keys= " + string.Join(",", obj.GetKeys()));
-
-            //=============================================================
-            Debug.Log("===============ForEach=============================");
-
-            Debug.Log("foreach(string, object)");
-            obj.ForEach((k, v) =>
-            {
-                Debug.Log($"{k}= {v}");
-            });
-            Debug.Log("foreach(string, int)");
-            obj.ForEach<int>((k, v) =>
-            {
-                Debug.Log($"{k}= {v}");
-            });
-        }
+})();";
+    public interface ITest
+    {
+        int a { get; set; }
+        string b { get; set; }
+        string c();
+        Puerts.JSObject d { get; set; }
+        Puerts.JSObject e { get; set; }
+        int f { get; set; }
     }
 }
