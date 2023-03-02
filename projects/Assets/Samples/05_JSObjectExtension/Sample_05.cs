@@ -29,6 +29,20 @@ public class Sample_05 : MonoBehaviour
             TestInterface(obj);
         }
     }
+    const string jsCode = @"
+(function(){
+    return {
+        a: 111,
+        b: '222',
+        c: function(){
+            console.log('call member method: '+ this?.a );
+        },
+        d:[1, 2, 3],
+        e:{
+            value: 'this is e member'
+        }
+    };
+})();";
     void TestGetter(Puerts.JSObject obj)
     {
         Debug.Log("===============Getter Start=============================");
@@ -104,20 +118,7 @@ public class Sample_05 : MonoBehaviour
 
         Debug.Log("===============Interface End=============================");
     }
-    const string jsCode = @"
-(function(){
-    return {
-        a: 111,
-        b: '222',
-        c: function(){
-            console.log('call member method: '+ this?.a );
-        },
-        d:[1, 2, 3],
-        e:{
-            value: 'this is e member'
-        }
-    };
-})();";
+
     public interface ITest
     {
         int a { get; set; }
