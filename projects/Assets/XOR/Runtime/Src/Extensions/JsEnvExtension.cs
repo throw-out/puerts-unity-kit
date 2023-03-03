@@ -34,6 +34,12 @@ namespace XOR
             }
         }
 
+        public static void AddInterfaceBridgeCreator(this JsEnv env, Type type, Func<Puerts.JSObject, object> creator)
+        {
+            JsTranslator
+                .GetOrCreate(env)
+                .AddInterfaceBridgeCreator(type, creator);
+        }
         public static void TryAutoUsing(this JsEnv env, bool printWarning = true)
         {
             const string typeName = "PuertsStaticWrap.AutoStaticCodeUsing";

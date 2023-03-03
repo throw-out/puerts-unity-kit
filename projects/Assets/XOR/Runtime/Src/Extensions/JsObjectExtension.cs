@@ -112,7 +112,9 @@ namespace XOR
         {
             if (typeof(T).IsInterface)
             {
-                return JsTranslator.CreateInterfaceBridge(obj, typeof(T)) as T;
+                return JsTranslator
+                    .GetOrCreate(Helper.GetJsEnv(obj, true))
+                    .CreateInterfaceBridge(obj, typeof(T)) as T;
             }
             var accessor = Accessor.GetOrCreate(obj);
             var cast = accessor.Get<Func<Puerts.JSObject, T>>("cast");
@@ -121,12 +123,12 @@ namespace XOR
 
         class Accessor : IDisposable
         {
-            static System.Runtime.CompilerServices.ConditionalWeakTable<Puerts.JsEnv, Accessor> accessorList =
+            static System.Runtime.CompilerServices.ConditionalWeakTable<Puerts.JsEnv, Accessor> accessors =
                 new System.Runtime.CompilerServices.ConditionalWeakTable<Puerts.JsEnv, Accessor>();
 
             public static Accessor GetOrCreate(Puerts.JSObject obj)
             {
-                return accessorList.GetValue(Helper.GetJsEnv(obj, true), (e) => new Accessor(e));
+                return accessors.GetValue(Helper.GetJsEnv(obj, true), (e) => new Accessor(e));
             }
 
             private WeakReference<Puerts.JsEnv> reference;

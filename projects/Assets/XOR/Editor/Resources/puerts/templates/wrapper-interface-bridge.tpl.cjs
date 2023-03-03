@@ -108,7 +108,7 @@ namespace PuertsStaticWrap
         {
 ${infos.map(info => {
         return `
-            XOR.JsTranslator.AddInterfaceBridgeCreator(typeof(${info.InterfaceTypeName}), PuertsBridge.${info.Name}.__Create);`;
+            jsEnv.AddInterfaceBridgeCreator(typeof(${info.InterfaceTypeName}), PuertsBridge.${info.Name}.__Create);`;
     }).join('')}
         }
     }
