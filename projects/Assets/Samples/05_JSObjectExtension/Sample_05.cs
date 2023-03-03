@@ -8,6 +8,7 @@ using XOR;
 /// 请悉知: JsObjectExtension中包含大量装箱丶拆箱操作, 必需谨慎使用;
 /// Puerts.JSObject本身不提供getter丶setter成员的操作, JsObjectExtension所做的是在js侧实现操作方法并映射和缓存到C# Delegate, 后续使用时无需重复创建C# Delegate;
 /// js侧的操作方法需要同时传入JSObject对象, 因此写UsingAction/UsingFunc时, 第一个参数必然是JSObejct.
+/// interface映射功能需要生成适配代码, 开发阶段可设置Editor .NET_4.x使用TypeBuilder动态构建类型而无需生成适配代码
 /// </summary>
 public class Sample_05 : MonoBehaviour
 {
