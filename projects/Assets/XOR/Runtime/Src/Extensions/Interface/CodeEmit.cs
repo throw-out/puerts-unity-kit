@@ -10,33 +10,35 @@ namespace XOR
 {
     internal class CodeEmit
     {
+#if UNITY_EDITOR && !NET_STANDARD_2_0
         private const BindingFlags Flags = BindingFlags.Static | BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic;
         private static Type[] JSBase_ctor_parameters = new Type[] { typeof(Puerts.JSObject) };
-        private ConstructorInfo JSBase_ctor = typeof(XOR.JsBase).GetConstructor(JSBase_ctor_parameters);
-        private FieldInfo JSBase_target = typeof(XOR.JsBase).GetField("target", Flags);
-        private MethodInfo JSObject_Get_generic1 = typeof(XOR.JsObjectExtension).GetMethods(Flags).FirstOrDefault(m =>
+        private static MethodInfo[] JSObejctEx_Methods = typeof(XOR.JsObjectExtension).GetMethods(Flags);
+
+        private static ConstructorInfo JSBase_ctor = typeof(XOR.JsBase).GetConstructor(JSBase_ctor_parameters);
+        private static FieldInfo JSBase_target = typeof(XOR.JsBase).GetField("target", Flags);
+        private static MethodInfo JSObject_Get_generic1 = JSObejctEx_Methods.FirstOrDefault(m =>
             "Get".Equals(m.Name) &&
             m.IsGenericMethod &&
             m.GetGenericArguments().Length == 1
         );
-        private MethodInfo JSObject_Set_generic1 = typeof(XOR.JsObjectExtension).GetMethods(Flags).FirstOrDefault(m =>
+        private static MethodInfo JSObject_Set_generic1 = JSObejctEx_Methods.FirstOrDefault(m =>
             "Set".Equals(m.Name) &&
             m.IsGenericMethod &&
             m.GetGenericArguments().Length == 1
         );
-        private MethodInfo JSObject_Call_void = typeof(XOR.JsObjectExtension).GetMethods(Flags).FirstOrDefault(m =>
+        private static MethodInfo JSObject_Call_void = JSObejctEx_Methods.FirstOrDefault(m =>
             "Call".Equals(m.Name) &&
             !m.IsGenericMethod
         );
-        private MethodInfo JSObject_Call_generic1 = typeof(XOR.JsObjectExtension).GetMethods(Flags).FirstOrDefault(m =>
+        private static MethodInfo JSObject_Call_generic1 = JSObejctEx_Methods.FirstOrDefault(m =>
             "Call".Equals(m.Name) &&
             m.IsGenericMethod &&
             m.GetGenericArguments().Length == 1
         );
-
-
         private static ulong genID = 1;
         private static Dictionary<Type, Type> genTypes = new Dictionary<Type, Type>();
+#endif
         public Type EmitInterfaceImpl(Type toBeImpl)
         {
             if (!toBeImpl.IsInterface)
@@ -47,7 +49,12 @@ namespace XOR
             Type impl;
             if (!genTypes.TryGetValue(toBeImpl, out impl))
             {
-                TypeBuilder typeBuilder = CodeEmitModule.DefineType($"<{genID++}>PuertsGenInterfaceImpl", TypeAttributes.Public | TypeAttributes.Class, typeof(XOR.JsBase), new Type[] { toBeImpl });
+                TypeBuilder typeBuilder = CodeEmitModule.DefineType(
+                    $"<{genID++}>PuertsGenInterfaceImpl",
+                    TypeAttributes.Public | TypeAttributes.Class,
+                    typeof(XOR.JsBase),
+                    new Type[] { toBeImpl }
+                );
 
                 foreach (MemberInfo member in (new Type[] { toBeImpl }.Concat(toBeImpl.GetInterfaces()).SelectMany(i => i.GetMembers()).Distinct()))
                 {
