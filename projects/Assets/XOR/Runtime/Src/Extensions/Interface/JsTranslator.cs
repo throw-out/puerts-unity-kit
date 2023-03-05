@@ -39,7 +39,7 @@ namespace XOR
                 };
                 interfaceBridgeCreators.Add(interfaceType, creator);
 #else
-                throw new InvalidCastException($"This type must add to [Configure] and generate bridge code: {interfaceType}\nYou can use [Api Compatibility Level .NET_4.x] without generating bridge code." );
+                throw new InvalidCastException($"This type must add to [Configure] and generate bridge code: {interfaceType}\nYou can use .NET_4.x without generating bridge code.");
 #endif
             }
 
