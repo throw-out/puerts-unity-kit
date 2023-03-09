@@ -1,30 +1,28 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
+using System.IO;
 using UnityEditor;
 using UnityEngine;
 
 namespace HR
 {
-    internal class ProfileView
+    internal class ProfileView : IDisposable
     {
         const float HEADER_WIDTH = 100f;
         internal readonly Profile profile;
         private Debugger debugger;
+        private FileWacher watcher;
+        private List<string> extnames;
+        private DateTime nextRetry = DateTime.MinValue;
+        private bool autoRetry;
 
         public string Name => string.IsNullOrEmpty(profile.name) ? $"{profile.host}:{profile.port}" : profile.name;
+        public bool IsOpen => debugger != null && debugger.IsOpen;
         public bool IsAlive => debugger != null && debugger.IsAlive;
+        public bool IsReadyHost => !string.IsNullOrEmpty(profile.host);
+        public bool IsReadyPath => !string.IsNullOrEmpty(profile.path) && Directory.Exists(profile.path);
         public bool Dirty { get; private set; }
-        public bool Auto
-        {
-            get => profile.auto;
-            set
-            {
-                if (profile.auto == value)
-                    return;
-                profile.auto = value;
-                Dirty = true;
-            }
-        }
 
         public ProfileView(Profile profile)
         {
@@ -34,21 +32,48 @@ namespace HR
         {
             if (IsAlive)
                 return;
-            if (string.IsNullOrEmpty(profile.host))
+            if (!IsReadyHost)
+            {
+                Debug.LogError($"host is empty.");
                 return;
+            }
+            if (!IsReadyPath)
+            {
+                Debug.LogError($"The path is empty or does not exist: {profile.path}.");
+                return;
+            }
             if (debugger == null)
             {
                 debugger = new Debugger();
             }
+            UpdateExtnames();
             debugger.trace = profile.trace;
             debugger.ignoreCase = profile.ignoreCase;
+            debugger.startupCheck = profile.startupCheck;
             debugger.Open(profile.host, profile.port);
+
+            StartWatcher();
+            autoRetry = true;
         }
         public void Stop()
         {
-            if (debugger == null)
+            autoRetry = false;
+            StopWatcher();
+            if (!IsAlive)
                 return;
             debugger.Close();
+        }
+        public void Update(string filepath, string extname)
+        {
+            if (!IsAlive)
+                return;
+            if (!string.IsNullOrEmpty(extname) && (extnames == null || !extnames.Contains(extname)))
+                return;
+            debugger.Update(filepath);
+        }
+        public void Apply()
+        {
+            Dirty = false;
         }
         public void OnGUI()
         {
@@ -57,9 +82,63 @@ namespace HR
                 RendererConfig();
             }
         }
-        public void Apply()
+        public void Tick()
         {
-            Dirty = false;
+            if (this.IsAlive || !this.profile.reconnect || !autoRetry)
+                return;
+            if (nextRetry == DateTime.MinValue)
+            {
+                nextRetry = DateTime.Now + TimeSpan.FromMilliseconds(profile.reconnectDelay);
+            }
+            else if (DateTime.Now > nextRetry)
+            {
+                nextRetry = DateTime.MinValue;
+                if (IsReadyHost && IsReadyPath) Start();
+            }
+        }
+
+        void UpdateExtnames()
+        {
+            if (extnames == null) extnames = new List<string>();
+            extnames.Clear();
+
+            Func<FileType, bool> @is = (type) => (type & profile.file) == type;
+
+            if (@is(FileType.js)) extnames.Add(".js");
+            if (@is(FileType.js_txt)) extnames.Add(".js.txt");
+            if (@is(FileType.jsx)) extnames.Add(".jsx");
+            if (@is(FileType.cjs)) extnames.Add(".cjs");
+            if (@is(FileType.mjs)) extnames.Add(".mjs");
+            if (@is(FileType.json)) extnames.Add(".json");
+        }
+        void StartWatcher()
+        {
+            if (watcher != null)
+                StopWatcher();
+
+            watcher = new FileWacher();
+            watcher.AddWatcher(profile.path);
+            watcher.OnChanged((filepath, type) =>
+            {
+                if (filepath.EndsWith(".js.txt"))
+                {
+                    Update(filepath, ".js.txt");
+                }
+                else
+                {
+                    Update(filepath, Path.GetExtension(filepath));
+                }
+            });
+            watcher.Start();
+            if (profile.trace) Debug.Log($"Watcher Listen: {profile.path}");
+        }
+        void StopWatcher()
+        {
+            if (watcher == null)
+                return;
+            watcher.Stop();
+            watcher.Dispose();
+            watcher = null;
         }
 
         void RendererConfig()
@@ -189,6 +268,10 @@ namespace HR
                 profile.file = newExtname;
                 Dirty |= true;
             }
+        }
+        public void Dispose()
+        {
+            this.Stop();
         }
     }
 }

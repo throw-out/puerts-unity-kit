@@ -2,28 +2,65 @@
 using UnityEditor;
 using System.Collections.Generic;
 using System.Linq;
+using System;
 
 namespace HR
 {
+#if UNITY_EDITOR
+    [UnityEditor.InitializeOnLoad]
+#endif
     public class ManagerGUI : EditorWindow
     {
+        private static List<ProfileView> profiles;
+        private static ProfileView current;
+        static ManagerGUI()
+        {
+            ReadProfiles();
+            current = profiles.Count > 0 ? profiles[0] : null;
+
+            EditorApplicationHandler.update += Tick;
+        }
 
         [MenuItem("Tools/CDP/HR Manager")]
-        private static void ShowWindow()
+        private static void ShowGUI()
         {
             var window = GetWindow<ManagerGUI>();
             window.titleContent = new GUIContent("ManagerGUI");
             window.Show();
         }
-        private List<ProfileView> profiles;
-        private ProfileView current;
-
-        private void OnEnable()
+        [MenuItem("Tools/CDP/Restart All")]
+        private static void RestartAll()
         {
-            ReadProfiles();
-            current = profiles.Count > 0 ? profiles[0] : null;
+            if (profiles == null)
+                return;
+            foreach (var profile in profiles)
+            {
+                profile.Stop();
+                profile.Start();
+            }
         }
-        private void OnGUI()
+        [MenuItem("Tools/CDP/Stop All")]
+        private static void StopAll()
+        {
+            if (profiles == null)
+                return;
+            foreach (var profile in profiles)
+            {
+                profile.Stop();
+            }
+        }
+
+        static void Tick()
+        {
+            if (profiles == null)
+                return;
+            foreach (var profile in profiles)
+            {
+                profile.Tick();
+            }
+        }
+
+        void OnGUI()
         {
             GUILayout.BeginHorizontal();
 
@@ -92,9 +129,9 @@ namespace HR
             GUILayout.BeginHorizontal();
             using (new EditorGUI.DisabledScope(current == null || current.IsAlive))
             {
-                if (GUILayout.Button("Start"))
+                if (GUILayout.Button("Start") && current != null)
                 {
-                    current?.Start();
+                    current.Start();
                 }
             }
             using (new EditorGUI.DisabledScope(current == null || !current.IsAlive))
@@ -118,7 +155,7 @@ namespace HR
             }
         }
 
-        void ReadProfiles()
+        static void ReadProfiles()
         {
             profiles = Prefs.Profiles.Read()
                            ?.Select(p => new ProfileView(p))
@@ -128,7 +165,7 @@ namespace HR
                 profiles = new List<ProfileView>();
             }
         }
-        void SaveProfiles()
+        static void SaveProfiles()
         {
             Prefs.Profiles.Save(profiles?.Select(v => v.profile).ToArray());
         }

@@ -17,6 +17,7 @@ namespace HR
         /// <summary>忽略文件路径大小写 </summary>
         public bool ignoreCase { get; set; }
         public bool trace { get; set; }
+        public bool startupCheck { get; set; }
 
         private CDP.Chrome chrome;
         private CDP.Domains.Debugger debugger;
@@ -25,6 +26,7 @@ namespace HR
         private Dictionary<string, string> scriptParsed;
         private Dictionary<string, string> scriptFailedToParse;
         private Dictionary<string, Locker> scriptLocks;
+        private Dictionary<string, string> scriptSources;
 
         public bool IsOpen
         {
@@ -50,7 +52,7 @@ namespace HR
                 this.runtime = new CDP.Domains.Runtime(this.chrome);
 
                 this.debugger.OnScriptParsed(ScriptParsedHandler);
-                this.debugger.OnScriptFailedToParse(HandleScriptFailedToParse);
+                this.debugger.OnScriptFailedToParse(ScriptFailedToParseHandler);
 
                 //connect to server
                 await ConnectTo(this.chrome);
@@ -62,8 +64,6 @@ namespace HR
                 {
                     maxScriptsCacheSize = MAX_SCRIPTS_CACHE_SIZE,
                 });
-
-                if (this.trace) Debug.Log($"enabled!");
             }
             catch (Exception e)
             {
@@ -109,47 +109,46 @@ namespace HR
         {
             string scriptId;
             if (!this.scriptParsed.TryGetValue(filepath, out scriptId))
-            {
                 return;
-            }
             if (!File.Exists(filepath))
-            {
                 return;
-            }
             string scriptSource = File.ReadAllText(filepath);
             scriptSource = ("(function (exports, require, module, __filename, __dirname) { " + scriptSource + "\n});");
 
+            //当前缓存的数据源已经同步
+            if (GetScriptSource(scriptId) == scriptSource)
+                return;
             //lock request
-            var @lock = await LockScript(scriptId);
-            if (this.debugger == null)
+            var @lock = await Lock(scriptId);
+            SetScriptSources(scriptId, scriptSource);
+            try
             {
-                @lock.Release();    //release lock
-                return;
+                if (this.debugger == null)
+                    return;
+
+                if (this.trace) Debug.Log($"check: {scriptId} - {filepath}");
+                var exist = await this.debugger.GetScriptSource(new CDP.Domains.Debugger.GetScriptSourceParameters()
+                {
+                    scriptId = scriptId
+                });
+                if (exist == null || exist.scriptSource == scriptSource || this.debugger == null)
+                    return;
+
+                if (this.trace) Debug.Log($"send: {scriptId} - {filepath}");
+                var resposne = await this.debugger.SetScriptSource(new CDP.Domains.Debugger.SetScriptSourceParameters()
+                {
+                    scriptId = scriptId,
+                    scriptSource = scriptSource
+                });
+                if (this.trace) Debug.Log($"completed: {scriptId} - {filepath}" /**+ Newtonsoft.Json.JsonConvert.SerializeObject(resposne)*/);
             }
-
-            if (this.trace) Debug.Log($"check: {scriptId} - {filepath}");
-            var exist = await this.debugger.GetScriptSource(new CDP.Domains.Debugger.GetScriptSourceParameters()
+            finally
             {
-                scriptId = scriptId
-            });
-            if (exist == null || exist.scriptSource == scriptSource || this.debugger == null)
-            {
+                SetScriptSources(scriptId, null);
                 @lock.Release();    //release lock
-                return;
             }
-
-            if (this.trace) Debug.Log($"send: {scriptId} - {filepath}");
-            var resposne = await this.debugger.SetScriptSource(new CDP.Domains.Debugger.SetScriptSourceParameters()
-            {
-                scriptId = scriptId,
-                scriptSource = scriptSource
-            });
-            if (this.trace) Debug.Log($"completed: {scriptId} - {filepath}" /**+ Newtonsoft.Json.JsonConvert.SerializeObject(resposne)*/);
-
-            //release lock
-            @lock.Release();
         }
-        async Task<Locker.IHandler> LockScript(string key)
+        async Task<Locker.IHandler> Lock(string key)
         {
             if (this.scriptLocks == null)
             {
@@ -162,6 +161,23 @@ namespace HR
                 this.scriptLocks.Add(key, locker);
             }
             return await locker.Acquire(0);
+        }
+        void SetScriptSources(string key, string scriptSource)
+        {
+            if (this.scriptSources == null)
+            {
+                this.scriptSources = new Dictionary<string, string>();
+            }
+            this.scriptSources[key] = scriptSource;
+        }
+        string GetScriptSource(string key)
+        {
+            string scriptSource;
+            if (this.scriptSources != null && this.scriptSources.TryGetValue(key, out scriptSource))
+            {
+                return scriptSource;
+            }
+            return null;
         }
         void ScriptParsedHandler(CDP.Domains.Debugger.OnScriptParsedParameters data)
         {
@@ -185,8 +201,10 @@ namespace HR
             }
             this.scriptParsed[scriptId] = filepath;
             this.scriptParsed[filepath] = scriptId;
+
+            if (this.startupCheck) PushUpdate(filepath);
         }
-        void HandleScriptFailedToParse(CDP.Domains.Debugger.OnScriptFailedToParseParameters data)
+        void ScriptFailedToParseHandler(CDP.Domains.Debugger.OnScriptFailedToParseParameters data)
         {
             if (data == null || string.IsNullOrEmpty(data.url) || string.IsNullOrEmpty(data.scriptId))
                 return;
@@ -242,6 +260,7 @@ namespace HR
         class Locker
         {
             public bool IsLocked => locked;
+            public int Pending => handlers.Count;
             private bool locked;
             private List<Tuple<int, Action>> handlers =
                 new List<Tuple<int, Action>>();
