@@ -156,7 +156,7 @@ namespace HR
             RenderPath();
 
             GUILayout.BeginHorizontal();
-            GUILayout.Label("Host", GUILayout.Width(HEADER_WIDTH));
+            GUILayout.Label(Host, GUILayout.Width(HEADER_WIDTH));
             var newHost = GUILayout.TextField(profile.host);
             GUILayout.EndHorizontal();
             if (profile.host != newHost)
@@ -166,7 +166,7 @@ namespace HR
             }
 
             GUILayout.BeginHorizontal();
-            GUILayout.Label("Port", GUILayout.Width(HEADER_WIDTH));
+            GUILayout.Label(Port, GUILayout.Width(HEADER_WIDTH));
             var newPort = (ushort)EditorGUILayout.IntField(profile.port);
             GUILayout.EndHorizontal();
             if (profile.port != newPort)
@@ -176,7 +176,7 @@ namespace HR
             }
 
             GUILayout.BeginHorizontal();
-            GUILayout.Label("Ignore Case", GUILayout.Width(HEADER_WIDTH));
+            GUILayout.Label(IgnoreCase, GUILayout.Width(HEADER_WIDTH));
             var newIgnoreCase = GUILayout.Toggle(profile.ignoreCase, string.Empty);
             GUILayout.EndHorizontal();
             if (profile.ignoreCase != newIgnoreCase)
@@ -186,7 +186,7 @@ namespace HR
             }
 
             GUILayout.BeginHorizontal();
-            GUILayout.Label("Trace", GUILayout.Width(HEADER_WIDTH));
+            GUILayout.Label(Trace, GUILayout.Width(HEADER_WIDTH));
             var newTrace = GUILayout.Toggle(profile.trace, string.Empty);
             GUILayout.EndHorizontal();
             if (profile.trace != newTrace)
@@ -198,7 +198,7 @@ namespace HR
             RenderReconnect();
 
             GUILayout.BeginHorizontal();
-            GUILayout.Label("Startup Check", GUILayout.Width(HEADER_WIDTH));
+            GUILayout.Label(StartupCheck, GUILayout.Width(HEADER_WIDTH));
             var newStartupCheck = GUILayout.Toggle(profile.startupCheck, string.Empty);
             GUILayout.EndHorizontal();
             if (profile.startupCheck != newStartupCheck)
@@ -212,7 +212,7 @@ namespace HR
         void RenderPath()
         {
             GUILayout.BeginHorizontal();
-            GUILayout.Label("Watch Path", GUILayout.Width(HEADER_WIDTH));
+            GUILayout.Label(WatchPath, GUILayout.Width(HEADER_WIDTH));
             using (new EditorGUI.DisabledScope(true))
             {
                 GUILayout.TextField(profile.path);
@@ -235,7 +235,7 @@ namespace HR
         void RenderReconnect()
         {
             GUILayout.BeginHorizontal();
-            GUILayout.Label("Reconnect", GUILayout.Width(HEADER_WIDTH));
+            GUILayout.Label(Reconnect, GUILayout.Width(HEADER_WIDTH));
             var newReconnect = GUILayout.Toggle(profile.reconnect, string.Empty);
             GUILayout.EndHorizontal();
             if (profile.reconnect != newReconnect)
@@ -247,7 +247,7 @@ namespace HR
             using (new EditorGUI.DisabledScope(!newReconnect))
             {
                 GUILayout.BeginHorizontal();
-                GUILayout.Label("Reconnect Delay(ms)", GUILayout.Width(HEADER_WIDTH));
+                GUILayout.Label(ReconnectDelay, GUILayout.Width(HEADER_WIDTH));
                 var newDelay = (ulong)EditorGUILayout.LongField((long)profile.reconnectDelay);
                 GUILayout.EndHorizontal();
                 if (profile.reconnectDelay != newDelay)
@@ -260,7 +260,7 @@ namespace HR
         void RenderFileType()
         {
             GUILayout.BeginHorizontal();
-            GUILayout.Label("Extname", GUILayout.Width(HEADER_WIDTH));
+            GUILayout.Label(Extname, GUILayout.Width(HEADER_WIDTH));
             var newExtname = (FileType)EditorGUILayout.EnumFlagsField(profile.file);
             GUILayout.EndHorizontal();
             if (profile.file != newExtname)
@@ -273,5 +273,14 @@ namespace HR
         {
             this.Stop();
         }
+        static GUIContent Host = new GUIContent("Host", "远程调试地址");
+        static GUIContent Port = new GUIContent("Port", "远程调试端口, 对应new JsEnv(loader, por)中的port参数, 其为ushort类型(0-65535)");
+        static GUIContent IgnoreCase = new GUIContent("Ignore Case", "不区分文件路径中的大小写");
+        static GUIContent Trace = new GUIContent("Trace", "输出脚本更新信息");
+        static GUIContent StartupCheck = new GUIContent("Startup Check", "连接成功后检查所有脚本是否需要更新(将导致启动时间变长)");
+        static GUIContent WatchPath = new GUIContent("Watch Path", "监听的文件夹路径(与已载入脚本路径一致, 对应ILoader.ReadFile debugpath参数)");
+        static GUIContent Reconnect = new GUIContent("Reconnect", "连接断开时, 自动重连.");
+        static GUIContent ReconnectDelay = new GUIContent("Reconnect Delay", "重连延迟");
+        static GUIContent Extname = new GUIContent("Extname", "监听的文件类型");
     }
 }
