@@ -39,27 +39,27 @@ namespace CDP
         public void Once(string eventName, Action fn)
         {
             List<Handler> handelrs = GetHandlers(eventName, true);
-            handelrs.Add(new Handler(fn, -1));
+            handelrs.Add(new Handler(fn, 1));
         }
         public void Once<T1>(string eventName, Action<T1> fn)
         {
             List<Handler> handelrs = GetHandlers(eventName, true);
-            handelrs.Add(new Handler(fn, -1));
+            handelrs.Add(new Handler(fn, 1));
         }
         public void Once<T1, T2>(string eventName, Action<T1, T2> fn)
         {
             List<Handler> handelrs = GetHandlers(eventName, true);
-            handelrs.Add(new Handler(fn, -1));
+            handelrs.Add(new Handler(fn, 1));
         }
         public void Once<T1, T2, T3>(string eventName, Action<T1, T2, T3> fn)
         {
             List<Handler> handelrs = GetHandlers(eventName, true);
-            handelrs.Add(new Handler(fn, -1));
+            handelrs.Add(new Handler(fn, 1));
         }
         public void Once<T1, T2, T3, T4>(string eventName, Action<T1, T2, T3, T4> fn)
         {
             List<Handler> handelrs = GetHandlers(eventName, true);
-            handelrs.Add(new Handler(fn, -1));
+            handelrs.Add(new Handler(fn, 1));
         }
 
         public void Remove<TDelegate>(string eventName, TDelegate handler)
