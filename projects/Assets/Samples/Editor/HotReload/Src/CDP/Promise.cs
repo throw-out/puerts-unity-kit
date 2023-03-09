@@ -25,7 +25,7 @@ namespace CDP
             executor(Resolve, Reject);
         }
 
-        public Awaiter GetAwaiter()
+        public IAwaiter GetAwaiter()
         {
             return this._awaiter;
         }
@@ -38,10 +38,14 @@ namespace CDP
         {
             this._awaiter.Reject(e);
         }
-
-        public class Awaiter :
-           //System.Runtime.CompilerServices.ICriticalNotifyCompletion,
-           System.Runtime.CompilerServices.INotifyCompletion
+        public interface IAwaiter :
+            //System.Runtime.CompilerServices.ICriticalNotifyCompletion,
+            System.Runtime.CompilerServices.INotifyCompletion
+        {
+            bool IsCompleted { get; }
+            void GetResult();
+        }
+        private class Awaiter : IAwaiter
         {
             private bool _completed = false;
             private Exception _exception;
@@ -70,7 +74,7 @@ namespace CDP
             {
                 throw new NotImplementedException();
             }
-            internal void Reject(Exception e)
+            public void Reject(Exception e)
             {
                 if (this._completed)
                     throw new InvalidOperationException("the promise is completed");
@@ -78,7 +82,7 @@ namespace CDP
                 this._exception = e;
                 CompletedContinuations();
             }
-            internal void Resolve()
+            public void Resolve()
             {
                 if (this._completed)
                     throw new InvalidOperationException("the promise is completed");
@@ -115,7 +119,7 @@ namespace CDP
             executor(Resolve, Reject);
         }
 
-        public Awaiter<TResult> GetAwaiter()
+        public IAwaiter<TResult> GetAwaiter()
         {
             return this._awaiter;
         }
@@ -127,9 +131,15 @@ namespace CDP
         {
             this._awaiter.Reject(e);
         }
-        public class Awaiter<T> :
+
+        public interface IAwaiter<T> :
             //System.Runtime.CompilerServices.ICriticalNotifyCompletion,
             System.Runtime.CompilerServices.INotifyCompletion
+        {
+            bool IsCompleted { get; }
+            T GetResult();
+        }
+        private class Awaiter<T> : IAwaiter<T>
         {
             private bool _completed = false;
             private T _result;
@@ -157,13 +167,12 @@ namespace CDP
                     this._continuations.Add(continuation);
                 }
             }
-
             public void UnsafeOnCompleted(Action continuation)
             {
                 throw new NotImplementedException();
             }
 
-            internal void Reject(Exception e)
+            public void Reject(Exception e)
             {
                 if (this._completed)
                     throw new InvalidOperationException("the promise is completed");
@@ -171,7 +180,7 @@ namespace CDP
                 this._exception = e;
                 CompletedContinuations();
             }
-            internal void Resolve(T result)
+            public void Resolve(T result)
             {
                 if (this._completed)
                     throw new InvalidOperationException("the promise is completed");
