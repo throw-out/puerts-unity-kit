@@ -6,6 +6,7 @@ namespace HR
 
     internal class Prefs
     {
+        public static readonly Prefs<bool> SaveExecute = new Prefs<bool>("Editor.HRSaveExecute");
         public static readonly Prefs<Profile[]> Profiles = new Prefs<Profile[]>("Editor.HRProfiles");
 
     }
@@ -40,6 +41,7 @@ namespace HR
         public string path;
         public string host = "localhost";
         public ushort port = 9222;
+        public bool execute;
 
         /// <summary>忽略路径大小写  </summary>
         public bool ignoreCase;

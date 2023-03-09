@@ -22,7 +22,17 @@ namespace HR
         public bool IsReadyHost => !string.IsNullOrEmpty(profile.host);
         public bool IsReadyPath => !string.IsNullOrEmpty(profile.path) && Directory.Exists(profile.path);
         public bool Dirty { get; private set; }
-        public bool Auto { get; private set; }
+        public bool Execute
+        {
+            get => profile.execute;
+            private set
+            {
+                if (profile.execute == value)
+                    return;
+                profile.execute = value;
+                Dirty |= true;
+            }
+        }
 
         public ProfileView(Profile profile)
         {
@@ -53,11 +63,11 @@ namespace HR
             debugger.Open(profile.host, profile.port);
 
             StartWatcher();
-            Auto = this.profile.reconnect;
+            Execute = true;
         }
         public void Stop()
         {
-            Auto = false;
+            Execute = false;
             StopWatcher();
             if (!IsAlive)
                 return;
@@ -77,14 +87,14 @@ namespace HR
         }
         public void OnGUI()
         {
-            using (new EditorGUI.DisabledScope(IsAlive || Auto))
+            using (new EditorGUI.DisabledScope(IsAlive || Execute))
             {
                 RendererConfig();
             }
         }
         public void Tick()
         {
-            if (this.IsAlive || !Auto)
+            if (this.IsAlive || !Execute || !this.profile.reconnect)
                 return;
             if (nextRetry == DateTime.MinValue)
             {

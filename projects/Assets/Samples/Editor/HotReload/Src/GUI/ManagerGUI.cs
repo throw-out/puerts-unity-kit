@@ -13,6 +13,8 @@ namespace HR
     {
         private static List<ProfileView> profiles;
         private static ProfileView current;
+        private static bool saveExecute;
+
         static ManagerGUI()
         {
             EditorApplicationHandler.update += Tick;
@@ -49,8 +51,16 @@ namespace HR
         }
         static void Init()
         {
-            ReadProfiles();
+            ReadSettings();
             current = profiles.Count > 0 ? profiles[0] : null;
+
+            foreach (var profile in profiles)
+            {
+                if (!profile.Execute)
+                    continue;
+                if (saveExecute) profile.Start();
+                else profile.Stop();
+            }
         }
         static void Tick()
         {
@@ -73,28 +83,34 @@ namespace HR
             GUILayout.EndVertical();
 
             GUILayout.BeginVertical();
-            RenderCurrentMenu();
-            GUILayout.Space(20f);
             RenderCurrentProfile();
             GUILayout.EndVertical();
 
             GUILayout.EndHorizontal();
-        }
 
+            RenderMenu();
+        }
+        void RenderMenu()
+        {
+            var newState = EditorGUILayout.Toggle("Save States", saveExecute);
+            if (newState != saveExecute)
+            {
+                saveExecute = newState;
+                SaveSettings();
+            }
+        }
         void RenderProfiles()
         {
             GUILayout.BeginHorizontal();
-            GUILayout.Space(20f);
             if (GUILayout.Button("Add Profile"))
             {
                 profiles.Add(new ProfileView(new Profile()));
-                SaveProfiles();
+                SaveSettings();
                 if (current == null)
                 {
                     current = profiles[0];
                 }
             }
-            GUILayout.Space(20f);
             GUILayout.EndHorizontal();
 
             GUILayout.Space(5f);
@@ -125,20 +141,20 @@ namespace HR
                     current = removeIndex < profiles.Count - 1 ? profiles[removeIndex + 1] : removeIndex > 0 ? profiles[removeIndex - 1] : null;
                 }
                 profiles.RemoveAt(removeIndex);
-                SaveProfiles();
+                SaveSettings();
             }
         }
-        void RenderCurrentMenu()
+        void RenderCurrentProfile()
         {
             GUILayout.BeginHorizontal();
-            using (new EditorGUI.DisabledScope(current == null || current.IsAlive || current.Auto))
+            using (new EditorGUI.DisabledScope(current == null || current.IsAlive || current.Execute))
             {
                 if (GUILayout.Button("Start") && current != null)
                 {
                     current.Start();
                 }
             }
-            using (new EditorGUI.DisabledScope(current == null || !current.IsAlive && !current.Auto))
+            using (new EditorGUI.DisabledScope(current == null || !current.IsAlive && !current.Execute))
             {
                 if (GUILayout.Button("Stop"))
                 {
@@ -146,20 +162,20 @@ namespace HR
                 }
             }
             GUILayout.EndHorizontal();
-        }
-        void RenderCurrentProfile()
-        {
+
             if (current == null)
                 return;
+
+            GUILayout.Space(5f);
             current.OnGUI();
             if (current.Dirty)
             {
                 current.Apply();
-                SaveProfiles();
+                SaveSettings();
             }
         }
 
-        static void ReadProfiles()
+        static void ReadSettings()
         {
             profiles = Prefs.Profiles.Read()
                            ?.Select(p => new ProfileView(p))
@@ -168,10 +184,12 @@ namespace HR
             {
                 profiles = new List<ProfileView>();
             }
+            saveExecute = Prefs.SaveExecute.Read();
         }
-        static void SaveProfiles()
+        static void SaveSettings()
         {
             Prefs.Profiles.Save(profiles?.Select(v => v.profile).ToArray());
+            Prefs.SaveExecute.Save(saveExecute);
         }
     }
 }
