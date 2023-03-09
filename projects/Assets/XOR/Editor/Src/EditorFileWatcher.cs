@@ -135,6 +135,7 @@ Event: {Enum.GetName(typeof(WatcherChangeTypes), e.ChangeType)} - {e.FullPath}
         {
             base.Release();
             this.Dispose();
+            this.UnregisterHandlers();
         }
         public void Dispose()
         {
