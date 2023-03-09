@@ -84,10 +84,6 @@ namespace CDP.Domains
         /// <summary> 
         /// Fetches the accessibility node and partial accessibility tree for this DOM node, if it exists. 
         /// </summary>
-        /// <param name="nodeId">Identifier of the node to get the partial accessibility tree for.</param>
-        /// <param name="backendNodeId">Identifier of the backend node to get the partial accessibility tree for.</param>
-        /// <param name="objectId">JavaScript object id of the node wrapper to get the partial accessibility tree for.</param>
-        /// <param name="fetchRelatives">Whether to fetch this nodes ancestors, siblings and children. Defaults to true.</param>
         public async Task<GetPartialAXTreeReturn> GetPartialAXTree(GetPartialAXTreeParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("Accessibility.getPartialAXTree", parameters, sessionId);
@@ -96,9 +92,6 @@ namespace CDP.Domains
         /// <summary> 
         /// Fetches the entire accessibility tree for the root Document 
         /// </summary>
-        /// <param name="depth">The maximum depth at which descendants of the root node should be retrieved.If omitted, the full tree is returned.</param>
-        /// <param name="max_depth">Deprecated. This parameter has been renamed to `depth`. If depth is not provided, max_depth will be used.</param>
-        /// <param name="frameId">The frame for whose document the AX tree should be retrieved.If omited, the root frame is used.</param>
         public async Task<GetFullAXTreeReturn> GetFullAXTree(GetFullAXTreeParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("Accessibility.getFullAXTree", parameters, sessionId);
@@ -107,7 +100,6 @@ namespace CDP.Domains
         /// <summary> 
         /// Fetches the root node.Requires `enable()` to have been called previously. 
         /// </summary>
-        /// <param name="frameId">The frame in whose document the node resides.If omitted, the root frame is used.</param>
         public async Task<GetRootAXNodeReturn> GetRootAXNode(GetRootAXNodeParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("Accessibility.getRootAXNode", parameters, sessionId);
@@ -116,9 +108,6 @@ namespace CDP.Domains
         /// <summary> 
         /// Fetches a node and all ancestors up to and including the root.Requires `enable()` to have been called previously. 
         /// </summary>
-        /// <param name="nodeId">Identifier of the node to get.</param>
-        /// <param name="backendNodeId">Identifier of the backend node to get.</param>
-        /// <param name="objectId">JavaScript object id of the node wrapper to get.</param>
         public async Task<GetAXNodeAndAncestorsReturn> GetAXNodeAndAncestors(GetAXNodeAndAncestorsParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("Accessibility.getAXNodeAndAncestors", parameters, sessionId);
@@ -127,8 +116,6 @@ namespace CDP.Domains
         /// <summary> 
         /// Fetches a particular accessibility node by AXNodeId.Requires `enable()` to have been called previously. 
         /// </summary>
-        /// <param name="id"></param>
-        /// <param name="frameId">The frame in whose document the node resides.If omitted, the root frame is used.</param>
         public async Task<GetChildAXNodesReturn> GetChildAXNodes(GetChildAXNodesParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("Accessibility.getChildAXNodes", parameters, sessionId);
@@ -137,11 +124,6 @@ namespace CDP.Domains
         /// <summary> 
         /// Query a DOM node's accessibility subtree for accessible name and role.This command computes the name and role for all nodes in the subtree, including those that areignored for accessibility, and returns those that mactch the specified name and role. If no DOMnode is specified, or the DOM node does not exist, the command returns an error. If neither`accessibleName` or `role` is specified, it returns all the accessibility nodes in the subtree. 
         /// </summary>
-        /// <param name="nodeId">Identifier of the node for the root to query.</param>
-        /// <param name="backendNodeId">Identifier of the backend node for the root to query.</param>
-        /// <param name="objectId">JavaScript object id of the node wrapper for the root to query.</param>
-        /// <param name="accessibleName">Find nodes with this computed name.</param>
-        /// <param name="role">Find nodes with this computed role.</param>
         public async Task<QueryAXTreeReturn> QueryAXTree(QueryAXTreeParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("Accessibility.queryAXTree", parameters, sessionId);
@@ -428,7 +410,6 @@ namespace CDP.Domains
         /// <summary> 
         /// Returns the current time of the an animation. 
         /// </summary>
-        /// <param name="id">Id of animation.</param>
         public async Task<GetCurrentTimeReturn> GetCurrentTime(GetCurrentTimeParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("Animation.getCurrentTime", parameters, sessionId);
@@ -445,7 +426,6 @@ namespace CDP.Domains
         /// <summary> 
         /// Releases a set of animations to no longer be manipulated. 
         /// </summary>
-        /// <param name="animations">List of animation ids to seek.</param>
         public async Task ReleaseAnimations(ReleaseAnimationsParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("Animation.releaseAnimations", parameters, sessionId);
@@ -454,7 +434,6 @@ namespace CDP.Domains
         /// <summary> 
         /// Gets the remote object of the Animation. 
         /// </summary>
-        /// <param name="animationId">Animation id.</param>
         public async Task<ResolveAnimationReturn> ResolveAnimation(ResolveAnimationParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("Animation.resolveAnimation", parameters, sessionId);
@@ -463,8 +442,6 @@ namespace CDP.Domains
         /// <summary> 
         /// Seek a set of animations to a particular time within each animation. 
         /// </summary>
-        /// <param name="animations">List of animation ids to seek.</param>
-        /// <param name="currentTime">Set the current time of each animation.</param>
         public async Task SeekAnimations(SeekAnimationsParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("Animation.seekAnimations", parameters, sessionId);
@@ -473,8 +450,6 @@ namespace CDP.Domains
         /// <summary> 
         /// Sets the paused state of a set of animations. 
         /// </summary>
-        /// <param name="animations">Animations to set the pause state of.</param>
-        /// <param name="paused">Paused state to set to.</param>
         public async Task SetPaused(SetPausedParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("Animation.setPaused", parameters, sessionId);
@@ -483,7 +458,6 @@ namespace CDP.Domains
         /// <summary> 
         /// Sets the playback rate of the document timeline. 
         /// </summary>
-        /// <param name="playbackRate">Playback rate for animations on page</param>
         public async Task SetPlaybackRate(SetPlaybackRateParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("Animation.setPlaybackRate", parameters, sessionId);
@@ -492,9 +466,6 @@ namespace CDP.Domains
         /// <summary> 
         /// Sets the timing of an animation node. 
         /// </summary>
-        /// <param name="animationId">Animation id.</param>
-        /// <param name="duration">Duration of the animation.</param>
-        /// <param name="delay">Delay of the animation.</param>
         public async Task SetTiming(SetTimingParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("Animation.setTiming", parameters, sessionId);
@@ -701,10 +672,6 @@ namespace CDP.Domains
         /// <summary> 
         /// Returns the response body and size if it were re-encoded with the specified settings. Onlyapplies to images. 
         /// </summary>
-        /// <param name="requestId">Identifier of the network request to get content for.</param>
-        /// <param name="encoding">The encoding to use.</param>
-        /// <param name="quality">The quality of the encoding (0-1). (defaults to 1)</param>
-        /// <param name="sizeOnly">Whether to only return the size information (defaults to false).</param>
         public async Task<GetEncodedResponseReturn> GetEncodedResponse(GetEncodedResponseParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("Audits.getEncodedResponse", parameters, sessionId);
@@ -729,7 +696,6 @@ namespace CDP.Domains
         /// <summary> 
         /// Runs the contrast check for the target page. Found issues are reportedusing Audits.issueAdded event. 
         /// </summary>
-        /// <param name="reportAAA">Whether to report WCAG AAA level issues. Default is false.</param>
         public async Task CheckContrast(CheckContrastParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("Audits.checkContrast", parameters, sessionId);
@@ -1121,7 +1087,6 @@ namespace CDP.Domains
         /// <summary> 
         /// Enables event updates for the service. 
         /// </summary>
-        /// <param name="service"></param>
         public async Task StartObserving(StartObservingParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("BackgroundService.startObserving", parameters, sessionId);
@@ -1130,7 +1095,6 @@ namespace CDP.Domains
         /// <summary> 
         /// Disables event updates for the service. 
         /// </summary>
-        /// <param name="service"></param>
         public async Task StopObserving(StopObservingParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("BackgroundService.stopObserving", parameters, sessionId);
@@ -1139,8 +1103,6 @@ namespace CDP.Domains
         /// <summary> 
         /// Set the recording state for the service. 
         /// </summary>
-        /// <param name="shouldRecord"></param>
-        /// <param name="service"></param>
         public async Task SetRecording(SetRecordingParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("BackgroundService.setRecording", parameters, sessionId);
@@ -1149,7 +1111,6 @@ namespace CDP.Domains
         /// <summary> 
         /// Clears all stored data for the service. 
         /// </summary>
-        /// <param name="service"></param>
         public async Task ClearEvents(ClearEventsParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("BackgroundService.clearEvents", parameters, sessionId);
@@ -1285,10 +1246,6 @@ namespace CDP.Domains
         /// <summary> 
         /// Set permission settings for given origin. 
         /// </summary>
-        /// <param name="permission">Descriptor of permission to override.</param>
-        /// <param name="setting">Setting of the permission.</param>
-        /// <param name="origin">Origin the permission applies to, all origins if not specified.</param>
-        /// <param name="browserContextId">Context to override. When omitted, default browser context is used.</param>
         public async Task SetPermission(SetPermissionParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("Browser.setPermission", parameters, sessionId);
@@ -1297,9 +1254,6 @@ namespace CDP.Domains
         /// <summary> 
         /// Grant specific permissions to the given origin and reject all others. 
         /// </summary>
-        /// <param name="permissions"></param>
-        /// <param name="origin">Origin the permission applies to, all origins if not specified.</param>
-        /// <param name="browserContextId">BrowserContext to override permissions. When omitted, default browser context is used.</param>
         public async Task GrantPermissions(GrantPermissionsParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("Browser.grantPermissions", parameters, sessionId);
@@ -1308,7 +1262,6 @@ namespace CDP.Domains
         /// <summary> 
         /// Reset all permission management for all origins. 
         /// </summary>
-        /// <param name="browserContextId">BrowserContext to reset permissions. When omitted, default browser context is used.</param>
         public async Task ResetPermissions(ResetPermissionsParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("Browser.resetPermissions", parameters, sessionId);
@@ -1317,10 +1270,6 @@ namespace CDP.Domains
         /// <summary> 
         /// Set the behavior when downloading a file. 
         /// </summary>
-        /// <param name="behavior">Whether to allow all or deny all download requests, or use default Chrome behavior ifavailable (otherwise deny). |allowAndName| allows download and names files according totheir dowmload guids.</param>
-        /// <param name="browserContextId">BrowserContext to set download behavior. When omitted, default browser context is used.</param>
-        /// <param name="downloadPath">The default path to save downloaded files to. This is required if behavior is set to 'allow'or 'allowAndName'.</param>
-        /// <param name="eventsEnabled">Whether to emit download events (defaults to false).</param>
         public async Task SetDownloadBehavior(SetDownloadBehaviorParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("Browser.setDownloadBehavior", parameters, sessionId);
@@ -1329,8 +1278,6 @@ namespace CDP.Domains
         /// <summary> 
         /// Cancel a download if in progress 
         /// </summary>
-        /// <param name="guid">Global unique identifier of the download.</param>
-        /// <param name="browserContextId">BrowserContext to perform the action in. When omitted, default browser context is used.</param>
         public async Task CancelDownload(CancelDownloadParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("Browser.cancelDownload", parameters, sessionId);
@@ -1379,8 +1326,6 @@ namespace CDP.Domains
         /// <summary> 
         /// Get Chrome histograms. 
         /// </summary>
-        /// <param name="query">Requested substring in name. Only histograms which have query as asubstring in their name are extracted. An empty or absent query returnsall histograms.</param>
-        /// <param name="delta">If true, retrieve delta since last call.</param>
         public async Task<GetHistogramsReturn> GetHistograms(GetHistogramsParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("Browser.getHistograms", parameters, sessionId);
@@ -1389,8 +1334,6 @@ namespace CDP.Domains
         /// <summary> 
         /// Get a Chrome histogram by name. 
         /// </summary>
-        /// <param name="name">Requested histogram name.</param>
-        /// <param name="delta">If true, retrieve delta since last call.</param>
         public async Task<GetHistogramReturn> GetHistogram(GetHistogramParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("Browser.getHistogram", parameters, sessionId);
@@ -1399,7 +1342,6 @@ namespace CDP.Domains
         /// <summary> 
         /// Get position and size of the browser window. 
         /// </summary>
-        /// <param name="windowId">Browser window id.</param>
         public async Task<GetWindowBoundsReturn> GetWindowBounds(GetWindowBoundsParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("Browser.getWindowBounds", parameters, sessionId);
@@ -1408,7 +1350,6 @@ namespace CDP.Domains
         /// <summary> 
         /// Get the browser window that contains the devtools target. 
         /// </summary>
-        /// <param name="targetId">Devtools agent host id. If called as a part of the session, associated targetId is used.</param>
         public async Task<GetWindowForTargetReturn> GetWindowForTarget(GetWindowForTargetParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("Browser.getWindowForTarget", parameters, sessionId);
@@ -1417,8 +1358,6 @@ namespace CDP.Domains
         /// <summary> 
         /// Set position and/or size of the browser window. 
         /// </summary>
-        /// <param name="windowId">Browser window id.</param>
-        /// <param name="bounds">New window bounds. The 'minimized', 'maximized' and 'fullscreen' states cannot be combinedwith 'left', 'top', 'width' or 'height'. Leaves unspecified fields unchanged.</param>
         public async Task SetWindowBounds(SetWindowBoundsParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("Browser.setWindowBounds", parameters, sessionId);
@@ -1427,8 +1366,6 @@ namespace CDP.Domains
         /// <summary> 
         /// Set dock tile details, platform-specific. 
         /// </summary>
-        /// <param name="badgeLabel"></param>
-        /// <param name="image">Png encoded image. (Encoded as a base64 string when passed over JSON)</param>
         public async Task SetDockTile(SetDockTileParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("Browser.setDockTile", parameters, sessionId);
@@ -1437,7 +1374,6 @@ namespace CDP.Domains
         /// <summary> 
         /// Invoke custom browser commands used by telemetry. 
         /// </summary>
-        /// <param name="commandId"></param>
         public async Task ExecuteBrowserCommand(ExecuteBrowserCommandParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("Browser.executeBrowserCommand", parameters, sessionId);
@@ -1705,6 +1641,7 @@ namespace CDP.Domains
         }
         
         /// <summary> Fires whenever a MediaQuery result changes (for example, after a browser window has beenresized.) The current implementation considers only viewport-dependent media features. </summary>
+        /// <returns> remove handler </returns>
         public Action OnMediaQueryResultChanged(Action handler, string sessionId = default)
         {
             string eventName = string.IsNullOrEmpty(sessionId) ? "CSS.mediaQueryResultChanged" : $"CSS.mediaQueryResultChanged.{sessionId}";
@@ -1759,9 +1696,6 @@ namespace CDP.Domains
         /// <summary> 
         /// Inserts a new rule with the given `ruleText` in a stylesheet with given `styleSheetId`, at theposition specified by `location`. 
         /// </summary>
-        /// <param name="styleSheetId">The css style sheet identifier where a new rule should be inserted.</param>
-        /// <param name="ruleText">The text of a new rule.</param>
-        /// <param name="location">Text position of a new rule in the target style sheet.</param>
         public async Task<AddRuleReturn> AddRule(AddRuleParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("CSS.addRule", parameters, sessionId);
@@ -1770,7 +1704,6 @@ namespace CDP.Domains
         /// <summary> 
         /// Returns all class names from specified stylesheet. 
         /// </summary>
-        /// <param name="styleSheetId"></param>
         public async Task<CollectClassNamesReturn> CollectClassNames(CollectClassNamesParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("CSS.collectClassNames", parameters, sessionId);
@@ -1779,7 +1712,6 @@ namespace CDP.Domains
         /// <summary> 
         /// Creates a new special "via-inspector" stylesheet in the frame with given `frameId`. 
         /// </summary>
-        /// <param name="frameId">Identifier of the frame where "via-inspector" stylesheet should be created.</param>
         public async Task<CreateStyleSheetReturn> CreateStyleSheet(CreateStyleSheetParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("CSS.createStyleSheet", parameters, sessionId);
@@ -1804,8 +1736,6 @@ namespace CDP.Domains
         /// <summary> 
         /// Ensures that the given node will have specified pseudo-classes whenever its style is computed bythe browser. 
         /// </summary>
-        /// <param name="nodeId">The element id for which to force the pseudo state.</param>
-        /// <param name="forcedPseudoClasses">Element pseudo classes to force when computing the element's style.</param>
         public async Task ForcePseudoState(ForcePseudoStateParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("CSS.forcePseudoState", parameters, sessionId);
@@ -1814,7 +1744,6 @@ namespace CDP.Domains
         /// <summary> 
         ///  
         /// </summary>
-        /// <param name="nodeId">Id of the node to get background colors for.</param>
         public async Task<GetBackgroundColorsReturn> GetBackgroundColors(GetBackgroundColorsParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("CSS.getBackgroundColors", parameters, sessionId);
@@ -1823,7 +1752,6 @@ namespace CDP.Domains
         /// <summary> 
         /// Returns the computed style for a DOM node identified by `nodeId`. 
         /// </summary>
-        /// <param name="nodeId"></param>
         public async Task<GetComputedStyleForNodeReturn> GetComputedStyleForNode(GetComputedStyleForNodeParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("CSS.getComputedStyleForNode", parameters, sessionId);
@@ -1832,7 +1760,6 @@ namespace CDP.Domains
         /// <summary> 
         /// Returns the styles defined inline (explicitly in the "style" attribute and implicitly, using DOMattributes) for a DOM node identified by `nodeId`. 
         /// </summary>
-        /// <param name="nodeId"></param>
         public async Task<GetInlineStylesForNodeReturn> GetInlineStylesForNode(GetInlineStylesForNodeParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("CSS.getInlineStylesForNode", parameters, sessionId);
@@ -1841,7 +1768,6 @@ namespace CDP.Domains
         /// <summary> 
         /// Returns requested styles for a DOM node identified by `nodeId`. 
         /// </summary>
-        /// <param name="nodeId"></param>
         public async Task<GetMatchedStylesForNodeReturn> GetMatchedStylesForNode(GetMatchedStylesForNodeParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("CSS.getMatchedStylesForNode", parameters, sessionId);
@@ -1858,7 +1784,6 @@ namespace CDP.Domains
         /// <summary> 
         /// Requests information about platform fonts which we used to render child TextNodes in the givennode. 
         /// </summary>
-        /// <param name="nodeId"></param>
         public async Task<GetPlatformFontsForNodeReturn> GetPlatformFontsForNode(GetPlatformFontsForNodeParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("CSS.getPlatformFontsForNode", parameters, sessionId);
@@ -1867,7 +1792,6 @@ namespace CDP.Domains
         /// <summary> 
         /// Returns the current textual content for a stylesheet. 
         /// </summary>
-        /// <param name="styleSheetId"></param>
         public async Task<GetStyleSheetTextReturn> GetStyleSheetText(GetStyleSheetTextParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("CSS.getStyleSheetText", parameters, sessionId);
@@ -1876,7 +1800,6 @@ namespace CDP.Domains
         /// <summary> 
         /// Starts tracking the given computed styles for updates. The specified array of propertiesreplaces the one previously specified. Pass empty array to disable tracking.Use takeComputedStyleUpdates to retrieve the list of nodes that had properties modified.The changes to computed style properties are only tracked for nodes pushed to the front-endby the DOM agent. If no changes to the tracked properties occur after the node has been pushedto the front-end, no updates will be issued for the node. 
         /// </summary>
-        /// <param name="propertiesToTrack"></param>
         public async Task TrackComputedStyleUpdates(TrackComputedStyleUpdatesParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("CSS.trackComputedStyleUpdates", parameters, sessionId);
@@ -1893,9 +1816,6 @@ namespace CDP.Domains
         /// <summary> 
         /// Find a rule with the given active property for the given node and set the new value for thisproperty 
         /// </summary>
-        /// <param name="nodeId">The element id for which to set property.</param>
-        /// <param name="propertyName"></param>
-        /// <param name="value"></param>
         public async Task SetEffectivePropertyValueForNode(SetEffectivePropertyValueForNodeParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("CSS.setEffectivePropertyValueForNode", parameters, sessionId);
@@ -1904,9 +1824,6 @@ namespace CDP.Domains
         /// <summary> 
         /// Modifies the keyframe rule key text. 
         /// </summary>
-        /// <param name="styleSheetId"></param>
-        /// <param name="range"></param>
-        /// <param name="keyText"></param>
         public async Task<SetKeyframeKeyReturn> SetKeyframeKey(SetKeyframeKeyParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("CSS.setKeyframeKey", parameters, sessionId);
@@ -1915,9 +1832,6 @@ namespace CDP.Domains
         /// <summary> 
         /// Modifies the rule selector. 
         /// </summary>
-        /// <param name="styleSheetId"></param>
-        /// <param name="range"></param>
-        /// <param name="text"></param>
         public async Task<SetMediaTextReturn> SetMediaText(SetMediaTextParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("CSS.setMediaText", parameters, sessionId);
@@ -1926,9 +1840,6 @@ namespace CDP.Domains
         /// <summary> 
         /// Modifies the expression of a container query. 
         /// </summary>
-        /// <param name="styleSheetId"></param>
-        /// <param name="range"></param>
-        /// <param name="text"></param>
         public async Task<SetContainerQueryTextReturn> SetContainerQueryText(SetContainerQueryTextParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("CSS.setContainerQueryText", parameters, sessionId);
@@ -1937,9 +1848,6 @@ namespace CDP.Domains
         /// <summary> 
         /// Modifies the rule selector. 
         /// </summary>
-        /// <param name="styleSheetId"></param>
-        /// <param name="range"></param>
-        /// <param name="selector"></param>
         public async Task<SetRuleSelectorReturn> SetRuleSelector(SetRuleSelectorParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("CSS.setRuleSelector", parameters, sessionId);
@@ -1948,8 +1856,6 @@ namespace CDP.Domains
         /// <summary> 
         /// Sets the new stylesheet text. 
         /// </summary>
-        /// <param name="styleSheetId"></param>
-        /// <param name="text"></param>
         public async Task<SetStyleSheetTextReturn> SetStyleSheetText(SetStyleSheetTextParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("CSS.setStyleSheetText", parameters, sessionId);
@@ -1958,7 +1864,6 @@ namespace CDP.Domains
         /// <summary> 
         /// Applies specified style edits one after another in the given order. 
         /// </summary>
-        /// <param name="edits"></param>
         public async Task<SetStyleTextsReturn> SetStyleTexts(SetStyleTextsParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("CSS.setStyleTexts", parameters, sessionId);
@@ -1991,7 +1896,6 @@ namespace CDP.Domains
         /// <summary> 
         /// Enables/disables rendering of local CSS fonts (enabled by default). 
         /// </summary>
-        /// <param name="enabled">Whether rendering of local fonts is enabled.</param>
         public async Task SetLocalFontsEnabled(SetLocalFontsEnabledParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("CSS.setLocalFontsEnabled", parameters, sessionId);
@@ -2641,7 +2545,6 @@ namespace CDP.Domains
         /// <summary> 
         /// Deletes a cache. 
         /// </summary>
-        /// <param name="cacheId">Id of cache for deletion.</param>
         public async Task DeleteCache(DeleteCacheParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("CacheStorage.deleteCache", parameters, sessionId);
@@ -2650,8 +2553,6 @@ namespace CDP.Domains
         /// <summary> 
         /// Deletes a cache entry. 
         /// </summary>
-        /// <param name="cacheId">Id of cache where the entry will be deleted.</param>
-        /// <param name="request">URL spec of the request.</param>
         public async Task DeleteEntry(DeleteEntryParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("CacheStorage.deleteEntry", parameters, sessionId);
@@ -2660,7 +2561,6 @@ namespace CDP.Domains
         /// <summary> 
         /// Requests cache names. 
         /// </summary>
-        /// <param name="securityOrigin">Security origin.</param>
         public async Task<RequestCacheNamesReturn> RequestCacheNames(RequestCacheNamesParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("CacheStorage.requestCacheNames", parameters, sessionId);
@@ -2669,9 +2569,6 @@ namespace CDP.Domains
         /// <summary> 
         /// Fetches cache entry. 
         /// </summary>
-        /// <param name="cacheId">Id of cache that contains the entry.</param>
-        /// <param name="requestURL">URL spec of the request.</param>
-        /// <param name="requestHeaders">headers of the request.</param>
         public async Task<RequestCachedResponseReturn> RequestCachedResponse(RequestCachedResponseParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("CacheStorage.requestCachedResponse", parameters, sessionId);
@@ -2680,10 +2577,6 @@ namespace CDP.Domains
         /// <summary> 
         /// Requests data from cache. 
         /// </summary>
-        /// <param name="cacheId">ID of cache to get entries from.</param>
-        /// <param name="skipCount">Number of records to skip.</param>
-        /// <param name="pageSize">Number of records to fetch.</param>
-        /// <param name="pathFilter">If present, only return the entries containing this substring in the path</param>
         public async Task<RequestEntriesReturn> RequestEntries(RequestEntriesParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("CacheStorage.requestEntries", parameters, sessionId);
@@ -2859,7 +2752,6 @@ namespace CDP.Domains
         /// <summary> 
         /// Starts observing for sinks that can be used for tab mirroring, and if set,sinks compatible with |presentationUrl| as well. When sinks are found, a|sinksUpdated| event is fired.Also starts observing for issue messages. When an issue is added or removed,an |issueUpdated| event is fired. 
         /// </summary>
-        /// <param name="presentationUrl"></param>
         public async Task Enable(EnableParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("Cast.enable", parameters, sessionId);
@@ -2876,7 +2768,6 @@ namespace CDP.Domains
         /// <summary> 
         /// Sets a sink to be used when the web page requests the browser to choose asink via Presentation API, Remote Playback API, or Cast SDK. 
         /// </summary>
-        /// <param name="sinkName"></param>
         public async Task SetSinkToUse(SetSinkToUseParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("Cast.setSinkToUse", parameters, sessionId);
@@ -2885,7 +2776,6 @@ namespace CDP.Domains
         /// <summary> 
         /// Starts mirroring the desktop to the sink. 
         /// </summary>
-        /// <param name="sinkName"></param>
         public async Task StartDesktopMirroring(StartDesktopMirroringParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("Cast.startDesktopMirroring", parameters, sessionId);
@@ -2894,7 +2784,6 @@ namespace CDP.Domains
         /// <summary> 
         /// Starts mirroring the tab to the sink. 
         /// </summary>
-        /// <param name="sinkName"></param>
         public async Task StartTabMirroring(StartTabMirroringParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("Cast.startTabMirroring", parameters, sessionId);
@@ -2903,7 +2792,6 @@ namespace CDP.Domains
         /// <summary> 
         /// Stops the active Cast session on the sink. 
         /// </summary>
-        /// <param name="sinkName"></param>
         public async Task StopCasting(StopCastingParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("Cast.stopCasting", parameters, sessionId);
@@ -3083,6 +2971,7 @@ namespace CDP.Domains
         }
         
         /// <summary> Fired when `Document` has been totally updated. Node ids are no longer valid. </summary>
+        /// <returns> remove handler </returns>
         public Action OnDocumentUpdated(Action handler, string sessionId = default)
         {
             string eventName = string.IsNullOrEmpty(sessionId) ? "DOM.documentUpdated" : $"DOM.documentUpdated.{sessionId}";
@@ -3176,7 +3065,6 @@ namespace CDP.Domains
         /// <summary> 
         /// Collects class names for the node with given id and all of it's child nodes. 
         /// </summary>
-        /// <param name="nodeId">Id of the node to collect class names.</param>
         public async Task<CollectClassNamesFromSubtreeReturn> CollectClassNamesFromSubtree(CollectClassNamesFromSubtreeParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("DOM.collectClassNamesFromSubtree", parameters, sessionId);
@@ -3185,9 +3073,6 @@ namespace CDP.Domains
         /// <summary> 
         /// Creates a deep copy of the specified node and places it into the target container before thegiven anchor. 
         /// </summary>
-        /// <param name="nodeId">Id of the node to copy.</param>
-        /// <param name="targetNodeId">Id of the element to drop the copy into.</param>
-        /// <param name="insertBeforeNodeId">Drop the copy before this node (if absent, the copy becomes the last child of`targetNodeId`).</param>
         public async Task<CopyToReturn> CopyTo(CopyToParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("DOM.copyTo", parameters, sessionId);
@@ -3196,11 +3081,6 @@ namespace CDP.Domains
         /// <summary> 
         /// Describes node given its id, does not require domain to be enabled. Does not start tracking anyobjects, can be used for automation. 
         /// </summary>
-        /// <param name="nodeId">Identifier of the node.</param>
-        /// <param name="backendNodeId">Identifier of the backend node.</param>
-        /// <param name="objectId">JavaScript object id of the node wrapper.</param>
-        /// <param name="depth">The maximum depth at which children should be retrieved, defaults to 1. Use -1 for theentire subtree or provide an integer larger than 0.</param>
-        /// <param name="pierce">Whether or not iframes and shadow roots should be traversed when returning the subtree(default is false).</param>
         public async Task<DescribeNodeReturn> DescribeNode(DescribeNodeParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("DOM.describeNode", parameters, sessionId);
@@ -3209,10 +3089,6 @@ namespace CDP.Domains
         /// <summary> 
         /// Scrolls the specified rect of the given node into view if not already visible.Note: exactly one between nodeId, backendNodeId and objectId should be passedto identify the node. 
         /// </summary>
-        /// <param name="nodeId">Identifier of the node.</param>
-        /// <param name="backendNodeId">Identifier of the backend node.</param>
-        /// <param name="objectId">JavaScript object id of the node wrapper.</param>
-        /// <param name="rect">The rect to be scrolled into view, relative to the node's border box, in CSS pixels.When omitted, center of the node will be used, similar to Element.scrollIntoView.</param>
         public async Task ScrollIntoViewIfNeeded(ScrollIntoViewIfNeededParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("DOM.scrollIntoViewIfNeeded", parameters, sessionId);
@@ -3229,7 +3105,6 @@ namespace CDP.Domains
         /// <summary> 
         /// Discards search results from the session with the given id. `getSearchResults` should no longerbe called for that search. 
         /// </summary>
-        /// <param name="searchId">Unique search session identifier.</param>
         public async Task DiscardSearchResults(DiscardSearchResultsParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("DOM.discardSearchResults", parameters, sessionId);
@@ -3238,7 +3113,6 @@ namespace CDP.Domains
         /// <summary> 
         /// Enables DOM agent for the given page. 
         /// </summary>
-        /// <param name="includeWhitespace">Whether to include whitespaces in the children array of returned Nodes.</param>
         public async Task Enable(EnableParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("DOM.enable", parameters, sessionId);
@@ -3247,9 +3121,6 @@ namespace CDP.Domains
         /// <summary> 
         /// Focuses the given element. 
         /// </summary>
-        /// <param name="nodeId">Identifier of the node.</param>
-        /// <param name="backendNodeId">Identifier of the backend node.</param>
-        /// <param name="objectId">JavaScript object id of the node wrapper.</param>
         public async Task Focus(FocusParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("DOM.focus", parameters, sessionId);
@@ -3258,7 +3129,6 @@ namespace CDP.Domains
         /// <summary> 
         /// Returns attributes for the specified node. 
         /// </summary>
-        /// <param name="nodeId">Id of the node to retrieve attibutes for.</param>
         public async Task<GetAttributesReturn> GetAttributes(GetAttributesParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("DOM.getAttributes", parameters, sessionId);
@@ -3267,9 +3137,6 @@ namespace CDP.Domains
         /// <summary> 
         /// Returns boxes for the given node. 
         /// </summary>
-        /// <param name="nodeId">Identifier of the node.</param>
-        /// <param name="backendNodeId">Identifier of the backend node.</param>
-        /// <param name="objectId">JavaScript object id of the node wrapper.</param>
         public async Task<GetBoxModelReturn> GetBoxModel(GetBoxModelParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("DOM.getBoxModel", parameters, sessionId);
@@ -3278,9 +3145,6 @@ namespace CDP.Domains
         /// <summary> 
         /// Returns quads that describe node position on the page. This methodmight return multiple quads for inline nodes. 
         /// </summary>
-        /// <param name="nodeId">Identifier of the node.</param>
-        /// <param name="backendNodeId">Identifier of the backend node.</param>
-        /// <param name="objectId">JavaScript object id of the node wrapper.</param>
         public async Task<GetContentQuadsReturn> GetContentQuads(GetContentQuadsParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("DOM.getContentQuads", parameters, sessionId);
@@ -3289,8 +3153,6 @@ namespace CDP.Domains
         /// <summary> 
         /// Returns the root DOM node (and optionally the subtree) to the caller. 
         /// </summary>
-        /// <param name="depth">The maximum depth at which children should be retrieved, defaults to 1. Use -1 for theentire subtree or provide an integer larger than 0.</param>
-        /// <param name="pierce">Whether or not iframes and shadow roots should be traversed when returning the subtree(default is false).</param>
         public async Task<GetDocumentReturn> GetDocument(GetDocumentParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("DOM.getDocument", parameters, sessionId);
@@ -3299,8 +3161,6 @@ namespace CDP.Domains
         /// <summary> 
         /// Returns the root DOM node (and optionally the subtree) to the caller.Deprecated, as it is not designed to work well with the rest of the DOM agent.Use DOMSnapshot.captureSnapshot instead. 
         /// </summary>
-        /// <param name="depth">The maximum depth at which children should be retrieved, defaults to 1. Use -1 for theentire subtree or provide an integer larger than 0.</param>
-        /// <param name="pierce">Whether or not iframes and shadow roots should be traversed when returning the subtree(default is false).</param>
         public async Task<GetFlattenedDocumentReturn> GetFlattenedDocument(GetFlattenedDocumentParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("DOM.getFlattenedDocument", parameters, sessionId);
@@ -3309,9 +3169,6 @@ namespace CDP.Domains
         /// <summary> 
         /// Finds nodes with a given computed style in a subtree. 
         /// </summary>
-        /// <param name="nodeId">Node ID pointing to the root of a subtree.</param>
-        /// <param name="computedStyles">The style to filter nodes by (includes nodes if any of properties matches).</param>
-        /// <param name="pierce">Whether or not iframes and shadow roots in the same target should be traversed when returning theresults (default is false).</param>
         public async Task<GetNodesForSubtreeByStyleReturn> GetNodesForSubtreeByStyle(GetNodesForSubtreeByStyleParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("DOM.getNodesForSubtreeByStyle", parameters, sessionId);
@@ -3320,10 +3177,6 @@ namespace CDP.Domains
         /// <summary> 
         /// Returns node id at given location. Depending on whether DOM domain is enabled, nodeId iseither returned or not. 
         /// </summary>
-        /// <param name="x">X coordinate.</param>
-        /// <param name="y">Y coordinate.</param>
-        /// <param name="includeUserAgentShadowDOM">False to skip to the nearest non-UA shadow root ancestor (default: false).</param>
-        /// <param name="ignorePointerEventsNone">Whether to ignore pointer-events: none on elements and hit test them.</param>
         public async Task<GetNodeForLocationReturn> GetNodeForLocation(GetNodeForLocationParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("DOM.getNodeForLocation", parameters, sessionId);
@@ -3332,9 +3185,6 @@ namespace CDP.Domains
         /// <summary> 
         /// Returns node's HTML markup. 
         /// </summary>
-        /// <param name="nodeId">Identifier of the node.</param>
-        /// <param name="backendNodeId">Identifier of the backend node.</param>
-        /// <param name="objectId">JavaScript object id of the node wrapper.</param>
         public async Task<GetOuterHTMLReturn> GetOuterHTML(GetOuterHTMLParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("DOM.getOuterHTML", parameters, sessionId);
@@ -3343,7 +3193,6 @@ namespace CDP.Domains
         /// <summary> 
         /// Returns the id of the nearest ancestor that is a relayout boundary. 
         /// </summary>
-        /// <param name="nodeId">Id of the node.</param>
         public async Task<GetRelayoutBoundaryReturn> GetRelayoutBoundary(GetRelayoutBoundaryParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("DOM.getRelayoutBoundary", parameters, sessionId);
@@ -3352,9 +3201,6 @@ namespace CDP.Domains
         /// <summary> 
         /// Returns search results from given `fromIndex` to given `toIndex` from the search with the givenidentifier. 
         /// </summary>
-        /// <param name="searchId">Unique search session identifier.</param>
-        /// <param name="fromIndex">Start index of the search result to be returned.</param>
-        /// <param name="toIndex">End index of the search result to be returned.</param>
         public async Task<GetSearchResultsReturn> GetSearchResults(GetSearchResultsParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("DOM.getSearchResults", parameters, sessionId);
@@ -3395,9 +3241,6 @@ namespace CDP.Domains
         /// <summary> 
         /// Moves node into the new container, places it before the given anchor. 
         /// </summary>
-        /// <param name="nodeId">Id of the node to move.</param>
-        /// <param name="targetNodeId">Id of the element to drop the moved node into.</param>
-        /// <param name="insertBeforeNodeId">Drop node before this one (if absent, the moved node becomes the last child of`targetNodeId`).</param>
         public async Task<MoveToReturn> MoveTo(MoveToParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("DOM.moveTo", parameters, sessionId);
@@ -3406,8 +3249,6 @@ namespace CDP.Domains
         /// <summary> 
         /// Searches for a given string in the DOM tree. Use `getSearchResults` to access search results or`cancelSearch` to end this search session. 
         /// </summary>
-        /// <param name="query">Plain text or query selector or XPath search query.</param>
-        /// <param name="includeUserAgentShadowDOM">True to search in user agent shadow DOM.</param>
         public async Task<PerformSearchReturn> PerformSearch(PerformSearchParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("DOM.performSearch", parameters, sessionId);
@@ -3416,7 +3257,6 @@ namespace CDP.Domains
         /// <summary> 
         /// Requests that the node is sent to the caller given its path. // FIXME, use XPath 
         /// </summary>
-        /// <param name="path">Path to node in the proprietary format.</param>
         public async Task<PushNodeByPathToFrontendReturn> PushNodeByPathToFrontend(PushNodeByPathToFrontendParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("DOM.pushNodeByPathToFrontend", parameters, sessionId);
@@ -3425,7 +3265,6 @@ namespace CDP.Domains
         /// <summary> 
         /// Requests that a batch of nodes is sent to the caller given their backend node ids. 
         /// </summary>
-        /// <param name="backendNodeIds">The array of backend node ids.</param>
         public async Task<PushNodesByBackendIdsToFrontendReturn> PushNodesByBackendIdsToFrontend(PushNodesByBackendIdsToFrontendParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("DOM.pushNodesByBackendIdsToFrontend", parameters, sessionId);
@@ -3434,8 +3273,6 @@ namespace CDP.Domains
         /// <summary> 
         /// Executes `querySelector` on a given node. 
         /// </summary>
-        /// <param name="nodeId">Id of the node to query upon.</param>
-        /// <param name="selector">Selector string.</param>
         public async Task<QuerySelectorReturn> QuerySelector(QuerySelectorParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("DOM.querySelector", parameters, sessionId);
@@ -3444,8 +3281,6 @@ namespace CDP.Domains
         /// <summary> 
         /// Executes `querySelectorAll` on a given node. 
         /// </summary>
-        /// <param name="nodeId">Id of the node to query upon.</param>
-        /// <param name="selector">Selector string.</param>
         public async Task<QuerySelectorAllReturn> QuerySelectorAll(QuerySelectorAllParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("DOM.querySelectorAll", parameters, sessionId);
@@ -3462,8 +3297,6 @@ namespace CDP.Domains
         /// <summary> 
         /// Removes attribute with given name from an element with given id. 
         /// </summary>
-        /// <param name="nodeId">Id of the element to remove attribute from.</param>
-        /// <param name="name">Name of the attribute to remove.</param>
         public async Task RemoveAttribute(RemoveAttributeParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("DOM.removeAttribute", parameters, sessionId);
@@ -3472,7 +3305,6 @@ namespace CDP.Domains
         /// <summary> 
         /// Removes node with given id. 
         /// </summary>
-        /// <param name="nodeId">Id of the node to remove.</param>
         public async Task RemoveNode(RemoveNodeParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("DOM.removeNode", parameters, sessionId);
@@ -3481,9 +3313,6 @@ namespace CDP.Domains
         /// <summary> 
         /// Requests that children of the node with given id are returned to the caller in form of`setChildNodes` events where not only immediate children are retrieved, but all children down tothe specified depth. 
         /// </summary>
-        /// <param name="nodeId">Id of the node to get children for.</param>
-        /// <param name="depth">The maximum depth at which children should be retrieved, defaults to 1. Use -1 for theentire subtree or provide an integer larger than 0.</param>
-        /// <param name="pierce">Whether or not iframes and shadow roots should be traversed when returning the sub-tree(default is false).</param>
         public async Task RequestChildNodes(RequestChildNodesParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("DOM.requestChildNodes", parameters, sessionId);
@@ -3492,7 +3321,6 @@ namespace CDP.Domains
         /// <summary> 
         /// Requests that the node is sent to the caller given the JavaScript node object reference. Allnodes that form the path from the node to the root are also sent to the client as a series of`setChildNodes` notifications. 
         /// </summary>
-        /// <param name="objectId">JavaScript object id to convert into node.</param>
         public async Task<RequestNodeReturn> RequestNode(RequestNodeParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("DOM.requestNode", parameters, sessionId);
@@ -3501,10 +3329,6 @@ namespace CDP.Domains
         /// <summary> 
         /// Resolves the JavaScript node object for a given NodeId or BackendNodeId. 
         /// </summary>
-        /// <param name="nodeId">Id of the node to resolve.</param>
-        /// <param name="backendNodeId">Backend identifier of the node to resolve.</param>
-        /// <param name="objectGroup">Symbolic group name that can be used to release multiple objects.</param>
-        /// <param name="executionContextId">Execution context in which to resolve the node.</param>
         public async Task<ResolveNodeReturn> ResolveNode(ResolveNodeParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("DOM.resolveNode", parameters, sessionId);
@@ -3513,9 +3337,6 @@ namespace CDP.Domains
         /// <summary> 
         /// Sets attribute for an element with given id. 
         /// </summary>
-        /// <param name="nodeId">Id of the element to set attribute for.</param>
-        /// <param name="name">Attribute name.</param>
-        /// <param name="value">Attribute value.</param>
         public async Task SetAttributeValue(SetAttributeValueParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("DOM.setAttributeValue", parameters, sessionId);
@@ -3524,9 +3345,6 @@ namespace CDP.Domains
         /// <summary> 
         /// Sets attributes on element with given id. This method is useful when user edits some existingattribute value and types in several attribute name/value pairs. 
         /// </summary>
-        /// <param name="nodeId">Id of the element to set attributes for.</param>
-        /// <param name="text">Text with a number of attributes. Will parse this text using HTML parser.</param>
-        /// <param name="name">Attribute name to replace with new attributes derived from text in case text parsedsuccessfully.</param>
         public async Task SetAttributesAsText(SetAttributesAsTextParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("DOM.setAttributesAsText", parameters, sessionId);
@@ -3535,10 +3353,6 @@ namespace CDP.Domains
         /// <summary> 
         /// Sets files for the given file input element. 
         /// </summary>
-        /// <param name="files">Array of file paths to set.</param>
-        /// <param name="nodeId">Identifier of the node.</param>
-        /// <param name="backendNodeId">Identifier of the backend node.</param>
-        /// <param name="objectId">JavaScript object id of the node wrapper.</param>
         public async Task SetFileInputFiles(SetFileInputFilesParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("DOM.setFileInputFiles", parameters, sessionId);
@@ -3547,7 +3361,6 @@ namespace CDP.Domains
         /// <summary> 
         /// Sets if stack traces should be captured for Nodes. See `Node.getNodeStackTraces`. Default is disabled. 
         /// </summary>
-        /// <param name="enable">Enable or disable.</param>
         public async Task SetNodeStackTracesEnabled(SetNodeStackTracesEnabledParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("DOM.setNodeStackTracesEnabled", parameters, sessionId);
@@ -3556,7 +3369,6 @@ namespace CDP.Domains
         /// <summary> 
         /// Gets stack traces associated with a Node. As of now, only provides stack trace for Node creation. 
         /// </summary>
-        /// <param name="nodeId">Id of the node to get stack traces for.</param>
         public async Task<GetNodeStackTracesReturn> GetNodeStackTraces(GetNodeStackTracesParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("DOM.getNodeStackTraces", parameters, sessionId);
@@ -3565,7 +3377,6 @@ namespace CDP.Domains
         /// <summary> 
         /// Returns file information for the givenFile wrapper. 
         /// </summary>
-        /// <param name="objectId">JavaScript object id of the node wrapper.</param>
         public async Task<GetFileInfoReturn> GetFileInfo(GetFileInfoParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("DOM.getFileInfo", parameters, sessionId);
@@ -3574,7 +3385,6 @@ namespace CDP.Domains
         /// <summary> 
         /// Enables console to refer to the node with given id via $x (see Command Line API for more details$x functions). 
         /// </summary>
-        /// <param name="nodeId">DOM node id to be accessible by means of $x command line API.</param>
         public async Task SetInspectedNode(SetInspectedNodeParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("DOM.setInspectedNode", parameters, sessionId);
@@ -3583,8 +3393,6 @@ namespace CDP.Domains
         /// <summary> 
         /// Sets node name for a node with given id. 
         /// </summary>
-        /// <param name="nodeId">Id of the node to set name for.</param>
-        /// <param name="name">New node's name.</param>
         public async Task<SetNodeNameReturn> SetNodeName(SetNodeNameParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("DOM.setNodeName", parameters, sessionId);
@@ -3593,8 +3401,6 @@ namespace CDP.Domains
         /// <summary> 
         /// Sets node value for a node with given id. 
         /// </summary>
-        /// <param name="nodeId">Id of the node to set value for.</param>
-        /// <param name="value">New node's value.</param>
         public async Task SetNodeValue(SetNodeValueParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("DOM.setNodeValue", parameters, sessionId);
@@ -3603,8 +3409,6 @@ namespace CDP.Domains
         /// <summary> 
         /// Sets node HTML markup, returns new node id. 
         /// </summary>
-        /// <param name="nodeId">Id of the node to set markup for.</param>
-        /// <param name="outerHTML">Outer HTML markup to set.</param>
         public async Task SetOuterHTML(SetOuterHTMLParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("DOM.setOuterHTML", parameters, sessionId);
@@ -3621,7 +3425,6 @@ namespace CDP.Domains
         /// <summary> 
         /// Returns iframe node that owns iframe with the given domain. 
         /// </summary>
-        /// <param name="frameId"></param>
         public async Task<GetFrameOwnerReturn> GetFrameOwner(GetFrameOwnerParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("DOM.getFrameOwner", parameters, sessionId);
@@ -3630,8 +3433,6 @@ namespace CDP.Domains
         /// <summary> 
         /// Returns the container of the given node based on container query conditions.If containerName is given, it will find the nearest container with a matching name;otherwise it will find the nearest container regardless of its container name. 
         /// </summary>
-        /// <param name="nodeId"></param>
-        /// <param name="containerName"></param>
         public async Task<GetContainerForNodeReturn> GetContainerForNode(GetContainerForNodeParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("DOM.getContainerForNode", parameters, sessionId);
@@ -3640,7 +3441,6 @@ namespace CDP.Domains
         /// <summary> 
         /// Returns the descendants of a container query container that havecontainer queries against this container. 
         /// </summary>
-        /// <param name="nodeId">Id of the container node to find querying descendants from.</param>
         public async Task<GetQueryingDescendantsForContainerReturn> GetQueryingDescendantsForContainer(GetQueryingDescendantsForContainerParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("DOM.getQueryingDescendantsForContainer", parameters, sessionId);
@@ -4434,9 +4234,6 @@ namespace CDP.Domains
         /// <summary> 
         /// Returns event listeners of the given object. 
         /// </summary>
-        /// <param name="objectId">Identifier of the object to return listeners for.</param>
-        /// <param name="depth">The maximum depth at which Node children should be retrieved, defaults to 1. Use -1 for theentire subtree or provide an integer larger than 0.</param>
-        /// <param name="pierce">Whether or not iframes and shadow roots should be traversed when returning the subtree(default is false). Reports listeners for all contexts if pierce is enabled.</param>
         public async Task<GetEventListenersReturn> GetEventListeners(GetEventListenersParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("DOMDebugger.getEventListeners", parameters, sessionId);
@@ -4445,8 +4242,6 @@ namespace CDP.Domains
         /// <summary> 
         /// Removes DOM breakpoint that was set using `setDOMBreakpoint`. 
         /// </summary>
-        /// <param name="nodeId">Identifier of the node to remove breakpoint from.</param>
-        /// <param name="type">Type of the breakpoint to remove.</param>
         public async Task RemoveDOMBreakpoint(RemoveDOMBreakpointParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("DOMDebugger.removeDOMBreakpoint", parameters, sessionId);
@@ -4455,8 +4250,6 @@ namespace CDP.Domains
         /// <summary> 
         /// Removes breakpoint on particular DOM event. 
         /// </summary>
-        /// <param name="eventName">Event name.</param>
-        /// <param name="targetName">EventTarget interface name.</param>
         public async Task RemoveEventListenerBreakpoint(RemoveEventListenerBreakpointParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("DOMDebugger.removeEventListenerBreakpoint", parameters, sessionId);
@@ -4465,7 +4258,6 @@ namespace CDP.Domains
         /// <summary> 
         /// Removes breakpoint on particular native event. 
         /// </summary>
-        /// <param name="eventName">Instrumentation name to stop on.</param>
         public async Task RemoveInstrumentationBreakpoint(RemoveInstrumentationBreakpointParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("DOMDebugger.removeInstrumentationBreakpoint", parameters, sessionId);
@@ -4474,7 +4266,6 @@ namespace CDP.Domains
         /// <summary> 
         /// Removes breakpoint from XMLHttpRequest. 
         /// </summary>
-        /// <param name="url">Resource URL substring.</param>
         public async Task RemoveXHRBreakpoint(RemoveXHRBreakpointParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("DOMDebugger.removeXHRBreakpoint", parameters, sessionId);
@@ -4483,7 +4274,6 @@ namespace CDP.Domains
         /// <summary> 
         /// Sets breakpoint on particular CSP violations. 
         /// </summary>
-        /// <param name="violationTypes">CSP Violations to stop upon.</param>
         public async Task SetBreakOnCSPViolation(SetBreakOnCSPViolationParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("DOMDebugger.setBreakOnCSPViolation", parameters, sessionId);
@@ -4492,8 +4282,6 @@ namespace CDP.Domains
         /// <summary> 
         /// Sets breakpoint on particular operation with DOM. 
         /// </summary>
-        /// <param name="nodeId">Identifier of the node to set breakpoint on.</param>
-        /// <param name="type">Type of the operation to stop upon.</param>
         public async Task SetDOMBreakpoint(SetDOMBreakpointParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("DOMDebugger.setDOMBreakpoint", parameters, sessionId);
@@ -4502,8 +4290,6 @@ namespace CDP.Domains
         /// <summary> 
         /// Sets breakpoint on particular DOM event. 
         /// </summary>
-        /// <param name="eventName">DOM Event name to stop on (any DOM event will do).</param>
-        /// <param name="targetName">EventTarget interface name to stop on. If equal to `"*"` or not provided, will stop on anyEventTarget.</param>
         public async Task SetEventListenerBreakpoint(SetEventListenerBreakpointParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("DOMDebugger.setEventListenerBreakpoint", parameters, sessionId);
@@ -4512,7 +4298,6 @@ namespace CDP.Domains
         /// <summary> 
         /// Sets breakpoint on particular native event. 
         /// </summary>
-        /// <param name="eventName">Instrumentation name to stop on.</param>
         public async Task SetInstrumentationBreakpoint(SetInstrumentationBreakpointParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("DOMDebugger.setInstrumentationBreakpoint", parameters, sessionId);
@@ -4521,7 +4306,6 @@ namespace CDP.Domains
         /// <summary> 
         /// Sets breakpoint on XMLHttpRequest. 
         /// </summary>
-        /// <param name="url">Resource URL substring. All XHRs having this substring in the URL will get stopped upon.</param>
         public async Task SetXHRBreakpoint(SetXHRBreakpointParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("DOMDebugger.setXHRBreakpoint", parameters, sessionId);
@@ -4667,7 +4451,6 @@ namespace CDP.Domains
         /// <summary> 
         /// Sets breakpoint on particular native event. 
         /// </summary>
-        /// <param name="eventName">Instrumentation name to stop on.</param>
         public async Task SetInstrumentationBreakpoint(SetInstrumentationBreakpointParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("EventBreakpoints.setInstrumentationBreakpoint", parameters, sessionId);
@@ -4676,7 +4459,6 @@ namespace CDP.Domains
         /// <summary> 
         /// Removes breakpoint on particular native event. 
         /// </summary>
-        /// <param name="eventName">Instrumentation name to stop on.</param>
         public async Task RemoveInstrumentationBreakpoint(RemoveInstrumentationBreakpointParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("EventBreakpoints.removeInstrumentationBreakpoint", parameters, sessionId);
@@ -4748,10 +4530,6 @@ namespace CDP.Domains
         /// <summary> 
         /// Returns a document snapshot, including the full DOM tree of the root node (including iframes,template contents, and imported documents) in a flattened array, as well as layout andwhite-listed computed style information for the nodes. Shadow DOM in the returned DOM tree isflattened. 
         /// </summary>
-        /// <param name="computedStyleWhitelist">Whitelist of computed styles to return.</param>
-        /// <param name="includeEventListeners">Whether or not to retrieve details of DOM listeners (default false).</param>
-        /// <param name="includePaintOrder">Whether to determine and include the paint order index of LayoutTreeNodes (default false).</param>
-        /// <param name="includeUserAgentShadowTree">Whether to include UA shadow tree in the snapshot (default false).</param>
         public async Task<GetSnapshotReturn> GetSnapshot(GetSnapshotParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("DOMSnapshot.getSnapshot", parameters, sessionId);
@@ -4760,11 +4538,6 @@ namespace CDP.Domains
         /// <summary> 
         /// Returns a document snapshot, including the full DOM tree of the root node (including iframes,template contents, and imported documents) in a flattened array, as well as layout andwhite-listed computed style information for the nodes. Shadow DOM in the returned DOM tree isflattened. 
         /// </summary>
-        /// <param name="computedStyles">Whitelist of computed styles to return.</param>
-        /// <param name="includePaintOrder">Whether to include layout object paint orders into the snapshot.</param>
-        /// <param name="includeDOMRects">Whether to include DOM rectangles (offsetRects, clientRects, scrollRects) into the snapshot</param>
-        /// <param name="includeBlendedBackgroundColors">Whether to include blended background colors in the snapshot (default: false).Blended background color is achieved by blending background colors of all elementsthat overlap with the current element.</param>
-        /// <param name="includeTextColorOpacities">Whether to include text color opacity in the snapshot (default: false).An element might have the opacity property set that affects the text color of the element.The final text color opacity is computed based on the opacity of all overlapping elements.</param>
         public async Task<CaptureSnapshotReturn> CaptureSnapshot(CaptureSnapshotParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("DOMSnapshot.captureSnapshot", parameters, sessionId);
@@ -5136,7 +4909,6 @@ namespace CDP.Domains
         /// <summary> 
         ///  
         /// </summary>
-        /// <param name="storageId"></param>
         public async Task Clear(ClearParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("DOMStorage.clear", parameters, sessionId);
@@ -5161,7 +4933,6 @@ namespace CDP.Domains
         /// <summary> 
         ///  
         /// </summary>
-        /// <param name="storageId"></param>
         public async Task<GetDOMStorageItemsReturn> GetDOMStorageItems(GetDOMStorageItemsParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("DOMStorage.getDOMStorageItems", parameters, sessionId);
@@ -5170,8 +4941,6 @@ namespace CDP.Domains
         /// <summary> 
         ///  
         /// </summary>
-        /// <param name="storageId"></param>
-        /// <param name="key"></param>
         public async Task RemoveDOMStorageItem(RemoveDOMStorageItemParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("DOMStorage.removeDOMStorageItem", parameters, sessionId);
@@ -5180,9 +4949,6 @@ namespace CDP.Domains
         /// <summary> 
         ///  
         /// </summary>
-        /// <param name="storageId"></param>
-        /// <param name="key"></param>
-        /// <param name="value"></param>
         public async Task SetDOMStorageItem(SetDOMStorageItemParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("DOMStorage.setDOMStorageItem", parameters, sessionId);
@@ -5335,8 +5101,6 @@ namespace CDP.Domains
         /// <summary> 
         ///  
         /// </summary>
-        /// <param name="databaseId"></param>
-        /// <param name="query"></param>
         public async Task<ExecuteSQLReturn> ExecuteSQL(ExecuteSQLParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("Database.executeSQL", parameters, sessionId);
@@ -5345,7 +5109,6 @@ namespace CDP.Domains
         /// <summary> 
         ///  
         /// </summary>
-        /// <param name="databaseId"></param>
         public async Task<GetDatabaseTableNamesReturn> GetDatabaseTableNames(GetDatabaseTableNamesParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("Database.getDatabaseTableNames", parameters, sessionId);
@@ -5453,9 +5216,6 @@ namespace CDP.Domains
         /// <summary> 
         /// Overrides the Device Orientation. 
         /// </summary>
-        /// <param name="alpha">Mock alpha</param>
-        /// <param name="beta">Mock beta</param>
-        /// <param name="gamma">Mock gamma</param>
         public async Task SetDeviceOrientationOverride(SetDeviceOrientationOverrideParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("DeviceOrientation.setDeviceOrientationOverride", parameters, sessionId);
@@ -5502,6 +5262,7 @@ namespace CDP.Domains
         ///////////////////////////////////////////////////////////
         
         /// <summary> Notification sent after the virtual time budget for the current VirtualTimePolicy has run out. </summary>
+        /// <returns> remove handler </returns>
         public Action OnVirtualTimeBudgetExpired(Action handler, string sessionId = default)
         {
             string eventName = string.IsNullOrEmpty(sessionId) ? "Emulation.virtualTimeBudgetExpired" : $"Emulation.virtualTimeBudgetExpired.{sessionId}";
@@ -5549,7 +5310,6 @@ namespace CDP.Domains
         /// <summary> 
         /// Enables or disables simulating a focused and active page. 
         /// </summary>
-        /// <param name="enabled">Whether to enable to disable focus emulation.</param>
         public async Task SetFocusEmulationEnabled(SetFocusEmulationEnabledParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("Emulation.setFocusEmulationEnabled", parameters, sessionId);
@@ -5558,7 +5318,6 @@ namespace CDP.Domains
         /// <summary> 
         /// Automatically render all web contents using a dark theme. 
         /// </summary>
-        /// <param name="enabled">Whether to enable or disable automatic dark mode.If not specified, any existing override will be cleared.</param>
         public async Task SetAutoDarkModeOverride(SetAutoDarkModeOverrideParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("Emulation.setAutoDarkModeOverride", parameters, sessionId);
@@ -5567,7 +5326,6 @@ namespace CDP.Domains
         /// <summary> 
         /// Enables CPU throttling to emulate slow CPUs. 
         /// </summary>
-        /// <param name="rate">Throttling rate as a slowdown factor (1 is no throttle, 2 is 2x slowdown, etc).</param>
         public async Task SetCPUThrottlingRate(SetCPUThrottlingRateParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("Emulation.setCPUThrottlingRate", parameters, sessionId);
@@ -5576,7 +5334,6 @@ namespace CDP.Domains
         /// <summary> 
         /// Sets or clears an override of the default background color of the frame. This override is usedif the content does not specify one. 
         /// </summary>
-        /// <param name="color">RGBA of the default background color. If not specified, any existing override will becleared.</param>
         public async Task SetDefaultBackgroundColorOverride(SetDefaultBackgroundColorOverrideParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("Emulation.setDefaultBackgroundColorOverride", parameters, sessionId);
@@ -5585,19 +5342,6 @@ namespace CDP.Domains
         /// <summary> 
         /// Overrides the values of device screen dimensions (window.screen.width, window.screen.height,window.innerWidth, window.innerHeight, and "device-width"/"device-height"-related CSS mediaquery results). 
         /// </summary>
-        /// <param name="width">Overriding width value in pixels (minimum 0, maximum 10000000). 0 disables the override.</param>
-        /// <param name="height">Overriding height value in pixels (minimum 0, maximum 10000000). 0 disables the override.</param>
-        /// <param name="deviceScaleFactor">Overriding device scale factor value. 0 disables the override.</param>
-        /// <param name="mobile">Whether to emulate mobile device. This includes viewport meta tag, overlay scrollbars, textautosizing and more.</param>
-        /// <param name="scale">Scale to apply to resulting view image.</param>
-        /// <param name="screenWidth">Overriding screen width value in pixels (minimum 0, maximum 10000000).</param>
-        /// <param name="screenHeight">Overriding screen height value in pixels (minimum 0, maximum 10000000).</param>
-        /// <param name="positionX">Overriding view X position on screen in pixels (minimum 0, maximum 10000000).</param>
-        /// <param name="positionY">Overriding view Y position on screen in pixels (minimum 0, maximum 10000000).</param>
-        /// <param name="dontSetVisibleSize">Do not set visible view size, rely upon explicit setVisibleSize call.</param>
-        /// <param name="screenOrientation">Screen orientation override.</param>
-        /// <param name="viewport">If set, the visible area of the page will be overridden to this viewport. This viewportchange is not observed by the page, e.g. viewport-relative elements do not change positions.</param>
-        /// <param name="displayFeature">If set, the display feature of a multi-segment screen. If not set, multi-segment supportis turned-off.</param>
         public async Task SetDeviceMetricsOverride(SetDeviceMetricsOverrideParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("Emulation.setDeviceMetricsOverride", parameters, sessionId);
@@ -5606,7 +5350,6 @@ namespace CDP.Domains
         /// <summary> 
         ///  
         /// </summary>
-        /// <param name="hidden">Whether scrollbars should be always hidden.</param>
         public async Task SetScrollbarsHidden(SetScrollbarsHiddenParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("Emulation.setScrollbarsHidden", parameters, sessionId);
@@ -5615,7 +5358,6 @@ namespace CDP.Domains
         /// <summary> 
         ///  
         /// </summary>
-        /// <param name="disabled">Whether document.coookie API should be disabled.</param>
         public async Task SetDocumentCookieDisabled(SetDocumentCookieDisabledParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("Emulation.setDocumentCookieDisabled", parameters, sessionId);
@@ -5624,8 +5366,6 @@ namespace CDP.Domains
         /// <summary> 
         ///  
         /// </summary>
-        /// <param name="enabled">Whether touch emulation based on mouse input should be enabled.</param>
-        /// <param name="configuration">Touch/gesture events configuration. Default: current platform.</param>
         public async Task SetEmitTouchEventsForMouse(SetEmitTouchEventsForMouseParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("Emulation.setEmitTouchEventsForMouse", parameters, sessionId);
@@ -5634,8 +5374,6 @@ namespace CDP.Domains
         /// <summary> 
         /// Emulates the given media type or media feature for CSS media queries. 
         /// </summary>
-        /// <param name="media">Media type to emulate. Empty string disables the override.</param>
-        /// <param name="features">Media features to emulate.</param>
         public async Task SetEmulatedMedia(SetEmulatedMediaParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("Emulation.setEmulatedMedia", parameters, sessionId);
@@ -5644,7 +5382,6 @@ namespace CDP.Domains
         /// <summary> 
         /// Emulates the given vision deficiency. 
         /// </summary>
-        /// <param name="type">Vision deficiency to emulate.</param>
         public async Task SetEmulatedVisionDeficiency(SetEmulatedVisionDeficiencyParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("Emulation.setEmulatedVisionDeficiency", parameters, sessionId);
@@ -5653,9 +5390,6 @@ namespace CDP.Domains
         /// <summary> 
         /// Overrides the Geolocation Position or Error. Omitting any of the parameters emulates positionunavailable. 
         /// </summary>
-        /// <param name="latitude">Mock latitude</param>
-        /// <param name="longitude">Mock longitude</param>
-        /// <param name="accuracy">Mock accuracy</param>
         public async Task SetGeolocationOverride(SetGeolocationOverrideParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("Emulation.setGeolocationOverride", parameters, sessionId);
@@ -5664,8 +5398,6 @@ namespace CDP.Domains
         /// <summary> 
         /// Overrides the Idle state. 
         /// </summary>
-        /// <param name="isUserActive">Mock isUserActive</param>
-        /// <param name="isScreenUnlocked">Mock isScreenUnlocked</param>
         public async Task SetIdleOverride(SetIdleOverrideParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("Emulation.setIdleOverride", parameters, sessionId);
@@ -5682,7 +5414,6 @@ namespace CDP.Domains
         /// <summary> 
         /// Overrides value returned by the javascript navigator object. 
         /// </summary>
-        /// <param name="platform">The platform navigator.platform should return.</param>
         public async Task SetNavigatorOverrides(SetNavigatorOverridesParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("Emulation.setNavigatorOverrides", parameters, sessionId);
@@ -5691,7 +5422,6 @@ namespace CDP.Domains
         /// <summary> 
         /// Sets a specified page scale factor. 
         /// </summary>
-        /// <param name="pageScaleFactor">Page scale factor.</param>
         public async Task SetPageScaleFactor(SetPageScaleFactorParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("Emulation.setPageScaleFactor", parameters, sessionId);
@@ -5700,7 +5430,6 @@ namespace CDP.Domains
         /// <summary> 
         /// Switches script execution in the page. 
         /// </summary>
-        /// <param name="value">Whether script execution should be disabled in the page.</param>
         public async Task SetScriptExecutionDisabled(SetScriptExecutionDisabledParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("Emulation.setScriptExecutionDisabled", parameters, sessionId);
@@ -5709,8 +5438,6 @@ namespace CDP.Domains
         /// <summary> 
         /// Enables touch on platforms which do not support them. 
         /// </summary>
-        /// <param name="enabled">Whether the touch event emulation should be enabled.</param>
-        /// <param name="maxTouchPoints">Maximum touch points supported. Defaults to one.</param>
         public async Task SetTouchEmulationEnabled(SetTouchEmulationEnabledParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("Emulation.setTouchEmulationEnabled", parameters, sessionId);
@@ -5719,10 +5446,6 @@ namespace CDP.Domains
         /// <summary> 
         /// Turns on virtual time for all frames (replacing real-time with a synthetic time source) and setsthe current virtual time policy.  Note this supersedes any previous time budget. 
         /// </summary>
-        /// <param name="policy"></param>
-        /// <param name="budget">If set, after this many virtual milliseconds have elapsed virtual time will be paused and avirtualTimeBudgetExpired event is sent.</param>
-        /// <param name="maxVirtualTimeTaskStarvationCount">If set this specifies the maximum number of tasks that can be run before virtual is forcedforwards to prevent deadlock.</param>
-        /// <param name="initialVirtualTime">If set, base::Time::Now will be overridden to initially return this value.</param>
         public async Task<SetVirtualTimePolicyReturn> SetVirtualTimePolicy(SetVirtualTimePolicyParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("Emulation.setVirtualTimePolicy", parameters, sessionId);
@@ -5731,7 +5454,6 @@ namespace CDP.Domains
         /// <summary> 
         /// Overrides default host system locale with the specified one. 
         /// </summary>
-        /// <param name="locale">ICU style C locale (e.g. "en_US"). If not specified or empty, disables the override andrestores default host system locale.</param>
         public async Task SetLocaleOverride(SetLocaleOverrideParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("Emulation.setLocaleOverride", parameters, sessionId);
@@ -5740,7 +5462,6 @@ namespace CDP.Domains
         /// <summary> 
         /// Overrides default host system timezone with the specified one. 
         /// </summary>
-        /// <param name="timezoneId">The timezone identifier. If empty, disables the override andrestores default host system timezone.</param>
         public async Task SetTimezoneOverride(SetTimezoneOverrideParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("Emulation.setTimezoneOverride", parameters, sessionId);
@@ -5749,8 +5470,6 @@ namespace CDP.Domains
         /// <summary> 
         /// Resizes the frame/viewport of the page. Note that this does not affect the frame's container(e.g. browser window). Can be used to produce screenshots of the specified size. Not supportedon Android. 
         /// </summary>
-        /// <param name="width">Frame width (DIP).</param>
-        /// <param name="height">Frame height (DIP).</param>
         public async Task SetVisibleSize(SetVisibleSizeParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("Emulation.setVisibleSize", parameters, sessionId);
@@ -5759,7 +5478,6 @@ namespace CDP.Domains
         /// <summary> 
         ///  
         /// </summary>
-        /// <param name="imageTypes">Image types to disable.</param>
         public async Task SetDisabledImageTypes(SetDisabledImageTypesParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("Emulation.setDisabledImageTypes", parameters, sessionId);
@@ -5768,10 +5486,6 @@ namespace CDP.Domains
         /// <summary> 
         /// Allows overriding user agent with the given string. 
         /// </summary>
-        /// <param name="userAgent">User agent to use.</param>
-        /// <param name="acceptLanguage">Browser langugage to emulate.</param>
-        /// <param name="platform">The platform navigator.platform should return.</param>
-        /// <param name="userAgentMetadata">To be sent in Sec-CH-UA-* headers and returned in navigator.userAgentData</param>
         public async Task SetUserAgentOverride(SetUserAgentOverrideParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("Emulation.setUserAgentOverride", parameters, sessionId);
@@ -6076,10 +5790,6 @@ namespace CDP.Domains
         /// <summary> 
         /// Sends a BeginFrame to the target and returns when the frame was completed. Optionally captures ascreenshot from the resulting frame. Requires that the target was created with enabledBeginFrameControl. Designed for use with --run-all-compositor-stages-before-draw, see alsohttps://goo.gl/3zHXhB for more background. 
         /// </summary>
-        /// <param name="frameTimeTicks">Timestamp of this BeginFrame in Renderer TimeTicks (milliseconds of uptime). If not set,the current time will be used.</param>
-        /// <param name="interval">The interval between BeginFrames that is reported to the compositor, in milliseconds.Defaults to a 60 frames/second interval, i.e. about 16.666 milliseconds.</param>
-        /// <param name="noDisplayUpdates">Whether updates should not be committed and drawn onto the display. False by default. Iftrue, only side effects of the BeginFrame will be run, such as layout and animations, butany visual updates may not be visible on the display or in screenshots.</param>
-        /// <param name="screenshot">If set, a screenshot of the frame will be captured and returned in the response. Otherwise,no screenshot will be captured. Note that capturing a screenshot can fail, for example,during renderer initialization. In such a case, no screenshot data will be returned.</param>
         public async Task<BeginFrameReturn> BeginFrame(BeginFrameParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("HeadlessExperimental.beginFrame", parameters, sessionId);
@@ -6173,7 +5883,6 @@ namespace CDP.Domains
         /// <summary> 
         /// Close the stream, discard any temporary backing storage. 
         /// </summary>
-        /// <param name="handle">Handle of the stream to close.</param>
         public async Task Close(CloseParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("IO.close", parameters, sessionId);
@@ -6182,9 +5891,6 @@ namespace CDP.Domains
         /// <summary> 
         /// Read a chunk of the stream 
         /// </summary>
-        /// <param name="handle">Handle of the stream to read.</param>
-        /// <param name="offset">Seek to the specified offset before reading (if not specificed, proceed with offsetfollowing the last read). Some types of streams may only support sequential reads.</param>
-        /// <param name="size">Maximum number of bytes to read (left upon the agent discretion if not specified).</param>
         public async Task<ReadReturn> Read(ReadParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("IO.read", parameters, sessionId);
@@ -6193,7 +5899,6 @@ namespace CDP.Domains
         /// <summary> 
         /// Return UUID of Blob object specified by a remote object id. 
         /// </summary>
-        /// <param name="objectId">Object id of a Blob object wrapper.</param>
         public async Task<ResolveBlobReturn> ResolveBlob(ResolveBlobParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("IO.resolveBlob", parameters, sessionId);
@@ -6275,9 +5980,6 @@ namespace CDP.Domains
         /// <summary> 
         /// Clears all entries from an object store. 
         /// </summary>
-        /// <param name="securityOrigin">Security origin.</param>
-        /// <param name="databaseName">Database name.</param>
-        /// <param name="objectStoreName">Object store name.</param>
         public async Task ClearObjectStore(ClearObjectStoreParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("IndexedDB.clearObjectStore", parameters, sessionId);
@@ -6286,8 +5988,6 @@ namespace CDP.Domains
         /// <summary> 
         /// Deletes a database. 
         /// </summary>
-        /// <param name="securityOrigin">Security origin.</param>
-        /// <param name="databaseName">Database name.</param>
         public async Task DeleteDatabase(DeleteDatabaseParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("IndexedDB.deleteDatabase", parameters, sessionId);
@@ -6296,10 +5996,6 @@ namespace CDP.Domains
         /// <summary> 
         /// Delete a range of entries from an object store 
         /// </summary>
-        /// <param name="securityOrigin"></param>
-        /// <param name="databaseName"></param>
-        /// <param name="objectStoreName"></param>
-        /// <param name="keyRange">Range of entry keys to delete</param>
         public async Task DeleteObjectStoreEntries(DeleteObjectStoreEntriesParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("IndexedDB.deleteObjectStoreEntries", parameters, sessionId);
@@ -6324,13 +6020,6 @@ namespace CDP.Domains
         /// <summary> 
         /// Requests data from object store or index. 
         /// </summary>
-        /// <param name="securityOrigin">Security origin.</param>
-        /// <param name="databaseName">Database name.</param>
-        /// <param name="objectStoreName">Object store name.</param>
-        /// <param name="indexName">Index name, empty string for object store data requests.</param>
-        /// <param name="skipCount">Number of records to skip.</param>
-        /// <param name="pageSize">Number of records to fetch.</param>
-        /// <param name="keyRange">Key range.</param>
         public async Task<RequestDataReturn> RequestData(RequestDataParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("IndexedDB.requestData", parameters, sessionId);
@@ -6339,9 +6028,6 @@ namespace CDP.Domains
         /// <summary> 
         /// Gets metadata of an object store 
         /// </summary>
-        /// <param name="securityOrigin">Security origin.</param>
-        /// <param name="databaseName">Database name.</param>
-        /// <param name="objectStoreName">Object store name.</param>
         public async Task<GetMetadataReturn> GetMetadata(GetMetadataParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("IndexedDB.getMetadata", parameters, sessionId);
@@ -6350,8 +6036,6 @@ namespace CDP.Domains
         /// <summary> 
         /// Requests database with given name in given frame. 
         /// </summary>
-        /// <param name="securityOrigin">Security origin.</param>
-        /// <param name="databaseName">Database name.</param>
         public async Task<RequestDatabaseReturn> RequestDatabase(RequestDatabaseParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("IndexedDB.requestDatabase", parameters, sessionId);
@@ -6360,7 +6044,6 @@ namespace CDP.Domains
         /// <summary> 
         /// Requests database names for given security origin. 
         /// </summary>
-        /// <param name="securityOrigin">Security origin.</param>
         public async Task<RequestDatabaseNamesReturn> RequestDatabaseNames(RequestDatabaseNamesParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("IndexedDB.requestDatabaseNames", parameters, sessionId);
@@ -6597,11 +6280,6 @@ namespace CDP.Domains
         /// <summary> 
         /// Dispatches a drag event into the page. 
         /// </summary>
-        /// <param name="type">Type of the drag event.</param>
-        /// <param name="x">X coordinate of the event relative to the main frame's viewport in CSS pixels.</param>
-        /// <param name="y">Y coordinate of the event relative to the main frame's viewport in CSS pixels. 0 refers tothe top of the viewport and Y increases as it proceeds towards the bottom of the viewport.</param>
-        /// <param name="data"></param>
-        /// <param name="modifiers">Bit field representing pressed modifier keys. Alt=1, Ctrl=2, Meta/Command=4, Shift=8(default: 0).</param>
         public async Task DispatchDragEvent(DispatchDragEventParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("Input.dispatchDragEvent", parameters, sessionId);
@@ -6610,21 +6288,6 @@ namespace CDP.Domains
         /// <summary> 
         /// Dispatches a key event to the page. 
         /// </summary>
-        /// <param name="type">Type of the key event.</param>
-        /// <param name="modifiers">Bit field representing pressed modifier keys. Alt=1, Ctrl=2, Meta/Command=4, Shift=8(default: 0).</param>
-        /// <param name="timestamp">Time at which the event occurred.</param>
-        /// <param name="text">Text as generated by processing a virtual key code with a keyboard layout. Not needed forfor `keyUp` and `rawKeyDown` events (default: "")</param>
-        /// <param name="unmodifiedText">Text that would have been generated by the keyboard if no modifiers were pressed (except forshift). Useful for shortcut (accelerator) key handling (default: "").</param>
-        /// <param name="keyIdentifier">Unique key identifier (e.g., 'U+0041') (default: "").</param>
-        /// <param name="code">Unique DOM defined string value for each physical key (e.g., 'KeyA') (default: "").</param>
-        /// <param name="key">Unique DOM defined string value describing the meaning of the key in the context of activemodifiers, keyboard layout, etc (e.g., 'AltGr') (default: "").</param>
-        /// <param name="windowsVirtualKeyCode">Windows virtual key code (default: 0).</param>
-        /// <param name="nativeVirtualKeyCode">Native virtual key code (default: 0).</param>
-        /// <param name="autoRepeat">Whether the event was generated from auto repeat (default: false).</param>
-        /// <param name="isKeypad">Whether the event was generated from the keypad (default: false).</param>
-        /// <param name="isSystemKey">Whether the event was a system key event (default: false).</param>
-        /// <param name="location">Whether the event was from the left or right side of the keyboard. 1=Left, 2=Right (default:0).</param>
-        /// <param name="commands">Editing commands to send with the key event (e.g., 'selectAll') (default: []).These are related to but not equal the command names used in `document.execCommand` and NSStandardKeyBindingResponding.See https://source.chromium.org/chromium/chromium/src/+/main:third_party/blink/renderer/core/editing/commands/editor_command_names.h for valid command names.</param>
         public async Task DispatchKeyEvent(DispatchKeyEventParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("Input.dispatchKeyEvent", parameters, sessionId);
@@ -6633,7 +6296,6 @@ namespace CDP.Domains
         /// <summary> 
         /// This method emulates inserting text that doesn't come from a key press,for example an emoji keyboard or an IME. 
         /// </summary>
-        /// <param name="text">The text to insert.</param>
         public async Task InsertText(InsertTextParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("Input.insertText", parameters, sessionId);
@@ -6642,11 +6304,6 @@ namespace CDP.Domains
         /// <summary> 
         /// This method sets the current candidate text for ime.Use imeCommitComposition to commit the final text.Use imeSetComposition with empty string as text to cancel composition. 
         /// </summary>
-        /// <param name="text">The text to insert</param>
-        /// <param name="selectionStart">selection start</param>
-        /// <param name="selectionEnd">selection end</param>
-        /// <param name="replacementStart">replacement start</param>
-        /// <param name="replacementEnd">replacement end</param>
         public async Task ImeSetComposition(ImeSetCompositionParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("Input.imeSetComposition", parameters, sessionId);
@@ -6655,22 +6312,6 @@ namespace CDP.Domains
         /// <summary> 
         /// Dispatches a mouse event to the page. 
         /// </summary>
-        /// <param name="type">Type of the mouse event.</param>
-        /// <param name="x">X coordinate of the event relative to the main frame's viewport in CSS pixels.</param>
-        /// <param name="y">Y coordinate of the event relative to the main frame's viewport in CSS pixels. 0 refers tothe top of the viewport and Y increases as it proceeds towards the bottom of the viewport.</param>
-        /// <param name="modifiers">Bit field representing pressed modifier keys. Alt=1, Ctrl=2, Meta/Command=4, Shift=8(default: 0).</param>
-        /// <param name="timestamp">Time at which the event occurred.</param>
-        /// <param name="button">Mouse button (default: "none").</param>
-        /// <param name="buttons">A number indicating which buttons are pressed on the mouse when a mouse event is triggered.Left=1, Right=2, Middle=4, Back=8, Forward=16, None=0.</param>
-        /// <param name="clickCount">Number of times the mouse button was clicked (default: 0).</param>
-        /// <param name="force">The normalized pressure, which has a range of [0,1] (default: 0).</param>
-        /// <param name="tangentialPressure">The normalized tangential pressure, which has a range of [-1,1] (default: 0).</param>
-        /// <param name="tiltX">The plane angle between the Y-Z plane and the plane containing both the stylus axis and the Y axis, in degrees of the range [-90,90], a positive tiltX is to the right (default: 0).</param>
-        /// <param name="tiltY">The plane angle between the X-Z plane and the plane containing both the stylus axis and the X axis, in degrees of the range [-90,90], a positive tiltY is towards the user (default: 0).</param>
-        /// <param name="twist">The clockwise rotation of a pen stylus around its own major axis, in degrees in the range [0,359] (default: 0).</param>
-        /// <param name="deltaX">X delta in CSS pixels for mouse wheel event (default: 0).</param>
-        /// <param name="deltaY">Y delta in CSS pixels for mouse wheel event (default: 0).</param>
-        /// <param name="pointerType">Pointer type (default: "mouse").</param>
         public async Task DispatchMouseEvent(DispatchMouseEventParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("Input.dispatchMouseEvent", parameters, sessionId);
@@ -6679,10 +6320,6 @@ namespace CDP.Domains
         /// <summary> 
         /// Dispatches a touch event to the page. 
         /// </summary>
-        /// <param name="type">Type of the touch event. TouchEnd and TouchCancel must not contain any touch points, whileTouchStart and TouchMove must contains at least one.</param>
-        /// <param name="touchPoints">Active touch points on the touch device. One event per any changed point (compared toprevious touch event in a sequence) is generated, emulating pressing/moving/releasing pointsone by one.</param>
-        /// <param name="modifiers">Bit field representing pressed modifier keys. Alt=1, Ctrl=2, Meta/Command=4, Shift=8(default: 0).</param>
-        /// <param name="timestamp">Time at which the event occurred.</param>
         public async Task DispatchTouchEvent(DispatchTouchEventParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("Input.dispatchTouchEvent", parameters, sessionId);
@@ -6691,15 +6328,6 @@ namespace CDP.Domains
         /// <summary> 
         /// Emulates touch event from the mouse event parameters. 
         /// </summary>
-        /// <param name="type">Type of the mouse event.</param>
-        /// <param name="x">X coordinate of the mouse pointer in DIP.</param>
-        /// <param name="y">Y coordinate of the mouse pointer in DIP.</param>
-        /// <param name="button">Mouse button. Only "none", "left", "right" are supported.</param>
-        /// <param name="timestamp">Time at which the event occurred (default: current time).</param>
-        /// <param name="deltaX">X delta in DIP for mouse wheel event (default: 0).</param>
-        /// <param name="deltaY">Y delta in DIP for mouse wheel event (default: 0).</param>
-        /// <param name="modifiers">Bit field representing pressed modifier keys. Alt=1, Ctrl=2, Meta/Command=4, Shift=8(default: 0).</param>
-        /// <param name="clickCount">Number of times the mouse button was clicked (default: 0).</param>
         public async Task EmulateTouchFromMouseEvent(EmulateTouchFromMouseEventParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("Input.emulateTouchFromMouseEvent", parameters, sessionId);
@@ -6708,7 +6336,6 @@ namespace CDP.Domains
         /// <summary> 
         /// Ignores input events (useful while auditing page). 
         /// </summary>
-        /// <param name="ignore">Ignores input events processing when set to true.</param>
         public async Task SetIgnoreInputEvents(SetIgnoreInputEventsParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("Input.setIgnoreInputEvents", parameters, sessionId);
@@ -6717,7 +6344,6 @@ namespace CDP.Domains
         /// <summary> 
         /// Prevents default drag and drop behavior and instead emits `Input.dragIntercepted` events.Drag and drop behavior can be directly controlled via `Input.dispatchDragEvent`. 
         /// </summary>
-        /// <param name="enabled"></param>
         public async Task SetInterceptDrags(SetInterceptDragsParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("Input.setInterceptDrags", parameters, sessionId);
@@ -6726,11 +6352,6 @@ namespace CDP.Domains
         /// <summary> 
         /// Synthesizes a pinch gesture over a time period by issuing appropriate touch events. 
         /// </summary>
-        /// <param name="x">X coordinate of the start of the gesture in CSS pixels.</param>
-        /// <param name="y">Y coordinate of the start of the gesture in CSS pixels.</param>
-        /// <param name="scaleFactor">Relative scale factor after zooming (>1.0 zooms in, <1.0 zooms out).</param>
-        /// <param name="relativeSpeed">Relative pointer speed in pixels per second (default: 800).</param>
-        /// <param name="gestureSourceType">Which type of input events to be generated (default: 'default', which queries the platformfor the preferred input type).</param>
         public async Task SynthesizePinchGesture(SynthesizePinchGestureParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("Input.synthesizePinchGesture", parameters, sessionId);
@@ -6739,18 +6360,6 @@ namespace CDP.Domains
         /// <summary> 
         /// Synthesizes a scroll gesture over a time period by issuing appropriate touch events. 
         /// </summary>
-        /// <param name="x">X coordinate of the start of the gesture in CSS pixels.</param>
-        /// <param name="y">Y coordinate of the start of the gesture in CSS pixels.</param>
-        /// <param name="xDistance">The distance to scroll along the X axis (positive to scroll left).</param>
-        /// <param name="yDistance">The distance to scroll along the Y axis (positive to scroll up).</param>
-        /// <param name="xOverscroll">The number of additional pixels to scroll back along the X axis, in addition to the givendistance.</param>
-        /// <param name="yOverscroll">The number of additional pixels to scroll back along the Y axis, in addition to the givendistance.</param>
-        /// <param name="preventFling">Prevent fling (default: true).</param>
-        /// <param name="speed">Swipe speed in pixels per second (default: 800).</param>
-        /// <param name="gestureSourceType">Which type of input events to be generated (default: 'default', which queries the platformfor the preferred input type).</param>
-        /// <param name="repeatCount">The number of times to repeat the gesture (default: 0).</param>
-        /// <param name="repeatDelayMs">The number of milliseconds delay between each repeat. (default: 250).</param>
-        /// <param name="interactionMarkerName">The name of the interaction markers to generate, if not empty (default: "").</param>
         public async Task SynthesizeScrollGesture(SynthesizeScrollGestureParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("Input.synthesizeScrollGesture", parameters, sessionId);
@@ -6759,11 +6368,6 @@ namespace CDP.Domains
         /// <summary> 
         /// Synthesizes a tap gesture over a time period by issuing appropriate touch events. 
         /// </summary>
-        /// <param name="x">X coordinate of the start of the gesture in CSS pixels.</param>
-        /// <param name="y">Y coordinate of the start of the gesture in CSS pixels.</param>
-        /// <param name="duration">Duration between touchdown and touchup events in ms (default: 50).</param>
-        /// <param name="tapCount">Number of times to perform the tap (e.g. 2 for double tap, default: 1).</param>
-        /// <param name="gestureSourceType">Which type of input events to be generated (default: 'default', which queries the platformfor the preferred input type).</param>
         public async Task SynthesizeTapGesture(SynthesizeTapGestureParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("Input.synthesizeTapGesture", parameters, sessionId);
@@ -7073,6 +6677,7 @@ namespace CDP.Domains
         }
         
         /// <summary> Fired when debugging target has crashed </summary>
+        /// <returns> remove handler </returns>
         public Action OnTargetCrashed(Action handler, string sessionId = default)
         {
             string eventName = string.IsNullOrEmpty(sessionId) ? "Inspector.targetCrashed" : $"Inspector.targetCrashed.{sessionId}";
@@ -7081,6 +6686,7 @@ namespace CDP.Domains
         }
         
         /// <summary> Fired when debugging target has reloaded after crash </summary>
+        /// <returns> remove handler </returns>
         public Action OnTargetReloadedAfterCrash(Action handler, string sessionId = default)
         {
             string eventName = string.IsNullOrEmpty(sessionId) ? "Inspector.targetReloadedAfterCrash" : $"Inspector.targetReloadedAfterCrash.{sessionId}";
@@ -7179,7 +6785,6 @@ namespace CDP.Domains
         /// <summary> 
         /// Provides the reasons why the given layer was composited. 
         /// </summary>
-        /// <param name="layerId">The id of the layer for which we want to get the reasons it was composited.</param>
         public async Task<CompositingReasonsReturn> CompositingReasons(CompositingReasonsParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("LayerTree.compositingReasons", parameters, sessionId);
@@ -7204,7 +6809,6 @@ namespace CDP.Domains
         /// <summary> 
         /// Returns the snapshot identifier. 
         /// </summary>
-        /// <param name="tiles">An array of tiles composing the snapshot.</param>
         public async Task<LoadSnapshotReturn> LoadSnapshot(LoadSnapshotParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("LayerTree.loadSnapshot", parameters, sessionId);
@@ -7213,7 +6817,6 @@ namespace CDP.Domains
         /// <summary> 
         /// Returns the layer snapshot identifier. 
         /// </summary>
-        /// <param name="layerId">The id of the layer.</param>
         public async Task<MakeSnapshotReturn> MakeSnapshot(MakeSnapshotParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("LayerTree.makeSnapshot", parameters, sessionId);
@@ -7222,10 +6825,6 @@ namespace CDP.Domains
         /// <summary> 
         ///  
         /// </summary>
-        /// <param name="snapshotId">The id of the layer snapshot.</param>
-        /// <param name="minRepeatCount">The maximum number of times to replay the snapshot (1, if not specified).</param>
-        /// <param name="minDuration">The minimum duration (in seconds) to replay the snapshot.</param>
-        /// <param name="clipRect">The clip rectangle to apply when replaying the snapshot.</param>
         public async Task<ProfileSnapshotReturn> ProfileSnapshot(ProfileSnapshotParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("LayerTree.profileSnapshot", parameters, sessionId);
@@ -7234,7 +6833,6 @@ namespace CDP.Domains
         /// <summary> 
         /// Releases layer snapshot captured by the back-end. 
         /// </summary>
-        /// <param name="snapshotId">The id of the layer snapshot.</param>
         public async Task ReleaseSnapshot(ReleaseSnapshotParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("LayerTree.releaseSnapshot", parameters, sessionId);
@@ -7243,10 +6841,6 @@ namespace CDP.Domains
         /// <summary> 
         /// Replays the layer snapshot and returns the resulting bitmap. 
         /// </summary>
-        /// <param name="snapshotId">The id of the layer snapshot.</param>
-        /// <param name="fromStep">The first step to replay from (replay from the very start if not specified).</param>
-        /// <param name="toStep">The last step to replay to (replay till the end if not specified).</param>
-        /// <param name="scale">The scale to apply while replaying (defaults to 1).</param>
         public async Task<ReplaySnapshotReturn> ReplaySnapshot(ReplaySnapshotParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("LayerTree.replaySnapshot", parameters, sessionId);
@@ -7255,7 +6849,6 @@ namespace CDP.Domains
         /// <summary> 
         /// Replays the layer snapshot and returns canvas log. 
         /// </summary>
-        /// <param name="snapshotId">The id of the layer snapshot.</param>
         public async Task<SnapshotCommandLogReturn> SnapshotCommandLog(SnapshotCommandLogParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("LayerTree.snapshotCommandLog", parameters, sessionId);
@@ -7508,7 +7101,6 @@ namespace CDP.Domains
         /// <summary> 
         /// start violation reporting. 
         /// </summary>
-        /// <param name="config">Configuration for violations.</param>
         public async Task StartViolationsReport(StartViolationsReportParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("Log.startViolationsReport", parameters, sessionId);
@@ -7630,7 +7222,6 @@ namespace CDP.Domains
         /// <summary> 
         /// Enable/disable suppressing memory pressure notifications in all processes. 
         /// </summary>
-        /// <param name="suppressed">If true, memory pressure notifications will be suppressed.</param>
         public async Task SetPressureNotificationsSuppressed(SetPressureNotificationsSuppressedParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("Memory.setPressureNotificationsSuppressed", parameters, sessionId);
@@ -7639,7 +7230,6 @@ namespace CDP.Domains
         /// <summary> 
         /// Simulate a memory pressure notification in all processes. 
         /// </summary>
-        /// <param name="level">Memory pressure level of the notification.</param>
         public async Task SimulatePressureNotification(SimulatePressureNotificationParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("Memory.simulatePressureNotification", parameters, sessionId);
@@ -7648,8 +7238,6 @@ namespace CDP.Domains
         /// <summary> 
         /// Start collecting native memory profile. 
         /// </summary>
-        /// <param name="samplingInterval">Average number of bytes between samples.</param>
-        /// <param name="suppressRandomness">Do not randomize intervals between samples.</param>
         public async Task StartSampling(StartSamplingParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("Memory.startSampling", parameters, sessionId);
@@ -8193,7 +7781,6 @@ namespace CDP.Domains
         /// <summary> 
         /// Sets a list of content encodings that will be accepted. Empty list means no encoding is accepted. 
         /// </summary>
-        /// <param name="encodings">List of accepted content encodings.</param>
         public async Task SetAcceptedEncodings(SetAcceptedEncodingsParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("Network.setAcceptedEncodings", parameters, sessionId);
@@ -8250,14 +7837,6 @@ namespace CDP.Domains
         /// <summary> 
         /// Response to Network.requestIntercepted which either modifies the request to continue with anymodifications, or blocks it, or completes it with the provided response bytes. If a networkfetch occurs as a result which encounters a redirect an additional Network.requestInterceptedevent will be sent with the same InterceptionId.Deprecated, use Fetch.continueRequest, Fetch.fulfillRequest and Fetch.failRequest instead. 
         /// </summary>
-        /// <param name="interceptionId"></param>
-        /// <param name="errorReason">If set this causes the request to fail with the given reason. Passing `Aborted` for requestsmarked with `isNavigationRequest` also cancels the navigation. Must not be set in responseto an authChallenge.</param>
-        /// <param name="rawResponse">If set the requests completes using with the provided base64 encoded raw response, includingHTTP status line and headers etc... Must not be set in response to an authChallenge. (Encoded as a base64 string when passed over JSON)</param>
-        /// <param name="url">If set the request url will be modified in a way that's not observable by page. Must not beset in response to an authChallenge.</param>
-        /// <param name="method">If set this allows the request method to be overridden. Must not be set in response to anauthChallenge.</param>
-        /// <param name="postData">If set this allows postData to be set. Must not be set in response to an authChallenge.</param>
-        /// <param name="headers">If set this allows the request headers to be changed. Must not be set in response to anauthChallenge.</param>
-        /// <param name="authChallengeResponse">Response to a requestIntercepted with an authChallenge. Must not be set otherwise.</param>
         public async Task ContinueInterceptedRequest(ContinueInterceptedRequestParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("Network.continueInterceptedRequest", parameters, sessionId);
@@ -8266,10 +7845,6 @@ namespace CDP.Domains
         /// <summary> 
         /// Deletes browser cookies with matching name and url or domain/path pair. 
         /// </summary>
-        /// <param name="name">Name of the cookies to remove.</param>
-        /// <param name="url">If specified, deletes all the cookies with the given name where domain and path matchprovided URL.</param>
-        /// <param name="domain">If specified, deletes only cookies with the exact domain.</param>
-        /// <param name="path">If specified, deletes only cookies with the exact path.</param>
         public async Task DeleteCookies(DeleteCookiesParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("Network.deleteCookies", parameters, sessionId);
@@ -8286,11 +7861,6 @@ namespace CDP.Domains
         /// <summary> 
         /// Activates emulation of network conditions. 
         /// </summary>
-        /// <param name="offline">True to emulate internet disconnection.</param>
-        /// <param name="latency">Minimum latency from request sent to response headers received (ms).</param>
-        /// <param name="downloadThroughput">Maximal aggregated download throughput (bytes/sec). -1 disables download throttling.</param>
-        /// <param name="uploadThroughput">Maximal aggregated upload throughput (bytes/sec).  -1 disables upload throttling.</param>
-        /// <param name="connectionType">Connection type if known.</param>
         public async Task EmulateNetworkConditions(EmulateNetworkConditionsParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("Network.emulateNetworkConditions", parameters, sessionId);
@@ -8299,9 +7869,6 @@ namespace CDP.Domains
         /// <summary> 
         /// Enables network tracking, network events will now be delivered to the client. 
         /// </summary>
-        /// <param name="maxTotalBufferSize">Buffer size in bytes to use when preserving network payloads (XHRs, etc).</param>
-        /// <param name="maxResourceBufferSize">Per-resource buffer size in bytes to use when preserving network payloads (XHRs, etc).</param>
-        /// <param name="maxPostDataSize">Longest post body size (in bytes) that would be included in requestWillBeSent notification</param>
         public async Task Enable(EnableParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("Network.enable", parameters, sessionId);
@@ -8318,7 +7885,6 @@ namespace CDP.Domains
         /// <summary> 
         /// Returns the DER-encoded certificate. 
         /// </summary>
-        /// <param name="origin">Origin to get certificate for.</param>
         public async Task<GetCertificateReturn> GetCertificate(GetCertificateParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("Network.getCertificate", parameters, sessionId);
@@ -8327,7 +7893,6 @@ namespace CDP.Domains
         /// <summary> 
         /// Returns all browser cookies for the current URL. Depending on the backend support, will returndetailed cookie information in the `cookies` field. 
         /// </summary>
-        /// <param name="urls">The list of URLs for which applicable cookies will be fetched.If not specified, it's assumed to be set to the list containingthe URLs of the page and all of its subframes.</param>
         public async Task<GetCookiesReturn> GetCookies(GetCookiesParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("Network.getCookies", parameters, sessionId);
@@ -8336,7 +7901,6 @@ namespace CDP.Domains
         /// <summary> 
         /// Returns content served for the given request. 
         /// </summary>
-        /// <param name="requestId">Identifier of the network request to get content for.</param>
         public async Task<GetResponseBodyReturn> GetResponseBody(GetResponseBodyParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("Network.getResponseBody", parameters, sessionId);
@@ -8345,7 +7909,6 @@ namespace CDP.Domains
         /// <summary> 
         /// Returns post data sent with the request. Returns an error when no data was sent with the request. 
         /// </summary>
-        /// <param name="requestId">Identifier of the network request to get content for.</param>
         public async Task<GetRequestPostDataReturn> GetRequestPostData(GetRequestPostDataParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("Network.getRequestPostData", parameters, sessionId);
@@ -8354,7 +7917,6 @@ namespace CDP.Domains
         /// <summary> 
         /// Returns content served for the given currently intercepted request. 
         /// </summary>
-        /// <param name="interceptionId">Identifier for the intercepted request to get body for.</param>
         public async Task<GetResponseBodyForInterceptionReturn> GetResponseBodyForInterception(GetResponseBodyForInterceptionParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("Network.getResponseBodyForInterception", parameters, sessionId);
@@ -8363,7 +7925,6 @@ namespace CDP.Domains
         /// <summary> 
         /// Returns a handle to the stream representing the response body. Note that after this command,the intercepted request can't be continued as is -- you either need to cancel it or to providethe response body. The stream only supports sequential read, IO.read will fail if the positionis specified. 
         /// </summary>
-        /// <param name="interceptionId"></param>
         public async Task<TakeResponseBodyForInterceptionAsStreamReturn> TakeResponseBodyForInterceptionAsStream(TakeResponseBodyForInterceptionAsStreamParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("Network.takeResponseBodyForInterceptionAsStream", parameters, sessionId);
@@ -8372,7 +7933,6 @@ namespace CDP.Domains
         /// <summary> 
         /// This method sends a new XMLHttpRequest which is identical to the original one. The followingparameters should be identical: method, url, async, request body, extra headers, withCredentialsattribute, user, password. 
         /// </summary>
-        /// <param name="requestId">Identifier of XHR to replay.</param>
         public async Task ReplayXHR(ReplayXHRParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("Network.replayXHR", parameters, sessionId);
@@ -8381,10 +7941,6 @@ namespace CDP.Domains
         /// <summary> 
         /// Searches for given string in response content. 
         /// </summary>
-        /// <param name="requestId">Identifier of the network response to search.</param>
-        /// <param name="query">String to search for.</param>
-        /// <param name="caseSensitive">If true, search is case sensitive.</param>
-        /// <param name="isRegex">If true, treats string parameter as regex.</param>
         public async Task<SearchInResponseBodyReturn> SearchInResponseBody(SearchInResponseBodyParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("Network.searchInResponseBody", parameters, sessionId);
@@ -8393,7 +7949,6 @@ namespace CDP.Domains
         /// <summary> 
         /// Blocks URLs from loading. 
         /// </summary>
-        /// <param name="urls">URL patterns to block. Wildcards ('*') are allowed.</param>
         public async Task SetBlockedURLs(SetBlockedURLsParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("Network.setBlockedURLs", parameters, sessionId);
@@ -8402,7 +7957,6 @@ namespace CDP.Domains
         /// <summary> 
         /// Toggles ignoring of service worker for each request. 
         /// </summary>
-        /// <param name="bypass">Bypass service worker and load from network.</param>
         public async Task SetBypassServiceWorker(SetBypassServiceWorkerParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("Network.setBypassServiceWorker", parameters, sessionId);
@@ -8411,7 +7965,6 @@ namespace CDP.Domains
         /// <summary> 
         /// Toggles ignoring cache for each request. If `true`, cache will not be used. 
         /// </summary>
-        /// <param name="cacheDisabled">Cache disabled state.</param>
         public async Task SetCacheDisabled(SetCacheDisabledParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("Network.setCacheDisabled", parameters, sessionId);
@@ -8420,20 +7973,6 @@ namespace CDP.Domains
         /// <summary> 
         /// Sets a cookie with the given cookie data; may overwrite equivalent cookies if they exist. 
         /// </summary>
-        /// <param name="name">Cookie name.</param>
-        /// <param name="value">Cookie value.</param>
-        /// <param name="url">The request-URI to associate with the setting of the cookie. This value can affect thedefault domain, path, source port, and source scheme values of the created cookie.</param>
-        /// <param name="domain">Cookie domain.</param>
-        /// <param name="path">Cookie path.</param>
-        /// <param name="secure">True if cookie is secure.</param>
-        /// <param name="httpOnly">True if cookie is http-only.</param>
-        /// <param name="sameSite">Cookie SameSite type.</param>
-        /// <param name="expires">Cookie expiration date, session cookie if not set</param>
-        /// <param name="priority">Cookie Priority type.</param>
-        /// <param name="sameParty">True if cookie is SameParty.</param>
-        /// <param name="sourceScheme">Cookie source scheme type.</param>
-        /// <param name="sourcePort">Cookie source port. Valid values are {-1, [1, 65535]}, -1 indicates an unspecified port.An unspecified port value allows protocol clients to emulate legacy cookie scope for the port.This is a temporary ability and it will be removed in the future.</param>
-        /// <param name="partitionKey">Cookie partition key. The site of the top-level URL the browser was visiting at the startof the request to the endpoint that set the cookie.If not set, the cookie will be set as not partitioned.</param>
         public async Task<SetCookieReturn> SetCookie(SetCookieParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("Network.setCookie", parameters, sessionId);
@@ -8442,7 +7981,6 @@ namespace CDP.Domains
         /// <summary> 
         /// Sets given cookies. 
         /// </summary>
-        /// <param name="cookies">Cookies to be set.</param>
         public async Task SetCookies(SetCookiesParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("Network.setCookies", parameters, sessionId);
@@ -8451,7 +7989,6 @@ namespace CDP.Domains
         /// <summary> 
         /// Specifies whether to always send extra HTTP headers with the requests from this page. 
         /// </summary>
-        /// <param name="headers">Map with extra HTTP headers.</param>
         public async Task SetExtraHTTPHeaders(SetExtraHTTPHeadersParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("Network.setExtraHTTPHeaders", parameters, sessionId);
@@ -8460,7 +7997,6 @@ namespace CDP.Domains
         /// <summary> 
         /// Specifies whether to attach a page script stack id in requests 
         /// </summary>
-        /// <param name="enabled">Whether to attach a page script stack for debugging purpose.</param>
         public async Task SetAttachDebugStack(SetAttachDebugStackParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("Network.setAttachDebugStack", parameters, sessionId);
@@ -8469,7 +8005,6 @@ namespace CDP.Domains
         /// <summary> 
         /// Sets the requests to intercept that match the provided patterns and optionally resource types.Deprecated, please use Fetch.enable instead. 
         /// </summary>
-        /// <param name="patterns">Requests matching any of these patterns will be forwarded and wait for the correspondingcontinueInterceptedRequest call.</param>
         public async Task SetRequestInterception(SetRequestInterceptionParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("Network.setRequestInterception", parameters, sessionId);
@@ -8478,10 +8013,6 @@ namespace CDP.Domains
         /// <summary> 
         /// Allows overriding user agent with the given string. 
         /// </summary>
-        /// <param name="userAgent">User agent to use.</param>
-        /// <param name="acceptLanguage">Browser langugage to emulate.</param>
-        /// <param name="platform">The platform navigator.platform should return.</param>
-        /// <param name="userAgentMetadata">To be sent in Sec-CH-UA-* headers and returned in navigator.userAgentData</param>
         public async Task SetUserAgentOverride(SetUserAgentOverrideParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("Network.setUserAgentOverride", parameters, sessionId);
@@ -8490,7 +8021,6 @@ namespace CDP.Domains
         /// <summary> 
         /// Returns information about the COEP/COOP isolation status. 
         /// </summary>
-        /// <param name="frameId">If no frameId is provided, the status of the target is provided.</param>
         public async Task<GetSecurityIsolationStatusReturn> GetSecurityIsolationStatus(GetSecurityIsolationStatusParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("Network.getSecurityIsolationStatus", parameters, sessionId);
@@ -8499,7 +8029,6 @@ namespace CDP.Domains
         /// <summary> 
         /// Enables tracking for the Reporting API, events generated by the Reporting API will now be delivered to the client.Enabling triggers 'reportingApiReportAdded' for all existing reports. 
         /// </summary>
-        /// <param name="enable">Whether to enable or disable events for the Reporting API</param>
         public async Task EnableReportingApi(EnableReportingApiParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("Network.enableReportingApi", parameters, sessionId);
@@ -8508,9 +8037,6 @@ namespace CDP.Domains
         /// <summary> 
         /// Fetches the resource and returns the content. 
         /// </summary>
-        /// <param name="frameId">Frame id to get the resource for. Mandatory for frame targets, andshould be omitted for worker targets.</param>
-        /// <param name="url">URL of the resource to get content for.</param>
-        /// <param name="options">Options for the request.</param>
         public async Task<LoadNetworkResourceReturn> LoadNetworkResource(LoadNetworkResourceParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("Network.loadNetworkResource", parameters, sessionId);
@@ -9790,6 +9316,7 @@ namespace CDP.Domains
         }
         
         /// <summary> Fired when user cancels the inspect mode. </summary>
+        /// <returns> remove handler </returns>
         public Action OnInspectModeCanceled(Action handler, string sessionId = default)
         {
             string eventName = string.IsNullOrEmpty(sessionId) ? "Overlay.inspectModeCanceled" : $"Overlay.inspectModeCanceled.{sessionId}";
@@ -9821,11 +9348,6 @@ namespace CDP.Domains
         /// <summary> 
         /// For testing. 
         /// </summary>
-        /// <param name="nodeId">Id of the node to get highlight object for.</param>
-        /// <param name="includeDistance">Whether to include distance info.</param>
-        /// <param name="includeStyle">Whether to include style info.</param>
-        /// <param name="colorFormat">The color format to get config with (default: hex).</param>
-        /// <param name="showAccessibilityInfo">Whether to show accessibility info (default: true).</param>
         public async Task<GetHighlightObjectForTestReturn> GetHighlightObjectForTest(GetHighlightObjectForTestParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("Overlay.getHighlightObjectForTest", parameters, sessionId);
@@ -9834,7 +9356,6 @@ namespace CDP.Domains
         /// <summary> 
         /// For Persistent Grid testing. 
         /// </summary>
-        /// <param name="nodeIds">Ids of the node to get highlight object for.</param>
         public async Task<GetGridHighlightObjectsForTestReturn> GetGridHighlightObjectsForTest(GetGridHighlightObjectsForTestParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("Overlay.getGridHighlightObjectsForTest", parameters, sessionId);
@@ -9843,7 +9364,6 @@ namespace CDP.Domains
         /// <summary> 
         /// For Source Order Viewer testing. 
         /// </summary>
-        /// <param name="nodeId">Id of the node to highlight.</param>
         public async Task<GetSourceOrderHighlightObjectForTestReturn> GetSourceOrderHighlightObjectForTest(GetSourceOrderHighlightObjectForTestParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("Overlay.getSourceOrderHighlightObjectForTest", parameters, sessionId);
@@ -9860,9 +9380,6 @@ namespace CDP.Domains
         /// <summary> 
         /// Highlights owner element of the frame with given id.Deprecated: Doesn't work reliablity and cannot be fixed due to processseparatation (the owner node might be in a different process). Determinethe owner node in the client and use highlightNode. 
         /// </summary>
-        /// <param name="frameId">Identifier of the frame to highlight.</param>
-        /// <param name="contentColor">The content box highlight fill color (default: transparent).</param>
-        /// <param name="contentOutlineColor">The content box highlight outline color (default: transparent).</param>
         public async Task HighlightFrame(HighlightFrameParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("Overlay.highlightFrame", parameters, sessionId);
@@ -9871,11 +9388,6 @@ namespace CDP.Domains
         /// <summary> 
         /// Highlights DOM node with given id or with the given JavaScript object wrapper. Either nodeId orobjectId must be specified. 
         /// </summary>
-        /// <param name="highlightConfig">A descriptor for the highlight appearance.</param>
-        /// <param name="nodeId">Identifier of the node to highlight.</param>
-        /// <param name="backendNodeId">Identifier of the backend node to highlight.</param>
-        /// <param name="objectId">JavaScript object id of the node to be highlighted.</param>
-        /// <param name="selector">Selectors to highlight relevant nodes.</param>
         public async Task HighlightNode(HighlightNodeParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("Overlay.highlightNode", parameters, sessionId);
@@ -9884,9 +9396,6 @@ namespace CDP.Domains
         /// <summary> 
         /// Highlights given quad. Coordinates are absolute with respect to the main frame viewport. 
         /// </summary>
-        /// <param name="quad">Quad to highlight</param>
-        /// <param name="color">The highlight fill color (default: transparent).</param>
-        /// <param name="outlineColor">The highlight outline color (default: transparent).</param>
         public async Task HighlightQuad(HighlightQuadParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("Overlay.highlightQuad", parameters, sessionId);
@@ -9895,12 +9404,6 @@ namespace CDP.Domains
         /// <summary> 
         /// Highlights given rectangle. Coordinates are absolute with respect to the main frame viewport. 
         /// </summary>
-        /// <param name="x">X coordinate</param>
-        /// <param name="y">Y coordinate</param>
-        /// <param name="width">Rectangle width</param>
-        /// <param name="height">Rectangle height</param>
-        /// <param name="color">The highlight fill color (default: transparent).</param>
-        /// <param name="outlineColor">The highlight outline color (default: transparent).</param>
         public async Task HighlightRect(HighlightRectParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("Overlay.highlightRect", parameters, sessionId);
@@ -9909,10 +9412,6 @@ namespace CDP.Domains
         /// <summary> 
         /// Highlights the source order of the children of the DOM node with given id or with the givenJavaScript object wrapper. Either nodeId or objectId must be specified. 
         /// </summary>
-        /// <param name="sourceOrderConfig">A descriptor for the appearance of the overlay drawing.</param>
-        /// <param name="nodeId">Identifier of the node to highlight.</param>
-        /// <param name="backendNodeId">Identifier of the backend node to highlight.</param>
-        /// <param name="objectId">JavaScript object id of the node to be highlighted.</param>
         public async Task HighlightSourceOrder(HighlightSourceOrderParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("Overlay.highlightSourceOrder", parameters, sessionId);
@@ -9921,8 +9420,6 @@ namespace CDP.Domains
         /// <summary> 
         /// Enters the 'inspect' mode. In this mode, elements that user is hovering over are highlighted.Backend then generates 'inspectNodeRequested' event upon element selection. 
         /// </summary>
-        /// <param name="mode">Set an inspection mode.</param>
-        /// <param name="highlightConfig">A descriptor for the highlight appearance of hovered-over nodes. May be omitted if `enabled== false`.</param>
         public async Task SetInspectMode(SetInspectModeParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("Overlay.setInspectMode", parameters, sessionId);
@@ -9931,7 +9428,6 @@ namespace CDP.Domains
         /// <summary> 
         /// Highlights owner element of all frames detected to be ads. 
         /// </summary>
-        /// <param name="show">True for showing ad highlights</param>
         public async Task SetShowAdHighlights(SetShowAdHighlightsParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("Overlay.setShowAdHighlights", parameters, sessionId);
@@ -9940,7 +9436,6 @@ namespace CDP.Domains
         /// <summary> 
         ///  
         /// </summary>
-        /// <param name="message">The message to display, also triggers resume and step over controls.</param>
         public async Task SetPausedInDebuggerMessage(SetPausedInDebuggerMessageParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("Overlay.setPausedInDebuggerMessage", parameters, sessionId);
@@ -9949,7 +9444,6 @@ namespace CDP.Domains
         /// <summary> 
         /// Requests that backend shows debug borders on layers 
         /// </summary>
-        /// <param name="show">True for showing debug borders</param>
         public async Task SetShowDebugBorders(SetShowDebugBordersParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("Overlay.setShowDebugBorders", parameters, sessionId);
@@ -9958,7 +9452,6 @@ namespace CDP.Domains
         /// <summary> 
         /// Requests that backend shows the FPS counter 
         /// </summary>
-        /// <param name="show">True for showing the FPS counter</param>
         public async Task SetShowFPSCounter(SetShowFPSCounterParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("Overlay.setShowFPSCounter", parameters, sessionId);
@@ -9967,7 +9460,6 @@ namespace CDP.Domains
         /// <summary> 
         /// Highlight multiple elements with the CSS Grid overlay. 
         /// </summary>
-        /// <param name="gridNodeHighlightConfigs">An array of node identifiers and descriptors for the highlight appearance.</param>
         public async Task SetShowGridOverlays(SetShowGridOverlaysParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("Overlay.setShowGridOverlays", parameters, sessionId);
@@ -9976,7 +9468,6 @@ namespace CDP.Domains
         /// <summary> 
         ///  
         /// </summary>
-        /// <param name="flexNodeHighlightConfigs">An array of node identifiers and descriptors for the highlight appearance.</param>
         public async Task SetShowFlexOverlays(SetShowFlexOverlaysParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("Overlay.setShowFlexOverlays", parameters, sessionId);
@@ -9985,7 +9476,6 @@ namespace CDP.Domains
         /// <summary> 
         ///  
         /// </summary>
-        /// <param name="scrollSnapHighlightConfigs">An array of node identifiers and descriptors for the highlight appearance.</param>
         public async Task SetShowScrollSnapOverlays(SetShowScrollSnapOverlaysParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("Overlay.setShowScrollSnapOverlays", parameters, sessionId);
@@ -9994,7 +9484,6 @@ namespace CDP.Domains
         /// <summary> 
         ///  
         /// </summary>
-        /// <param name="containerQueryHighlightConfigs">An array of node identifiers and descriptors for the highlight appearance.</param>
         public async Task SetShowContainerQueryOverlays(SetShowContainerQueryOverlaysParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("Overlay.setShowContainerQueryOverlays", parameters, sessionId);
@@ -10003,7 +9492,6 @@ namespace CDP.Domains
         /// <summary> 
         /// Requests that backend shows paint rectangles 
         /// </summary>
-        /// <param name="result">True for showing paint rectangles</param>
         public async Task SetShowPaintRects(SetShowPaintRectsParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("Overlay.setShowPaintRects", parameters, sessionId);
@@ -10012,7 +9500,6 @@ namespace CDP.Domains
         /// <summary> 
         /// Requests that backend shows layout shift regions 
         /// </summary>
-        /// <param name="result">True for showing layout shift regions</param>
         public async Task SetShowLayoutShiftRegions(SetShowLayoutShiftRegionsParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("Overlay.setShowLayoutShiftRegions", parameters, sessionId);
@@ -10021,7 +9508,6 @@ namespace CDP.Domains
         /// <summary> 
         /// Requests that backend shows scroll bottleneck rects 
         /// </summary>
-        /// <param name="show">True for showing scroll bottleneck rects</param>
         public async Task SetShowScrollBottleneckRects(SetShowScrollBottleneckRectsParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("Overlay.setShowScrollBottleneckRects", parameters, sessionId);
@@ -10030,7 +9516,6 @@ namespace CDP.Domains
         /// <summary> 
         /// Deprecated, no longer has any effect. 
         /// </summary>
-        /// <param name="show">True for showing hit-test borders</param>
         public async Task SetShowHitTestBorders(SetShowHitTestBordersParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("Overlay.setShowHitTestBorders", parameters, sessionId);
@@ -10039,7 +9524,6 @@ namespace CDP.Domains
         /// <summary> 
         /// Request that backend shows an overlay with web vital metrics. 
         /// </summary>
-        /// <param name="show"></param>
         public async Task SetShowWebVitals(SetShowWebVitalsParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("Overlay.setShowWebVitals", parameters, sessionId);
@@ -10048,7 +9532,6 @@ namespace CDP.Domains
         /// <summary> 
         /// Paints viewport size upon main frame resize. 
         /// </summary>
-        /// <param name="show">Whether to paint size or not.</param>
         public async Task SetShowViewportSizeOnResize(SetShowViewportSizeOnResizeParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("Overlay.setShowViewportSizeOnResize", parameters, sessionId);
@@ -10057,7 +9540,6 @@ namespace CDP.Domains
         /// <summary> 
         /// Add a dual screen device hinge 
         /// </summary>
-        /// <param name="hingeConfig">hinge data, null means hideHinge</param>
         public async Task SetShowHinge(SetShowHingeParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("Overlay.setShowHinge", parameters, sessionId);
@@ -10066,7 +9548,6 @@ namespace CDP.Domains
         /// <summary> 
         /// Show elements in isolation mode with overlays. 
         /// </summary>
-        /// <param name="isolatedElementHighlightConfigs">An array of node identifiers and descriptors for the highlight appearance.</param>
         public async Task SetShowIsolatedElements(SetShowIsolatedElementsParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("Overlay.setShowIsolatedElements", parameters, sessionId);
@@ -10642,6 +10123,7 @@ namespace CDP.Domains
         }
         
         /// <summary>  </summary>
+        /// <returns> remove handler </returns>
         public Action OnFrameResized(Action handler, string sessionId = default)
         {
             string eventName = string.IsNullOrEmpty(sessionId) ? "Page.frameResized" : $"Page.frameResized.{sessionId}";
@@ -10728,6 +10210,7 @@ namespace CDP.Domains
         }
         
         /// <summary> Fired when interstitial page was hidden </summary>
+        /// <returns> remove handler </returns>
         public Action OnInterstitialHidden(Action handler, string sessionId = default)
         {
             string eventName = string.IsNullOrEmpty(sessionId) ? "Page.interstitialHidden" : $"Page.interstitialHidden.{sessionId}";
@@ -10736,6 +10219,7 @@ namespace CDP.Domains
         }
         
         /// <summary> Fired when interstitial page was shown </summary>
+        /// <returns> remove handler </returns>
         public Action OnInterstitialShown(Action handler, string sessionId = default)
         {
             string eventName = string.IsNullOrEmpty(sessionId) ? "Page.interstitialShown" : $"Page.interstitialShown.{sessionId}";
@@ -10881,7 +10365,6 @@ namespace CDP.Domains
         /// <summary> 
         /// Deprecated, please use addScriptToEvaluateOnNewDocument instead. 
         /// </summary>
-        /// <param name="scriptSource"></param>
         public async Task<AddScriptToEvaluateOnLoadReturn> AddScriptToEvaluateOnLoad(AddScriptToEvaluateOnLoadParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("Page.addScriptToEvaluateOnLoad", parameters, sessionId);
@@ -10890,9 +10373,6 @@ namespace CDP.Domains
         /// <summary> 
         /// Evaluates given script in every frame upon creation (before loading frame's scripts). 
         /// </summary>
-        /// <param name="source"></param>
-        /// <param name="worldName">If specified, creates an isolated world with the given name and evaluates given script in it.This world name will be used as the ExecutionContextDescription::name when the correspondingevent is emitted.</param>
-        /// <param name="includeCommandLineAPI">Specifies whether command line API should be available to the script, defaultsto false.</param>
         public async Task<AddScriptToEvaluateOnNewDocumentReturn> AddScriptToEvaluateOnNewDocument(AddScriptToEvaluateOnNewDocumentParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("Page.addScriptToEvaluateOnNewDocument", parameters, sessionId);
@@ -10909,11 +10389,6 @@ namespace CDP.Domains
         /// <summary> 
         /// Capture page screenshot. 
         /// </summary>
-        /// <param name="format">Image compression format (defaults to png).</param>
-        /// <param name="quality">Compression quality from range [0..100] (jpeg only).</param>
-        /// <param name="clip">Capture the screenshot of a given region only.</param>
-        /// <param name="fromSurface">Capture the screenshot from the surface, rather than the view. Defaults to true.</param>
-        /// <param name="captureBeyondViewport">Capture the screenshot beyond the viewport. Defaults to false.</param>
         public async Task<CaptureScreenshotReturn> CaptureScreenshot(CaptureScreenshotParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("Page.captureScreenshot", parameters, sessionId);
@@ -10922,7 +10397,6 @@ namespace CDP.Domains
         /// <summary> 
         /// Returns a snapshot of the page as a string. For MHTML format, the serialization includesiframes, shadow DOM, external resources, and element-inline styles. 
         /// </summary>
-        /// <param name="format">Format (defaults to mhtml).</param>
         public async Task<CaptureSnapshotReturn> CaptureSnapshot(CaptureSnapshotParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("Page.captureSnapshot", parameters, sessionId);
@@ -10955,9 +10429,6 @@ namespace CDP.Domains
         /// <summary> 
         /// Creates an isolated world for the given frame. 
         /// </summary>
-        /// <param name="frameId">Id of the frame in which the isolated world should be created.</param>
-        /// <param name="worldName">An optional name which is reported in the Execution Context.</param>
-        /// <param name="grantUniveralAccess">Whether or not universal access should be granted to the isolated world. This is a powerfuloption, use with caution.</param>
         public async Task<CreateIsolatedWorldReturn> CreateIsolatedWorld(CreateIsolatedWorldParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("Page.createIsolatedWorld", parameters, sessionId);
@@ -10966,8 +10437,6 @@ namespace CDP.Domains
         /// <summary> 
         /// Deletes browser cookie with given name, domain and path. 
         /// </summary>
-        /// <param name="cookieName">Name of the cookie to remove.</param>
-        /// <param name="url">URL to match cooke domain and path.</param>
         public async Task DeleteCookie(DeleteCookieParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("Page.deleteCookie", parameters, sessionId);
@@ -11064,8 +10533,6 @@ namespace CDP.Domains
         /// <summary> 
         /// Returns content of the given resource. 
         /// </summary>
-        /// <param name="frameId">Frame id to get resource for.</param>
-        /// <param name="url">URL of the resource to get content for.</param>
         public async Task<GetResourceContentReturn> GetResourceContent(GetResourceContentParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("Page.getResourceContent", parameters, sessionId);
@@ -11082,8 +10549,6 @@ namespace CDP.Domains
         /// <summary> 
         /// Accepts or dismisses a JavaScript initiated dialog (alert, confirm, prompt, or onbeforeunload). 
         /// </summary>
-        /// <param name="accept">Whether to accept or dismiss the dialog.</param>
-        /// <param name="promptText">The text to enter into the dialog prompt before accepting. Used only if this is a promptdialog.</param>
         public async Task HandleJavaScriptDialog(HandleJavaScriptDialogParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("Page.handleJavaScriptDialog", parameters, sessionId);
@@ -11092,11 +10557,6 @@ namespace CDP.Domains
         /// <summary> 
         /// Navigates current page to the given URL. 
         /// </summary>
-        /// <param name="url">URL to navigate the page to.</param>
-        /// <param name="referrer">Referrer URL.</param>
-        /// <param name="transitionType">Intended transition type.</param>
-        /// <param name="frameId">Frame id to navigate, if not specified navigates the top frame.</param>
-        /// <param name="referrerPolicy">Referrer-policy used for the navigation.</param>
         public async Task<NavigateReturn> Navigate(NavigateParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("Page.navigate", parameters, sessionId);
@@ -11105,7 +10565,6 @@ namespace CDP.Domains
         /// <summary> 
         /// Navigates current page to the given history entry. 
         /// </summary>
-        /// <param name="entryId">Unique id of the entry to navigate to.</param>
         public async Task NavigateToHistoryEntry(NavigateToHistoryEntryParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("Page.navigateToHistoryEntry", parameters, sessionId);
@@ -11114,22 +10573,6 @@ namespace CDP.Domains
         /// <summary> 
         /// Print page as PDF. 
         /// </summary>
-        /// <param name="landscape">Paper orientation. Defaults to false.</param>
-        /// <param name="displayHeaderFooter">Display header and footer. Defaults to false.</param>
-        /// <param name="printBackground">Print background graphics. Defaults to false.</param>
-        /// <param name="scale">Scale of the webpage rendering. Defaults to 1.</param>
-        /// <param name="paperWidth">Paper width in inches. Defaults to 8.5 inches.</param>
-        /// <param name="paperHeight">Paper height in inches. Defaults to 11 inches.</param>
-        /// <param name="marginTop">Top margin in inches. Defaults to 1cm (~0.4 inches).</param>
-        /// <param name="marginBottom">Bottom margin in inches. Defaults to 1cm (~0.4 inches).</param>
-        /// <param name="marginLeft">Left margin in inches. Defaults to 1cm (~0.4 inches).</param>
-        /// <param name="marginRight">Right margin in inches. Defaults to 1cm (~0.4 inches).</param>
-        /// <param name="pageRanges">Paper ranges to print, e.g., '1-5, 8, 11-13'. Defaults to the empty string, which meansprint all pages.</param>
-        /// <param name="ignoreInvalidPageRanges">Whether to silently ignore invalid but successfully parsed page ranges, such as '3-2'.Defaults to false.</param>
-        /// <param name="headerTemplate">HTML template for the print header. Should be valid HTML markup with followingclasses used to inject printing values into them:- `date`: formatted print date- `title`: document title- `url`: document location- `pageNumber`: current page number- `totalPages`: total pages in the documentFor example, `<span class=title></span>` would generate span containing the title.</param>
-        /// <param name="footerTemplate">HTML template for the print footer. Should use the same format as the `headerTemplate`.</param>
-        /// <param name="preferCSSPageSize">Whether or not to prefer page size as defined by css. Defaults to false,in which case the content will be scaled to fit the paper size.</param>
-        /// <param name="transferMode">return as stream</param>
         public async Task<PrintToPDFReturn> PrintToPDF(PrintToPDFParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("Page.printToPDF", parameters, sessionId);
@@ -11138,8 +10581,6 @@ namespace CDP.Domains
         /// <summary> 
         /// Reloads given page optionally ignoring the cache. 
         /// </summary>
-        /// <param name="ignoreCache">If true, browser cache is ignored (as if the user pressed Shift+refresh).</param>
-        /// <param name="scriptToEvaluateOnLoad">If set, the script will be injected into all frames of the inspected page after reload.Argument will be ignored if reloading dataURL origin.</param>
         public async Task Reload(ReloadParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("Page.reload", parameters, sessionId);
@@ -11148,7 +10589,6 @@ namespace CDP.Domains
         /// <summary> 
         /// Deprecated, please use removeScriptToEvaluateOnNewDocument instead. 
         /// </summary>
-        /// <param name="identifier"></param>
         public async Task RemoveScriptToEvaluateOnLoad(RemoveScriptToEvaluateOnLoadParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("Page.removeScriptToEvaluateOnLoad", parameters, sessionId);
@@ -11157,7 +10597,6 @@ namespace CDP.Domains
         /// <summary> 
         /// Removes given script from the list. 
         /// </summary>
-        /// <param name="identifier"></param>
         public async Task RemoveScriptToEvaluateOnNewDocument(RemoveScriptToEvaluateOnNewDocumentParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("Page.removeScriptToEvaluateOnNewDocument", parameters, sessionId);
@@ -11166,7 +10605,6 @@ namespace CDP.Domains
         /// <summary> 
         /// Acknowledges that a screencast frame has been received by the frontend. 
         /// </summary>
-        /// <param name="sessionId">Frame number.</param>
         public async Task ScreencastFrameAck(ScreencastFrameAckParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("Page.screencastFrameAck", parameters, sessionId);
@@ -11175,11 +10613,6 @@ namespace CDP.Domains
         /// <summary> 
         /// Searches for given string in resource content. 
         /// </summary>
-        /// <param name="frameId">Frame id for resource to search in.</param>
-        /// <param name="url">URL of the resource to search in.</param>
-        /// <param name="query">String to search for.</param>
-        /// <param name="caseSensitive">If true, search is case sensitive.</param>
-        /// <param name="isRegex">If true, treats string parameter as regex.</param>
         public async Task<SearchInResourceReturn> SearchInResource(SearchInResourceParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("Page.searchInResource", parameters, sessionId);
@@ -11188,7 +10621,6 @@ namespace CDP.Domains
         /// <summary> 
         /// Enable Chrome's experimental ad filter on all sites. 
         /// </summary>
-        /// <param name="enabled">Whether to block ads.</param>
         public async Task SetAdBlockingEnabled(SetAdBlockingEnabledParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("Page.setAdBlockingEnabled", parameters, sessionId);
@@ -11197,7 +10629,6 @@ namespace CDP.Domains
         /// <summary> 
         /// Enable page Content Security Policy by-passing. 
         /// </summary>
-        /// <param name="enabled">Whether to bypass page CSP.</param>
         public async Task SetBypassCSP(SetBypassCSPParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("Page.setBypassCSP", parameters, sessionId);
@@ -11206,7 +10637,6 @@ namespace CDP.Domains
         /// <summary> 
         /// Get Permissions Policy state on given frame. 
         /// </summary>
-        /// <param name="frameId"></param>
         public async Task<GetPermissionsPolicyStateReturn> GetPermissionsPolicyState(GetPermissionsPolicyStateParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("Page.getPermissionsPolicyState", parameters, sessionId);
@@ -11215,7 +10645,6 @@ namespace CDP.Domains
         /// <summary> 
         /// Get Origin Trials on given frame. 
         /// </summary>
-        /// <param name="frameId"></param>
         public async Task<GetOriginTrialsReturn> GetOriginTrials(GetOriginTrialsParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("Page.getOriginTrials", parameters, sessionId);
@@ -11224,18 +10653,6 @@ namespace CDP.Domains
         /// <summary> 
         /// Overrides the values of device screen dimensions (window.screen.width, window.screen.height,window.innerWidth, window.innerHeight, and "device-width"/"device-height"-related CSS mediaquery results). 
         /// </summary>
-        /// <param name="width">Overriding width value in pixels (minimum 0, maximum 10000000). 0 disables the override.</param>
-        /// <param name="height">Overriding height value in pixels (minimum 0, maximum 10000000). 0 disables the override.</param>
-        /// <param name="deviceScaleFactor">Overriding device scale factor value. 0 disables the override.</param>
-        /// <param name="mobile">Whether to emulate mobile device. This includes viewport meta tag, overlay scrollbars, textautosizing and more.</param>
-        /// <param name="scale">Scale to apply to resulting view image.</param>
-        /// <param name="screenWidth">Overriding screen width value in pixels (minimum 0, maximum 10000000).</param>
-        /// <param name="screenHeight">Overriding screen height value in pixels (minimum 0, maximum 10000000).</param>
-        /// <param name="positionX">Overriding view X position on screen in pixels (minimum 0, maximum 10000000).</param>
-        /// <param name="positionY">Overriding view Y position on screen in pixels (minimum 0, maximum 10000000).</param>
-        /// <param name="dontSetVisibleSize">Do not set visible view size, rely upon explicit setVisibleSize call.</param>
-        /// <param name="screenOrientation">Screen orientation override.</param>
-        /// <param name="viewport">The viewport dimensions and scale. If not set, the override is cleared.</param>
         public async Task SetDeviceMetricsOverride(SetDeviceMetricsOverrideParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("Page.setDeviceMetricsOverride", parameters, sessionId);
@@ -11244,9 +10661,6 @@ namespace CDP.Domains
         /// <summary> 
         /// Overrides the Device Orientation. 
         /// </summary>
-        /// <param name="alpha">Mock alpha</param>
-        /// <param name="beta">Mock beta</param>
-        /// <param name="gamma">Mock gamma</param>
         public async Task SetDeviceOrientationOverride(SetDeviceOrientationOverrideParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("Page.setDeviceOrientationOverride", parameters, sessionId);
@@ -11255,8 +10669,6 @@ namespace CDP.Domains
         /// <summary> 
         /// Set generic font families. 
         /// </summary>
-        /// <param name="fontFamilies">Specifies font families to set. If a font family is not specified, it won't be changed.</param>
-        /// <param name="forScripts">Specifies font families to set for individual scripts.</param>
         public async Task SetFontFamilies(SetFontFamiliesParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("Page.setFontFamilies", parameters, sessionId);
@@ -11265,7 +10677,6 @@ namespace CDP.Domains
         /// <summary> 
         /// Set default font sizes. 
         /// </summary>
-        /// <param name="fontSizes">Specifies font sizes to set. If a font size is not specified, it won't be changed.</param>
         public async Task SetFontSizes(SetFontSizesParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("Page.setFontSizes", parameters, sessionId);
@@ -11274,8 +10685,6 @@ namespace CDP.Domains
         /// <summary> 
         /// Sets given markup as the document's HTML. 
         /// </summary>
-        /// <param name="frameId">Frame id to set HTML for.</param>
-        /// <param name="html">HTML content to set.</param>
         public async Task SetDocumentContent(SetDocumentContentParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("Page.setDocumentContent", parameters, sessionId);
@@ -11284,8 +10693,6 @@ namespace CDP.Domains
         /// <summary> 
         /// Set the behavior when downloading a file. 
         /// </summary>
-        /// <param name="behavior">Whether to allow all or deny all download requests, or use default Chrome behavior ifavailable (otherwise deny).</param>
-        /// <param name="downloadPath">The default path to save downloaded files to. This is required if behavior is set to 'allow'</param>
         public async Task SetDownloadBehavior(SetDownloadBehaviorParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("Page.setDownloadBehavior", parameters, sessionId);
@@ -11294,9 +10701,6 @@ namespace CDP.Domains
         /// <summary> 
         /// Overrides the Geolocation Position or Error. Omitting any of the parameters emulates positionunavailable. 
         /// </summary>
-        /// <param name="latitude">Mock latitude</param>
-        /// <param name="longitude">Mock longitude</param>
-        /// <param name="accuracy">Mock accuracy</param>
         public async Task SetGeolocationOverride(SetGeolocationOverrideParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("Page.setGeolocationOverride", parameters, sessionId);
@@ -11305,7 +10709,6 @@ namespace CDP.Domains
         /// <summary> 
         /// Controls whether page will emit lifecycle events. 
         /// </summary>
-        /// <param name="enabled">If true, starts emitting lifecycle events.</param>
         public async Task SetLifecycleEventsEnabled(SetLifecycleEventsEnabledParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("Page.setLifecycleEventsEnabled", parameters, sessionId);
@@ -11314,8 +10717,6 @@ namespace CDP.Domains
         /// <summary> 
         /// Toggles mouse event-based touch event emulation. 
         /// </summary>
-        /// <param name="enabled">Whether the touch event emulation should be enabled.</param>
-        /// <param name="configuration">Touch/gesture events configuration. Default: current platform.</param>
         public async Task SetTouchEmulationEnabled(SetTouchEmulationEnabledParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("Page.setTouchEmulationEnabled", parameters, sessionId);
@@ -11324,11 +10725,6 @@ namespace CDP.Domains
         /// <summary> 
         /// Starts sending each frame using the `screencastFrame` event. 
         /// </summary>
-        /// <param name="format">Image compression format.</param>
-        /// <param name="quality">Compression quality from range [0..100].</param>
-        /// <param name="maxWidth">Maximum screenshot width.</param>
-        /// <param name="maxHeight">Maximum screenshot height.</param>
-        /// <param name="everyNthFrame">Send every n-th frame.</param>
         public async Task StartScreencast(StartScreencastParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("Page.startScreencast", parameters, sessionId);
@@ -11361,7 +10757,6 @@ namespace CDP.Domains
         /// <summary> 
         /// Tries to update the web lifecycle state of the page.It will transition the page to the given state according to:https://github.com/WICG/web-lifecycle/ 
         /// </summary>
-        /// <param name="state">Target lifecycle state</param>
         public async Task SetWebLifecycleState(SetWebLifecycleStateParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("Page.setWebLifecycleState", parameters, sessionId);
@@ -11378,7 +10773,6 @@ namespace CDP.Domains
         /// <summary> 
         /// Requests backend to produce compilation cache for the specified scripts.`scripts` are appeneded to the list of scripts for which the cachewould be produced. The list may be reset during page navigation.When script with a matching URL is encountered, the cache is optionallyproduced upon backend discretion, based on internal heuristics.See also: `Page.compilationCacheProduced`. 
         /// </summary>
-        /// <param name="scripts"></param>
         public async Task ProduceCompilationCache(ProduceCompilationCacheParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("Page.produceCompilationCache", parameters, sessionId);
@@ -11387,8 +10781,6 @@ namespace CDP.Domains
         /// <summary> 
         /// Seeds compilation cache for given url. Compilation cache does not survivecross-process navigation. 
         /// </summary>
-        /// <param name="url"></param>
-        /// <param name="data">Base64-encoded data (Encoded as a base64 string when passed over JSON)</param>
         public async Task AddCompilationCache(AddCompilationCacheParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("Page.addCompilationCache", parameters, sessionId);
@@ -11405,7 +10797,6 @@ namespace CDP.Domains
         /// <summary> 
         /// Sets the Secure Payment Confirmation transaction mode.https://w3c.github.io/secure-payment-confirmation/#sctn-automation-set-spc-transaction-mode 
         /// </summary>
-        /// <param name="mode"></param>
         public async Task SetSPCTransactionMode(SetSPCTransactionModeParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("Page.setSPCTransactionMode", parameters, sessionId);
@@ -11414,8 +10805,6 @@ namespace CDP.Domains
         /// <summary> 
         /// Generates a report for testing. 
         /// </summary>
-        /// <param name="message">Message to be displayed in the report.</param>
-        /// <param name="group">Specifies the endpoint group to deliver the report to.</param>
         public async Task GenerateTestReport(GenerateTestReportParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("Page.generateTestReport", parameters, sessionId);
@@ -11432,7 +10821,6 @@ namespace CDP.Domains
         /// <summary> 
         /// Intercept file chooser requests and transfer control to protocol clients.When file chooser interception is enabled, native file chooser dialog is not shown.Instead, a protocol event `Page.fileChooserOpened` is emitted. 
         /// </summary>
-        /// <param name="enabled"></param>
         public async Task SetInterceptFileChooserDialog(SetInterceptFileChooserDialogParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("Page.setInterceptFileChooserDialog", parameters, sessionId);
@@ -12493,7 +11881,6 @@ namespace CDP.Domains
         /// <summary> 
         /// Enable collecting and reporting metrics. 
         /// </summary>
-        /// <param name="timeDomain">Time domain to use for collecting and reporting duration metrics.</param>
         public async Task Enable(EnableParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("Performance.enable", parameters, sessionId);
@@ -12502,7 +11889,6 @@ namespace CDP.Domains
         /// <summary> 
         /// Sets time domain to use for collecting and reporting duration metrics.Note that this must be called before enabling metrics collection. Callingthis method while metrics collection is enabled returns an error. 
         /// </summary>
-        /// <param name="timeDomain">Time domain</param>
         public async Task SetTimeDomain(SetTimeDomainParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("Performance.setTimeDomain", parameters, sessionId);
@@ -12601,7 +11987,6 @@ namespace CDP.Domains
         /// <summary> 
         /// Previously buffered events would be reported before method returns.See also: timelineEventAdded 
         /// </summary>
-        /// <param name="eventTypes">The types of event to report, as specified inhttps://w3c.github.io/performance-timeline/#dom-performanceentry-entrytypeThe specified filter overrides any previous filters, passing emptyfilter disables recording.Note that not all types exposed to the web platform are currently supported.</param>
         public async Task Enable(EnableParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("PerformanceTimeline.enable", parameters, sessionId);
@@ -12768,7 +12153,6 @@ namespace CDP.Domains
         /// <summary> 
         /// Enable/disable whether all certificate errors should be ignored. 
         /// </summary>
-        /// <param name="ignore">If true, all certificate errors will be ignored.</param>
         public async Task SetIgnoreCertificateErrors(SetIgnoreCertificateErrorsParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("Security.setIgnoreCertificateErrors", parameters, sessionId);
@@ -12777,8 +12161,6 @@ namespace CDP.Domains
         /// <summary> 
         /// Handles a certificate error that fired a certificateError event. 
         /// </summary>
-        /// <param name="eventId">The ID of the event.</param>
-        /// <param name="action">The action to take on the certificate error.</param>
         public async Task HandleCertificateError(HandleCertificateErrorParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("Security.handleCertificateError", parameters, sessionId);
@@ -12787,7 +12169,6 @@ namespace CDP.Domains
         /// <summary> 
         /// Enable/disable overriding certificate errors. If enabled, all certificate error events need tobe handled by the DevTools client and should be answered with `handleCertificateError` commands. 
         /// </summary>
-        /// <param name="@override">If true, certificate errors will be overridden.</param>
         public async Task SetOverrideCertificateErrors(SetOverrideCertificateErrorsParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("Security.setOverrideCertificateErrors", parameters, sessionId);
@@ -13016,9 +12397,6 @@ namespace CDP.Domains
         /// <summary> 
         ///  
         /// </summary>
-        /// <param name="origin"></param>
-        /// <param name="registrationId"></param>
-        /// <param name="data"></param>
         public async Task DeliverPushMessage(DeliverPushMessageParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("ServiceWorker.deliverPushMessage", parameters, sessionId);
@@ -13035,10 +12413,6 @@ namespace CDP.Domains
         /// <summary> 
         ///  
         /// </summary>
-        /// <param name="origin"></param>
-        /// <param name="registrationId"></param>
-        /// <param name="tag"></param>
-        /// <param name="lastChance"></param>
         public async Task DispatchSyncEvent(DispatchSyncEventParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("ServiceWorker.dispatchSyncEvent", parameters, sessionId);
@@ -13047,9 +12421,6 @@ namespace CDP.Domains
         /// <summary> 
         ///  
         /// </summary>
-        /// <param name="origin"></param>
-        /// <param name="registrationId"></param>
-        /// <param name="tag"></param>
         public async Task DispatchPeriodicSyncEvent(DispatchPeriodicSyncEventParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("ServiceWorker.dispatchPeriodicSyncEvent", parameters, sessionId);
@@ -13066,7 +12437,6 @@ namespace CDP.Domains
         /// <summary> 
         ///  
         /// </summary>
-        /// <param name="versionId"></param>
         public async Task InspectWorker(InspectWorkerParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("ServiceWorker.inspectWorker", parameters, sessionId);
@@ -13075,7 +12445,6 @@ namespace CDP.Domains
         /// <summary> 
         ///  
         /// </summary>
-        /// <param name="forceUpdateOnPageLoad"></param>
         public async Task SetForceUpdateOnPageLoad(SetForceUpdateOnPageLoadParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("ServiceWorker.setForceUpdateOnPageLoad", parameters, sessionId);
@@ -13084,7 +12453,6 @@ namespace CDP.Domains
         /// <summary> 
         ///  
         /// </summary>
-        /// <param name="scopeURL"></param>
         public async Task SkipWaiting(SkipWaitingParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("ServiceWorker.skipWaiting", parameters, sessionId);
@@ -13093,7 +12461,6 @@ namespace CDP.Domains
         /// <summary> 
         ///  
         /// </summary>
-        /// <param name="scopeURL"></param>
         public async Task StartWorker(StartWorkerParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("ServiceWorker.startWorker", parameters, sessionId);
@@ -13110,7 +12477,6 @@ namespace CDP.Domains
         /// <summary> 
         ///  
         /// </summary>
-        /// <param name="versionId"></param>
         public async Task StopWorker(StopWorkerParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("ServiceWorker.stopWorker", parameters, sessionId);
@@ -13119,7 +12485,6 @@ namespace CDP.Domains
         /// <summary> 
         ///  
         /// </summary>
-        /// <param name="scopeURL"></param>
         public async Task Unregister(UnregisterParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("ServiceWorker.unregister", parameters, sessionId);
@@ -13128,7 +12493,6 @@ namespace CDP.Domains
         /// <summary> 
         ///  
         /// </summary>
-        /// <param name="scopeURL"></param>
         public async Task UpdateRegistration(UpdateRegistrationParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("ServiceWorker.updateRegistration", parameters, sessionId);
@@ -13377,8 +12741,6 @@ namespace CDP.Domains
         /// <summary> 
         /// Clears storage for origin. 
         /// </summary>
-        /// <param name="origin">Security origin.</param>
-        /// <param name="storageTypes">Comma separated list of StorageType to clear.</param>
         public async Task ClearDataForOrigin(ClearDataForOriginParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("Storage.clearDataForOrigin", parameters, sessionId);
@@ -13387,7 +12749,6 @@ namespace CDP.Domains
         /// <summary> 
         /// Returns all browser cookies. 
         /// </summary>
-        /// <param name="browserContextId">Browser context to use when called on the browser endpoint.</param>
         public async Task<GetCookiesReturn> GetCookies(GetCookiesParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("Storage.getCookies", parameters, sessionId);
@@ -13396,8 +12757,6 @@ namespace CDP.Domains
         /// <summary> 
         /// Sets given cookies. 
         /// </summary>
-        /// <param name="cookies">Cookies to be set.</param>
-        /// <param name="browserContextId">Browser context to use when called on the browser endpoint.</param>
         public async Task SetCookies(SetCookiesParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("Storage.setCookies", parameters, sessionId);
@@ -13406,7 +12765,6 @@ namespace CDP.Domains
         /// <summary> 
         /// Clears cookies. 
         /// </summary>
-        /// <param name="browserContextId">Browser context to use when called on the browser endpoint.</param>
         public async Task ClearCookies(ClearCookiesParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("Storage.clearCookies", parameters, sessionId);
@@ -13415,7 +12773,6 @@ namespace CDP.Domains
         /// <summary> 
         /// Returns usage and quota in bytes. 
         /// </summary>
-        /// <param name="origin">Security origin.</param>
         public async Task<GetUsageAndQuotaReturn> GetUsageAndQuota(GetUsageAndQuotaParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("Storage.getUsageAndQuota", parameters, sessionId);
@@ -13424,8 +12781,6 @@ namespace CDP.Domains
         /// <summary> 
         /// Override quota for the specified origin 
         /// </summary>
-        /// <param name="origin">Security origin.</param>
-        /// <param name="quotaSize">The quota size (in bytes) to override the original quota with.If this is called multiple times, the overridden quota will be equal tothe quotaSize provided in the final call. If this is called withoutspecifying a quotaSize, the quota will be reset to the default value forthe specified origin. If this is called multiple times with differentorigins, the override will be maintained for each origin until it isdisabled (called without a quotaSize).</param>
         public async Task OverrideQuotaForOrigin(OverrideQuotaForOriginParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("Storage.overrideQuotaForOrigin", parameters, sessionId);
@@ -13434,7 +12789,6 @@ namespace CDP.Domains
         /// <summary> 
         /// Registers origin to be notified when an update occurs to its cache storage list. 
         /// </summary>
-        /// <param name="origin">Security origin.</param>
         public async Task TrackCacheStorageForOrigin(TrackCacheStorageForOriginParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("Storage.trackCacheStorageForOrigin", parameters, sessionId);
@@ -13443,7 +12797,6 @@ namespace CDP.Domains
         /// <summary> 
         /// Registers origin to be notified when an update occurs to its IndexedDB. 
         /// </summary>
-        /// <param name="origin">Security origin.</param>
         public async Task TrackIndexedDBForOrigin(TrackIndexedDBForOriginParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("Storage.trackIndexedDBForOrigin", parameters, sessionId);
@@ -13452,7 +12805,6 @@ namespace CDP.Domains
         /// <summary> 
         /// Unregisters origin from receiving notifications for cache storage. 
         /// </summary>
-        /// <param name="origin">Security origin.</param>
         public async Task UntrackCacheStorageForOrigin(UntrackCacheStorageForOriginParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("Storage.untrackCacheStorageForOrigin", parameters, sessionId);
@@ -13461,7 +12813,6 @@ namespace CDP.Domains
         /// <summary> 
         /// Unregisters origin from receiving notifications for IndexedDB. 
         /// </summary>
-        /// <param name="origin">Security origin.</param>
         public async Task UntrackIndexedDBForOrigin(UntrackIndexedDBForOriginParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("Storage.untrackIndexedDBForOrigin", parameters, sessionId);
@@ -13478,7 +12829,6 @@ namespace CDP.Domains
         /// <summary> 
         /// Removes all Trust Tokens issued by the provided issuerOrigin.Leaves other stored data, including the issuer's Redemption Records, intact. 
         /// </summary>
-        /// <param name="issuerOrigin"></param>
         public async Task<ClearTrustTokensReturn> ClearTrustTokens(ClearTrustTokensParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("Storage.clearTrustTokens", parameters, sessionId);
@@ -13487,8 +12837,6 @@ namespace CDP.Domains
         /// <summary> 
         /// Gets details for a named interest group. 
         /// </summary>
-        /// <param name="ownerOrigin"></param>
-        /// <param name="name"></param>
         public async Task<GetInterestGroupDetailsReturn> GetInterestGroupDetails(GetInterestGroupDetailsParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("Storage.getInterestGroupDetails", parameters, sessionId);
@@ -13497,7 +12845,6 @@ namespace CDP.Domains
         /// <summary> 
         /// Enables/Disables issuing of interestGroupAccessed events. 
         /// </summary>
-        /// <param name="enable"></param>
         public async Task SetInterestGroupTracking(SetInterestGroupTrackingParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("Storage.setInterestGroupTracking", parameters, sessionId);
@@ -14007,7 +13354,6 @@ namespace CDP.Domains
         /// <summary> 
         /// Activates (focuses) the target. 
         /// </summary>
-        /// <param name="targetId"></param>
         public async Task ActivateTarget(ActivateTargetParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("Target.activateTarget", parameters, sessionId);
@@ -14016,8 +13362,6 @@ namespace CDP.Domains
         /// <summary> 
         /// Attaches to the target with given id. 
         /// </summary>
-        /// <param name="targetId"></param>
-        /// <param name="flatten">Enables "flat" access to the session via specifying sessionId attribute in the commands.We plan to make this the default, deprecate non-flattened mode,and eventually retire it. See crbug.com/991325.</param>
         public async Task<AttachToTargetReturn> AttachToTarget(AttachToTargetParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("Target.attachToTarget", parameters, sessionId);
@@ -14034,7 +13378,6 @@ namespace CDP.Domains
         /// <summary> 
         /// Closes the target. If the target is a page that gets closed too. 
         /// </summary>
-        /// <param name="targetId"></param>
         public async Task<CloseTargetReturn> CloseTarget(CloseTargetParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("Target.closeTarget", parameters, sessionId);
@@ -14043,8 +13386,6 @@ namespace CDP.Domains
         /// <summary> 
         /// Inject object to the target's main frame that provides a communicationchannel with browser target.Injected object will be available as `window[bindingName]`.The object has the follwing API:- `binding.send(json)` - a method to send messages over the remote debugging protocol- `binding.onmessage = json => handleMessage(json)` - a callback that will be called for the protocol notifications and command responses. 
         /// </summary>
-        /// <param name="targetId"></param>
-        /// <param name="bindingName">Binding name, 'cdp' if not specified.</param>
         public async Task ExposeDevToolsProtocol(ExposeDevToolsProtocolParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("Target.exposeDevToolsProtocol", parameters, sessionId);
@@ -14053,10 +13394,6 @@ namespace CDP.Domains
         /// <summary> 
         /// Creates a new empty BrowserContext. Similar to an incognito profile but you can have more thanone. 
         /// </summary>
-        /// <param name="disposeOnDetach">If specified, disposes this context when debugging session disconnects.</param>
-        /// <param name="proxyServer">Proxy server, similar to the one passed to --proxy-server</param>
-        /// <param name="proxyBypassList">Proxy bypass list, similar to the one passed to --proxy-bypass-list</param>
-        /// <param name="originsWithUniversalNetworkAccess">An optional list of origins to grant unlimited cross-origin access to.Parts of the URL other than those constituting origin are ignored.</param>
         public async Task<CreateBrowserContextReturn> CreateBrowserContext(CreateBrowserContextParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("Target.createBrowserContext", parameters, sessionId);
@@ -14073,13 +13410,6 @@ namespace CDP.Domains
         /// <summary> 
         /// Creates a new page. 
         /// </summary>
-        /// <param name="url">The initial URL the page will be navigated to. An empty string indicates about:blank.</param>
-        /// <param name="width">Frame width in DIP (headless chrome only).</param>
-        /// <param name="height">Frame height in DIP (headless chrome only).</param>
-        /// <param name="browserContextId">The browser context to create the page in.</param>
-        /// <param name="enableBeginFrameControl">Whether BeginFrames for this target will be controlled via DevTools (headless chrome only,not supported on MacOS yet, false by default).</param>
-        /// <param name="newWindow">Whether to create a new Window or Tab (chrome-only, false by default).</param>
-        /// <param name="background">Whether to create the target in background or foreground (chrome-only,false by default).</param>
         public async Task<CreateTargetReturn> CreateTarget(CreateTargetParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("Target.createTarget", parameters, sessionId);
@@ -14088,8 +13418,6 @@ namespace CDP.Domains
         /// <summary> 
         /// Detaches session with given id. 
         /// </summary>
-        /// <param name="sessionId">Session to detach.</param>
-        /// <param name="targetId">Deprecated.</param>
         public async Task DetachFromTarget(DetachFromTargetParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("Target.detachFromTarget", parameters, sessionId);
@@ -14098,7 +13426,6 @@ namespace CDP.Domains
         /// <summary> 
         /// Deletes a BrowserContext. All the belonging pages will be closed without calling theirbeforeunload hooks. 
         /// </summary>
-        /// <param name="browserContextId"></param>
         public async Task DisposeBrowserContext(DisposeBrowserContextParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("Target.disposeBrowserContext", parameters, sessionId);
@@ -14107,7 +13434,6 @@ namespace CDP.Domains
         /// <summary> 
         /// Returns information about a target. 
         /// </summary>
-        /// <param name="targetId"></param>
         public async Task<GetTargetInfoReturn> GetTargetInfo(GetTargetInfoParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("Target.getTargetInfo", parameters, sessionId);
@@ -14124,9 +13450,6 @@ namespace CDP.Domains
         /// <summary> 
         /// Sends protocol message over session with given id.Consider using flat mode instead; see commands attachToTarget, setAutoAttach,and crbug.com/991325. 
         /// </summary>
-        /// <param name="message"></param>
-        /// <param name="sessionId">Identifier of the session.</param>
-        /// <param name="targetId">Deprecated.</param>
         public async Task SendMessageToTarget(SendMessageToTargetParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("Target.sendMessageToTarget", parameters, sessionId);
@@ -14135,9 +13458,6 @@ namespace CDP.Domains
         /// <summary> 
         /// Controls whether to automatically attach to new targets which are considered to be related tothis one. When turned on, attaches to all existing related targets as well. When turned off,automatically detaches from all currently attached targets.This also clears all targets added by `autoAttachRelated` from the list of targets to watchfor creation of related targets. 
         /// </summary>
-        /// <param name="autoAttach">Whether to auto-attach to related targets.</param>
-        /// <param name="waitForDebuggerOnStart">Whether to pause new targets when attaching to them. Use `Runtime.runIfWaitingForDebugger`to run paused targets.</param>
-        /// <param name="flatten">Enables "flat" access to the session via specifying sessionId attribute in the commands.We plan to make this the default, deprecate non-flattened mode,and eventually retire it. See crbug.com/991325.</param>
         public async Task SetAutoAttach(SetAutoAttachParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("Target.setAutoAttach", parameters, sessionId);
@@ -14146,8 +13466,6 @@ namespace CDP.Domains
         /// <summary> 
         /// Adds the specified target to the list of targets that will be monitored for any related targetcreation (such as child frames, child workers and new versions of service worker) and reportedthrough `attachedToTarget`. The specified target is also auto-attached.This cancels the effect of any previous `setAutoAttach` and is also cancelled by subsequent`setAutoAttach`. Only available at the Browser target. 
         /// </summary>
-        /// <param name="targetId"></param>
-        /// <param name="waitForDebuggerOnStart">Whether to pause new targets when attaching to them. Use `Runtime.runIfWaitingForDebugger`to run paused targets.</param>
         public async Task AutoAttachRelated(AutoAttachRelatedParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("Target.autoAttachRelated", parameters, sessionId);
@@ -14156,7 +13474,6 @@ namespace CDP.Domains
         /// <summary> 
         /// Controls whether to discover available targets and notify via`targetCreated/targetInfoChanged/targetDestroyed` events. 
         /// </summary>
-        /// <param name="discover">Whether to discover available targets.</param>
         public async Task SetDiscoverTargets(SetDiscoverTargetsParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("Target.setDiscoverTargets", parameters, sessionId);
@@ -14165,7 +13482,6 @@ namespace CDP.Domains
         /// <summary> 
         /// Enables target discovery for the specified locations, when `setDiscoverTargets` was set to`true`. 
         /// </summary>
-        /// <param name="locations">List of remote locations.</param>
         public async Task SetRemoteLocations(SetRemoteLocationsParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("Target.setRemoteLocations", parameters, sessionId);
@@ -14474,7 +13790,6 @@ namespace CDP.Domains
         /// <summary> 
         /// Request browser port binding. 
         /// </summary>
-        /// <param name="port">Port number to bind.</param>
         public async Task Bind(BindParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("Tethering.bind", parameters, sessionId);
@@ -14483,7 +13798,6 @@ namespace CDP.Domains
         /// <summary> 
         /// Request browser port unbinding. 
         /// </summary>
-        /// <param name="port">Port number to unbind.</param>
         public async Task Unbind(UnbindParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("Tethering.unbind", parameters, sessionId);
@@ -14602,7 +13916,6 @@ namespace CDP.Domains
         /// <summary> 
         /// Record a clock sync marker in the trace. 
         /// </summary>
-        /// <param name="syncId">The ID of this clock sync marker</param>
         public async Task RecordClockSyncMarker(RecordClockSyncMarkerParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("Tracing.recordClockSyncMarker", parameters, sessionId);
@@ -14611,8 +13924,6 @@ namespace CDP.Domains
         /// <summary> 
         /// Request a global memory dump. 
         /// </summary>
-        /// <param name="deterministic">Enables more deterministic results by forcing garbage collection</param>
-        /// <param name="levelOfDetail">Specifies level of details in memory dump. Defaults to "detailed".</param>
         public async Task<RequestMemoryDumpReturn> RequestMemoryDump(RequestMemoryDumpParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("Tracing.requestMemoryDump", parameters, sessionId);
@@ -14621,15 +13932,6 @@ namespace CDP.Domains
         /// <summary> 
         /// Start trace events collection. 
         /// </summary>
-        /// <param name="categories">Category/tag filter</param>
-        /// <param name="options">Tracing options</param>
-        /// <param name="bufferUsageReportingInterval">If set, the agent will issue bufferUsage events at this interval, specified in milliseconds</param>
-        /// <param name="transferMode">Whether to report trace events as series of dataCollected events or to save trace to astream (defaults to `ReportEvents`).</param>
-        /// <param name="streamFormat">Trace data format to use. This only applies when using `ReturnAsStream`transfer mode (defaults to `json`).</param>
-        /// <param name="streamCompression">Compression format to use. This only applies when using `ReturnAsStream`transfer mode (defaults to `none`)</param>
-        /// <param name="traceConfig"></param>
-        /// <param name="perfettoConfig">Base64-encoded serialized perfetto.protos.TraceConfig protobuf messageWhen specified, the parameters `categories`, `options`, `traceConfig`are ignored. (Encoded as a base64 string when passed over JSON)</param>
-        /// <param name="tracingBackend">Backend type (defaults to `auto`)</param>
         public async Task Start(StartParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("Tracing.start", parameters, sessionId);
@@ -14809,8 +14111,6 @@ namespace CDP.Domains
         /// <summary> 
         /// Enables issuing of requestPaused events. A request will be paused until clientcalls one of failRequest, fulfillRequest or continueRequest/continueWithAuth. 
         /// </summary>
-        /// <param name="patterns">If specified, only requests matching any of these patterns will producefetchRequested event and will be paused until clients response. If not set,all requests will be affected.</param>
-        /// <param name="handleAuthRequests">If true, authRequired events will be issued and requests will be pausedexpecting a call to continueWithAuth.</param>
         public async Task Enable(EnableParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("Fetch.enable", parameters, sessionId);
@@ -14819,8 +14119,6 @@ namespace CDP.Domains
         /// <summary> 
         /// Causes the request to fail with specified reason. 
         /// </summary>
-        /// <param name="requestId">An id the client received in requestPaused event.</param>
-        /// <param name="errorReason">Causes the request to fail with the given reason.</param>
         public async Task FailRequest(FailRequestParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("Fetch.failRequest", parameters, sessionId);
@@ -14829,12 +14127,6 @@ namespace CDP.Domains
         /// <summary> 
         /// Provides response to the request. 
         /// </summary>
-        /// <param name="requestId">An id the client received in requestPaused event.</param>
-        /// <param name="responseCode">An HTTP response code.</param>
-        /// <param name="responseHeaders">Response headers.</param>
-        /// <param name="binaryResponseHeaders">Alternative way of specifying response headers as a \0-separatedseries of name: value pairs. Prefer the above method unless youneed to represent some non-UTF8 values that can't be transmittedover the protocol as text. (Encoded as a base64 string when passed over JSON)</param>
-        /// <param name="body">A response body. If absent, original response body will be used ifthe request is intercepted at the response stage and empty bodywill be used if the request is intercepted at the request stage. (Encoded as a base64 string when passed over JSON)</param>
-        /// <param name="responsePhrase">A textual representation of responseCode.If absent, a standard phrase matching responseCode is used.</param>
         public async Task FulfillRequest(FulfillRequestParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("Fetch.fulfillRequest", parameters, sessionId);
@@ -14843,12 +14135,6 @@ namespace CDP.Domains
         /// <summary> 
         /// Continues the request, optionally modifying some of its parameters. 
         /// </summary>
-        /// <param name="requestId">An id the client received in requestPaused event.</param>
-        /// <param name="url">If set, the request url will be modified in a way that's not observable by page.</param>
-        /// <param name="method">If set, the request method is overridden.</param>
-        /// <param name="postData">If set, overrides the post data in the request. (Encoded as a base64 string when passed over JSON)</param>
-        /// <param name="headers">If set, overrides the request headers.</param>
-        /// <param name="interceptResponse">If set, overrides response interception behavior for this request.</param>
         public async Task ContinueRequest(ContinueRequestParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("Fetch.continueRequest", parameters, sessionId);
@@ -14857,8 +14143,6 @@ namespace CDP.Domains
         /// <summary> 
         /// Continues a request supplying authChallengeResponse following authRequired event. 
         /// </summary>
-        /// <param name="requestId">An id the client received in authRequired event.</param>
-        /// <param name="authChallengeResponse">Response to  with an authChallenge.</param>
         public async Task ContinueWithAuth(ContinueWithAuthParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("Fetch.continueWithAuth", parameters, sessionId);
@@ -14867,11 +14151,6 @@ namespace CDP.Domains
         /// <summary> 
         /// Continues loading of the paused response, optionally modifying theresponse headers. If either responseCode or headers are modified, all of themmust be present. 
         /// </summary>
-        /// <param name="requestId">An id the client received in requestPaused event.</param>
-        /// <param name="responseCode">An HTTP response code. If absent, original response code will be used.</param>
-        /// <param name="responsePhrase">A textual representation of responseCode.If absent, a standard phrase matching responseCode is used.</param>
-        /// <param name="responseHeaders">Response headers. If absent, original response headers will be used.</param>
-        /// <param name="binaryResponseHeaders">Alternative way of specifying response headers as a \0-separatedseries of name: value pairs. Prefer the above method unless youneed to represent some non-UTF8 values that can't be transmittedover the protocol as text. (Encoded as a base64 string when passed over JSON)</param>
         public async Task ContinueResponse(ContinueResponseParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("Fetch.continueResponse", parameters, sessionId);
@@ -14880,7 +14159,6 @@ namespace CDP.Domains
         /// <summary> 
         /// Causes the body of the response to be received from the server andreturned as a single string. May only be issued for a request thatis paused in the Response stage and is mutually exclusive withtakeResponseBodyForInterceptionAsStream. Calling other methods thataffect the request or disabling fetch domain before body is receivedresults in an undefined behavior. 
         /// </summary>
-        /// <param name="requestId">Identifier for the intercepted request to get body for.</param>
         public async Task<GetResponseBodyReturn> GetResponseBody(GetResponseBodyParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("Fetch.getResponseBody", parameters, sessionId);
@@ -14889,7 +14167,6 @@ namespace CDP.Domains
         /// <summary> 
         /// Returns a handle to the stream representing the response body.The request must be paused in the HeadersReceived stage.Note that after this command the request can't be continuedas is -- client either needs to cancel it or to provide theresponse body.The stream only supports sequential read, IO.read will fail if the positionis specified.This method is mutually exclusive with getResponseBody.Calling other methods that affect the request or disabling fetchdomain before body is received results in an undefined behavior. 
         /// </summary>
-        /// <param name="requestId"></param>
         public async Task<TakeResponseBodyAsStreamReturn> TakeResponseBodyAsStream(TakeResponseBodyAsStreamParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("Fetch.takeResponseBodyAsStream", parameters, sessionId);
@@ -15290,7 +14567,6 @@ namespace CDP.Domains
         /// <summary> 
         /// Fetch the realtime data from the registered contexts. 
         /// </summary>
-        /// <param name="contextId"></param>
         public async Task<GetRealtimeDataReturn> GetRealtimeData(GetRealtimeDataParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("WebAudio.getRealtimeData", parameters, sessionId);
@@ -15554,7 +14830,6 @@ namespace CDP.Domains
         /// <summary> 
         /// Creates and adds a virtual authenticator. 
         /// </summary>
-        /// <param name="options"></param>
         public async Task<AddVirtualAuthenticatorReturn> AddVirtualAuthenticator(AddVirtualAuthenticatorParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("WebAuthn.addVirtualAuthenticator", parameters, sessionId);
@@ -15563,7 +14838,6 @@ namespace CDP.Domains
         /// <summary> 
         /// Removes the given authenticator. 
         /// </summary>
-        /// <param name="authenticatorId"></param>
         public async Task RemoveVirtualAuthenticator(RemoveVirtualAuthenticatorParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("WebAuthn.removeVirtualAuthenticator", parameters, sessionId);
@@ -15572,8 +14846,6 @@ namespace CDP.Domains
         /// <summary> 
         /// Adds the credential to the specified authenticator. 
         /// </summary>
-        /// <param name="authenticatorId"></param>
-        /// <param name="credential"></param>
         public async Task AddCredential(AddCredentialParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("WebAuthn.addCredential", parameters, sessionId);
@@ -15582,8 +14854,6 @@ namespace CDP.Domains
         /// <summary> 
         /// Returns a single credential stored in the given virtual authenticator thatmatches the credential ID. 
         /// </summary>
-        /// <param name="authenticatorId"></param>
-        /// <param name="credentialId"></param>
         public async Task<GetCredentialReturn> GetCredential(GetCredentialParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("WebAuthn.getCredential", parameters, sessionId);
@@ -15592,7 +14862,6 @@ namespace CDP.Domains
         /// <summary> 
         /// Returns all the credentials stored in the given virtual authenticator. 
         /// </summary>
-        /// <param name="authenticatorId"></param>
         public async Task<GetCredentialsReturn> GetCredentials(GetCredentialsParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("WebAuthn.getCredentials", parameters, sessionId);
@@ -15601,8 +14870,6 @@ namespace CDP.Domains
         /// <summary> 
         /// Removes a credential from the authenticator. 
         /// </summary>
-        /// <param name="authenticatorId"></param>
-        /// <param name="credentialId"></param>
         public async Task RemoveCredential(RemoveCredentialParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("WebAuthn.removeCredential", parameters, sessionId);
@@ -15611,7 +14878,6 @@ namespace CDP.Domains
         /// <summary> 
         /// Clears all the credentials from the specified device. 
         /// </summary>
-        /// <param name="authenticatorId"></param>
         public async Task ClearCredentials(ClearCredentialsParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("WebAuthn.clearCredentials", parameters, sessionId);
@@ -15620,8 +14886,6 @@ namespace CDP.Domains
         /// <summary> 
         /// Sets whether User Verification succeeds or fails for an authenticator.The default is true. 
         /// </summary>
-        /// <param name="authenticatorId"></param>
-        /// <param name="isUserVerified"></param>
         public async Task SetUserVerified(SetUserVerifiedParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("WebAuthn.setUserVerified", parameters, sessionId);
@@ -15630,8 +14894,6 @@ namespace CDP.Domains
         /// <summary> 
         /// Sets whether tests of user presence will succeed immediately (if true) or fail to resolve (if false) for an authenticator.The default is true. 
         /// </summary>
-        /// <param name="authenticatorId"></param>
-        /// <param name="enabled"></param>
         public async Task SetAutomaticPresenceSimulation(SetAutomaticPresenceSimulationParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("WebAuthn.setAutomaticPresenceSimulation", parameters, sessionId);
@@ -16098,6 +15360,7 @@ namespace CDP.Domains
         }
         
         /// <summary> Fired when the virtual machine resumed execution. </summary>
+        /// <returns> remove handler </returns>
         public Action OnResumed(Action handler, string sessionId = default)
         {
             string eventName = string.IsNullOrEmpty(sessionId) ? "Debugger.resumed" : $"Debugger.resumed.{sessionId}";
@@ -16139,8 +15402,6 @@ namespace CDP.Domains
         /// <summary> 
         /// Continues execution until specific location is reached. 
         /// </summary>
-        /// <param name="location">Location to continue to.</param>
-        /// <param name="targetCallFrames"></param>
         public async Task ContinueToLocation(ContinueToLocationParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("Debugger.continueToLocation", parameters, sessionId);
@@ -16157,7 +15418,6 @@ namespace CDP.Domains
         /// <summary> 
         /// Enables debugger for the given page. Clients should not assume that the debugging has beenenabled until the result for this command is received. 
         /// </summary>
-        /// <param name="maxScriptsCacheSize">The maximum size in bytes of collected scripts (not referenced by other heap objects)the debugger can hold. Puts no limit if parameter is omitted.</param>
         public async Task<EnableReturn> Enable(EnableParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("Debugger.enable", parameters, sessionId);
@@ -16166,15 +15426,6 @@ namespace CDP.Domains
         /// <summary> 
         /// Evaluates expression on a given call frame. 
         /// </summary>
-        /// <param name="callFrameId">Call frame identifier to evaluate on.</param>
-        /// <param name="expression">Expression to evaluate.</param>
-        /// <param name="objectGroup">String object group name to put result into (allows rapid releasing resulting object handlesusing `releaseObjectGroup`).</param>
-        /// <param name="includeCommandLineAPI">Specifies whether command line API should be available to the evaluated expression, defaultsto false.</param>
-        /// <param name="silent">In silent mode exceptions thrown during evaluation are not reported and do not pauseexecution. Overrides `setPauseOnException` state.</param>
-        /// <param name="returnByValue">Whether the result is expected to be a JSON object that should be sent by value.</param>
-        /// <param name="generatePreview">Whether preview should be generated for the result.</param>
-        /// <param name="throwOnSideEffect">Whether to throw an exception if side effect cannot be ruled out during evaluation.</param>
-        /// <param name="timeout">Terminate execution after timing out (number of milliseconds).</param>
         public async Task<EvaluateOnCallFrameReturn> EvaluateOnCallFrame(EvaluateOnCallFrameParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("Debugger.evaluateOnCallFrame", parameters, sessionId);
@@ -16183,9 +15434,6 @@ namespace CDP.Domains
         /// <summary> 
         /// Returns possible locations for breakpoint. scriptId in start and end range locations should bethe same. 
         /// </summary>
-        /// <param name="start">Start of range to search possible breakpoint locations in.</param>
-        /// <param name="end">End of range to search possible breakpoint locations in (excluding). When not specified, endof scripts is used as end of range.</param>
-        /// <param name="restrictToFunction">Only consider locations which are in the same (non-nested) function as start.</param>
         public async Task<GetPossibleBreakpointsReturn> GetPossibleBreakpoints(GetPossibleBreakpointsParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("Debugger.getPossibleBreakpoints", parameters, sessionId);
@@ -16194,7 +15442,6 @@ namespace CDP.Domains
         /// <summary> 
         /// Returns source for the script with given id. 
         /// </summary>
-        /// <param name="scriptId">Id of the script to get source for.</param>
         public async Task<GetScriptSourceReturn> GetScriptSource(GetScriptSourceParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("Debugger.getScriptSource", parameters, sessionId);
@@ -16203,7 +15450,6 @@ namespace CDP.Domains
         /// <summary> 
         /// This command is deprecated. Use getScriptSource instead. 
         /// </summary>
-        /// <param name="scriptId">Id of the Wasm script to get source for.</param>
         public async Task<GetWasmBytecodeReturn> GetWasmBytecode(GetWasmBytecodeParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("Debugger.getWasmBytecode", parameters, sessionId);
@@ -16212,7 +15458,6 @@ namespace CDP.Domains
         /// <summary> 
         /// Returns stack trace with given `stackTraceId`. 
         /// </summary>
-        /// <param name="stackTraceId"></param>
         public async Task<GetStackTraceReturn> GetStackTrace(GetStackTraceParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("Debugger.getStackTrace", parameters, sessionId);
@@ -16229,7 +15474,6 @@ namespace CDP.Domains
         /// <summary> 
         ///  
         /// </summary>
-        /// <param name="parentStackTraceId">Debugger will pause when async call with given stack trace is started.</param>
         public async Task PauseOnAsyncCall(PauseOnAsyncCallParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("Debugger.pauseOnAsyncCall", parameters, sessionId);
@@ -16238,7 +15482,6 @@ namespace CDP.Domains
         /// <summary> 
         /// Removes JavaScript breakpoint. 
         /// </summary>
-        /// <param name="breakpointId"></param>
         public async Task RemoveBreakpoint(RemoveBreakpointParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("Debugger.removeBreakpoint", parameters, sessionId);
@@ -16247,7 +15490,6 @@ namespace CDP.Domains
         /// <summary> 
         /// Restarts particular call frame from the beginning. 
         /// </summary>
-        /// <param name="callFrameId">Call frame identifier to evaluate on.</param>
         public async Task<RestartFrameReturn> RestartFrame(RestartFrameParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("Debugger.restartFrame", parameters, sessionId);
@@ -16256,7 +15498,6 @@ namespace CDP.Domains
         /// <summary> 
         /// Resumes JavaScript execution. 
         /// </summary>
-        /// <param name="terminateOnResume">Set to true to terminate execution upon resuming execution. In contrastto Runtime.terminateExecution, this will allows to execute furtherJavaScript (i.e. via evaluation) until execution of the paused codeis actually resumed, at which point termination is triggered.If execution is currently not paused, this parameter has no effect.</param>
         public async Task Resume(ResumeParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("Debugger.resume", parameters, sessionId);
@@ -16265,10 +15506,6 @@ namespace CDP.Domains
         /// <summary> 
         /// Searches for given string in script content. 
         /// </summary>
-        /// <param name="scriptId">Id of the script to search in.</param>
-        /// <param name="query">String to search for.</param>
-        /// <param name="caseSensitive">If true, search is case sensitive.</param>
-        /// <param name="isRegex">If true, treats string parameter as regex.</param>
         public async Task<SearchInContentReturn> SearchInContent(SearchInContentParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("Debugger.searchInContent", parameters, sessionId);
@@ -16277,7 +15514,6 @@ namespace CDP.Domains
         /// <summary> 
         /// Enables or disables async call stacks tracking. 
         /// </summary>
-        /// <param name="maxDepth">Maximum depth of async call stacks. Setting to `0` will effectively disable collecting asynccall stacks (default).</param>
         public async Task SetAsyncCallStackDepth(SetAsyncCallStackDepthParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("Debugger.setAsyncCallStackDepth", parameters, sessionId);
@@ -16286,7 +15522,6 @@ namespace CDP.Domains
         /// <summary> 
         /// Replace previous blackbox patterns with passed ones. Forces backend to skip stepping/pausing inscripts with url matching one of the patterns. VM will try to leave blackboxed script byperforming 'step in' several times, finally resorting to 'step out' if unsuccessful. 
         /// </summary>
-        /// <param name="patterns">Array of regexps that will be used to check script url for blackbox state.</param>
         public async Task SetBlackboxPatterns(SetBlackboxPatternsParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("Debugger.setBlackboxPatterns", parameters, sessionId);
@@ -16295,8 +15530,6 @@ namespace CDP.Domains
         /// <summary> 
         /// Makes backend skip steps in the script in blackboxed ranges. VM will try leave blacklistedscripts by performing 'step in' several times, finally resorting to 'step out' if unsuccessful.Positions array contains positions where blackbox state is changed. First interval isn'tblackboxed. Array should be sorted. 
         /// </summary>
-        /// <param name="scriptId">Id of the script.</param>
-        /// <param name="positions"></param>
         public async Task SetBlackboxedRanges(SetBlackboxedRangesParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("Debugger.setBlackboxedRanges", parameters, sessionId);
@@ -16305,8 +15538,6 @@ namespace CDP.Domains
         /// <summary> 
         /// Sets JavaScript breakpoint at a given location. 
         /// </summary>
-        /// <param name="location">Location to set breakpoint in.</param>
-        /// <param name="condition">Expression to use as a breakpoint condition. When specified, debugger will only stop on thebreakpoint if this expression evaluates to true.</param>
         public async Task<SetBreakpointReturn> SetBreakpoint(SetBreakpointParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("Debugger.setBreakpoint", parameters, sessionId);
@@ -16315,7 +15546,6 @@ namespace CDP.Domains
         /// <summary> 
         /// Sets instrumentation breakpoint. 
         /// </summary>
-        /// <param name="instrumentation">Instrumentation name.</param>
         public async Task<SetInstrumentationBreakpointReturn> SetInstrumentationBreakpoint(SetInstrumentationBreakpointParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("Debugger.setInstrumentationBreakpoint", parameters, sessionId);
@@ -16324,12 +15554,6 @@ namespace CDP.Domains
         /// <summary> 
         /// Sets JavaScript breakpoint at given location specified either by URL or URL regex. Once thiscommand is issued, all existing parsed scripts will have breakpoints resolved and returned in`locations` property. Further matching script parsing will result in subsequent`breakpointResolved` events issued. This logical breakpoint will survive page reloads. 
         /// </summary>
-        /// <param name="lineNumber">Line number to set breakpoint at.</param>
-        /// <param name="url">URL of the resources to set breakpoint on.</param>
-        /// <param name="urlRegex">Regex pattern for the URLs of the resources to set breakpoints on. Either `url` or`urlRegex` must be specified.</param>
-        /// <param name="scriptHash">Script hash of the resources to set breakpoint on.</param>
-        /// <param name="columnNumber">Offset in the line to set breakpoint at.</param>
-        /// <param name="condition">Expression to use as a breakpoint condition. When specified, debugger will only stop on thebreakpoint if this expression evaluates to true.</param>
         public async Task<SetBreakpointByUrlReturn> SetBreakpointByUrl(SetBreakpointByUrlParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("Debugger.setBreakpointByUrl", parameters, sessionId);
@@ -16338,8 +15562,6 @@ namespace CDP.Domains
         /// <summary> 
         /// Sets JavaScript breakpoint before each call to the given function.If another function was created from the same source as a given one,calling it will also trigger the breakpoint. 
         /// </summary>
-        /// <param name="objectId">Function object id.</param>
-        /// <param name="condition">Expression to use as a breakpoint condition. When specified, debugger willstop on the breakpoint if this expression evaluates to true.</param>
         public async Task<SetBreakpointOnFunctionCallReturn> SetBreakpointOnFunctionCall(SetBreakpointOnFunctionCallParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("Debugger.setBreakpointOnFunctionCall", parameters, sessionId);
@@ -16348,7 +15570,6 @@ namespace CDP.Domains
         /// <summary> 
         /// Activates / deactivates all breakpoints on the page. 
         /// </summary>
-        /// <param name="active">New value for breakpoints active state.</param>
         public async Task SetBreakpointsActive(SetBreakpointsActiveParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("Debugger.setBreakpointsActive", parameters, sessionId);
@@ -16357,7 +15578,6 @@ namespace CDP.Domains
         /// <summary> 
         /// Defines pause on exceptions state. Can be set to stop on all exceptions, uncaught exceptions orno exceptions. Initial pause on exceptions state is `none`. 
         /// </summary>
-        /// <param name="state">Pause on exceptions mode.</param>
         public async Task SetPauseOnExceptions(SetPauseOnExceptionsParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("Debugger.setPauseOnExceptions", parameters, sessionId);
@@ -16366,7 +15586,6 @@ namespace CDP.Domains
         /// <summary> 
         /// Changes return value in top frame. Available only at return break position. 
         /// </summary>
-        /// <param name="newValue">New return value.</param>
         public async Task SetReturnValue(SetReturnValueParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("Debugger.setReturnValue", parameters, sessionId);
@@ -16375,9 +15594,6 @@ namespace CDP.Domains
         /// <summary> 
         /// Edits JavaScript source live. 
         /// </summary>
-        /// <param name="scriptId">Id of the script to edit.</param>
-        /// <param name="scriptSource">New content of the script.</param>
-        /// <param name="dryRun">If true the change will not actually be applied. Dry run may be used to get resultdescription without actually modifying the code.</param>
         public async Task<SetScriptSourceReturn> SetScriptSource(SetScriptSourceParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("Debugger.setScriptSource", parameters, sessionId);
@@ -16386,7 +15602,6 @@ namespace CDP.Domains
         /// <summary> 
         /// Makes page not interrupt on any pauses (breakpoint, exception, dom exception etc). 
         /// </summary>
-        /// <param name="skip">New value for skip pauses state.</param>
         public async Task SetSkipAllPauses(SetSkipAllPausesParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("Debugger.setSkipAllPauses", parameters, sessionId);
@@ -16395,10 +15610,6 @@ namespace CDP.Domains
         /// <summary> 
         /// Changes value of variable in a callframe. Object-based scopes are not supported and must bemutated manually. 
         /// </summary>
-        /// <param name="scopeNumber">0-based number of scope as was listed in scope chain. Only 'local', 'closure' and 'catch'scope types are allowed. Other scopes could be manipulated manually.</param>
-        /// <param name="variableName">Variable name.</param>
-        /// <param name="newValue">New variable value.</param>
-        /// <param name="callFrameId">Id of callframe that holds variable.</param>
         public async Task SetVariableValue(SetVariableValueParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("Debugger.setVariableValue", parameters, sessionId);
@@ -16407,8 +15618,6 @@ namespace CDP.Domains
         /// <summary> 
         /// Steps into the function call. 
         /// </summary>
-        /// <param name="breakOnAsyncCall">Debugger will pause on the execution of the first async task which was scheduledbefore next pause.</param>
-        /// <param name="skipList">The skipList specifies location ranges that should be skipped on step into.</param>
         public async Task StepInto(StepIntoParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("Debugger.stepInto", parameters, sessionId);
@@ -16425,7 +15634,6 @@ namespace CDP.Domains
         /// <summary> 
         /// Steps over the statement. 
         /// </summary>
-        /// <param name="skipList">The skipList specifies location ranges that should be skipped on step over.</param>
         public async Task StepOver(StepOverParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("Debugger.stepOver", parameters, sessionId);
@@ -17026,6 +16234,7 @@ namespace CDP.Domains
         }
         
         /// <summary>  </summary>
+        /// <returns> remove handler </returns>
         public Action OnResetProfiles(Action handler, string sessionId = default)
         {
             string eventName = string.IsNullOrEmpty(sessionId) ? "HeapProfiler.resetProfiles" : $"HeapProfiler.resetProfiles.{sessionId}";
@@ -17041,7 +16250,6 @@ namespace CDP.Domains
         /// <summary> 
         /// Enables console to refer to the node with given id via $x (see Command Line API for more details$x functions). 
         /// </summary>
-        /// <param name="heapObjectId">Heap snapshot object id to be accessible by means of $x command line API.</param>
         public async Task AddInspectedHeapObject(AddInspectedHeapObjectParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("HeapProfiler.addInspectedHeapObject", parameters, sessionId);
@@ -17074,7 +16282,6 @@ namespace CDP.Domains
         /// <summary> 
         ///  
         /// </summary>
-        /// <param name="objectId">Identifier of the object to get heap object id for.</param>
         public async Task<GetHeapObjectIdReturn> GetHeapObjectId(GetHeapObjectIdParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("HeapProfiler.getHeapObjectId", parameters, sessionId);
@@ -17083,8 +16290,6 @@ namespace CDP.Domains
         /// <summary> 
         ///  
         /// </summary>
-        /// <param name="objectId"></param>
-        /// <param name="objectGroup">Symbolic group name that can be used to release multiple objects.</param>
         public async Task<GetObjectByHeapObjectIdReturn> GetObjectByHeapObjectId(GetObjectByHeapObjectIdParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("HeapProfiler.getObjectByHeapObjectId", parameters, sessionId);
@@ -17101,7 +16306,6 @@ namespace CDP.Domains
         /// <summary> 
         ///  
         /// </summary>
-        /// <param name="samplingInterval">Average sample interval in bytes. Poisson distribution is used for the intervals. Thedefault value is 32768 bytes.</param>
         public async Task StartSampling(StartSamplingParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("HeapProfiler.startSampling", parameters, sessionId);
@@ -17110,7 +16314,6 @@ namespace CDP.Domains
         /// <summary> 
         ///  
         /// </summary>
-        /// <param name="trackAllocations"></param>
         public async Task StartTrackingHeapObjects(StartTrackingHeapObjectsParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("HeapProfiler.startTrackingHeapObjects", parameters, sessionId);
@@ -17127,9 +16330,6 @@ namespace CDP.Domains
         /// <summary> 
         ///  
         /// </summary>
-        /// <param name="reportProgress">If true 'reportHeapSnapshotProgress' events will be generated while snapshot is being takenwhen the tracking is stopped.</param>
-        /// <param name="treatGlobalObjectsAsRoots"></param>
-        /// <param name="captureNumericValue">If true, numerical values are included in the snapshot</param>
         public async Task StopTrackingHeapObjects(StopTrackingHeapObjectsParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("HeapProfiler.stopTrackingHeapObjects", parameters, sessionId);
@@ -17138,9 +16338,6 @@ namespace CDP.Domains
         /// <summary> 
         ///  
         /// </summary>
-        /// <param name="reportProgress">If true 'reportHeapSnapshotProgress' events will be generated while snapshot is being taken.</param>
-        /// <param name="treatGlobalObjectsAsRoots">If true, a raw snapshot without artificial roots will be generated</param>
-        /// <param name="captureNumericValue">If true, numerical values are included in the snapshot</param>
         public async Task TakeHeapSnapshot(TakeHeapSnapshotParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("HeapProfiler.takeHeapSnapshot", parameters, sessionId);
@@ -17383,7 +16580,6 @@ namespace CDP.Domains
         /// <summary> 
         /// Changes CPU profiler sampling interval. Must be called before CPU profiles recording started. 
         /// </summary>
-        /// <param name="interval">New sampling interval in microseconds.</param>
         public async Task SetSamplingInterval(SetSamplingIntervalParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("Profiler.setSamplingInterval", parameters, sessionId);
@@ -17400,9 +16596,6 @@ namespace CDP.Domains
         /// <summary> 
         /// Enable precise code coverage. Coverage data for JavaScript executed before enabling precise codecoverage may be incomplete. Enabling prevents running optimized code and resets executioncounters. 
         /// </summary>
-        /// <param name="callCount">Collect accurate call counts beyond simple 'covered' or 'not covered'.</param>
-        /// <param name="detailed">Collect block-based coverage.</param>
-        /// <param name="allowTriggeredUpdates">Allow the backend to send updates on its own initiative</param>
         public async Task<StartPreciseCoverageReturn> StartPreciseCoverage(StartPreciseCoverageParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("Profiler.startPreciseCoverage", parameters, sessionId);
@@ -17737,6 +16930,7 @@ namespace CDP.Domains
         }
         
         /// <summary> Issued when all executionContexts were cleared in browser </summary>
+        /// <returns> remove handler </returns>
         public Action OnExecutionContextsCleared(Action handler, string sessionId = default)
         {
             string eventName = string.IsNullOrEmpty(sessionId) ? "Runtime.executionContextsCleared" : $"Runtime.executionContextsCleared.{sessionId}";
@@ -17765,9 +16959,6 @@ namespace CDP.Domains
         /// <summary> 
         /// Add handler to promise with given promise object id. 
         /// </summary>
-        /// <param name="promiseObjectId">Identifier of the promise.</param>
-        /// <param name="returnByValue">Whether the result is expected to be a JSON object that should be sent by value.</param>
-        /// <param name="generatePreview">Whether preview should be generated for the result.</param>
         public async Task<AwaitPromiseReturn> AwaitPromise(AwaitPromiseParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("Runtime.awaitPromise", parameters, sessionId);
@@ -17776,17 +16967,6 @@ namespace CDP.Domains
         /// <summary> 
         /// Calls function with given declaration on the given object. Object group of the result isinherited from the target object. 
         /// </summary>
-        /// <param name="functionDeclaration">Declaration of the function to call.</param>
-        /// <param name="objectId">Identifier of the object to call function on. Either objectId or executionContextId shouldbe specified.</param>
-        /// <param name="arguments">Call arguments. All call arguments must belong to the same JavaScript world as the targetobject.</param>
-        /// <param name="silent">In silent mode exceptions thrown during evaluation are not reported and do not pauseexecution. Overrides `setPauseOnException` state.</param>
-        /// <param name="returnByValue">Whether the result is expected to be a JSON object which should be sent by value.</param>
-        /// <param name="generatePreview">Whether preview should be generated for the result.</param>
-        /// <param name="userGesture">Whether execution should be treated as initiated by user in the UI.</param>
-        /// <param name="awaitPromise">Whether execution should `await` for resulting value and return once awaited promise isresolved.</param>
-        /// <param name="executionContextId">Specifies execution context which global object will be used to call function on. EitherexecutionContextId or objectId should be specified.</param>
-        /// <param name="objectGroup">Symbolic group name that can be used to release multiple objects. If objectGroup is notspecified and objectId is, objectGroup will be inherited from object.</param>
-        /// <param name="throwOnSideEffect">Whether to throw an exception if side effect cannot be ruled out during evaluation.</param>
         public async Task<CallFunctionOnReturn> CallFunctionOn(CallFunctionOnParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("Runtime.callFunctionOn", parameters, sessionId);
@@ -17795,10 +16975,6 @@ namespace CDP.Domains
         /// <summary> 
         /// Compiles expression. 
         /// </summary>
-        /// <param name="expression">Expression to compile.</param>
-        /// <param name="sourceURL">Source url to be set for the script.</param>
-        /// <param name="persistScript">Specifies whether the compiled script should be persisted.</param>
-        /// <param name="executionContextId">Specifies in which execution context to perform script run. If the parameter is omitted theevaluation will be performed in the context of the inspected page.</param>
         public async Task<CompileScriptReturn> CompileScript(CompileScriptParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("Runtime.compileScript", parameters, sessionId);
@@ -17831,21 +17007,6 @@ namespace CDP.Domains
         /// <summary> 
         /// Evaluates expression on global object. 
         /// </summary>
-        /// <param name="expression">Expression to evaluate.</param>
-        /// <param name="objectGroup">Symbolic group name that can be used to release multiple objects.</param>
-        /// <param name="includeCommandLineAPI">Determines whether Command Line API should be available during the evaluation.</param>
-        /// <param name="silent">In silent mode exceptions thrown during evaluation are not reported and do not pauseexecution. Overrides `setPauseOnException` state.</param>
-        /// <param name="contextId">Specifies in which execution context to perform evaluation. If the parameter is omitted theevaluation will be performed in the context of the inspected page.This is mutually exclusive with `uniqueContextId`, which offers analternative way to identify the execution context that is more reliablein a multi-process environment.</param>
-        /// <param name="returnByValue">Whether the result is expected to be a JSON object that should be sent by value.</param>
-        /// <param name="generatePreview">Whether preview should be generated for the result.</param>
-        /// <param name="userGesture">Whether execution should be treated as initiated by user in the UI.</param>
-        /// <param name="awaitPromise">Whether execution should `await` for resulting value and return once awaited promise isresolved.</param>
-        /// <param name="throwOnSideEffect">Whether to throw an exception if side effect cannot be ruled out during evaluation.This implies `disableBreaks` below.</param>
-        /// <param name="timeout">Terminate execution after timing out (number of milliseconds).</param>
-        /// <param name="disableBreaks">Disable breakpoints during execution.</param>
-        /// <param name="replMode">Setting this flag to true enables `let` re-declaration and top-level `await`.Note that `let` variables can only be re-declared if they originate from`replMode` themselves.</param>
-        /// <param name="allowUnsafeEvalBlockedByCSP">The Content Security Policy (CSP) for the target might block 'unsafe-eval'which includes eval(), Function(), setTimeout() and setInterval()when called with non-callable arguments. This flag bypasses CSP for thisevaluation and allows unsafe-eval. Defaults to true.</param>
-        /// <param name="uniqueContextId">An alternative way to specify the execution context to evaluate in.Compared to contextId that may be reused across processes, this is guaranteed to besystem-unique, so it can be used to prevent accidental evaluation of the expressionin context different than intended (e.g. as a result of navigation across processboundaries).This is mutually exclusive with `contextId`.</param>
         public async Task<EvaluateReturn> Evaluate(EvaluateParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("Runtime.evaluate", parameters, sessionId);
@@ -17870,11 +17031,6 @@ namespace CDP.Domains
         /// <summary> 
         /// Returns properties of a given object. Object group of the result is inherited from the targetobject. 
         /// </summary>
-        /// <param name="objectId">Identifier of the object to return properties for.</param>
-        /// <param name="ownProperties">If true, returns properties belonging only to the element itself, not to its prototypechain.</param>
-        /// <param name="accessorPropertiesOnly">If true, returns accessor properties (with getter/setter) only; internal properties are notreturned either.</param>
-        /// <param name="generatePreview">Whether preview should be generated for the results.</param>
-        /// <param name="nonIndexedPropertiesOnly">If true, returns non-indexed properties only.</param>
         public async Task<GetPropertiesReturn> GetProperties(GetPropertiesParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("Runtime.getProperties", parameters, sessionId);
@@ -17883,7 +17039,6 @@ namespace CDP.Domains
         /// <summary> 
         /// Returns all let, const and class variables from global scope. 
         /// </summary>
-        /// <param name="executionContextId">Specifies in which execution context to lookup global scope variables.</param>
         public async Task<GlobalLexicalScopeNamesReturn> GlobalLexicalScopeNames(GlobalLexicalScopeNamesParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("Runtime.globalLexicalScopeNames", parameters, sessionId);
@@ -17892,8 +17047,6 @@ namespace CDP.Domains
         /// <summary> 
         ///  
         /// </summary>
-        /// <param name="prototypeObjectId">Identifier of the prototype to return objects for.</param>
-        /// <param name="objectGroup">Symbolic group name that can be used to release the results.</param>
         public async Task<QueryObjectsReturn> QueryObjects(QueryObjectsParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("Runtime.queryObjects", parameters, sessionId);
@@ -17902,7 +17055,6 @@ namespace CDP.Domains
         /// <summary> 
         /// Releases remote object with given id. 
         /// </summary>
-        /// <param name="objectId">Identifier of the object to release.</param>
         public async Task ReleaseObject(ReleaseObjectParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("Runtime.releaseObject", parameters, sessionId);
@@ -17911,7 +17063,6 @@ namespace CDP.Domains
         /// <summary> 
         /// Releases all remote objects that belong to a given group. 
         /// </summary>
-        /// <param name="objectGroup">Symbolic object group name.</param>
         public async Task ReleaseObjectGroup(ReleaseObjectGroupParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("Runtime.releaseObjectGroup", parameters, sessionId);
@@ -17928,14 +17079,6 @@ namespace CDP.Domains
         /// <summary> 
         /// Runs script with given id in a given context. 
         /// </summary>
-        /// <param name="scriptId">Id of the script to run.</param>
-        /// <param name="executionContextId">Specifies in which execution context to perform script run. If the parameter is omitted theevaluation will be performed in the context of the inspected page.</param>
-        /// <param name="objectGroup">Symbolic group name that can be used to release multiple objects.</param>
-        /// <param name="silent">In silent mode exceptions thrown during evaluation are not reported and do not pauseexecution. Overrides `setPauseOnException` state.</param>
-        /// <param name="includeCommandLineAPI">Determines whether Command Line API should be available during the evaluation.</param>
-        /// <param name="returnByValue">Whether the result is expected to be a JSON object which should be sent by value.</param>
-        /// <param name="generatePreview">Whether preview should be generated for the result.</param>
-        /// <param name="awaitPromise">Whether execution should `await` for resulting value and return once awaited promise isresolved.</param>
         public async Task<RunScriptReturn> RunScript(RunScriptParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("Runtime.runScript", parameters, sessionId);
@@ -17944,7 +17087,6 @@ namespace CDP.Domains
         /// <summary> 
         /// Enables or disables async call stacks tracking. 
         /// </summary>
-        /// <param name="maxDepth">Maximum depth of async call stacks. Setting to `0` will effectively disable collecting asynccall stacks (default).</param>
         public async Task SetAsyncCallStackDepth(SetAsyncCallStackDepthParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("Runtime.setAsyncCallStackDepth", parameters, sessionId);
@@ -17953,7 +17095,6 @@ namespace CDP.Domains
         /// <summary> 
         ///  
         /// </summary>
-        /// <param name="enabled"></param>
         public async Task SetCustomObjectFormatterEnabled(SetCustomObjectFormatterEnabledParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("Runtime.setCustomObjectFormatterEnabled", parameters, sessionId);
@@ -17962,7 +17103,6 @@ namespace CDP.Domains
         /// <summary> 
         ///  
         /// </summary>
-        /// <param name="size"></param>
         public async Task SetMaxCallStackSizeToCapture(SetMaxCallStackSizeToCaptureParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("Runtime.setMaxCallStackSizeToCapture", parameters, sessionId);
@@ -17979,9 +17119,6 @@ namespace CDP.Domains
         /// <summary> 
         /// If executionContextId is empty, adds binding with the given name on theglobal objects of all inspected contexts, including those created later,bindings survive reloads.Binding function takes exactly one argument, this argument should be string,in case of any other input, function throws an exception.Each binding function call produces Runtime.bindingCalled notification. 
         /// </summary>
-        /// <param name="name"></param>
-        /// <param name="executionContextId">If specified, the binding would only be exposed to the specifiedexecution context. If omitted and `executionContextName` is not set,the binding is exposed to all execution contexts of the target.This parameter is mutually exclusive with `executionContextName`.Deprecated in favor of `executionContextName` due to an unclear use caseand bugs in implementation (crbug.com/1169639). `executionContextId` will beremoved in the future.</param>
-        /// <param name="executionContextName">If specified, the binding is exposed to the executionContext withmatching name, even for contexts created after the binding is added.See also `ExecutionContext.name` and `worldName` parameter to`Page.addScriptToEvaluateOnNewDocument`.This parameter is mutually exclusive with `executionContextId`.</param>
         public async Task AddBinding(AddBindingParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("Runtime.addBinding", parameters, sessionId);
@@ -17990,7 +17127,6 @@ namespace CDP.Domains
         /// <summary> 
         /// This method does not remove binding function from global object butunsubscribes current runtime agent from Runtime.bindingCalled notifications. 
         /// </summary>
-        /// <param name="name"></param>
         public async Task RemoveBinding(RemoveBindingParameters parameters, string sessionId = default)
         {
             var ___r = await this.chrome.Send("Runtime.removeBinding", parameters, sessionId);

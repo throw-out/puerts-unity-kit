@@ -136,6 +136,7 @@ namespace CDP.Domains
             {
                 code = $@"
         /// <summary> {ProtocolGenertor.FormatDescription(e.description)} </summary>
+        /// <returns> remove handler </returns>
         public Action On{ProtocolGenertor.FormatCapitalizeFirstCharacter(e.name)}(Action handler, string sessionId = default)
         {{
             string eventName = string.IsNullOrEmpty(sessionId) ? ""{commandName}"" : $""{commandName}.{{sessionId}}"";
@@ -166,8 +167,7 @@ namespace CDP.Domains
             string code = $@"
         /// <summary> 
         /// {ProtocolGenertor.FormatDescription(command.description)} 
-        /// </summary>{string.Join("", command.parameters == null ? new string[0] : command.parameters.Select(p => $@"
-        /// <param name=""{ProtocolGenertor.FormatVariable(p.name)}"">{ProtocolGenertor.FormatDescription(p.description)}</param>"))}
+        /// </summary>
         public async {returnType} {ProtocolGenertor.FormatCapitalizeFirstCharacter(command.name)}({parameterDeclare}string sessionId = default)
         {{
             var ___r = await this.chrome.Send(""{commandName}"", {parameterCode}, sessionId);
