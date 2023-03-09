@@ -15,10 +15,8 @@ namespace HR
         private static ProfileView current;
         static ManagerGUI()
         {
-            ReadProfiles();
-            current = profiles.Count > 0 ? profiles[0] : null;
-
             EditorApplicationHandler.update += Tick;
+            EditorApplicationHandler.delayCall += Init;
         }
 
         [MenuItem("Tools/CDP/HR Manager")]
@@ -49,7 +47,11 @@ namespace HR
                 profile.Stop();
             }
         }
-
+        static void Init()
+        {
+            ReadProfiles();
+            current = profiles.Count > 0 ? profiles[0] : null;
+        }
         static void Tick()
         {
             if (profiles == null)
@@ -127,14 +129,14 @@ namespace HR
         void RenderCurrentMenu()
         {
             GUILayout.BeginHorizontal();
-            using (new EditorGUI.DisabledScope(current == null || current.IsAlive))
+            using (new EditorGUI.DisabledScope(current == null || current.IsAlive || current.Auto))
             {
                 if (GUILayout.Button("Start") && current != null)
                 {
                     current.Start();
                 }
             }
-            using (new EditorGUI.DisabledScope(current == null || !current.IsAlive))
+            using (new EditorGUI.DisabledScope(current == null || !current.IsAlive && !current.Auto))
             {
                 if (GUILayout.Button("Stop"))
                 {

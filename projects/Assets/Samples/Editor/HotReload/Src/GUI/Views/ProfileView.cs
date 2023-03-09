@@ -15,7 +15,6 @@ namespace HR
         private FileWacher watcher;
         private List<string> extnames;
         private DateTime nextRetry = DateTime.MinValue;
-        private bool autoRetry;
 
         public string Name => string.IsNullOrEmpty(profile.name) ? $"{profile.host}:{profile.port}" : profile.name;
         public bool IsOpen => debugger != null && debugger.IsOpen;
@@ -23,6 +22,7 @@ namespace HR
         public bool IsReadyHost => !string.IsNullOrEmpty(profile.host);
         public bool IsReadyPath => !string.IsNullOrEmpty(profile.path) && Directory.Exists(profile.path);
         public bool Dirty { get; private set; }
+        public bool Auto { get; private set; }
 
         public ProfileView(Profile profile)
         {
@@ -53,11 +53,11 @@ namespace HR
             debugger.Open(profile.host, profile.port);
 
             StartWatcher();
-            autoRetry = true;
+            Auto = this.profile.reconnect;
         }
         public void Stop()
         {
-            autoRetry = false;
+            Auto = false;
             StopWatcher();
             if (!IsAlive)
                 return;
@@ -77,14 +77,14 @@ namespace HR
         }
         public void OnGUI()
         {
-            using (new EditorGUI.DisabledScope(IsAlive))
+            using (new EditorGUI.DisabledScope(IsAlive || Auto))
             {
                 RendererConfig();
             }
         }
         public void Tick()
         {
-            if (this.IsAlive || !this.profile.reconnect || !autoRetry)
+            if (this.IsAlive || !Auto)
                 return;
             if (nextRetry == DateTime.MinValue)
             {
