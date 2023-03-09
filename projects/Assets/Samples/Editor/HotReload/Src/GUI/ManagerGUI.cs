@@ -64,6 +64,8 @@ namespace HR
 
         void OnGUI()
         {
+            if (profiles == null)
+                return;
             GUILayout.BeginHorizontal();
 
             GUILayout.BeginVertical(GUILayout.Width(200f));
