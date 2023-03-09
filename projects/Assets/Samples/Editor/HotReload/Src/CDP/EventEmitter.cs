@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 using System.Reflection;
+using System.Linq;
 
 namespace CDP
 {
@@ -176,6 +177,7 @@ namespace CDP
             private Delegate callback;
             private int count;
             private int argCount;
+            private Type[] argTypes;
 
             public bool IsCompleted { get; private set; } = false;
 
@@ -183,7 +185,19 @@ namespace CDP
             {
                 this.callback = callback;
                 this.count = count;
-                this.argCount = callback != null ? callback.GetType().GetMethod("Invoke", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)?.GetParameters().Length ?? -1 : -1;
+                if (callback != null)
+                {
+                    this.argTypes = callback.GetType()
+                        .GetMethod("Invoke", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)
+                        .GetParameters()
+                        .Select(p => p.ParameterType)
+                        .ToArray();
+                    this.argCount = this.argTypes.Length;
+                }
+                else
+                {
+                    this.argCount = -1;
+                }
             }
             public bool Equals(Delegate target)
             {
@@ -198,6 +212,10 @@ namespace CDP
                 {
                     Complete();
                 }
+                else if (_DynamicInvoke())
+                {
+                    Complete();
+                }
             }
             public void Invoke<T1>(T1 arg1)
             {
@@ -205,6 +223,12 @@ namespace CDP
                     return;
                 if (_Invoke(arg1) ||
                     _Invoke()
+                )
+                {
+                    Complete();
+                }
+                else if (_DynamicInvoke(arg1) ||
+                    _DynamicInvoke()
                 )
                 {
                     Complete();
@@ -217,6 +241,13 @@ namespace CDP
                 if (_Invoke(arg1, arg2) ||
                     _Invoke(arg1) || _Invoke(arg2) ||
                     _Invoke()
+                )
+                {
+                    Complete();
+                }
+                else if (_DynamicInvoke(arg1, arg2) ||
+                    _DynamicInvoke(arg1) || _DynamicInvoke(arg2) ||
+                    _DynamicInvoke()
                 )
                 {
                     Complete();
@@ -235,6 +266,14 @@ namespace CDP
                 {
                     Complete();
                 }
+                else if (_DynamicInvoke(arg1, arg2, arg3) ||
+                    _DynamicInvoke(arg1, arg2) || _DynamicInvoke(arg2, arg3) ||
+                    _DynamicInvoke(arg1) || _DynamicInvoke(arg2) || _DynamicInvoke(arg3) ||
+                    _DynamicInvoke()
+                )
+                {
+                    Complete();
+                }
             }
             public void Invoke<T1, T2, T3, T4>(T1 arg1, T2 arg2, T3 arg3, T4 arg4)
             {
@@ -246,6 +285,15 @@ namespace CDP
                     _Invoke(arg1, arg2) || _Invoke(arg2, arg3) || _Invoke(arg3, arg4) ||
                     _Invoke(arg1) || _Invoke(arg2) || _Invoke(arg3) || _Invoke(arg4) ||
                     _Invoke()
+                )
+                {
+                    Complete();
+                }
+                else if (_DynamicInvoke(arg1, arg2, arg3, arg4) ||
+                    _DynamicInvoke(arg1, arg2, arg3) || _DynamicInvoke(arg2, arg3, arg4) ||
+                    _DynamicInvoke(arg1, arg2) || _DynamicInvoke(arg2, arg3) || _DynamicInvoke(arg3, arg4) ||
+                    _DynamicInvoke(arg1) || _DynamicInvoke(arg2) || _DynamicInvoke(arg3) || _DynamicInvoke(arg4) ||
+                    _DynamicInvoke()
                 )
                 {
                     Complete();
@@ -316,6 +364,85 @@ namespace CDP
                     return true;
                 }
                 return false;
+            }
+
+            bool _DynamicInvoke()
+            {
+                if (this.argCount == 0)
+                {
+                    try
+                    {
+                        callback.DynamicInvoke();
+                    }
+                    catch (Exception e) { Debug.LogError(e); }
+                    return true;
+                }
+                return false;
+            }
+            bool _DynamicInvoke<T1>(T1 arg1)
+            {
+                if (_CheckParameters(typeof(T1)))
+                {
+                    try
+                    {
+                        callback.DynamicInvoke(arg1);
+                    }
+                    catch (Exception e) { Debug.LogError(e); }
+                    return true;
+                }
+                return false;
+            }
+            bool _DynamicInvoke<T1, T2>(T1 arg1, T2 arg2)
+            {
+                if (_CheckParameters(typeof(T1), typeof(T2)))
+                {
+                    try
+                    {
+                        callback.DynamicInvoke(arg1, arg2);
+                    }
+                    catch (Exception e) { Debug.LogError(e); }
+                    return true;
+                }
+                return false;
+            }
+            bool _DynamicInvoke<T1, T2, T3>(T1 arg1, T2 arg2, T3 arg3)
+            {
+                if (_CheckParameters(typeof(T1), typeof(T2), typeof(T3)))
+                {
+                    try
+                    {
+                        callback.DynamicInvoke(arg1, arg2, arg3);
+                    }
+                    catch (Exception e) { Debug.LogError(e); }
+                    return true;
+                }
+                return false;
+            }
+            bool _DynamicInvoke<T1, T2, T3, T4>(T1 arg1, T2 arg2, T3 arg3, T4 arg4)
+            {
+                if (_CheckParameters(typeof(T1), typeof(T2), typeof(T3), typeof(T4)))
+                {
+                    try
+                    {
+                        callback.DynamicInvoke(arg1, arg2, arg3, arg4);
+                    }
+                    catch (Exception e) { Debug.LogError(e); }
+                    return true;
+                }
+                return false;
+            }
+            bool _CheckParameters(params Type[] types)
+            {
+                if (types.Length != this.argCount)
+                    return false;
+                for (int i = 0; i < argCount; i++)
+                {
+                    if (!argTypes[i].IsAssignableFrom(types[i]))
+                    {
+                        return false;
+                    }
+                }
+                return true;
             }
 
             void Complete()
