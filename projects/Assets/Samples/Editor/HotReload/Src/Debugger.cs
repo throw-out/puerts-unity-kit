@@ -185,7 +185,7 @@ namespace HR
                 return;
 
             var scriptId = data.scriptId;
-            var filepath = Path.GetFullPath(data.url).Replace("\\", "/");
+            var filepath = GetFullPath(data.url).Replace("\\", "/");
             if (this.ignoreCase)
             {
                 filepath = filepath.ToLower();
@@ -210,7 +210,7 @@ namespace HR
                 return;
 
             var scriptId = data.scriptId;
-            var filepath = Path.GetFullPath(data.url).Replace("\\", "/");
+            var filepath = GetFullPath(data.url).Replace("\\", "/");
             if (this.ignoreCase)
             {
                 filepath = filepath.ToLower();
@@ -226,6 +226,27 @@ namespace HR
             }
             this.scriptFailedToParse[scriptId] = filepath;
             this.scriptFailedToParse[filepath] = scriptId;
+        }
+
+        static char[] systemIllegalCharacters = new char[]{
+#if UNITY_STANDALONE_WIN
+            '"'
+#else
+            '*',
+            '?',
+            '"',
+            '<',
+            '>',
+            '|',
+#endif
+        };
+        static string GetFullPath(string url)
+        {
+            if (string.IsNullOrEmpty(url) || systemIllegalCharacters.FirstOrDefault(@char => url.Contains(@char)) == default(char))
+            {
+                return url;
+            }
+            return Path.GetFullPath(url);
         }
         static async Task ConnectTo(CDP.Chrome chrome)
         {
