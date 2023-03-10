@@ -8,58 +8,70 @@ namespace CDP
 {
     public class EventEmitter
     {
+        public delegate void DynamicHandler(params object[] args);
+
         private Dictionary<string, List<Handler>> events;
 
-        public void On(string eventName, Action fn)
+        public void On(string eventName, Action handler)
         {
             List<Handler> handelrs = GetHandlers(eventName, true);
-            handelrs.Add(new Handler(fn));
+            handelrs.Add(new Handler(handler));
         }
-        public void On<T1>(string eventName, Action<T1> fn)
+        public void On<T1>(string eventName, Action<T1> handler)
         {
             List<Handler> handelrs = GetHandlers(eventName, true);
-            handelrs.Add(new Handler(fn));
+            handelrs.Add(new Handler(handler));
         }
-        public void On<T1, T2>(string eventName, Action<T1, T2> fn)
+        public void On<T1, T2>(string eventName, Action<T1, T2> handler)
         {
             List<Handler> handelrs = GetHandlers(eventName, true);
-            handelrs.Add(new Handler(fn));
+            handelrs.Add(new Handler(handler));
         }
-        public void On<T1, T2, T3>(string eventName, Action<T1, T2, T3> fn)
+        public void On<T1, T2, T3>(string eventName, Action<T1, T2, T3> handler)
         {
             List<Handler> handelrs = GetHandlers(eventName, true);
-            handelrs.Add(new Handler(fn));
+            handelrs.Add(new Handler(handler));
         }
-        public void On<T1, T2, T3, T4>(string eventName, Action<T1, T2, T3, T4> fn)
+        public void On<T1, T2, T3, T4>(string eventName, Action<T1, T2, T3, T4> handler)
         {
             List<Handler> handelrs = GetHandlers(eventName, true);
-            handelrs.Add(new Handler(fn));
+            handelrs.Add(new Handler(handler));
+        }
+        public void On(string eventName, DynamicHandler handler)
+        {
+            List<Handler> handelrs = GetHandlers(eventName, true);
+            handelrs.Add(new Handler(handler));
         }
 
-        public void Once(string eventName, Action fn)
+        public void Once(string eventName, Action handler)
         {
             List<Handler> handelrs = GetHandlers(eventName, true);
-            handelrs.Add(new Handler(fn, 1));
+            handelrs.Add(new Handler(handler, 1));
         }
-        public void Once<T1>(string eventName, Action<T1> fn)
+        public void Once<T1>(string eventName, Action<T1> handler)
         {
             List<Handler> handelrs = GetHandlers(eventName, true);
-            handelrs.Add(new Handler(fn, 1));
+            handelrs.Add(new Handler(handler, 1));
         }
-        public void Once<T1, T2>(string eventName, Action<T1, T2> fn)
+        public void Once<T1, T2>(string eventName, Action<T1, T2> handler)
         {
             List<Handler> handelrs = GetHandlers(eventName, true);
-            handelrs.Add(new Handler(fn, 1));
+            handelrs.Add(new Handler(handler, 1));
         }
-        public void Once<T1, T2, T3>(string eventName, Action<T1, T2, T3> fn)
+        public void Once<T1, T2, T3>(string eventName, Action<T1, T2, T3> handler)
         {
             List<Handler> handelrs = GetHandlers(eventName, true);
-            handelrs.Add(new Handler(fn, 1));
+            handelrs.Add(new Handler(handler, 1));
         }
-        public void Once<T1, T2, T3, T4>(string eventName, Action<T1, T2, T3, T4> fn)
+        public void Once<T1, T2, T3, T4>(string eventName, Action<T1, T2, T3, T4> handler)
         {
             List<Handler> handelrs = GetHandlers(eventName, true);
-            handelrs.Add(new Handler(fn, 1));
+            handelrs.Add(new Handler(handler, 1));
+        }
+        public void Once(string eventName, DynamicHandler handler)
+        {
+            List<Handler> handelrs = GetHandlers(eventName, true);
+            handelrs.Add(new Handler(handler, 1));
         }
 
         public void Remove<TDelegate>(string eventName, TDelegate handler)
@@ -144,6 +156,18 @@ namespace CDP
             }
             RemoveCompletedHandlers(handelrs);
         }
+        protected void Emit(string eventName, params object[] args)
+        {
+            List<Handler> handelrs = GetHandlers(eventName, false);
+            if (handelrs == null || handelrs.Count == 0)
+                return;
+            foreach (Handler handler in handelrs)
+            {
+                handler.Invoke(args);
+            }
+            RemoveCompletedHandlers(handelrs);
+        }
+
 
         List<Handler> GetHandlers(string eventName, bool create = false)
         {
@@ -185,7 +209,7 @@ namespace CDP
             {
                 this.callback = callback;
                 this.count = count;
-                if (callback != null)
+                if (callback != null && !(callback is DynamicHandler))
                 {
                     this.argTypes = GetDelegateParameters(callback.GetType());
                     this.argCount = this.argTypes.Length;
@@ -212,6 +236,11 @@ namespace CDP
                 {
                     InvokeComplete();
                 }
+                else if (callback is DynamicHandler)
+                {
+                    _DynamicHandlerInvoke();
+                    InvokeComplete();
+                }
             }
             public void Invoke<T1>(T1 arg1)
             {
@@ -227,6 +256,11 @@ namespace CDP
                     _DynamicInvoke()
                 )
                 {
+                    InvokeComplete();
+                }
+                else if (callback is DynamicHandler)
+                {
+                    _DynamicHandlerInvoke(arg1);
                     InvokeComplete();
                 }
             }
@@ -246,6 +280,11 @@ namespace CDP
                     _DynamicInvoke()
                 )
                 {
+                    InvokeComplete();
+                }
+                else if (callback is DynamicHandler)
+                {
+                    _DynamicHandlerInvoke(arg1, arg2);
                     InvokeComplete();
                 }
             }
@@ -270,6 +309,11 @@ namespace CDP
                 {
                     InvokeComplete();
                 }
+                else if (callback is DynamicHandler)
+                {
+                    _DynamicHandlerInvoke(arg1, arg2, arg3);
+                    InvokeComplete();
+                }
             }
             public void Invoke<T1, T2, T3, T4>(T1 arg1, T2 arg2, T3 arg3, T4 arg4)
             {
@@ -292,6 +336,19 @@ namespace CDP
                     _DynamicInvoke()
                 )
                 {
+                    InvokeComplete();
+                }
+                else if (callback is DynamicHandler)
+                {
+                    _DynamicHandlerInvoke(arg1, arg2, arg3, arg4);
+                    InvokeComplete();
+                }
+            }
+            public void Invoke(object[] args)
+            {
+                if (callback is DynamicHandler)
+                {
+                    _DynamicHandlerInvoke(args);
                     InvokeComplete();
                 }
             }
@@ -377,7 +434,7 @@ namespace CDP
             }
             bool _DynamicInvoke<T1>(T1 arg1)
             {
-                if (_CheckParameters(typeof(T1)))
+                if (this.argCount == 1 && CheckParameters(typeof(T1)))
                 {
                     try
                     {
@@ -390,7 +447,7 @@ namespace CDP
             }
             bool _DynamicInvoke<T1, T2>(T1 arg1, T2 arg2)
             {
-                if (_CheckParameters(typeof(T1), typeof(T2)))
+                if (this.argCount == 2 && CheckParameters(typeof(T1), typeof(T2)))
                 {
                     try
                     {
@@ -403,7 +460,7 @@ namespace CDP
             }
             bool _DynamicInvoke<T1, T2, T3>(T1 arg1, T2 arg2, T3 arg3)
             {
-                if (_CheckParameters(typeof(T1), typeof(T2), typeof(T3)))
+                if (this.argCount == 3 && CheckParameters(typeof(T1), typeof(T2), typeof(T3)))
                 {
                     try
                     {
@@ -416,7 +473,7 @@ namespace CDP
             }
             bool _DynamicInvoke<T1, T2, T3, T4>(T1 arg1, T2 arg2, T3 arg3, T4 arg4)
             {
-                if (_CheckParameters(typeof(T1), typeof(T2), typeof(T3), typeof(T4)))
+                if (this.argCount == 4 && CheckParameters(typeof(T1), typeof(T2), typeof(T3), typeof(T4)))
                 {
                     try
                     {
@@ -427,20 +484,32 @@ namespace CDP
                 }
                 return false;
             }
-            bool _CheckParameters(params Type[] types)
+
+            void _DynamicHandlerInvoke(params object[] args)
+            {
+                try
+                {
+                    ((DynamicHandler)callback)(args);
+                }
+                catch (Exception e) { Debug.LogError(e); }
+            }
+
+            bool CheckParameters(params Type[] types)
             {
                 if (types.Length != this.argCount)
                     return false;
                 for (int i = 0; i < argCount; i++)
                 {
-                    if (!argTypes[i].IsAssignableFrom(types[i]))
+                    if (
+                        types[i] == null && argTypes[i].IsValueType ||
+                        types[i] != null && !argTypes[i].IsAssignableFrom(types[i])
+                    )
                     {
                         return false;
                     }
                 }
                 return true;
             }
-
             void InvokeComplete()
             {
                 if (count <= 0)
