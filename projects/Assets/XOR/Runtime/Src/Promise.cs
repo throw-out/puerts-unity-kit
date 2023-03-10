@@ -25,16 +25,22 @@ namespace XOR
     public interface IPromiseAwaitable
     {
         IPromiseAwaiter GetAwaiter();
+        IPromiseAwaitable Then(Action onfulfilled);
+        IPromiseAwaitable Catch(Action<Exception> onrejected);
+        IPromiseAwaitable Finally(Action onfinally);
     }
     public interface IPromiseAwaitable<TResult>
     {
         IPromiseAwaiter<TResult> GetAwaiter();
+        IPromiseAwaitable<TResult> Then(Action<TResult> onfulfilled);
+        IPromiseAwaitable<TResult> Catch(Action<Exception> onrejected);
+        IPromiseAwaitable<TResult> Finally(Action onfinally);
     }
 
     public sealed class Promise : IPromiseAwaitable
     {
         private Awaiter _awaiter;
-        private IPromiseAwaitable _configuredTaskAwaitable;
+        private ConfiguredTaskAwaitable _configuredTaskAwaitable;
 
         public Promise()
         {
@@ -57,14 +63,43 @@ namespace XOR
         {
             if (continueOnCapturedContext)
             {
-                if (this._configuredTaskAwaitable == null)
-                {
-                    this._configuredTaskAwaitable = new ConfiguredTaskAwaitable(this._awaiter);
-                }
+                TryCreateConfiguredTaskAwaitable();
                 return this._configuredTaskAwaitable;
             }
             return this;
         }
+        public IPromiseAwaitable Then(Action onfulfilled)
+        {
+            if (onfulfilled == null)
+                return this;
+            this._awaiter.OnCompleted(() =>
+            {
+                if (this._awaiter.Exception != null)
+                    return;
+                onfulfilled();
+            });
+            return this;
+        }
+        public IPromiseAwaitable Catch(Action<Exception> onrejected)
+        {
+            if (onrejected == null)
+                return this;
+            this._awaiter.OnCompleted(() =>
+            {
+                if (this._awaiter.Exception == null)
+                    return;
+                onrejected(this._awaiter.Exception);
+            });
+            return this;
+        }
+        public IPromiseAwaitable Finally(Action onfinally)
+        {
+            if (onfinally == null)
+                return this;
+            this._awaiter.OnCompleted(onfinally);
+            return this;
+        }
+
         public void Resolve()
         {
             this._awaiter.Resolve();
@@ -73,7 +108,12 @@ namespace XOR
         {
             this._awaiter.Reject(e);
         }
-
+        void TryCreateConfiguredTaskAwaitable()
+        {
+            if (this._configuredTaskAwaitable != null)
+                return;
+            this._configuredTaskAwaitable = new ConfiguredTaskAwaitable(this._awaiter);
+        }
         private class Awaiter : IPromiseAwaiter
         {
             private bool _completed = false;
@@ -81,6 +121,7 @@ namespace XOR
             private List<Action> _continuations = new List<Action>();
 
             public bool IsCompleted { get => this._completed; }
+            public Exception Exception { get => this._exception; }
             public void GetResult()
             {
                 if (this._exception != null)
@@ -93,10 +134,17 @@ namespace XOR
                 if (this._completed)
                 {
                     continuation();
+                    return;
                 }
-                else
+                bool completed = false;
+                lock (this._continuations)
                 {
-                    this._continuations.Add(continuation);
+                    if (this._completed) completed = true;
+                    else this._continuations.Add(continuation);
+                }
+                if (completed)
+                {
+                    continuation();
                 }
             }
             public void UnsafeOnCompleted(Action continuation)
@@ -106,29 +154,53 @@ namespace XOR
             public void Reject(Exception e)
             {
                 if (this._completed)
-                    throw new InvalidOperationException("the promise is completed");
-                this._completed = true;
+                    throw NewPromiseCompletedException();
+                lock (this._continuations)
+                {
+                    if (this._completed)
+                        throw NewPromiseCompletedException();
+                    this._completed = true;
+                }
                 this._exception = e;
                 CompletedContinuations();
             }
             public void Resolve()
             {
                 if (this._completed)
-                    throw new InvalidOperationException("the promise is completed");
-                this._completed = true;
+                    throw NewPromiseCompletedException();
+                lock (this._continuations)
+                {
+                    if (this._completed)
+                        throw NewPromiseCompletedException();
+                    this._completed = true;
+                }
                 CompletedContinuations();
             }
             void CompletedContinuations()
             {
-                foreach (var continuation in this._continuations)
+                Action[] continuations;
+                lock (this._continuations)
+                {
+                    continuations = new Action[this._continuations.Count];
+                    for (int i = 0; i < this._continuations.Count; i++)
+                    {
+                        continuations[i] = this._continuations[i];
+                    }
+                    this._continuations.Clear();
+                }
+                for (int i = 0; i < continuations.Length; i++)
                 {
                     try
                     {
-                        continuation();
+                        continuations[i]();
                     }
                     catch (Exception e) { UnityEngine.Debug.LogError(e); }
                 }
-                this._continuations.Clear();
+            }
+
+            static Exception NewPromiseCompletedException()
+            {
+                return new InvalidOperationException("the promise is completed");
             }
         }
         private class ConfiguredTaskAwaitable : IPromiseAwaitable
@@ -142,11 +214,43 @@ namespace XOR
             {
                 return this._awaiter;
             }
+            public IPromiseAwaitable Then(Action onfulfilled)
+            {
+                if (onfulfilled == null)
+                    return this;
+                this._awaiter.OnCompleted(() =>
+                {
+                    if (this._awaiter.Exception != null)
+                        return;
+                    onfulfilled();
+                });
+                return this;
+            }
+            public IPromiseAwaitable Catch(Action<Exception> onrejected)
+            {
+                if (onrejected == null)
+                    return this;
+                this._awaiter.OnCompleted(() =>
+                {
+                    if (this._awaiter.Exception == null)
+                        return;
+                    onrejected(this._awaiter.Exception);
+                });
+                return this;
+            }
+            public IPromiseAwaitable Finally(Action onfinally)
+            {
+                if (onfinally == null)
+                    return this;
+                this._awaiter.OnCompleted(onfinally);
+                return this;
+            }
         }
         private class ConfiguredTaskAwaiter : IPromiseAwaiter
         {
             private Awaiter _awaiter;
             public bool IsCompleted => this._awaiter.IsCompleted;
+            public Exception Exception { get => this._awaiter.Exception; }
 
             public ConfiguredTaskAwaiter(Awaiter awaiter)
             {
@@ -182,7 +286,7 @@ namespace XOR
     public sealed class Promise<TResult> : IPromiseAwaitable<TResult>
     {
         private Awaiter<TResult> _awaiter;
-        private IPromiseAwaitable<TResult> _configuredTaskAwaitable;
+        private ConfiguredTaskAwaitable<TResult> _configuredTaskAwaitable;
 
         public Promise()
         {
@@ -205,12 +309,40 @@ namespace XOR
         {
             if (continueOnCapturedContext)
             {
-                if (this._configuredTaskAwaitable == null)
-                {
-                    this._configuredTaskAwaitable = new ConfiguredTaskAwaitable<TResult>(this._awaiter);
-                }
+                TryCreateConfiguredTaskAwaitable();
                 return this._configuredTaskAwaitable;
             }
+            return this;
+        }
+        public IPromiseAwaitable<TResult> Then(Action<TResult> onfulfilled)
+        {
+            if (onfulfilled == null)
+                return this;
+            this._awaiter.OnCompleted(() =>
+            {
+                if (this._awaiter.Exception != null)
+                    return;
+                onfulfilled(this._awaiter.GetResult());
+            });
+            return this;
+        }
+        public IPromiseAwaitable<TResult> Catch(Action<Exception> onrejected)
+        {
+            if (onrejected == null)
+                return this;
+            this._awaiter.OnCompleted(() =>
+            {
+                if (this._awaiter.Exception == null)
+                    return;
+                onrejected(this._awaiter.Exception);
+            });
+            return this;
+        }
+        public IPromiseAwaitable<TResult> Finally(Action onfinally)
+        {
+            if (onfinally == null)
+                return this;
+            this._awaiter.OnCompleted(onfinally);
             return this;
         }
 
@@ -222,6 +354,12 @@ namespace XOR
         {
             this._awaiter.Reject(e);
         }
+        void TryCreateConfiguredTaskAwaitable()
+        {
+            if (this._configuredTaskAwaitable != null)
+                return;
+            this._configuredTaskAwaitable = new ConfiguredTaskAwaitable<TResult>(this._awaiter);
+        }
 
         private class Awaiter<T> : IPromiseAwaiter<T>
         {
@@ -231,6 +369,8 @@ namespace XOR
             private List<Action> _continuations = new List<Action>();
 
             public bool IsCompleted { get => this._completed; }
+            public Exception Exception { get => this._exception; }
+
             public T GetResult()
             {
                 if (this._exception != null)
@@ -245,10 +385,17 @@ namespace XOR
                 if (this._completed)
                 {
                     continuation();
+                    return;
                 }
-                else
+                bool completed = false;
+                lock (this._continuations)
                 {
-                    this._continuations.Add(continuation);
+                    if (this._completed) completed = true;
+                    else this._continuations.Add(continuation);
+                }
+                if (completed)
+                {
+                    continuation();
                 }
             }
             public void UnsafeOnCompleted(Action continuation)
@@ -259,30 +406,53 @@ namespace XOR
             public void Reject(Exception e)
             {
                 if (this._completed)
-                    throw new InvalidOperationException("the promise is completed");
-                this._completed = true;
+                    throw NewPromiseCompletedException();
+                lock (this._continuations)
+                {
+                    if (this._completed)
+                        throw NewPromiseCompletedException();
+                    this._completed = true;
+                }
                 this._exception = e;
                 CompletedContinuations();
             }
             public void Resolve(T result)
             {
                 if (this._completed)
-                    throw new InvalidOperationException("the promise is completed");
-                this._completed = true;
+                    throw NewPromiseCompletedException();
+                lock (this._continuations)
+                {
+                    if (this._completed)
+                        throw NewPromiseCompletedException();
+                    this._completed = true;
+                }
                 this._result = result;
                 CompletedContinuations();
             }
             void CompletedContinuations()
             {
-                foreach (var continuation in this._continuations)
+                Action[] continuations;
+                lock (this._continuations)
+                {
+                    continuations = new Action[this._continuations.Count];
+                    for (int i = 0; i < this._continuations.Count; i++)
+                    {
+                        continuations[i] = this._continuations[i];
+                    }
+                    this._continuations.Clear();
+                }
+                for (int i = 0; i < continuations.Length; i++)
                 {
                     try
                     {
-                        continuation();
+                        continuations[i]();
                     }
                     catch (Exception e) { UnityEngine.Debug.LogError(e); }
                 }
-                this._continuations.Clear();
+            }
+            static Exception NewPromiseCompletedException()
+            {
+                return new InvalidOperationException("the promise is completed");
             }
         }
         private class ConfiguredTaskAwaitable<T> : IPromiseAwaitable<T>
@@ -296,11 +466,43 @@ namespace XOR
             {
                 return this._awaiter;
             }
+            public IPromiseAwaitable<T> Then(Action<T> onfulfilled)
+            {
+                if (onfulfilled == null)
+                    return this;
+                this._awaiter.OnCompleted(() =>
+                {
+                    if (this._awaiter.Exception != null)
+                        return;
+                    onfulfilled(this._awaiter.GetResult());
+                });
+                return this;
+            }
+            public IPromiseAwaitable<T> Catch(Action<Exception> onrejected)
+            {
+                if (onrejected == null)
+                    return this;
+                this._awaiter.OnCompleted(() =>
+                {
+                    if (this._awaiter.Exception == null)
+                        return;
+                    onrejected(this._awaiter.Exception);
+                });
+                return this;
+            }
+            public IPromiseAwaitable<T> Finally(Action onfinally)
+            {
+                if (onfinally == null)
+                    return this;
+                this._awaiter.OnCompleted(onfinally);
+                return this;
+            }
         }
         private class ConfiguredTaskAwaiter<T> : IPromiseAwaiter<T>
         {
             private Awaiter<T> _awaiter;
             public bool IsCompleted => this._awaiter.IsCompleted;
+            public Exception Exception { get => this._awaiter.Exception; }
 
             public ConfiguredTaskAwaiter(Awaiter<T> awaiter)
             {
