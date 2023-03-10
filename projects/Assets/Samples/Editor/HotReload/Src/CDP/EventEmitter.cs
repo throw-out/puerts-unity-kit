@@ -187,11 +187,7 @@ namespace CDP
                 this.count = count;
                 if (callback != null)
                 {
-                    this.argTypes = callback.GetType()
-                        .GetMethod("Invoke", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)
-                        .GetParameters()
-                        .Select(p => p.ParameterType)
-                        .ToArray();
+                    this.argTypes = GetDelegateParameters(callback.GetType());
                     this.argCount = this.argTypes.Length;
                 }
                 else
@@ -210,11 +206,11 @@ namespace CDP
                     return;
                 if (_Invoke())
                 {
-                    Complete();
+                    InvokeComplete();
                 }
                 else if (_DynamicInvoke())
                 {
-                    Complete();
+                    InvokeComplete();
                 }
             }
             public void Invoke<T1>(T1 arg1)
@@ -225,13 +221,13 @@ namespace CDP
                     _Invoke()
                 )
                 {
-                    Complete();
+                    InvokeComplete();
                 }
                 else if (_DynamicInvoke(arg1) ||
                     _DynamicInvoke()
                 )
                 {
-                    Complete();
+                    InvokeComplete();
                 }
             }
             public void Invoke<T1, T2>(T1 arg1, T2 arg2)
@@ -243,14 +239,14 @@ namespace CDP
                     _Invoke()
                 )
                 {
-                    Complete();
+                    InvokeComplete();
                 }
                 else if (_DynamicInvoke(arg1, arg2) ||
                     _DynamicInvoke(arg1) || _DynamicInvoke(arg2) ||
                     _DynamicInvoke()
                 )
                 {
-                    Complete();
+                    InvokeComplete();
                 }
             }
             public void Invoke<T1, T2, T3>(T1 arg1, T2 arg2, T3 arg3)
@@ -264,7 +260,7 @@ namespace CDP
                     _Invoke()
                 )
                 {
-                    Complete();
+                    InvokeComplete();
                 }
                 else if (_DynamicInvoke(arg1, arg2, arg3) ||
                     _DynamicInvoke(arg1, arg2) || _DynamicInvoke(arg2, arg3) ||
@@ -272,7 +268,7 @@ namespace CDP
                     _DynamicInvoke()
                 )
                 {
-                    Complete();
+                    InvokeComplete();
                 }
             }
             public void Invoke<T1, T2, T3, T4>(T1 arg1, T2 arg2, T3 arg3, T4 arg4)
@@ -287,7 +283,7 @@ namespace CDP
                     _Invoke()
                 )
                 {
-                    Complete();
+                    InvokeComplete();
                 }
                 else if (_DynamicInvoke(arg1, arg2, arg3, arg4) ||
                     _DynamicInvoke(arg1, arg2, arg3) || _DynamicInvoke(arg2, arg3, arg4) ||
@@ -296,7 +292,7 @@ namespace CDP
                     _DynamicInvoke()
                 )
                 {
-                    Complete();
+                    InvokeComplete();
                 }
             }
 
@@ -445,7 +441,7 @@ namespace CDP
                 return true;
             }
 
-            void Complete()
+            void InvokeComplete()
             {
                 if (count <= 0)
                     return;
@@ -454,6 +450,22 @@ namespace CDP
                 {
                     this.IsCompleted = true;
                 }
+            }
+
+            private static readonly Dictionary<Type, Type[]> _cacheParameters =
+                new Dictionary<Type, Type[]>();
+            private static Type[] GetDelegateParameters(Type delegateType)
+            {
+                Type[] argTypes;
+                if (!_cacheParameters.TryGetValue(delegateType, out argTypes))
+                {
+                    argTypes = delegateType.GetMethod("Invoke", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)
+                        .GetParameters()
+                        .Select(p => p.ParameterType)
+                        .ToArray();
+                    _cacheParameters.Add(delegateType, argTypes);
+                }
+                return argTypes;
             }
         }
     }
