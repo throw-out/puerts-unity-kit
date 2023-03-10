@@ -184,15 +184,13 @@ namespace HR
             if (data == null || string.IsNullOrEmpty(data.url) || string.IsNullOrEmpty(data.scriptId))
                 return;
 
+            if (this.trace) Debug.Log($"scriptParsed: {data.url}");
+
             var scriptId = data.scriptId;
             var filepath = GetFullPath(data.url).Replace("\\", "/");
             if (this.ignoreCase)
             {
                 filepath = filepath.ToLower();
-            }
-            if (this.trace)
-            {
-                Debug.Log($"scriptParsed: {filepath}");
             }
 
             if (this.scriptParsed == null)
@@ -208,16 +206,13 @@ namespace HR
         {
             if (data == null || string.IsNullOrEmpty(data.url) || string.IsNullOrEmpty(data.scriptId))
                 return;
+            if (this.trace) Debug.Log($"scriptFailedToParse: {data.url}");
 
             var scriptId = data.scriptId;
             var filepath = GetFullPath(data.url).Replace("\\", "/");
             if (this.ignoreCase)
             {
                 filepath = filepath.ToLower();
-            }
-            if (this.trace)
-            {
-                Debug.Log($"scriptFailedToParse: {filepath}");
             }
 
             if (this.scriptFailedToParse == null)
@@ -230,8 +225,6 @@ namespace HR
 
         static char[] systemIllegalCharacters = new char[]{
 #if UNITY_STANDALONE_WIN
-            '"'
-#else
             '*',
             '?',
             '"',
@@ -242,7 +235,7 @@ namespace HR
         };
         static string GetFullPath(string url)
         {
-            if (string.IsNullOrEmpty(url) || systemIllegalCharacters.FirstOrDefault(@char => url.Contains(@char)) == default(char))
+            if (string.IsNullOrEmpty(url) || systemIllegalCharacters.Length > 0 && systemIllegalCharacters.FirstOrDefault(@char => url.Contains(@char)) != default(char))
             {
                 return url;
             }
