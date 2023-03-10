@@ -158,6 +158,11 @@ namespace XOR
             }
             public void OnCompleted(Action continuation)
             {
+                /*
+                var operation = System.ComponentModel.AsyncOperationManager.CreateOperation(null);
+                operation.Post(state => continuation(), null);
+                this._awaiter.OnCompleted(operation.OperationCompleted);
+                //*/
                 var syncContext = System.Threading.SynchronizationContext.Current;
                 if (syncContext == null)
                 {
@@ -167,6 +172,10 @@ namespace XOR
                 {
                     syncContext.Post(state => continuation(), null);
                 });
+            }
+            public void UnsafeOnCompleted(Action continuation)
+            {
+                this._awaiter.UnsafeOnCompleted(continuation);
             }
         }
     }
@@ -312,6 +321,10 @@ namespace XOR
                 {
                     syncContext.Post(state => continuation(), null);
                 });
+            }
+            public void UnsafeOnCompleted(Action continuation)
+            {
+                this._awaiter.UnsafeOnCompleted(continuation);
             }
         }
     }
