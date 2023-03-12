@@ -12,13 +12,15 @@ namespace XOR
         //System.Runtime.CompilerServices.ICriticalNotifyCompletion,
         System.Runtime.CompilerServices.INotifyCompletion
     {
+        Exception Exception { get; }
         bool IsCompleted { get; }
         void GetResult();
     }
     public interface IPromiseAwaiter<TResult> :
-           //System.Runtime.CompilerServices.ICriticalNotifyCompletion,
-           System.Runtime.CompilerServices.INotifyCompletion
+        //System.Runtime.CompilerServices.ICriticalNotifyCompletion,
+        System.Runtime.CompilerServices.INotifyCompletion
     {
+        Exception Exception { get; }
         bool IsCompleted { get; }
         TResult GetResult();
     }
@@ -39,11 +41,13 @@ namespace XOR
 
     public sealed class Promise : IPromiseAwaitable
     {
+        private object _locker;
         private Awaiter _awaiter;
         private ConfiguredTaskAwaitable _configuredTaskAwaitable;
 
         public Promise()
         {
+            this._locker = new object();
             this._awaiter = new Awaiter();
         }
         public Promise(PromiseResolve executor) : this()
@@ -112,7 +116,12 @@ namespace XOR
         {
             if (this._configuredTaskAwaitable != null)
                 return;
-            this._configuredTaskAwaitable = new ConfiguredTaskAwaitable(this._awaiter);
+            lock (this._locker)
+            {
+                if (this._configuredTaskAwaitable != null)
+                    return;
+                this._configuredTaskAwaitable = new ConfiguredTaskAwaitable(this._awaiter);
+            }
         }
         private class Awaiter : IPromiseAwaiter
         {
@@ -248,12 +257,15 @@ namespace XOR
         }
         private class ConfiguredTaskAwaiter : IPromiseAwaiter
         {
+            private object _locker;
             private Awaiter _awaiter;
+            private System.ComponentModel.AsyncOperation _operation;
             public bool IsCompleted => this._awaiter.IsCompleted;
             public Exception Exception { get => this._awaiter.Exception; }
 
             public ConfiguredTaskAwaiter(Awaiter awaiter)
             {
+                this._locker = new object();
                 this._awaiter = awaiter;
             }
             public void GetResult()
@@ -266,7 +278,7 @@ namespace XOR
                 var operation = System.ComponentModel.AsyncOperationManager.CreateOperation(null);
                 operation.Post(state => continuation(), null);
                 this._awaiter.OnCompleted(operation.OperationCompleted);
-                //*/
+
                 var syncContext = System.Threading.SynchronizationContext.Current;
                 if (syncContext == null)
                 {
@@ -276,20 +288,48 @@ namespace XOR
                 {
                     syncContext.Post(state => continuation(), null);
                 });
+                //*/
+                if (IsCompleted)
+                {
+                    continuation();
+                    return;
+                }
+                TryCreateAsyncOperation();
+                this._operation.Post(PostCallback, continuation);
             }
             public void UnsafeOnCompleted(Action continuation)
             {
                 this._awaiter.UnsafeOnCompleted(continuation);
             }
+            void TryCreateAsyncOperation()
+            {
+                if (this._operation != null)
+                    return;
+                lock (this._locker)
+                {
+                    if (this._operation != null)
+                        return;
+                    this._operation = System.ComponentModel.AsyncOperationManager.CreateOperation(null);
+                }
+                this._awaiter.OnCompleted(this._operation.OperationCompleted);
+            }
+            static void PostCallback(object continuation)
+            {
+                if (continuation == null || !(continuation is Action))
+                    return;
+                ((Action)continuation)();
+            }
         }
     }
     public sealed class Promise<TResult> : IPromiseAwaitable<TResult>
     {
+        private object _locker;
         private Awaiter<TResult> _awaiter;
         private ConfiguredTaskAwaitable<TResult> _configuredTaskAwaitable;
 
         public Promise()
         {
+            this._locker = new object();
             this._awaiter = new Awaiter<TResult>();
         }
         public Promise(PromiseResolve<TResult> executor) : this()
@@ -358,7 +398,12 @@ namespace XOR
         {
             if (this._configuredTaskAwaitable != null)
                 return;
-            this._configuredTaskAwaitable = new ConfiguredTaskAwaitable<TResult>(this._awaiter);
+            lock (this._locker)
+            {
+                if (this._configuredTaskAwaitable != null)
+                    return;
+                this._configuredTaskAwaitable = new ConfiguredTaskAwaitable<TResult>(this._awaiter);
+            }
         }
 
         private class Awaiter<T> : IPromiseAwaiter<T>
@@ -500,12 +545,16 @@ namespace XOR
         }
         private class ConfiguredTaskAwaiter<T> : IPromiseAwaiter<T>
         {
+            private object _locker;
             private Awaiter<T> _awaiter;
+            private System.ComponentModel.AsyncOperation _operation;
+
             public bool IsCompleted => this._awaiter.IsCompleted;
             public Exception Exception { get => this._awaiter.Exception; }
 
             public ConfiguredTaskAwaiter(Awaiter<T> awaiter)
             {
+                this._locker = new object();
                 this._awaiter = awaiter;
             }
             public T GetResult()
@@ -514,19 +563,35 @@ namespace XOR
             }
             public void OnCompleted(Action continuation)
             {
-                var syncContext = System.Threading.SynchronizationContext.Current;
-                if (syncContext == null)
+                if (IsCompleted)
                 {
-                    throw new InvalidProgramException();
+                    continuation();
+                    return;
                 }
-                this._awaiter.OnCompleted(() =>
-                {
-                    syncContext.Post(state => continuation(), null);
-                });
+                TryCreateAsyncOperation();
+                this._operation.Post(PostCallback, continuation);
             }
             public void UnsafeOnCompleted(Action continuation)
             {
                 this._awaiter.UnsafeOnCompleted(continuation);
+            }
+            void TryCreateAsyncOperation()
+            {
+                if (this._operation != null)
+                    return;
+                lock (this._locker)
+                {
+                    if (this._operation != null)
+                        return;
+                    this._operation = System.ComponentModel.AsyncOperationManager.CreateOperation(null);
+                }
+                this._awaiter.OnCompleted(this._operation.OperationCompleted);
+            }
+            static void PostCallback(object continuation)
+            {
+                if (continuation == null || !(continuation is Action))
+                    return;
+                ((Action)continuation)();
             }
         }
     }
