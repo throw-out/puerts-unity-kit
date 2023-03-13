@@ -26,10 +26,10 @@ namespace XOR
         {
             if (__instance__ == null)
             {
-                if (!IsSetupAssetPath())
-                    return null;
-                __instance__ = Resources.Load<T>(resourceAssetPath);
+                __instance__ = string.IsNullOrEmpty(resourceAssetPath) ? null : Resources.Load<T>(resourceAssetPath);
 #if UNITY_EDITOR
+                if (!IsSetupAssetPath() && !useDefault)
+                    return null;
                 if (createAsset && __instance__ == null)
                 {
                     __instance__ = CreateAssetPath();
