@@ -71,7 +71,9 @@ namespace XOR
 #endif
         }
     }
+#if UNITY_EDITOR
     [UnityEditor.InitializeOnLoad]
+#endif
     public class Settings : ScriptableObject<Settings>
     {
         static Settings() => resourceAssetPath = "XOR/Settings";
