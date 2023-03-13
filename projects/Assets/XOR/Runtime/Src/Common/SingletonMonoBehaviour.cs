@@ -10,12 +10,16 @@ namespace XOR
         {
             get
             {
+                if (__instance != null && __instance.__isDestroyed)
+                {
+                    __instance = null;
+                }
                 return __instance;
             }
         }
         public static T GetInstance()
         {
-            if (__instance == null)
+            if (__instance == null || __instance.__isDestroyed)
             {
                 __instance = GameObject.FindObjectOfType(typeof(T)) as T;
                 if (__instance == null)
@@ -38,7 +42,7 @@ namespace XOR
             if (__instance != null)
             {
                 var singleton = __instance as SingletonMonoBehaviour<T>;
-                Destroy(singleton.gameObject);
+                DestroyImmediate(singleton.gameObject);
                 singleton.Release();
                 __instance = null;
             }

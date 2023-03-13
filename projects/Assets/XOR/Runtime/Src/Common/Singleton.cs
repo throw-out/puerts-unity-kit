@@ -9,12 +9,16 @@ namespace XOR
         {
             get
             {
+                if (__instance != null && __instance.__isDestroyed)
+                {
+                    __instance = null;
+                }
                 return __instance;
             }
         }
         public static T GetInstance()
         {
-            if (__instance == null)
+            if (__instance == null || __instance.__isDestroyed)
             {
                 __instance = Activator.CreateInstance<T>();
                 if (__instance != null)
