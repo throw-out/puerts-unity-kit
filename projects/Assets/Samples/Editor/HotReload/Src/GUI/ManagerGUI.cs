@@ -90,14 +90,21 @@ namespace HR
 
             RenderMenu();
         }
+
         void RenderMenu()
         {
+            GUILayout.BeginHorizontal();
             var newState = EditorGUILayout.Toggle("Save States", saveExecute);
             if (newState != saveExecute)
             {
                 saveExecute = newState;
                 SaveSettings();
             }
+            if (GUILayout.Button("Localhost"))
+            {
+                ScanLocalhost();
+            }
+            GUILayout.EndHorizontal();
         }
         void RenderProfiles()
         {
@@ -172,6 +179,50 @@ namespace HR
             {
                 current.Apply();
                 SaveSettings();
+            }
+        }
+
+
+        async void ScanLocalhost()
+        {
+            try
+            {
+                var ports = await InspectorScanner.GetActiveInspector((token, current, total) =>
+                {
+                    if (token.IsCancelled)
+                        return;
+                    bool cancel = EditorUtility.DisplayCancelableProgressBar("Scanning", $"Progress: {current}/{total}", current / (float)total);
+                    if (cancel)
+                    {
+                        token.Cancel();
+                    }
+                });
+                EditorUtility.ClearProgressBar();
+                if (ports == null || profiles == null)
+                    return;
+                if (ports.Length == 0)
+                {
+                    EditorUtility.DisplayDialog("Scan Complete", $"Inspector: Empty", "OK");
+                    return;
+                }
+                EditorUtility.DisplayDialog("Scan Complete", $"Inspector:\n{string.Join("\n", ports.Select(port => $"ws://localhost:{port}"))}", "OK");
+                foreach (var port in ports)
+                {
+                    if (profiles.FirstOrDefault(p => p.profile.port == port && p.profile.host == "localhost") != null)
+                        continue;
+                    var profile = new Profile()
+                    {
+                        host = "localhost",
+                        port = (ushort)port
+                    };
+                    profiles.Add(new ProfileView(profile));
+                }
+                SaveSettings();
+            }
+            catch (Exception e)
+            {
+                EditorUtility.ClearProgressBar();
+                throw e;
             }
         }
 
