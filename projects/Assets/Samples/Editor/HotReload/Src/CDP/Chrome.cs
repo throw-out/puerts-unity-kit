@@ -43,12 +43,18 @@ namespace CDP
                 throw new InvalidOperationException();
             try
             {
+                var context = System.Threading.SynchronizationContext.Current;
+                if (context == null)
+                {
+                    context = new System.Threading.SynchronizationContext();
+                }
+
                 this.ws = new WebSocket(this.url);
 
-                this.ws.OnOpen += HandleOpen;
-                this.ws.OnClose += HandleClose;
-                this.ws.OnError += HandleError;
-                this.ws.OnMessage += HandleMessage;
+                this.ws.OnOpen += (sender, arg) => context.Post(this.HandleOpen, arg); ;
+                this.ws.OnClose += (sender, arg) => context.Post(this.HandleClose, arg); ;
+                this.ws.OnError += (sender, arg) => context.Post(this.HandleError, arg);
+                this.ws.OnMessage += (sender, arg) => context.Post(this.HandleMessage, arg);
                 this.ws.ConnectAsync();
             }
             catch (Exception e)
@@ -104,20 +110,32 @@ namespace CDP
             });
         }
 
-        private void HandleOpen(object sender, EventArgs args)
+        private void HandleOpen(object args)
         {
+            if (!(args is EventArgs))
+                return;
             this.Emit("open");
         }
-        private void HandleClose(object sender, CloseEventArgs args)
+        private void HandleClose(object args)
         {
-            this.Emit("close", args.Code, args.Reason);
+            if (!(args is CloseEventArgs))
+                return;
+            var data = args as CloseEventArgs;
+            this.Emit("close", data.Code, data.Reason);
         }
-        private void HandleError(object sender, ErrorEventArgs args)
+        private void HandleError(object args)
         {
-            this.Emit("error", args.Message);
+            if (!(args is ErrorEventArgs))
+                return;
+            var data = args as ErrorEventArgs;
+            this.Emit("error", data.Message);
         }
-        private void HandleMessage(object sender, MessageEventArgs data)
+        private void HandleMessage(object args)
         {
+            if (!(args is MessageEventArgs))
+                return;
+            var data = args as MessageEventArgs;
+
             this.Emit("message", data.Data);
 
             CommandResponse msg = JSON.DeserializeObject<CommandResponse>(data.Data);

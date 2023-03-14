@@ -108,11 +108,9 @@ namespace HR
         }
         public IEnumerable<string> GetScriptLoaded()
         {
-            if (this.scriptLoaded != null)
-            {
-                return this.scriptLoaded.ToArray();
-            }
-            return null;
+            if (this.scriptLoaded == null)
+                return null;
+            return this.scriptLoaded;
         }
 
         async void PushUpdate(string filepath)
