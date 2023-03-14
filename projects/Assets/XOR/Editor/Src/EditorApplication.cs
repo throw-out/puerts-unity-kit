@@ -109,6 +109,7 @@ namespace XOR
     internal static class EditorApplicationHandler
     {
 #if UNITY_EDITOR
+        /*
         static EditorApplicationHandler()
         {
             RegisterHandlers();
@@ -123,6 +124,7 @@ namespace XOR
         {
             //UnityEngine.Debug.Log("PostProcessBuild");
         }
+        //*/
         static void RegisterHandlers()
         {
             UnityEditor.EditorApplication.update += UpdateHandler;

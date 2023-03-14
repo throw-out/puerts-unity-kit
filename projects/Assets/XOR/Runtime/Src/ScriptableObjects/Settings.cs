@@ -26,10 +26,10 @@ namespace XOR
         {
             if (__instance__ == null)
             {
-                __instance__ = string.IsNullOrEmpty(resourceAssetPath) ? null : Resources.Load<T>(resourceAssetPath);
-#if UNITY_EDITOR
                 if (!IsSetupAssetPath() && !useDefault)
                     return null;
+                __instance__ = string.IsNullOrEmpty(resourceAssetPath) ? null : Resources.Load<T>(resourceAssetPath);
+#if UNITY_EDITOR
                 if (createAsset && __instance__ == null)
                 {
                     __instance__ = CreateAssetPath();
@@ -44,6 +44,11 @@ namespace XOR
         }
         static bool IsSetupAssetPath()
         {
+            if (resourceAssetPath == null)
+            {
+                UnityEngine.ScriptableObject.CreateInstance<T>();       //invoke static constructor
+                if (resourceAssetPath == null) resourceAssetPath = string.Empty;
+            }
             if (string.IsNullOrEmpty(resourceAssetPath))
             {
                 Debug.LogWarning($"{typeof(T).FullName} not setup {nameof(resourceAssetPath)}");

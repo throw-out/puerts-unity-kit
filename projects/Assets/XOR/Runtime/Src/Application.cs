@@ -69,7 +69,7 @@ namespace XOR
             Env.TryAutoUsing();
             Env.TryAutoInterfaceBridge();
             Env.RequireXORModules();
-#if !UNITY_EDITOR && UNITY_WEBGL
+#if UNITY_EDITOR || !UNITY_WEBGL
             Env.SupportCommonJS();
 #endif
 #if UNITY_EDITOR

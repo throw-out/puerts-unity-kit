@@ -198,6 +198,10 @@ namespace XOR
         /// <param name="filepath"></param>
         internal static void Load(this JsEnv env, string filepath)
         {
+            if (filepath != null && (filepath.StartsWith("./") || filepath.StartsWith(".\\")))
+            {
+                filepath = filepath.Substring(2);
+            }
 #if UNITY_EDITOR || !UNITY_WEBGL
             ILoader loader = Helper.GetLoader(env, false);
             if (loader == null || !loader.FileExists(filepath))
@@ -222,6 +226,10 @@ namespace XOR
         /// </summary>
         internal static TResult Load<TResult>(this JsEnv env, string filepath, string exportee = "")
         {
+            if (filepath != null && (filepath.StartsWith("./") || filepath.StartsWith(".\\")))
+            {
+                filepath = filepath.Substring(2);
+            }
 #if UNITY_EDITOR || !UNITY_WEBGL
             ILoader loader = Helper.GetLoader(env, false);
             if (loader == null || !loader.FileExists(filepath))
