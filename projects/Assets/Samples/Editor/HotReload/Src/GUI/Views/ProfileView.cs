@@ -10,11 +10,14 @@ namespace HR
     internal class ProfileView : IDisposable
     {
         const float HEADER_WIDTH = 100f;
+        const float HEADER_BUTTON_WIDTH = 20f;
         internal readonly Profile profile;
         private Debugger debugger;
         private FileWacher watcher;
         private List<string> extnames;
         private DateTime nextRetry = DateTime.MinValue;
+
+        private Vector2 scriptViewPosition = Vector2.zero;
 
         public string Name => string.IsNullOrEmpty(profile.name) ? $"{profile.host}:{profile.port}" : profile.name;
         public bool IsOpen => debugger != null && debugger.IsOpen;
@@ -47,11 +50,6 @@ namespace HR
                 Debug.LogError($"host is empty.");
                 return;
             }
-            if (!IsReadyPath)
-            {
-                Debug.LogError($"The path is empty or does not exist: {profile.path}.");
-                return;
-            }
             if (debugger == null)
             {
                 debugger = new Debugger();
@@ -62,7 +60,9 @@ namespace HR
             debugger.startupCheck = profile.startupCheck;
             debugger.Open(profile.host, profile.port);
 
-            StartWatcher();
+            StopWatcher();
+            if (IsReadyPath) StartWatcher();
+
             Execute = true;
         }
         public void Stop()
@@ -91,6 +91,7 @@ namespace HR
             {
                 RendererConfig();
             }
+            RenderScriptParsed();
         }
         public void Tick()
         {
@@ -103,7 +104,7 @@ namespace HR
             else if (DateTime.Now > nextRetry)
             {
                 nextRetry = DateTime.MinValue;
-                if (IsReadyHost && IsReadyPath) Start();
+                if (IsReadyHost) Start();
             }
         }
 
@@ -279,6 +280,39 @@ namespace HR
                 Dirty |= true;
             }
         }
+        void RenderScriptParsed()
+        {
+            GUILayout.BeginHorizontal();
+            GUILayout.Label("Script Parsed", GUILayout.Width(HEADER_WIDTH));
+            GUILayout.EndHorizontal();
+
+            GUILayout.Space(5f);
+            GUILayout.BeginHorizontal("HelpBox");
+            GUILayout.Space(5f);
+            RenderScriptContent();
+            GUILayout.Space(5f);
+            GUILayout.EndHorizontal();
+        }
+        void RenderScriptContent()
+        {
+            scriptViewPosition = GUILayout.BeginScrollView(scriptViewPosition);
+            var scripts = debugger != null ? debugger.GetScriptLoaded() : null;
+            if (scripts != null)
+            {
+                foreach (var script in scripts)
+                {
+                    GUILayout.BeginHorizontal();
+                    if (GUILayout.Button("I", GUILayout.Width(HEADER_BUTTON_WIDTH)))
+                    {
+                        ScriptUtil.PrintScriptInfo(script);
+                    }
+                    GUILayout.Label(script);
+                    GUILayout.EndHorizontal();
+                }
+            }
+            GUILayout.EndScrollView();
+        }
+
         public void Dispose()
         {
             this.Stop();
@@ -292,5 +326,6 @@ namespace HR
         static GUIContent Reconnect = new GUIContent("Reconnect", "连接断开时, 自动重连.");
         static GUIContent ReconnectDelay = new GUIContent("Reconnect Delay", "重连延迟");
         static GUIContent Extname = new GUIContent("Extname", "监听的文件类型");
+
     }
 }

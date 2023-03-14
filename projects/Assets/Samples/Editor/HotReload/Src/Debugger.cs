@@ -23,6 +23,7 @@ namespace HR
         private CDP.Domains.Debugger debugger;
         private CDP.Domains.Runtime runtime;
 
+        private HashSet<string> scriptLoaded;
         private Dictionary<string, string> scriptParsed;
         private Dictionary<string, string> scriptFailedToParse;
         private Dictionary<string, Locker> scriptLocks;
@@ -80,6 +81,7 @@ namespace HR
             this.chrome = null;
             this.debugger = null;
             this.runtime = null;
+            this.scriptLoaded = null;
             this.scriptParsed = null;
             this.scriptFailedToParse = null;
 
@@ -103,6 +105,14 @@ namespace HR
                 filepath = filepath.ToLower();
             }
             this.PushUpdate(filepath);
+        }
+        public IEnumerable<string> GetScriptLoaded()
+        {
+            if (this.scriptLoaded != null)
+            {
+                return this.scriptLoaded.ToArray();
+            }
+            return null;
         }
 
         async void PushUpdate(string filepath)
@@ -193,12 +203,17 @@ namespace HR
                 filepath = filepath.ToLower();
             }
 
+            if (this.scriptLoaded == null)
+            {
+                this.scriptLoaded = new HashSet<string>();
+            }
             if (this.scriptParsed == null)
             {
                 this.scriptParsed = new Dictionary<string, string>();
             }
             this.scriptParsed[scriptId] = filepath;
             this.scriptParsed[filepath] = scriptId;
+            this.scriptLoaded.Add(data.url);
 
             if (this.startupCheck) PushUpdate(filepath);
         }
