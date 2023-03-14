@@ -1,3 +1,5 @@
+#pragma warning disable
+
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -76,6 +78,8 @@ namespace CDP
             ProtocolGenertor genertor = new ProtocolGenertor(protocol);
 
             return $@"
+#pragma warning disable
+
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
