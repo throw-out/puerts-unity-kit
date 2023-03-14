@@ -134,7 +134,6 @@ namespace HR
                 if (GUILayout.Button("x", GUILayout.Width(20f)))
                 {
                     removeIndex = i;
-
                 }
                 GUILayout.EndHorizontal();
             }
@@ -147,6 +146,7 @@ namespace HR
                 {
                     current = removeIndex < profiles.Count - 1 ? profiles[removeIndex + 1] : removeIndex > 0 ? profiles[removeIndex - 1] : null;
                 }
+                profiles[removeIndex].Stop();
                 profiles.RemoveAt(removeIndex);
                 SaveSettings();
             }
