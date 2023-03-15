@@ -100,9 +100,9 @@ namespace HR
                 saveExecute = newState;
                 SaveSettings();
             }
-            if (GUILayout.Button("Localhost"))
+            if (GUILayout.Button("Local Network"))
             {
-                ScanLocalhost();
+                ScanLocalListeners();
             }
             GUILayout.EndHorizontal();
         }
@@ -183,7 +183,7 @@ namespace HR
         }
 
 
-        async void ScanLocalhost()
+        async void ScanLocalListeners()
         {
             try
             {
@@ -191,7 +191,7 @@ namespace HR
                 {
                     if (token.IsCancelled)
                         return;
-                    bool cancel = EditorUtility.DisplayCancelableProgressBar("Scanning", $"Progress: {current}/{total}", current / (float)total);
+                    bool cancel = EditorUtility.DisplayCancelableProgressBar("Scanning", $"Scan Local Listeners: {current}/{total}", current / (float)total);
                     if (cancel)
                     {
                         token.Cancel();

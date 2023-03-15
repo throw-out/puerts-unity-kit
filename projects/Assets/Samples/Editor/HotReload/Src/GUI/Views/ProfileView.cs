@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using UnityEditor;
 using UnityEngine;
 
@@ -11,12 +12,16 @@ namespace HR
     {
         const float HEADER_WIDTH = 100f;
         const float HEADER_BUTTON_WIDTH = 20f;
+        const int PAGE_COUNT = 50;
+
         internal readonly Profile profile;
         private Debugger debugger;
         private FileWacher watcher;
         private List<string> extnames;
         private DateTime nextRetry = DateTime.MinValue;
 
+        private int scriptPage;
+        private static bool scrnetMenu = true;
         private Vector2 scriptViewPosition = Vector2.zero;
 
         public string Name => string.IsNullOrEmpty(profile.name) ? $"{profile.host}:{profile.port}" : profile.name;
@@ -282,31 +287,64 @@ namespace HR
         }
         void RenderScriptParsed()
         {
+            var scriptUrls = debugger != null ? debugger.GetScriptUrls() : null;
+            var scriptCount = scriptUrls != null ? scriptUrls.Count() : 0;
+            var totalPage = (scriptCount / PAGE_COUNT) + (scriptCount % PAGE_COUNT != 0 ? 1 : 0);
+            scriptPage = totalPage == 0 ? 0 : scriptPage > totalPage - 1 ? totalPage - 1 : scriptPage < 0 ? 0 : scriptPage;
+
             GUILayout.BeginHorizontal();
             GUILayout.Label("Script Parsed", GUILayout.Width(HEADER_WIDTH));
+
+            GUILayout.FlexibleSpace();
+            scrnetMenu = GUILayout.Toggle(scrnetMenu, "Menu");
+            if (GUILayout.Button("←", GUILayout.Width(HEADER_BUTTON_WIDTH)) && scriptPage > 0)
+            {
+                scriptPage--;
+                scriptViewPosition = Vector2.zero;
+            }
+            GUILayout.Label($"Page: {scriptPage * PAGE_COUNT}/{scriptCount}", GUILayout.Width(HEADER_WIDTH));
+            if (GUILayout.Button("→", GUILayout.Width(HEADER_BUTTON_WIDTH)) && scriptPage < totalPage - 1)
+            {
+                scriptPage++;
+                scriptViewPosition = Vector2.zero;
+            }
             GUILayout.EndHorizontal();
 
             GUILayout.Space(5f);
             GUILayout.BeginHorizontal("HelpBox");
             GUILayout.Space(5f);
-            RenderScriptContent();
+            RenderScriptContent(scriptUrls);
             GUILayout.Space(5f);
             GUILayout.EndHorizontal();
         }
-        void RenderScriptContent()
+        void RenderScriptContent(IEnumerable<string> scriptUrls)
         {
             scriptViewPosition = GUILayout.BeginScrollView(scriptViewPosition);
-            var scripts = debugger != null ? debugger.GetScriptLoaded() : null;
-            if (scripts != null)
+            if (scriptUrls != null)
             {
-                foreach (var script in scripts)
+                int index = 0, startIndex = scriptPage * PAGE_COUNT, endIndex = startIndex + PAGE_COUNT;
+                foreach (var url in scriptUrls)
                 {
+                    index++;
+                    if (index <= startIndex || index > endIndex)
+                        continue;
                     GUILayout.BeginHorizontal();
-                    if (GUILayout.Button("I", GUILayout.Width(HEADER_BUTTON_WIDTH)))
+                    if (scrnetMenu)
                     {
-                        ScriptUtil.PrintScriptInfo(script);
+                        if (GUILayout.Button("I", GUILayout.Width(HEADER_BUTTON_WIDTH)))
+                        {
+                            ScriptUtil.PrintScriptInfo(url);
+                        }
+                        if (GUILayout.Button("S", GUILayout.Width(HEADER_BUTTON_WIDTH)))
+                        {
+                            ScriptUtil.SaveScript(this.debugger, url);
+                        }
+                        if (GUILayout.Button("U", GUILayout.Width(HEADER_BUTTON_WIDTH)))
+                        {
+                            ScriptUtil.UpdateScript(this.debugger, url);
+                        }
                     }
-                    GUILayout.Label(script);
+                    GUILayout.Label($"{index}. {url}");
                     GUILayout.EndHorizontal();
                 }
             }
@@ -326,6 +364,5 @@ namespace HR
         static GUIContent Reconnect = new GUIContent("Reconnect", "连接断开时, 自动重连.");
         static GUIContent ReconnectDelay = new GUIContent("Reconnect Delay", "重连延迟");
         static GUIContent Extname = new GUIContent("Extname", "监听的文件类型");
-
     }
 }

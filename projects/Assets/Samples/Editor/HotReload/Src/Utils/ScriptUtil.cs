@@ -1,6 +1,8 @@
 namespace HR
 {
+    using System;
     using System.IO;
+    using UnityEditor;
     using UnityEngine;
     using JSON = Newtonsoft.Json.JsonConvert;
     public static class ScriptUtil
@@ -29,6 +31,71 @@ namespace HR
 <b>TSFile</b>: {source}
 <b>TSExists</b>: {sourceExists}
 ");
+        }
+
+        public static void UpdateScript(Debugger debugger, string filepath)
+        {
+            try
+            {
+                string dirpath = Path.GetDirectoryName(filepath);
+                if (!Directory.Exists(dirpath))
+                {
+                    dirpath = Path.GetDirectoryName(UnityEngine.Application.dataPath);
+                }
+                string path = UnityEditor.EditorUtility.OpenFilePanel(
+                    $"Update: {filepath}",
+                    dirpath,
+                    null
+                );
+                if (string.IsNullOrEmpty(path) || !File.Exists(path))
+                    return;
+
+                debugger.Update(filepath, File.ReadAllText(path));
+            }
+            catch (Exception e)
+            {
+                Debug.LogError(e);
+            }
+        }
+        public static async void SaveScript(Debugger debugger, string filepath)
+        {
+            EditorUtility.DisplayProgressBar("Reading", string.Empty, 0);
+            try
+            {
+                string dirpath = Path.GetDirectoryName(filepath);
+                if (!Directory.Exists(dirpath))
+                {
+                    dirpath = Path.GetDirectoryName(UnityEngine.Application.dataPath);
+                }
+
+                var scriptSource = await debugger.GetScriptSource(filepath);
+                if (string.IsNullOrEmpty(scriptSource))
+                {
+                    Debug.LogWarning($"ScriptSource is empty: {filepath}");
+                    return;
+                }
+                EditorUtility.ClearProgressBar();
+                string path = UnityEditor.EditorUtility.SaveFilePanel(
+                    $"Save: {filepath}",
+                    dirpath,
+                    null,
+                    null
+                );
+                if (string.IsNullOrEmpty(path))
+                    return;
+                dirpath = Path.GetDirectoryName(path);
+                if (!Directory.Exists(dirpath)) Directory.CreateDirectory(dirpath);
+                File.WriteAllText(path, scriptSource);
+                EditorUtility.RevealInFinder(path);
+            }
+            catch (Exception e)
+            {
+                Debug.LogError(e);
+            }
+            finally
+            {
+                EditorUtility.ClearProgressBar();
+            }
         }
 
         static string ReadFileLastLine(string file)

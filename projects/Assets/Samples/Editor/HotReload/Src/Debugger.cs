@@ -23,7 +23,7 @@ namespace HR
         private CDP.Domains.Debugger debugger;
         private CDP.Domains.Runtime runtime;
 
-        private HashSet<string> scriptLoaded;
+        private HashSet<string> scriptUrls;
         private Dictionary<string, string> scriptParsed;
         private Dictionary<string, string> scriptFailedToParse;
         private Dictionary<string, Locker> scriptLocks;
@@ -81,7 +81,7 @@ namespace HR
             this.chrome = null;
             this.debugger = null;
             this.runtime = null;
-            this.scriptLoaded = null;
+            this.scriptUrls = null;
             this.scriptParsed = null;
             this.scriptFailedToParse = null;
 
@@ -90,6 +90,12 @@ namespace HR
         }
         public void Update(string filepath)
         {
+            if (HasSystemIllegalCharacters(filepath) || !File.Exists(filepath))
+                return;
+            this.Update(filepath, File.ReadAllText(filepath));
+        }
+        public void Update(string filepath, string scriptSource)
+        {
             if (!this.IsOpen)
                 throw new InvalidOperationException("socket is closed!");
 
@@ -97,38 +103,45 @@ namespace HR
             {
                 Debug.Log($"chaneg: {filepath}");
             }
-            if (this.scriptParsed == null)
-                return;
-            filepath = Path.GetFullPath(filepath).Replace("\\", "/");
-            if (this.ignoreCase)
-            {
-                filepath = filepath.ToLower();
-            }
-            this.PushUpdate(filepath);
+            filepath = GetNormalizePath(filepath, this.ignoreCase);
+            this.PushUpdate(GetNormalizePath(filepath, this.ignoreCase), scriptSource);
         }
-        public IEnumerable<string> GetScriptLoaded()
+        public IEnumerable<string> GetScriptUrls()
         {
-            if (this.scriptLoaded == null)
+            return this.scriptUrls;
+        }
+        public async Task<string> GetScriptSource(string filepath)
+        {
+            if (!this.IsOpen)
+                throw new InvalidOperationException("socket is closed!");
+            filepath = GetNormalizePath(filepath, this.ignoreCase);
+
+            string scriptId;
+            if (this.scriptParsed == null || !this.scriptParsed.TryGetValue(filepath, out scriptId))
                 return null;
-            return this.scriptLoaded;
+            var exist = await this.debugger.GetScriptSource(new CDP.Domains.Debugger.GetScriptSourceParameters()
+            {
+                scriptId = scriptId
+            });
+            if (exist != null)
+            {
+                return exist.scriptSource;
+            }
+            return null;
         }
 
-        async void PushUpdate(string filepath)
+        async void PushUpdate(string filepath, string scriptSource)
         {
             string scriptId;
-            if (!this.scriptParsed.TryGetValue(filepath, out scriptId))
+            if (this.scriptParsed == null || !this.scriptParsed.TryGetValue(filepath, out scriptId))
                 return;
-            if (!File.Exists(filepath))
-                return;
-            string scriptSource = File.ReadAllText(filepath);
             scriptSource = ("(function (exports, require, module, __filename, __dirname) { " + scriptSource + "\n});");
-
             //当前缓存的数据源已经同步
-            if (GetScriptSource(scriptId) == scriptSource)
+            if (GetLockScriptSource(scriptId) == scriptSource)
                 return;
             //lock request
             var @lock = await Lock(scriptId);
-            SetScriptSources(scriptId, scriptSource);
+            SetLockScriptSource(scriptId, scriptSource);
             try
             {
                 if (this.debugger == null)
@@ -152,7 +165,7 @@ namespace HR
             }
             finally
             {
-                SetScriptSources(scriptId, null);
+                SetLockScriptSource(scriptId, null);
                 @lock.Release();    //release lock
             }
         }
@@ -170,7 +183,7 @@ namespace HR
             }
             return await locker.Acquire(0);
         }
-        void SetScriptSources(string key, string scriptSource)
+        void SetLockScriptSource(string key, string scriptSource)
         {
             if (this.scriptSources == null)
             {
@@ -178,7 +191,7 @@ namespace HR
             }
             this.scriptSources[key] = scriptSource;
         }
-        string GetScriptSource(string key)
+        string GetLockScriptSource(string key)
         {
             string scriptSource;
             if (this.scriptSources != null && this.scriptSources.TryGetValue(key, out scriptSource))
@@ -195,15 +208,11 @@ namespace HR
             if (this.trace) Debug.Log($"scriptParsed: {data.url}");
 
             var scriptId = data.scriptId;
-            var filepath = GetFullPath(data.url).Replace("\\", "/");
-            if (this.ignoreCase)
-            {
-                filepath = filepath.ToLower();
-            }
+            var filepath = GetNormalizePath(data.url, this.ignoreCase);
 
-            if (this.scriptLoaded == null)
+            if (this.scriptUrls == null)
             {
-                this.scriptLoaded = new HashSet<string>();
+                this.scriptUrls = new HashSet<string>();
             }
             if (this.scriptParsed == null)
             {
@@ -211,9 +220,9 @@ namespace HR
             }
             this.scriptParsed[scriptId] = filepath;
             this.scriptParsed[filepath] = scriptId;
-            this.scriptLoaded.Add(data.url);
+            this.scriptUrls.Add(data.url);
 
-            if (this.startupCheck) PushUpdate(filepath);
+            if (this.startupCheck) Update(data.url);
         }
         void ScriptFailedToParseHandler(CDP.Domains.Debugger.OnScriptFailedToParseParameters data)
         {
@@ -222,11 +231,7 @@ namespace HR
             if (this.trace) Debug.Log($"scriptFailedToParse: {data.url}");
 
             var scriptId = data.scriptId;
-            var filepath = GetFullPath(data.url).Replace("\\", "/");
-            if (this.ignoreCase)
-            {
-                filepath = filepath.ToLower();
-            }
+            var filepath = GetNormalizePath(data.url, this.ignoreCase);
 
             if (this.scriptFailedToParse == null)
             {
@@ -246,13 +251,23 @@ namespace HR
             '|',
 #endif
         };
-        static string GetFullPath(string url)
+        static bool HasSystemIllegalCharacters(string path)
         {
-            if (string.IsNullOrEmpty(url) || systemIllegalCharacters.Length > 0 && systemIllegalCharacters.FirstOrDefault(@char => url.Contains(@char)) != default(char))
+            return systemIllegalCharacters.Length > 0 && systemIllegalCharacters.FirstOrDefault(@char => path.Contains(@char)) != default(char);
+        }
+        static string GetNormalizePath(string path, bool ignoreCase)
+        {
+            if (string.IsNullOrEmpty(path))
+                return path;
+            if (!HasSystemIllegalCharacters(path))
             {
-                return url;
+                path = Path.GetFullPath(path);
             }
-            return Path.GetFullPath(url);
+            if (ignoreCase)
+            {
+                path = path.ToLower();
+            }
+            return path.Replace("\\", "/");
         }
         static async Task ConnectTo(CDP.Chrome chrome)
         {
