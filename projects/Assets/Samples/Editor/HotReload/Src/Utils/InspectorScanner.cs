@@ -58,34 +58,36 @@ namespace HR
         {
             try
             {
-                var http = new HttpClient();
-                http.Timeout = TimeSpan.FromMilliseconds(timeout > 0 ? timeout : NETWORK_TIMEOUT);
+                using (var http = new HttpClient())
+                {
+                    http.Timeout = TimeSpan.FromMilliseconds(timeout > 0 ? timeout : NETWORK_TIMEOUT);
 
-                var response = await http.GetAsync(url).ConfigureAwait(true);
-                if (response == null || response.StatusCode != HttpStatusCode.OK ||
-                    response.Content == null)
-                {
-                    return null;
-                }
-                var data = await response.Content.ReadAsStringAsync().ConfigureAwait(true);
-                if (string.IsNullOrEmpty(data))
-                {
-                    return null;
-                }
-                if (data.StartsWith("{"))
-                {
-                    try
+                    var response = await http.GetAsync(url).ConfigureAwait(true);
+                    if (response == null || response.StatusCode != HttpStatusCode.OK ||
+                        response.Content == null)
                     {
-                        var protocol = JSON.DeserializeObject<Protocol>(data);
-                        return new Protocol[] { protocol };
+                        return null;
                     }
-                    catch (Exception e)
+                    var data = await response.Content.ReadAsStringAsync().ConfigureAwait(true);
+                    if (string.IsNullOrEmpty(data))
                     {
-                        Debug.LogError(e);
+                        return null;
                     }
-                    return null;
+                    if (data.StartsWith("{"))
+                    {
+                        try
+                        {
+                            var protocol = JSON.DeserializeObject<Protocol>(data);
+                            return new Protocol[] { protocol };
+                        }
+                        catch (Exception e)
+                        {
+                            Debug.LogError(e);
+                        }
+                        return null;
+                    }
+                    return JSON.DeserializeObject<Protocol[]>(data);
                 }
-                return JSON.DeserializeObject<Protocol[]>(data);
             }
             catch (Exception /*e*/)
             {
