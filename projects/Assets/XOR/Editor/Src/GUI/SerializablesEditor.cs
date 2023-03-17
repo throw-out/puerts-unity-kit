@@ -1511,7 +1511,7 @@ namespace XOR.Serializables.TsProperties
                             var o = arr.GetValue(j);
                             if (o != null && !o.Equals(null))
                             {
-                                typeStr = "System.Array$1<" + GetTypeName(o.GetType(), useFullname) + ">";
+                                typeStr = $"{GetTypeName(o.GetType(), useFullname)}[]";
                                 break;
                             }
                         }
@@ -1651,6 +1651,23 @@ namespace XOR.Serializables.TsProperties
             }
         }
 
+        static Dictionary<Type, string> typeMappings = new Dictionary<Type, string>()
+        {
+            {typeof(bool), "boolean"},
+            {typeof(string), "string"},
+            {typeof(long), "bigint"},
+            {typeof(ulong), "bigint"},
+            {typeof(float), "number"},
+            {typeof(double), "number"},
+            {typeof(int), "number"},
+            {typeof(uint), "number"},
+            {typeof(short), "number"},
+            {typeof(ushort), "number"},
+            {typeof(char), "number"},
+            {typeof(byte), "number"},
+            {typeof(sbyte), "number"},
+            {typeof(DateTime), "Date"},
+        };
         static string GetTypeName(Type type, bool useFullname)
         {
             if (type == null)
@@ -1658,17 +1675,10 @@ namespace XOR.Serializables.TsProperties
             //Array Type
             if (type.IsArray)
                 return $"{GetTypeName(type.GetElementType(), useFullname)}[]";
-            //Value Mapping
-            if (type.Equals(typeof(double)) || type.Equals(typeof(float)) || type.Equals(typeof(int)) || type.Equals(typeof(long)))
-                return "number";
-            if (type.Equals(typeof(long)))
-                return "bigint";
-            if (type.Equals(typeof(string)) || type.Equals(typeof(char)))
-                return "string";
-            if (type.Equals(typeof(bool)))
-                return "boolean";
-            if (type.Equals(typeof(DateTime)))
-                return "Date";
+            if (typeMappings.TryGetValue(type, out string name))
+            {
+                return name;
+            }
             return useFullname ? type.FullName.Replace("+", ".") : type.Name;
         }
     }
