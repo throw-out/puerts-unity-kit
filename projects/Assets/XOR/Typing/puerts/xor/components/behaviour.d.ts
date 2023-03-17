@@ -299,7 +299,14 @@ declare class TsBehaviourConstructor {
 interface TsBehaviourConstructor extends IBehaviour, IGizmos, IOnPointerHandler, IOnDragHandler, IOnMouse, IOnCollision, IOnCollision2D, IOnTrigger, IOnTrigger2D {
 }
 declare namespace TsBehaviourConstructor {
-    /**将C# TsPropertys中的属性绑定到obj对象上
+    /**获取IAccessor中的属性
+     * @param accessor
+     * @returns
+     */
+    function getAccessorProperties(accessor: AccessorType): {
+        [key: string]: any;
+    };
+    /**将C# IAccessor中的属性绑定到obj对象上
      * @param object
      * @param accessor
      * @param bind       运行时绑定

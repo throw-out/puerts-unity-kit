@@ -721,7 +721,72 @@ namespace TsBehaviourConstructor {
         return results;
     }
 
-    /**将C# TsPropertys中的属性绑定到obj对象上
+    const WatchFlag = Symbol("--watch--");
+    const WatchFunctions: typeof Array.prototype = ["pop", "push", "reverse", "shift", "sort", "splice", "unshift"];
+    function watch<T>(obj: T, change: () => void) {
+        if (!obj || !Array.isArray(obj))
+            return obj;
+        let functions: { [property: string | symbol]: Function } = {};
+
+        Object.defineProperty(obj, WatchFlag, {
+            value: change,
+            configurable: true,
+            enumerable: false,
+            writable: false,
+        });
+        return new Proxy(obj, {
+            get: function (target, property) {
+                if (WatchFlag in target && WatchFunctions.includes(property)) {
+                    if (!(property in functions)) {
+                        functions[property] = new Proxy(<Function>Array.prototype[property], {
+                            apply: function (target, thisArg, argArray) {
+                                let result = target.apply(thisArg, argArray);
+                                if (WatchFlag in thisArg) {
+                                    (<Function>thisArg[WatchFlag])();
+                                }
+                                return result;
+                            }
+                        });
+                    }
+                    return functions[property];
+                }
+                return target[property];
+            },
+            set: function (target, property, newValue) {
+                target[property] = newValue;
+                if (WatchFlag in target) {
+                    (<Function>target[WatchFlag])();
+                }
+                return true;
+            }
+        });
+    }
+    function unwatch<T>(obj: T) {
+        if (typeof (obj) !== "object")
+            return;
+        delete obj[WatchFlag];
+    }
+
+    /**获取IAccessor中的属性
+     * @param accessor 
+     * @returns 
+     */
+    export function getAccessorProperties(accessor: AccessorType) {
+        let results: { [key: string]: any } = {};
+
+        let properties = accessor.GetProperties();
+        if (properties && properties.Length > 0) {
+            for (let i = 0; i < properties.Length; i++) {
+                let { key, value } = properties.get_Item(i);
+                if (value && value instanceof CS.System.Array) {
+                    value = toArray(value);
+                }
+                results[key] = value;
+            }
+        }
+        return results;
+    }
+    /**将C# IAccessor中的属性绑定到obj对象上
      * @param object 
      * @param accessor 
      * @param bind       运行时绑定
@@ -736,48 +801,42 @@ namespace TsBehaviourConstructor {
         for (let accessor of list) {
             if (!accessor || accessor.Equals(null))
                 continue;
-            let properties = accessor.GetProperties();
-            if (!properties || properties.Length === 0)
+            let properties = getAccessorProperties(accessor),
+                keys = Object.keys(properties);
+            if (keys.length === 0)
                 continue;
 
-            let values: { [key: string]: any } = {};
-            for (let i = 0; i < properties.Length; i++) {
-                let { key, value } = properties.get_Item(i);
-                if (value && value instanceof CS.System.Array) {
-                    value = toArray(value);
-                }
-                values[key] = value;
-            }
-            if (isEditor) {
-                if (bind) {
-                    accessor.SetPropertyListener((key, newValue) => {
-                        if (newValue && newValue instanceof CS.System.Array) {
-                            newValue = toArray(newValue);
-                        }
-                        values[key] = newValue;
+            if (isEditor && bind) {
+                let set = (key: string, newValue: any) => {
+                    unwatch(properties[key]);
+                    properties[key] = watch(newValue, () => {
+                        accessor.SetProperty(key, Array.isArray(newValue) ? toCSharpArray(newValue) : newValue);
                     });
-                }
-                for (let key in values) {
+                };
+                accessor.SetPropertyListener((key, newValue) => {
+                    if (newValue && newValue instanceof CS.System.Array) {
+                        newValue = toArray(newValue);
+                    }
+                    set(key, newValue);
+                });
+                for (let key of keys) {
                     if (key in object) {
                         console.warn(`Object ${object}(${object["name"]}) already exists prop '${key}' ---> ${object[key]}`);
                     }
-                    if (bind) {
-                        Object.defineProperty(object, key, {
-                            get: () => values[key],
-                            set: (newValue) => {
-                                values[key] = newValue;
-                                accessor.SetProperty(key, Array.isArray(newValue) ? toCSharpArray(newValue) : newValue);
-                            },
-                            configurable: true,
-                            enumerable: true,
-                        });
-                    } else {
-                        object[key] = values[key];
-                    }
+                    set(key, properties[key]);
+                    Object.defineProperty(object, key, {
+                        get: () => properties[key],
+                        set: (newValue) => {
+                            set(key, newValue);
+                            accessor.SetProperty(key, Array.isArray(newValue) ? toCSharpArray(newValue) : newValue);
+                        },
+                        configurable: true,
+                        enumerable: true,
+                    });
                 }
             }
             else {
-                Object.assign(object, values);
+                Object.assign(object, properties);
             }
         }
     }
