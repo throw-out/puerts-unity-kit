@@ -1,6 +1,18 @@
 import * as fs from "fs";
+import * as url from "url";
 import * as path from "path";
 import minimist from "minimist";
+
+/**获取文件绝对路径
+ * @param {string} target 
+ */
+function fullname(target) {
+    if (target.startsWith(".")) {
+        let __dirname = path.dirname(url.fileURLToPath(import.meta.url));
+        target = path.join(__dirname, target);
+    }
+    return target;
+}
 
 /**
  * @type type T= {a:string, b}
@@ -12,11 +24,7 @@ const commands = new class {
      */
     rmdir(options) {
         let { target } = options;
-
-        let __dirname = path.dirname(import.meta.url.replace("file:///", ""));
-        if (target.startsWith(".")) {
-            target = path.join(__dirname, target);
-        }
+        target = fullname(target);
         if (!fs.existsSync(target) || !fs.statSync(target).isDirectory())
             return;
         this.#_rmdir(target);
@@ -28,14 +36,8 @@ const commands = new class {
         let { source, target, extname } = options;
         if (!source || !target)
             throw new Error("必须传入--source和--target参数");
-
-        let __dirname = path.dirname(import.meta.url.replace("file:///", ""));
-        if (source.startsWith(".")) {
-            source = path.join(__dirname, source);
-        }
-        if (target.startsWith(".")) {
-            target = path.join(__dirname, target);
-        }
+        source = fullname(source);
+        target = fullname(target);
 
         //是否递归处理文件
         let recursion = !("recursion" in options) || !!options.recursion;
