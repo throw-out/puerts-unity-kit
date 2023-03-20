@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using UnityEngine;
 
@@ -13,6 +14,8 @@ namespace HR
     public class Debugger
     {
         const int MAX_SCRIPTS_CACHE_SIZE = 1000000;
+        private static readonly Regex ESMImport = new Regex(@"(^import [\S ]+|\r?\nimport [\S ]+)");
+        private static readonly Regex ESMExport = new Regex(@"(^export [\S ]+|\r?\nexport [\S ]+)");
 
         /// <summary>忽略文件路径大小写 </summary>
         public bool ignoreCase { get; set; }
@@ -135,7 +138,10 @@ namespace HR
             string scriptId;
             if (this.scriptParsed == null || !this.scriptParsed.TryGetValue(filepath, out scriptId))
                 return;
-            scriptSource = ("(function (exports, require, module, __filename, __dirname) { " + scriptSource + "\n});");
+            if (!ESMImport.IsMatch(scriptSource) && !ESMExport.IsMatch(scriptSource))
+            {
+                scriptSource = ("(function (exports, require, module, __filename, __dirname) { " + scriptSource + "\n});");
+            }
             //当前缓存的数据源已经同步
             if (GetLockScriptSource(scriptId) == scriptSource)
                 return;
