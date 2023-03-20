@@ -298,17 +298,14 @@ export const {name} = puerts.{name};"))}
 //@ts-nocheck | ignore global error checking
 
 //此功能适用于commonjs模块和esm模块;
-//此功能旨在让puerts esm模块也能使用解构声明语法, 让commonjs和esm模块在typescript层语法一致(无需额外适配), 同时也能快速导入csharp namespace的类型(例):
+//此功能旨在让puerts esm模块也能使用解构声明语法, 让commonjs和esm模块在typescript层语法一致, 如此我们就能自由转换工程为commonjs模块或esm模块而无需额外修改代码. 
+//同时为csharp namespace创建额外的模块, 从而快速导入其中的类型.
+//例:
 //import {{ Array }} from 'csharp.System';
 //import {{ File }} from 'csharp.System.IO';
 //
 //此处仅声明接口, 运行时js代码通过GeneratorECMAScript工具生成, 生成文件位置'Assets/Gen/Resources/puerts/modules';
-//js运行代码会通过Puerts.ILoader读取, 请自行处理csharp/puerts相关模块的读取, 或可参考以下示例:
-//
-//Loader示例:  
-//https://github.com/throw-out/puerts-unity-kit/tree/main/projects/Assets/Samples/Tools/ECMAScript/ModuleLoader.cs
-//在链式Loader中使用此Loader实例: 
-//https://github.com/throw-out/puerts-unity-kit/blob/main/projects/Assets/Samples/Starter.cs#L13
+//js运行时代码会通过`Puerts.ILoader`实例读取, 需自行处理csharp/puerts模块的读取, 详情请查看GeneratorECMAScript工具`README.md`:
 //===========================================================================================
 
 {string.Join("", namespaceNames.Select(name => $@"
