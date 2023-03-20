@@ -10,6 +10,8 @@ public class Starter : MonoBehaviour
     void Awake()
     {
         var app = XOR.Application.GetInstance();
+        app.Loader.AddLoader(Puerts.ModuleLoader.ESM());
+        app.Loader.AddLoader(Puerts.ModuleLoader.Commonjs());
 
 #if UNITY_EDITOR
         //添加Editor Loader
