@@ -319,11 +319,9 @@ declare module ""csharp.{name}"" {{
 
         static string GetFilePath(string saveTo, string filename, bool isESM)
         {
-            string extensionName =
-#if UNITY_2018_1_OR_NEWER
-                isESM ? "mjs" : "cjs";
-#else
-                ".txt";
+            string extensionName = isESM ? "mjs" : "cjs";
+#if !UNITY_2018_1_OR_NEWER
+            extensionName += ".txt";
 #endif
             return $"{GetDirectoryPath(saveTo, false)}/{filename}.{extensionName}";
         }
