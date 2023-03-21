@@ -42,6 +42,8 @@ namespace XOR.Services
 
         public Statement GetStatement(string guid, bool create = true)
         {
+            if (guid == null)
+                return null;
             Statement statement;
             this.Statements.TryGetValue(guid, out statement);
             return statement;
@@ -123,6 +125,8 @@ namespace XOR.Services
         }
         public EnumPropertyDeclaration GetProperty(string propertyName)
         {
+            if (propertyName == null)
+                return null;
             EnumPropertyDeclaration property;
             this.Properties.TryGetValue(propertyName, out property);
             return property;
@@ -161,6 +165,8 @@ namespace XOR.Services
 
         public PropertyDeclaration GetProperty(string propertyName)
         {
+            if (propertyName == null)
+                return null;
             PropertyDeclaration property;
             this.Properties.TryGetValue(propertyName, out property);
             return property;
