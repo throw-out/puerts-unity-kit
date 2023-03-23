@@ -52,4 +52,5 @@
 4. 完成.
 
 ## 规划
-- 无
+- 使用ts-morph替换typescript, 并接触对node环境的依赖
+- UGUI绑定ts脚本中的方法
