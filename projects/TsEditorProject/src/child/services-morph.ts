@@ -214,11 +214,9 @@ export class Program {
         //解析文件并为class分配guid
         await this.resolveFiles(this.project.getSourceFiles());
 
-        await new Promise(resolve => setTimeout(resolve, 3000));
         //推送所有文件的定义
         this.cp.state = csharp.XOR.Services.ProgramState.Allocating;
         for (let [_, classes] of this.mapping) {
-            await new Promise(resolve => setTimeout(resolve, 1000));
             this.register(classes, true);
             await new Promise(resolve => setTimeout(resolve, 1));
         }
@@ -290,31 +288,29 @@ export class Program {
             this.cp.state = csharp.XOR.Services.ProgramState.Allocating;
 
             while (files.length > 0) {
-                let filePath = files.shift(), { exist, content, error } = util.tryReadFile(filePath);
+                let filePath = files.shift();
 
+                let newSourceFile: tsm.SourceFile;
                 let oldSource = this.project.getSourceFile(filePath);
-                //删除文件
-                if (!exist && oldSource) {
-                    oldSource.delete();
-                    oldSource.saveSync();
-                    continue;
-                }
-                //如果文件已相同, 跳过更改
-                if (oldSource && oldSource.getFullText() === content) {
-                    continue;
+                if (oldSource) {
+                    let refreshResult = await oldSource.refreshFromFileSystem();
+                    if (refreshResult === tsm.FileSystemRefreshResult.NoChange) {       //文件没有更新
+                        continue;
+                    } else if (refreshResult === tsm.FileSystemRefreshResult.Deleted) { //文件已删除
+                        this.unregister(filePath);
+                        continue;
+                    }
+                    newSourceFile = oldSource;
+                } else {
+                    newSourceFile = this.project.addSourceFileAtPath(filePath);
                 }
 
                 //新增或更新文件内容
                 this.unregister(filePath);
-                let newSourceFile = this.project.createSourceFile(filePath, content, {
-                    overwrite: true
-                });
-                newSourceFile.saveSync();
-
                 await this.resolveStatements(newSourceFile.getStatements());
                 if (!newSourceFile.isSaved()) {
                     newSourceFile.saveSync();
-                    File.WriteAllText(filePath, newSourceFile.getFullText());
+                    //File.WriteAllText(filePath, newSourceFile.getFullText());
                 }
                 this.register(filePath);
             }
@@ -333,7 +329,7 @@ export class Program {
      */
     public change(files: string[]) {
         for (let file of files) {
-            console.log("file change: " + file);
+            //console.log("file change: " + file);
             file = Path.GetFullPath(file).replace(/\\/g, "/");
             if (!this.pending) {
                 this.pending = new Set()
@@ -383,9 +379,6 @@ export class Program {
             let properties = this.getExportProperties(node);
             if (properties && properties.size > 0) {
                 for (let [name, property] of properties) {
-                    if (className == "Sample03") {
-                        debugger;
-                    }
                     let fargs = this.getFieldArguments(property),
                         ftype = util.toCSharpType([property.getTypeNode(), fargs?.type]);
                     if (!ftype || !ftype.type) {
@@ -432,25 +425,34 @@ export class Program {
      * @param fileName 
      */
     private unregister(fileName: string): void;
-    private unregister(classes: ClassInfo[], force?: boolean): void;
+    private unregister(classes: ClassInfo[]): void;
     private unregister() {
-        let classes: ClassInfo[] = arguments[0];
-        if (typeof (classes) === "string") {
-            classes = this.mapping.get(classes);
+        if (typeof (arguments[0]) === "string") {
+            let filePath = arguments[0];
+            let classes: ClassInfo[] = this.mapping.get(filePath);
+            if (!classes) {
+                return;
+            }
+            this.mapping.delete(filePath);
+            classes.forEach(cls => this.cp.RemoveStatement(cls.guid));
         }
-        if (!classes || classes.length === 0)
-            return;
-        for (let cls of classes) {
-            if (cls.guid) this.cp.RemoveStatement(cls.guid);
-            if (!cls.node)
-                continue;
-            let filePath = cls.node.getSourceFile().getFilePath();
-            let infos = this.mapping.get(filePath);
-            if (!infos || !infos.includes(cls))
-                continue;
-            infos.splice(infos.indexOf(cls), 1);
-            if (infos.length === 0) {
-                this.mapping.delete(filePath);
+        else {
+            let classes: ClassInfo[] = arguments[0];
+            if (!classes || classes.length === 0) {
+                return;
+            }
+            for (let cls of [...classes]) {
+                this.cp.RemoveStatement(cls.guid);
+                if (!cls.node)
+                    continue;
+                let filePath = cls.node.getSourceFile().getFilePath();
+                let infos = this.mapping.get(filePath);
+                if (!infos || !infos.includes(cls))
+                    continue;
+                infos.splice(infos.indexOf(cls), 1);
+                if (infos.length === 0) {
+                    this.mapping.delete(filePath);
+                }
             }
         }
     }
