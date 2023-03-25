@@ -30,7 +30,7 @@
         // 目标语言的版本
         "target": "ES2020",
         "module": "ES6",
-        "moduleResolution": "node",
+        //"moduleResolution": "node",
         "lib": [
             "DOM",
             "ES2020",

@@ -635,6 +635,10 @@ declare namespace CS {
             (arg: T): TResult;
             Invoke?: (arg: T) => TResult;
         }
+        interface Action$4<T1, T2, T3, T4> {
+            (arg1: T1, arg2: T2, arg3: T3, arg4: T4): void;
+            Invoke?: (arg1: T1, arg2: T2, arg3: T3, arg4: T4) => void;
+        }
         interface Func$3<T1, T2, TResult> {
             (arg1: T1, arg2: T2): TResult;
             Invoke?: (arg1: T1, arg2: T2) => TResult;
@@ -25731,14 +25735,6 @@ declare namespace CS {
         }
         interface IEqualityComparer$1<T> {
         }
-        interface IList$1<T> extends System.Collections.IEnumerable, System.Collections.Generic.ICollection$1<T>, System.Collections.Generic.IEnumerable$1<T> {
-            GetEnumerator(): System.Collections.IEnumerator
-            GetEnumerator(): System.Collections.Generic.IEnumerator$1<T>
-        }
-        interface IReadOnlyList$1<T> extends System.Collections.IEnumerable, System.Collections.Generic.IReadOnlyCollection$1<T>, System.Collections.Generic.IEnumerable$1<T> {
-            GetEnumerator(): System.Collections.IEnumerator
-            GetEnumerator(): System.Collections.Generic.IEnumerator$1<T>
-        }
         class List$1<T> extends System.Object implements System.Collections.IEnumerable, System.Collections.Generic.IList$1<T>, System.Collections.Generic.IReadOnlyCollection$1<T>, System.Collections.Generic.IReadOnlyList$1<T>, System.Collections.IList, System.Collections.Generic.ICollection$1<T>, System.Collections.ICollection, System.Collections.Generic.IEnumerable$1<T>
         {
             protected [__keep_incompatibility]: never;
@@ -25797,6 +25793,14 @@ declare namespace CS {
             public constructor($collection: System.Collections.Generic.IEnumerable$1<T>)
             public GetEnumerator(): System.Collections.IEnumerator
             public GetEnumerator(): System.Collections.Generic.IEnumerator$1<T>
+        }
+        interface IList$1<T> extends System.Collections.IEnumerable, System.Collections.Generic.ICollection$1<T>, System.Collections.Generic.IEnumerable$1<T> {
+            GetEnumerator(): System.Collections.IEnumerator
+            GetEnumerator(): System.Collections.Generic.IEnumerator$1<T>
+        }
+        interface IReadOnlyList$1<T> extends System.Collections.IEnumerable, System.Collections.Generic.IReadOnlyCollection$1<T>, System.Collections.Generic.IEnumerable$1<T> {
+            GetEnumerator(): System.Collections.IEnumerator
+            GetEnumerator(): System.Collections.Generic.IEnumerator$1<T>
         }
         interface IComparer$1<T> {
         }
@@ -25893,7 +25897,7 @@ declare namespace CS {
             public get Disposed(): boolean;
             public get ThreadId(): number;
             public get Env(): Puerts.JsEnv;
-            public get Loader(): Puerts.ILoader;
+            public get Loader(): XOR.MixerLoader;
             public get Options(): XOR.ThreadOptions;
             public Tick(): void
             public Run($filepath: string, $isESM: boolean): void
@@ -25939,7 +25943,7 @@ declare namespace CS {
             public static DisposeAll(): void
             public constructor()
         }
-        class TsComponent extends XOR.TsBehaviour implements System.IDisposable, XOR.Serializables.IAccessor {
+        class TsComponent extends XOR.TsBehaviour implements XOR.Serializables.IAccessor, System.IDisposable {
             protected [__keep_incompatibility]: never;
             public get JSObject(): Puerts.JSObject;
             public GetProperties(): System.Array$1<XOR.Serializables.ResultPair>
@@ -25947,9 +25951,11 @@ declare namespace CS {
             public SetPropertyListener($handler: System.Action$2<string, any>): void
             public GetGuid(): string
             public GetRoute(): string
+            public GetPath(): string
             public static GC(): void
             public static PrintStatus(): void
             public static Register($env: Puerts.JsEnv): void
+            public static Unregister(): void
             public constructor()
         }
         class Application extends XOR.SingletonMonoBehaviour$1<XOR.Application>
@@ -25971,12 +25977,26 @@ declare namespace CS {
             public FileExists($filepath: string): boolean
             public ReadFile($filepath: string, $debugpath: $Ref<string>): string
             public IsESM($filepath: string): boolean
-            public AddLoader($loader: Puerts.ILoader, $index?: number): void
+            public AddLoader($loader: Puerts.ILoader): void
+            public AddLoader($loader: Puerts.ILoader, $index: number): void
+            public AddLoader($loader: Puerts.ILoader, $match: System.Func$2<string, boolean>): void
+            public AddLoader($loader: Puerts.ILoader, $index: number, $match: System.Func$2<string, boolean>): void
             public RemoveLoader($type: System.Type): boolean
             public RemoveLoader($loader: Puerts.ILoader): boolean
             public GetLoaders($type: System.Type): System.Array$1<Puerts.ILoader>
             public constructor()
             public constructor($other: XOR.MixerLoader)
+        }
+        class EventEmitter extends System.Object {
+            protected [__keep_incompatibility]: never;
+            public On($eventName: string, $handler: System.Action): void
+            public On($eventName: string, $handler: XOR.EventEmitter.DynamicHandler): void
+            public Once($eventName: string, $handler: System.Action): void
+            public Once($eventName: string, $handler: XOR.EventEmitter.DynamicHandler): void
+            public Remove($eventName: string, $handler: Function): void
+            public RemoveAll($eventName: string): void
+            public Clear(): void
+            public constructor()
         }
         class Subscription extends System.Object {
             protected [__keep_incompatibility]: never;
@@ -26001,6 +26021,58 @@ declare namespace CS {
             public Dispose(): void
             public constructor()
             public constructor($subscribe: System.Action$1<XOR.Subscriber>)
+        }
+        interface PromiseExecutor {
+            (resolve: System.Action, reject: System.Action$1<System.Exception>): void;
+            Invoke?: (resolve: System.Action, reject: System.Action$1<System.Exception>) => void;
+        }
+        var PromiseExecutor: { new(func: (resolve: System.Action, reject: System.Action$1<System.Exception>) => void): PromiseExecutor; }
+        interface PromiseResolve {
+            (resolve: System.Action): void;
+            Invoke?: (resolve: System.Action) => void;
+        }
+        var PromiseResolve: { new(func: (resolve: System.Action) => void): PromiseResolve; }
+        interface IPromiseAwaiter extends System.Runtime.CompilerServices.INotifyCompletion {
+            Exception: System.Exception
+            IsCompleted: boolean
+            GetResult(): void
+        }
+        interface IPromiseAwaitable {
+            GetAwaiter(): XOR.IPromiseAwaiter
+            Then($onfulfilled: System.Action): XOR.IPromiseAwaitable
+            Catch($onrejected: System.Action$1<System.Exception>): XOR.IPromiseAwaitable
+            Finally($onfinally: System.Action): XOR.IPromiseAwaitable
+        }
+        class Promise extends System.Object implements XOR.IPromiseAwaitable {
+            protected [__keep_incompatibility]: never;
+            public GetAwaiter(): XOR.IPromiseAwaiter
+            public ConfigureAwait($continueOnCapturedContext: boolean): XOR.IPromiseAwaitable
+            public Then($onfulfilled: System.Action): XOR.IPromiseAwaitable
+            public Catch($onrejected: System.Action$1<System.Exception>): XOR.IPromiseAwaitable
+            public Finally($onfinally: System.Action): XOR.IPromiseAwaitable
+            public Resolve(): void
+            public Reject($e: System.Exception): void
+            public constructor()
+            public constructor($executor: XOR.PromiseResolve)
+            public constructor($executor: XOR.PromiseExecutor)
+        }
+        enum EventBaseParameter { None = 0 }
+        class EventBaseData extends System.Object {
+            protected [__keep_incompatibility]: never;
+            public target: UnityEngine.Object
+            public method: string
+            public parameter: XOR.EventBaseParameter
+            public stringValue: string
+            public floatValue: string
+            public boolValue: string
+            public objectValue: UnityEngine.Object
+            public constructor()
+        }
+        class EventBase extends System.Object {
+            protected [__keep_incompatibility]: never;
+            public Invoke(): void
+            public GetEventCount(): number
+            public constructor()
         }
         class OnDragProxy extends XOR.Proxy implements UnityEngine.EventSystems.IDragHandler, UnityEngine.EventSystems.IEndDragHandler, UnityEngine.EventSystems.IEventSystemHandler, System.IDisposable, UnityEngine.EventSystems.IBeginDragHandler {
             protected [__keep_incompatibility]: never;
@@ -26200,14 +26272,36 @@ declare namespace CS {
             protected [__keep_incompatibility]: never;
             public constructor()
         }
+        class JsBase extends System.Object {
+            protected [__keep_incompatibility]: never;
+            public constructor($target: Puerts.JSObject)
+            public constructor()
+        }
+        class JsTranslator extends System.Object {
+            protected [__keep_incompatibility]: never;
+            public static GetOrCreate($env: Puerts.JsEnv): XOR.JsTranslator
+            public AddInterfaceBridgeCreator($type: System.Type, $creator: System.Func$2<Puerts.JSObject, any>): void
+            public CreateInterfaceBridge($target: Puerts.JSObject, $interfaceType: System.Type): any
+            public constructor()
+        }
         class JsEnvExtension extends System.Object {
             protected [__keep_incompatibility]: never;
             public static GlobalListenerQuit($env: Puerts.JsEnv): void
+            public static AddInterfaceBridgeCreator($env: Puerts.JsEnv, $type: System.Type, $creator: System.Func$2<Puerts.JSObject, any>): void
             public static TryAutoUsing($env: Puerts.JsEnv, $printWarning?: boolean): void
+            public static TryAutoInterfaceBridge($env: Puerts.JsEnv, $printWarning?: boolean): void
             public static SupportCommonJS($env: Puerts.JsEnv): void
             public static RequireXORModules($env: Puerts.JsEnv): void
             public static RequireXORModules($env: Puerts.JsEnv, $throwOnFailure: boolean): void
             public static ComponentJSObjectCreator($env: Puerts.JsEnv): System.Func$3<XOR.TsComponent, string, Puerts.JSObject>
+            public static ComponentInvokeMethod($env: Puerts.JsEnv): System.Action$3<Puerts.JSObject, string, System.Array$1<any>>
+        }
+        class JsObjectExtension extends System.Object {
+            protected [__keep_incompatibility]: never;
+            public static GetKeys($obj: Puerts.JSObject): System.Array$1<string>
+            public static Length($obj: Puerts.JSObject): number
+            public static ForEach($obj: Puerts.JSObject, $action: System.Action$2<string, any>): void
+            public static Call($obj: Puerts.JSObject, $methodName: string, ...args: any[]): void
         }
         class TsComponentExtension extends System.Object {
             protected [__keep_incompatibility]: never;
@@ -26316,6 +26410,7 @@ declare namespace CS {
             public project: string
             public editorProject: string
             public isESM: boolean
+            public autoLoadScript: boolean
             public watchType: XOR.Settings.WacthType
             public logger: XOR.Settings.LOGGER
             public constructor()
@@ -26381,7 +26476,6 @@ declare namespace CS {
             public IsESM($filepath: string): boolean
             public Process(): void
             public constructor($worker: XOR.ThreadWorker, $source: Puerts.ILoader)
-            public constructor($worker: XOR.ThreadWorker, $source: Puerts.ILoader, $match: System.Func$2<string, boolean>)
             public constructor()
         }
         interface ISyncProcess {
@@ -26416,6 +26510,9 @@ declare namespace CS {
             public static Copy($buffer: ArrayBuffer, $offset: number, $length: number): ArrayBuffer
             public static Create($size: number): System.Array$1<number>
             public static Connect($first: System.Array$1<number>, $second: System.Array$1<number>): System.Array$1<number>
+        }
+        class DelegateUtil extends System.Object {
+            protected [__keep_incompatibility]: never;
         }
         class HashUtil extends System.Object {
             protected [__keep_incompatibility]: never;
@@ -26500,6 +26597,8 @@ declare namespace CS {
             public module: string
             public path: string
             public line: number
+            public GetLocalPath(): string
+            public GetLocalModule(): string
         }
         class EnumDeclaration extends XOR.Services.Statement {
             protected [__keep_incompatibility]: never;
@@ -26523,12 +26622,18 @@ declare namespace CS {
             protected [__keep_incompatibility]: never;
             public route: string
             public get Properties(): System.Collections.Generic.Dictionary$2<string, XOR.Services.PropertyDeclaration>;
-            public GetNames(): System.Array$1<string>
+            public get Methods(): System.Collections.Generic.Dictionary$2<string, System.Collections.Generic.List$1<XOR.Services.MethodDeclaration>>;
             public GetProperties(): System.Array$1<XOR.Services.PropertyDeclaration>
             public GetProperty($propertyName: string): XOR.Services.PropertyDeclaration
             public AddProperty($property: XOR.Services.PropertyDeclaration): void
             public RemoveProperty($property: XOR.Services.PropertyDeclaration): void
             public RemoveProperty($propertyName: string): void
+            public GetMethods(): System.Array$1<XOR.Services.MethodDeclaration>
+            public GetMethods($methodName: string): System.Array$1<XOR.Services.MethodDeclaration>
+            public GetMethod($methodName: string): XOR.Services.MethodDeclaration
+            public AddMethod($method: XOR.Services.MethodDeclaration): void
+            public RemoveMethod($method: XOR.Services.MethodDeclaration): void
+            public RemoveMethods($methodName: string): void
             public constructor()
         }
         class PropertyDeclaration extends System.Object {
@@ -26541,6 +26646,13 @@ declare namespace CS {
             public SetRange($left: number, $right: number): void
             public AddEnum($key: string, $value: any): void
             public BuildTooltip($force?: boolean): string
+            public constructor()
+        }
+        class MethodDeclaration extends System.Object {
+            protected [__keep_incompatibility]: never;
+            public name: string
+            public returnType: System.Type
+            public parameterTypes: System.Array$1<System.Type>
             public constructor()
         }
     }
@@ -26810,6 +26922,8 @@ declare namespace CS {
     }
     namespace System.Runtime.CompilerServices {
         interface ITuple {
+        }
+        interface INotifyCompletion {
         }
     }
     namespace UnityEngine.Playables {
@@ -28618,6 +28732,620 @@ declare namespace CS {
             protected [__keep_incompatibility]: never;
         }
     }
+    namespace Puerts {
+        class ModuleLoader extends System.Object implements Puerts.ILoader, Puerts.IModuleChecker {
+            protected [__keep_incompatibility]: never;
+            public FileExists($filepath: string): boolean
+            public ReadFile($filepath: string, $debugpath: $Ref<string>): string
+            public IsESM($filepath: string): boolean
+            public static ESM(): Puerts.ILoader
+            public static Commonjs(): Puerts.ILoader
+            public constructor($loader: Puerts.ILoader, $resolve: System.Func$2<string, string>)
+            public constructor($loader: Puerts.ILoader, $match: System.Func$2<string, boolean>)
+            public constructor($loader: Puerts.ILoader, $match: System.Func$2<string, boolean>, $resolve: System.Func$2<string, string>)
+            public constructor()
+        }
+        interface ILoader {
+            FileExists($filepath: string): boolean
+            ReadFile($filepath: string, $debugpath: $Ref<string>): string
+        }
+        interface IModuleChecker {
+            IsESM($filepath: string): boolean
+        }
+        class ArrayBuffer extends System.Object {
+            protected [__keep_incompatibility]: never;
+            public Bytes: System.Array$1<number>
+            public Count: number
+            public constructor($bytes: System.Array$1<number>)
+            public constructor($bytes: System.Array$1<number>, $count: number)
+            public constructor($ptr: System.IntPtr, $length: number)
+            public constructor()
+        }
+        class GenericDelegate extends System.Object {
+            protected [__keep_incompatibility]: never;
+            public TryGetDelegate($key: System.Type, $value: $Ref<Function>): boolean
+            public AddDelegate($key: System.Type, $value: Function): void
+            public Action(): void
+        }
+        type JSObject = any;
+        interface TypedValue {
+            Target: any
+        }
+        class Any$1<T> extends System.Object implements Puerts.TypedValue {
+            protected [__keep_incompatibility]: never;
+            public get Target(): any;
+        }
+        class ByteValue extends Puerts.Any$1<number> implements Puerts.TypedValue {
+            protected [__keep_incompatibility]: never;
+            public get Target(): any;
+            public constructor($i: number)
+        }
+        class SByteValue extends Puerts.Any$1<number> implements Puerts.TypedValue {
+            protected [__keep_incompatibility]: never;
+            public get Target(): any;
+            public constructor($i: number)
+        }
+        class CharValue extends Puerts.Any$1<number> implements Puerts.TypedValue {
+            protected [__keep_incompatibility]: never;
+            public get Target(): any;
+            public constructor($i: number)
+        }
+        class Int16Value extends Puerts.Any$1<number> implements Puerts.TypedValue {
+            protected [__keep_incompatibility]: never;
+            public get Target(): any;
+            public constructor($i: number)
+        }
+        class UInt16Value extends Puerts.Any$1<number> implements Puerts.TypedValue {
+            protected [__keep_incompatibility]: never;
+            public get Target(): any;
+            public constructor($i: number)
+        }
+        class Int32Value extends Puerts.Any$1<number> implements Puerts.TypedValue {
+            protected [__keep_incompatibility]: never;
+            public get Target(): any;
+            public constructor($i: number)
+        }
+        class UInt32Value extends Puerts.Any$1<number> implements Puerts.TypedValue {
+            protected [__keep_incompatibility]: never;
+            public get Target(): any;
+            public constructor($i: number)
+        }
+        class Int64Value extends Puerts.Any$1<bigint> implements Puerts.TypedValue {
+            protected [__keep_incompatibility]: never;
+            public get Target(): any;
+            public constructor($i: bigint)
+            public constructor($str: string)
+        }
+        class UInt64Value extends Puerts.Any$1<bigint> implements Puerts.TypedValue {
+            protected [__keep_incompatibility]: never;
+            public get Target(): any;
+            public constructor($i: bigint)
+            public constructor($str: string)
+        }
+        class FloatValue extends Puerts.Any$1<number> implements Puerts.TypedValue {
+            protected [__keep_incompatibility]: never;
+            public get Target(): any;
+            public constructor($i: number)
+        }
+        class DoubleValue extends Puerts.Any$1<number> implements Puerts.TypedValue {
+            protected [__keep_incompatibility]: never;
+            public get Target(): any;
+            public constructor($i: number)
+        }
+        interface JSFunctionCallback {
+            (isolate: System.IntPtr, info: System.IntPtr, self: System.IntPtr, argumentsLen: number): void;
+            Invoke?: (isolate: System.IntPtr, info: System.IntPtr, self: System.IntPtr, argumentsLen: number) => void;
+        }
+        var JSFunctionCallback: { new(func: (isolate: System.IntPtr, info: System.IntPtr, self: System.IntPtr, argumentsLen: number) => void): JSFunctionCallback; }
+        interface JSConstructorCallback {
+            (isolate: System.IntPtr, info: System.IntPtr, argumentsLen: number): any;
+            Invoke?: (isolate: System.IntPtr, info: System.IntPtr, argumentsLen: number) => any;
+        }
+        var JSConstructorCallback: { new(func: (isolate: System.IntPtr, info: System.IntPtr, argumentsLen: number) => any): JSConstructorCallback; }
+        class JsEnv extends System.Object implements System.IDisposable {
+            protected [__keep_incompatibility]: never;
+            public static jsEnvs: System.Collections.Generic.List$1<Puerts.JsEnv>
+            public Backend: Puerts.Backend
+            public get Index(): number;
+            public ExecuteModule($filename: string): void
+            public Eval($chunk: string, $chunkName?: string): void
+            public ClearModuleCache(): void
+            public static ClearAllModuleCaches(): void
+            public AddLazyStaticWrapLoader($type: System.Type, $lazyStaticWrapLoader: System.Func$1<Puerts.TypeRegisterInfo>): void
+            public AddLazyStaticWrapLoaderGenericDefinition($typeDefinition: System.Type, $genericArgumentsType: System.Array$1<System.Type>, $wrapperDefinition: System.Type): void
+            public RegisterGeneralGetSet($type: System.Type, $getter: Puerts.GeneralGetter, $setter: Puerts.GeneralSetter): void
+            public GetTypeId($type: System.Type): number
+            public Tick(): void
+            public WaitDebugger(): void
+            public WaitDebuggerAsync(): $Task<any>
+            public Dispose(): void
+            public constructor()
+            public constructor($loader: Puerts.ILoader, $debugPort?: number)
+            public constructor($loader: Puerts.ILoader, $externalRuntime: System.IntPtr, $externalContext: System.IntPtr)
+            public constructor($loader: Puerts.ILoader, $debugPort: number, $externalRuntime: System.IntPtr, $externalContext: System.IntPtr)
+        }
+        interface JsEnv {
+            GlobalListenerQuit(): void;
+            AddInterfaceBridgeCreator($type: System.Type, $creator: System.Func$2<Puerts.JSObject, any>): void;
+            TryAutoUsing($printWarning?: boolean): void;
+            TryAutoInterfaceBridge($printWarning?: boolean): void;
+            SupportCommonJS(): void;
+            RequireXORModules(): void;
+            RequireXORModules($throwOnFailure: boolean): void;
+            ComponentJSObjectCreator(): System.Func$3<XOR.TsComponent, string, Puerts.JSObject>;
+            ComponentInvokeMethod(): System.Action$3<Puerts.JSObject, string, System.Array$1<any>>;
+            UsingTick(): void;
+        }
+        class Backend extends System.Object {
+            protected [__keep_incompatibility]: never;
+            public constructor($env: Puerts.JsEnv)
+            public constructor()
+        }
+        class TypeRegisterInfo extends System.Object {
+            protected [__keep_incompatibility]: never;
+            public BlittableCopy: boolean
+            public Constructor: Puerts.V8ConstructorCallback
+            public Methods: System.Collections.Generic.Dictionary$2<Puerts.MethodKey, Puerts.V8FunctionCallback>
+            public Properties: System.Collections.Generic.Dictionary$2<string, Puerts.PropertyRegisterInfo>
+            public LazyMembers: System.Collections.Generic.List$1<Puerts.LazyMemberRegisterInfo>
+            public constructor()
+        }
+        interface GeneralGetter {
+            (jsEnvIdx: number, isolate: System.IntPtr, getValueApi: Puerts.IGetValueFromJs, value: System.IntPtr, isByRef: boolean): any;
+            Invoke?: (jsEnvIdx: number, isolate: System.IntPtr, getValueApi: Puerts.IGetValueFromJs, value: System.IntPtr, isByRef: boolean) => any;
+        }
+        var GeneralGetter: { new(func: (jsEnvIdx: number, isolate: System.IntPtr, getValueApi: Puerts.IGetValueFromJs, value: System.IntPtr, isByRef: boolean) => any): GeneralGetter; }
+        interface IGetValueFromJs {
+            GetJsValueType($isolate: System.IntPtr, $holder: System.IntPtr, $isByRef: boolean): Puerts.JsValueType
+            GetNumber($isolate: System.IntPtr, $holder: System.IntPtr, $isByRef: boolean): number
+            GetDate($isolate: System.IntPtr, $holder: System.IntPtr, $isByRef: boolean): number
+            GetString($isolate: System.IntPtr, $holder: System.IntPtr, $isByRef: boolean): string
+            GetBoolean($isolate: System.IntPtr, $holder: System.IntPtr, $isByRef: boolean): boolean
+            GetBigInt($isolate: System.IntPtr, $holder: System.IntPtr, $isByRef: boolean): bigint
+            GetNativeObject($isolate: System.IntPtr, $holder: System.IntPtr, $isByRef: boolean): System.IntPtr
+            GetTypeId($isolate: System.IntPtr, $holder: System.IntPtr, $isByRef: boolean): number
+            GetJSObject($isolate: System.IntPtr, $holder: System.IntPtr, $isByRef: boolean): System.IntPtr
+            GetFunction($isolate: System.IntPtr, $holder: System.IntPtr, $isByRef: boolean): System.IntPtr
+            GetArrayBuffer($isolate: System.IntPtr, $holder: System.IntPtr, $isByRef: boolean): ArrayBuffer
+        }
+        interface GeneralSetter {
+            (jsEnvIdx: number, isolate: System.IntPtr, setValueApi: Puerts.ISetValueToJs, holder: System.IntPtr, obj: any): void;
+            Invoke?: (jsEnvIdx: number, isolate: System.IntPtr, setValueApi: Puerts.ISetValueToJs, holder: System.IntPtr, obj: any) => void;
+        }
+        var GeneralSetter: { new(func: (jsEnvIdx: number, isolate: System.IntPtr, setValueApi: Puerts.ISetValueToJs, holder: System.IntPtr, obj: any) => void): GeneralSetter; }
+        interface ISetValueToJs {
+            SetNativeObject($isolate: System.IntPtr, $holder: System.IntPtr, $classID: number, $self: System.IntPtr): void
+            SetJSObject($isolate: System.IntPtr, $holder: System.IntPtr, $JSObject: System.IntPtr): void
+            SetFunction($isolate: System.IntPtr, $holder: System.IntPtr, $JSFunction: System.IntPtr): void
+            SetNumber($isolate: System.IntPtr, $holder: System.IntPtr, $number: number): void
+            SetString($isolate: System.IntPtr, $holder: System.IntPtr, $str: string): void
+            SetBigInt($isolate: System.IntPtr, $holder: System.IntPtr, $number: bigint): void
+            SetBoolean($isolate: System.IntPtr, $holder: System.IntPtr, $b: boolean): void
+            SetDate($isolate: System.IntPtr, $holder: System.IntPtr, $date: number): void
+            SetNull($isolate: System.IntPtr, $holder: System.IntPtr): void
+            SetArrayBuffer($isolate: System.IntPtr, $holder: System.IntPtr, $arrayBuffer: ArrayBuffer): void
+        }
+        class DefaultLoader extends System.Object implements Puerts.ILoader, Puerts.IModuleChecker {
+            protected [__keep_incompatibility]: never;
+            public FileExists($filepath: string): boolean
+            public ReadFile($filepath: string, $debugpath: $Ref<string>): string
+            public IsESM($filepath: string): boolean
+            public constructor()
+            public constructor($root: string)
+        }
+        class BackendV8 extends Puerts.Backend {
+            protected [__keep_incompatibility]: never;
+            public IdleNotificationDeadline($DeadlineInSeconds: number): boolean
+            public LowMemoryNotification(): void
+            public RequestMinorGarbageCollectionForTesting(): void
+            public RequestFullGarbageCollectionForTesting(): void
+            public constructor($env: Puerts.JsEnv)
+        }
+        class BackendNodeJS extends Puerts.BackendV8 {
+            protected [__keep_incompatibility]: never;
+            public constructor($env: Puerts.JsEnv)
+        }
+        class BackendQuickJS extends Puerts.Backend {
+            protected [__keep_incompatibility]: never;
+            public LowMemoryNotification(): void
+            public constructor($env: Puerts.JsEnv)
+        }
+        class MonoPInvokeCallbackAttribute extends System.Attribute implements System.Runtime.InteropServices._Attribute {
+            protected [__keep_incompatibility]: never;
+            public constructor($t: System.Type)
+            public constructor()
+        }
+        interface V8FunctionCallback {
+            (isolate: System.IntPtr, info: System.IntPtr, self: System.IntPtr, paramLen: number, data: bigint): void;
+            Invoke?: (isolate: System.IntPtr, info: System.IntPtr, self: System.IntPtr, paramLen: number, data: bigint) => void;
+        }
+        var V8FunctionCallback: { new(func: (isolate: System.IntPtr, info: System.IntPtr, self: System.IntPtr, paramLen: number, data: bigint) => void): V8FunctionCallback; }
+        interface V8ConstructorCallback {
+            (isolate: System.IntPtr, info: System.IntPtr, paramLen: number, data: bigint): System.IntPtr;
+            Invoke?: (isolate: System.IntPtr, info: System.IntPtr, paramLen: number, data: bigint) => System.IntPtr;
+        }
+        var V8ConstructorCallback: { new(func: (isolate: System.IntPtr, info: System.IntPtr, paramLen: number, data: bigint) => System.IntPtr): V8ConstructorCallback; }
+        interface ModuleResolveCallback {
+            (identifer: string, jsEnvIdx: number, pathForDebug: $Ref<string>): string;
+            Invoke?: (identifer: string, jsEnvIdx: number, pathForDebug: $Ref<string>) => string;
+        }
+        var ModuleResolveCallback: { new(func: (identifer: string, jsEnvIdx: number, pathForDebug: $Ref<string>) => string): ModuleResolveCallback; }
+        interface V8DestructorCallback {
+            (self: System.IntPtr, data: bigint): void;
+            Invoke?: (self: System.IntPtr, data: bigint) => void;
+        }
+        var V8DestructorCallback: { new(func: (self: System.IntPtr, data: bigint) => void): V8DestructorCallback; }
+        interface LogCallback {
+            (content: string): void;
+            Invoke?: (content: string) => void;
+        }
+        var LogCallback: { new(func: (content: string) => void): LogCallback; }
+        enum JsValueType { Invalid = 0, NullOrUndefined = 1, BigInt = 2, Number = 4, String = 8, Boolean = 16, NativeObject = 32, JsObject = 64, Array = 128, Function = 256, Date = 512, ArrayBuffer = 1024, Unknow = 2048, Any = 2047 }
+        class PuertsDLL extends System.Object {
+            protected [__keep_incompatibility]: never;
+            public static GetLibVersion(): number
+            public static GetApiLevel(): number
+            public static GetLibBackend(): number
+            public static CreateJSEngine(): System.IntPtr
+            public static CreateJSEngineWithExternalEnv($externalRuntime: System.IntPtr, $externalContext: System.IntPtr): System.IntPtr
+            public static DestroyJSEngine($isolate: System.IntPtr): void
+            public static SetGlobalFunction($isolate: System.IntPtr, $name: string, $v8FunctionCallback: System.IntPtr, $data: bigint): void
+            public static SetGlobalFunction($isolate: System.IntPtr, $name: string, $v8FunctionCallback: Puerts.V8FunctionCallback, $data: bigint): void
+            public static GetLastExceptionInfo($isolate: System.IntPtr, $strlen: $Ref<number>): System.IntPtr
+            public static GetLastExceptionInfo($isolate: System.IntPtr): string
+            public static LowMemoryNotification($isolate: System.IntPtr): void
+            public static IdleNotificationDeadline($isolate: System.IntPtr, $DeadlineInSeconds: number): boolean
+            public static RequestMinorGarbageCollectionForTesting($isolate: System.IntPtr): void
+            public static RequestFullGarbageCollectionForTesting($isolate: System.IntPtr): void
+            public static SetGeneralDestructor($isolate: System.IntPtr, $generalDestructor: System.IntPtr): void
+            public static SetGeneralDestructor($isolate: System.IntPtr, $generalDestructor: Puerts.V8DestructorCallback): void
+            public static SetModuleResolver($isolate: System.IntPtr, $callback: Puerts.ModuleResolveCallback, $jsEnvIdx: number): void
+            public static ExecuteModule($isolate: System.IntPtr, $path: string, $exportee: string): System.IntPtr
+            public static Eval($isolate: System.IntPtr, $code: string, $path: string): System.IntPtr
+            public static EvalChecked($isolate: System.IntPtr, $code: string, $path: string): System.IntPtr
+            public static _RegisterClass($isolate: System.IntPtr, $BaseTypeId: number, $fullName: string, $constructor: System.IntPtr, $destructor: System.IntPtr, $data: bigint): number
+            public static RegisterClass($isolate: System.IntPtr, $BaseTypeId: number, $fullName: string, $constructor: Puerts.V8ConstructorCallback, $destructor: Puerts.V8DestructorCallback, $data: bigint): number
+            public static RegisterStruct($isolate: System.IntPtr, $BaseTypeId: number, $fullName: string, $constructor: System.IntPtr, $destructor: System.IntPtr, $data: bigint, $size: number): number
+            public static RegisterStruct($isolate: System.IntPtr, $BaseTypeId: number, $fullName: string, $constructor: Puerts.V8ConstructorCallback, $destructor: Puerts.V8DestructorCallback, $data: bigint, $size: number): number
+            public static RegisterFunction($isolate: System.IntPtr, $classID: number, $name: string, $isStatic: boolean, $callback: System.IntPtr, $data: bigint): boolean
+            public static RegisterFunction($isolate: System.IntPtr, $classID: number, $name: string, $isStatic: boolean, $callback: Puerts.V8FunctionCallback, $data: bigint): boolean
+            public static RegisterProperty($isolate: System.IntPtr, $classID: number, $name: string, $isStatic: boolean, $getter: System.IntPtr, $getterData: bigint, $setter: System.IntPtr, $setterData: bigint, $dontDelete: boolean): boolean
+            public static RegisterProperty($isolate: System.IntPtr, $classID: number, $name: string, $isStatic: boolean, $getter: Puerts.V8FunctionCallback, $getterData: bigint, $setter: Puerts.V8FunctionCallback, $setterData: bigint, $dontDelete: boolean): boolean
+            public static ReturnClass($isolate: System.IntPtr, $info: System.IntPtr, $classID: number): void
+            public static ReturnObject($isolate: System.IntPtr, $info: System.IntPtr, $classID: number, $self: System.IntPtr): void
+            public static ReturnNumber($isolate: System.IntPtr, $info: System.IntPtr, $number: number): void
+            public static __ReturnString($isolate: System.IntPtr, $info: System.IntPtr, $str: string): void
+            public static ReturnString($isolate: System.IntPtr, $info: System.IntPtr, $str: string): void
+            public static ReturnBigInt($isolate: System.IntPtr, $info: System.IntPtr, $number: bigint): void
+            public static ReturnBoolean($isolate: System.IntPtr, $info: System.IntPtr, $b: boolean): void
+            public static ReturnDate($isolate: System.IntPtr, $info: System.IntPtr, $date: number): void
+            public static ReturnNull($isolate: System.IntPtr, $info: System.IntPtr): void
+            public static ReturnFunction($isolate: System.IntPtr, $info: System.IntPtr, $JSFunction: System.IntPtr): void
+            public static ReturnCSharpFunctionCallback($isolate: System.IntPtr, $info: System.IntPtr, $v8FunctionCallback: Puerts.V8FunctionCallback, $data: bigint): void
+            public static ReturnJSObject($isolate: System.IntPtr, $info: System.IntPtr, $JSObject: System.IntPtr): void
+            public static GetArgumentValue($info: System.IntPtr, $index: number): System.IntPtr
+            public static GetJsValueType($isolate: System.IntPtr, $value: System.IntPtr, $isByRef: boolean): Puerts.JsValueType
+            public static GetArgumentType($isolate: System.IntPtr, $info: System.IntPtr, $index: number, $isByRef: boolean): Puerts.JsValueType
+            public static GetNumberFromValue($isolate: System.IntPtr, $value: System.IntPtr, $isByRef: boolean): number
+            public static GetDateFromValue($isolate: System.IntPtr, $value: System.IntPtr, $isByRef: boolean): number
+            public static GetStringFromValue($isolate: System.IntPtr, $value: System.IntPtr, $len: $Ref<number>, $isByRef: boolean): System.IntPtr
+            public static GetStringFromValue($isolate: System.IntPtr, $value: System.IntPtr, $isByRef: boolean): string
+            public static GetBooleanFromValue($isolate: System.IntPtr, $value: System.IntPtr, $isByRef: boolean): boolean
+            public static ValueIsBigInt($isolate: System.IntPtr, $value: System.IntPtr, $isByRef: boolean): boolean
+            public static GetBigIntFromValue($isolate: System.IntPtr, $value: System.IntPtr, $isByRef: boolean): bigint
+            public static GetBigIntFromValueChecked($isolate: System.IntPtr, $value: System.IntPtr, $isByRef: boolean): bigint
+            public static GetObjectFromValue($isolate: System.IntPtr, $value: System.IntPtr, $isByRef: boolean): System.IntPtr
+            public static GetTypeIdFromValue($isolate: System.IntPtr, $value: System.IntPtr, $isByRef: boolean): number
+            public static GetFunctionFromValue($isolate: System.IntPtr, $value: System.IntPtr, $isByRef: boolean): System.IntPtr
+            public static GetJSObjectFromValue($isolate: System.IntPtr, $value: System.IntPtr, $isByRef: boolean): System.IntPtr
+            public static SetNumberToOutValue($isolate: System.IntPtr, $value: System.IntPtr, $number: number): void
+            public static SetDateToOutValue($isolate: System.IntPtr, $value: System.IntPtr, $date: number): void
+            public static SetStringToOutValue($isolate: System.IntPtr, $value: System.IntPtr, $str: string): void
+            public static SetBooleanToOutValue($isolate: System.IntPtr, $value: System.IntPtr, $b: boolean): void
+            public static SetBigIntToOutValue($isolate: System.IntPtr, $value: System.IntPtr, $bigInt: bigint): void
+            public static SetObjectToOutValue($isolate: System.IntPtr, $value: System.IntPtr, $classId: number, $ptr: System.IntPtr): void
+            public static SetNullToOutValue($isolate: System.IntPtr, $value: System.IntPtr): void
+            public static ThrowException($isolate: System.IntPtr, $message: System.Array$1<number>): void
+            public static ThrowException($isolate: System.IntPtr, $message: string): void
+            public static PushNullForJSFunction($function: System.IntPtr): void
+            public static PushDateForJSFunction($function: System.IntPtr, $dateValue: number): void
+            public static PushBooleanForJSFunction($function: System.IntPtr, $b: boolean): void
+            public static PushBigIntForJSFunction($function: System.IntPtr, $l: bigint): void
+            public static __PushStringForJSFunction($function: System.IntPtr, $str: string): void
+            public static PushStringForJSFunction($function: System.IntPtr, $str: string): void
+            public static PushNumberForJSFunction($function: System.IntPtr, $d: number): void
+            public static PushObjectForJSFunction($function: System.IntPtr, $classId: number, $objectId: System.IntPtr): void
+            public static PushJSFunctionForJSFunction($function: System.IntPtr, $JSFunction: System.IntPtr): void
+            public static PushJSObjectForJSFunction($function: System.IntPtr, $JSObject: System.IntPtr): void
+            public static InvokeJSFunction($function: System.IntPtr, $hasResult: boolean): System.IntPtr
+            public static GetFunctionLastExceptionInfo($function: System.IntPtr, $len: $Ref<number>): System.IntPtr
+            public static ReleaseJSFunction($isolate: System.IntPtr, $function: System.IntPtr): void
+            public static ReleaseJSObject($isolate: System.IntPtr, $obj: System.IntPtr): void
+            public static GetFunctionLastExceptionInfo($function: System.IntPtr): string
+            public static GetResultType($resultInfo: System.IntPtr): Puerts.JsValueType
+            public static GetNumberFromResult($resultInfo: System.IntPtr): number
+            public static GetDateFromResult($resultInfo: System.IntPtr): number
+            public static GetStringFromResult($resultInfo: System.IntPtr, $len: $Ref<number>): System.IntPtr
+            public static GetStringFromResult($resultInfo: System.IntPtr): string
+            public static GetBooleanFromResult($resultInfo: System.IntPtr): boolean
+            public static ResultIsBigInt($resultInfo: System.IntPtr): boolean
+            public static GetBigIntFromResult($resultInfo: System.IntPtr): bigint
+            public static GetBigIntFromResultCheck($resultInfo: System.IntPtr): bigint
+            public static GetObjectFromResult($resultInfo: System.IntPtr): System.IntPtr
+            public static GetTypeIdFromResult($resultInfo: System.IntPtr): number
+            public static GetFunctionFromResult($resultInfo: System.IntPtr): System.IntPtr
+            public static GetJSObjectFromResult($resultInfo: System.IntPtr): System.IntPtr
+            public static ResetResult($resultInfo: System.IntPtr): void
+            public static CreateInspector($isolate: System.IntPtr, $port: number): void
+            public static DestroyInspector($isolate: System.IntPtr): void
+            public static InspectorTick($isolate: System.IntPtr): boolean
+            public static LogicTick($isolate: System.IntPtr): void
+            public static SetLogCallback($log: System.IntPtr, $logWarning: System.IntPtr, $logError: System.IntPtr): void
+            public static SetLogCallback($log: Puerts.LogCallback, $logWarning: Puerts.LogCallback, $logError: Puerts.LogCallback): void
+            public static ReturnArrayBuffer($isolate: System.IntPtr, $info: System.IntPtr, $bytes: System.Array$1<number>, $Length: number): void
+            public static SetArrayBufferToOutValue($isolate: System.IntPtr, $value: System.IntPtr, $bytes: System.Array$1<number>, $length: number): void
+            public static PushArrayBufferForJSFunction($function: System.IntPtr, $bytes: System.Array$1<number>, $length: number): void
+            public static GetArrayBufferFromValue($isolate: System.IntPtr, $value: System.IntPtr, $length: $Ref<number>, $isOut: boolean): System.IntPtr
+            public static GetArrayBufferFromResult($function: System.IntPtr, $length: $Ref<number>): System.IntPtr
+            public constructor()
+        }
+        class ArgHelper extends System.ValueType {
+            protected [__keep_incompatibility]: never;
+            public static IsMatchParams($jsEnvIdx: number, $isolate: System.IntPtr, $info: System.IntPtr, $expectJsType: Puerts.JsValueType, $expectCsType: System.Type, $start: number, $end: number, $v8Value: System.IntPtr, $arg: $Ref<any>, $argValueType: $Ref<Puerts.JsValueType>): boolean
+            public static IsMatch($jsEnvIdx: number, $isolate: System.IntPtr, $expectJsType: Puerts.JsValueType, $expectCsType: System.Type, $isByRef: boolean, $isOut: boolean, $v8Value: System.IntPtr, $arg: $Ref<any>, $argValueType: $Ref<Puerts.JsValueType>): boolean
+        }
+        class ResultHelper extends System.ValueType {
+            protected [__keep_incompatibility]: never;
+        }
+        class GeneralGetterManager extends System.Object {
+            protected [__keep_incompatibility]: never;
+            public GetTranslateFunc($type: System.Type): Puerts.GeneralGetter
+            public RegisterGetter($type: System.Type, $generalGetter: Puerts.GeneralGetter): void
+            public GetSelf($jsEnvIdx: number, $Self: System.IntPtr): any
+            public static GetJsTypeMask($type: System.Type): Puerts.JsValueType
+        }
+        class GeneralSetterManager extends System.Object {
+            protected [__keep_incompatibility]: never;
+            public GetTranslateFunc($type: System.Type): Puerts.GeneralSetter
+            public RegisterSetter($type: System.Type, $generalSetter: Puerts.GeneralSetter): void
+            public constructor()
+        }
+        class NativeValueApi extends System.Object {
+            protected [__keep_incompatibility]: never;
+            public static GetValueFromArgument: Puerts.IGetValueFromJs
+            public static GetValueFromResult: Puerts.IGetValueFromJs
+            public static SetValueToResult: Puerts.ISetValueToJs
+            public static SetValueToByRefArgument: Puerts.ISetValueToJs
+            public static SetValueToArgument: Puerts.ISetValueToJs
+        }
+        class GetValueFromResultImpl extends System.Object implements Puerts.IGetValueFromJs {
+            protected [__keep_incompatibility]: never;
+            public GetBigInt($isolate: System.IntPtr, $holder: System.IntPtr, $isByRef: boolean): bigint
+            public GetBoolean($isolate: System.IntPtr, $holder: System.IntPtr, $isByRef: boolean): boolean
+            public GetDate($isolate: System.IntPtr, $holder: System.IntPtr, $isByRef: boolean): number
+            public GetFunction($isolate: System.IntPtr, $holder: System.IntPtr, $isByRef: boolean): System.IntPtr
+            public GetJSObject($isolate: System.IntPtr, $holder: System.IntPtr, $isByRef: boolean): System.IntPtr
+            public GetJsValueType($isolate: System.IntPtr, $holder: System.IntPtr, $isByRef: boolean): Puerts.JsValueType
+            public GetNumber($isolate: System.IntPtr, $holder: System.IntPtr, $isByRef: boolean): number
+            public GetNativeObject($isolate: System.IntPtr, $holder: System.IntPtr, $isByRef: boolean): System.IntPtr
+            public GetTypeId($isolate: System.IntPtr, $holder: System.IntPtr, $isByRef: boolean): number
+            public GetString($isolate: System.IntPtr, $holder: System.IntPtr, $isByRef: boolean): string
+            public GetArrayBuffer($isolate: System.IntPtr, $holder: System.IntPtr, $isByRef: boolean): ArrayBuffer
+            public constructor()
+        }
+        class GetValueFromArgumentImpl extends System.Object implements Puerts.IGetValueFromJs {
+            protected [__keep_incompatibility]: never;
+            public GetBigInt($isolate: System.IntPtr, $holder: System.IntPtr, $isByRef: boolean): bigint
+            public GetBoolean($isolate: System.IntPtr, $holder: System.IntPtr, $isByRef: boolean): boolean
+            public GetDate($isolate: System.IntPtr, $holder: System.IntPtr, $isByRef: boolean): number
+            public GetFunction($isolate: System.IntPtr, $holder: System.IntPtr, $isByRef: boolean): System.IntPtr
+            public GetJSObject($isolate: System.IntPtr, $holder: System.IntPtr, $isByRef: boolean): System.IntPtr
+            public GetJsValueType($isolate: System.IntPtr, $holder: System.IntPtr, $isByRef: boolean): Puerts.JsValueType
+            public GetNumber($isolate: System.IntPtr, $holder: System.IntPtr, $isByRef: boolean): number
+            public GetNativeObject($isolate: System.IntPtr, $holder: System.IntPtr, $isByRef: boolean): System.IntPtr
+            public GetTypeId($isolate: System.IntPtr, $holder: System.IntPtr, $isByRef: boolean): number
+            public GetString($isolate: System.IntPtr, $holder: System.IntPtr, $isByRef: boolean): string
+            public GetArrayBuffer($isolate: System.IntPtr, $holder: System.IntPtr, $isByRef: boolean): ArrayBuffer
+            public constructor()
+        }
+        class SetValueToResultImpl extends System.Object implements Puerts.ISetValueToJs {
+            protected [__keep_incompatibility]: never;
+            public SetArrayBuffer($isolate: System.IntPtr, $holder: System.IntPtr, $arrayBuffer: ArrayBuffer): void
+            public SetBigInt($isolate: System.IntPtr, $holder: System.IntPtr, $number: bigint): void
+            public SetBoolean($isolate: System.IntPtr, $holder: System.IntPtr, $b: boolean): void
+            public SetDate($isolate: System.IntPtr, $holder: System.IntPtr, $date: number): void
+            public SetNull($isolate: System.IntPtr, $holder: System.IntPtr): void
+            public SetNumber($isolate: System.IntPtr, $holder: System.IntPtr, $number: number): void
+            public SetNativeObject($isolate: System.IntPtr, $holder: System.IntPtr, $classID: number, $self: System.IntPtr): void
+            public SetFunction($isolate: System.IntPtr, $holder: System.IntPtr, $JSFunction: System.IntPtr): void
+            public SetJSObject($isolate: System.IntPtr, $holder: System.IntPtr, $JSObject: System.IntPtr): void
+            public SetString($isolate: System.IntPtr, $holder: System.IntPtr, $str: string): void
+            public constructor()
+        }
+        class SetValueToByRefArgumentImpl extends System.Object implements Puerts.ISetValueToJs {
+            protected [__keep_incompatibility]: never;
+            public SetArrayBuffer($isolate: System.IntPtr, $holder: System.IntPtr, $arrayBuffer: ArrayBuffer): void
+            public SetBigInt($isolate: System.IntPtr, $holder: System.IntPtr, $number: bigint): void
+            public SetBoolean($isolate: System.IntPtr, $holder: System.IntPtr, $b: boolean): void
+            public SetDate($isolate: System.IntPtr, $holder: System.IntPtr, $date: number): void
+            public SetNull($isolate: System.IntPtr, $holder: System.IntPtr): void
+            public SetNumber($isolate: System.IntPtr, $holder: System.IntPtr, $number: number): void
+            public SetNativeObject($isolate: System.IntPtr, $holder: System.IntPtr, $classID: number, $self: System.IntPtr): void
+            public SetFunction($isolate: System.IntPtr, $holder: System.IntPtr, $JSFunction: System.IntPtr): void
+            public SetJSObject($isolate: System.IntPtr, $holder: System.IntPtr, $JSObject: System.IntPtr): void
+            public SetString($isolate: System.IntPtr, $holder: System.IntPtr, $str: string): void
+            public constructor()
+        }
+        class SetValueToArgumentImpl extends System.Object implements Puerts.ISetValueToJs {
+            protected [__keep_incompatibility]: never;
+            public SetArrayBuffer($isolate: System.IntPtr, $holder: System.IntPtr, $arrayBuffer: ArrayBuffer): void
+            public SetBigInt($isolate: System.IntPtr, $holder: System.IntPtr, $number: bigint): void
+            public SetBoolean($isolate: System.IntPtr, $holder: System.IntPtr, $b: boolean): void
+            public SetDate($isolate: System.IntPtr, $holder: System.IntPtr, $date: number): void
+            public SetNull($isolate: System.IntPtr, $holder: System.IntPtr): void
+            public SetNumber($isolate: System.IntPtr, $holder: System.IntPtr, $number: number): void
+            public SetNativeObject($isolate: System.IntPtr, $holder: System.IntPtr, $classID: number, $self: System.IntPtr): void
+            public SetFunction($isolate: System.IntPtr, $holder: System.IntPtr, $JSFunction: System.IntPtr): void
+            public SetJSObject($isolate: System.IntPtr, $holder: System.IntPtr, $JSObject: System.IntPtr): void
+            public SetString($isolate: System.IntPtr, $holder: System.IntPtr, $str: string): void
+            public constructor()
+        }
+        class ObjectPool extends System.Object {
+            protected [__keep_incompatibility]: never;
+            public Clear(): void
+            public FindOrAddObject($obj: any): number
+            public AddBoxedValueType($obj: any): number
+            public TryGetValue($index: number, $obj: $Ref<any>): boolean
+            public Get($index: number): any
+            public Remove($index: number): any
+            public ReplaceValueType($index: number, $o: any): any
+            public Check($checkPos: number, $maxCheck: number, $checker: System.Func$2<any, boolean>, $reverseMap: System.Collections.Generic.Dictionary$2<any, number>): number
+            public constructor()
+        }
+        class PrimitiveTypeTranslate extends System.Object {
+            protected [__keep_incompatibility]: never;
+            public static PushChar($jsEnvIdx: number, $isolate: System.IntPtr, $setValueApi: Puerts.ISetValueToJs, $holder: System.IntPtr, $i: number): void
+            public static GetChar($jsEnvIdx: number, $isolate: System.IntPtr, $getValueApi: Puerts.IGetValueFromJs, $holder: System.IntPtr, $isByRef: boolean): number
+            public static PushSByte($jsEnvIdx: number, $isolate: System.IntPtr, $setValueApi: Puerts.ISetValueToJs, $holder: System.IntPtr, $i: number): void
+            public static GetSByte($jsEnvIdx: number, $isolate: System.IntPtr, $getValueApi: Puerts.IGetValueFromJs, $holder: System.IntPtr, $isByRef: boolean): number
+            public static PushByte($jsEnvIdx: number, $isolate: System.IntPtr, $setValueApi: Puerts.ISetValueToJs, $holder: System.IntPtr, $i: number): void
+            public static GetByte($jsEnvIdx: number, $isolate: System.IntPtr, $getValueApi: Puerts.IGetValueFromJs, $holder: System.IntPtr, $isByRef: boolean): number
+            public static PushInt16($jsEnvIdx: number, $isolate: System.IntPtr, $setValueApi: Puerts.ISetValueToJs, $holder: System.IntPtr, $i: number): void
+            public static GetInt16($jsEnvIdx: number, $isolate: System.IntPtr, $getValueApi: Puerts.IGetValueFromJs, $holder: System.IntPtr, $isByRef: boolean): number
+            public static PushUInt16($jsEnvIdx: number, $isolate: System.IntPtr, $setValueApi: Puerts.ISetValueToJs, $holder: System.IntPtr, $i: number): void
+            public static GetUInt16($jsEnvIdx: number, $isolate: System.IntPtr, $getValueApi: Puerts.IGetValueFromJs, $holder: System.IntPtr, $isByRef: boolean): number
+            public static PushInt32($jsEnvIdx: number, $isolate: System.IntPtr, $setValueApi: Puerts.ISetValueToJs, $holder: System.IntPtr, $i: number): void
+            public static GetInt32($jsEnvIdx: number, $isolate: System.IntPtr, $getValueApi: Puerts.IGetValueFromJs, $holder: System.IntPtr, $isByRef: boolean): number
+            public static PushUInt32($jsEnvIdx: number, $isolate: System.IntPtr, $setValueApi: Puerts.ISetValueToJs, $holder: System.IntPtr, $i: number): void
+            public static GetUInt32($jsEnvIdx: number, $isolate: System.IntPtr, $getValueApi: Puerts.IGetValueFromJs, $holder: System.IntPtr, $isByRef: boolean): number
+            public static PushInt64($jsEnvIdx: number, $isolate: System.IntPtr, $setValueApi: Puerts.ISetValueToJs, $holder: System.IntPtr, $i: bigint): void
+            public static GetInt64($jsEnvIdx: number, $isolate: System.IntPtr, $getValueApi: Puerts.IGetValueFromJs, $holder: System.IntPtr, $isByRef: boolean): bigint
+            public static PushUInt64($jsEnvIdx: number, $isolate: System.IntPtr, $setValueApi: Puerts.ISetValueToJs, $holder: System.IntPtr, $i: bigint): void
+            public static GetUInt64($jsEnvIdx: number, $isolate: System.IntPtr, $getValueApi: Puerts.IGetValueFromJs, $holder: System.IntPtr, $isByRef: boolean): bigint
+            public static PushDouble($jsEnvIdx: number, $isolate: System.IntPtr, $setValueApi: Puerts.ISetValueToJs, $holder: System.IntPtr, $i: number): void
+            public static GetDouble($jsEnvIdx: number, $isolate: System.IntPtr, $getValueApi: Puerts.IGetValueFromJs, $holder: System.IntPtr, $isByRef: boolean): number
+            public static PushFloat($jsEnvIdx: number, $isolate: System.IntPtr, $setValueApi: Puerts.ISetValueToJs, $holder: System.IntPtr, $i: number): void
+            public static GetFloat($jsEnvIdx: number, $isolate: System.IntPtr, $getValueApi: Puerts.IGetValueFromJs, $holder: System.IntPtr, $isByRef: boolean): number
+            public static PushBoolean($jsEnvIdx: number, $isolate: System.IntPtr, $setValueApi: Puerts.ISetValueToJs, $holder: System.IntPtr, $i: boolean): void
+            public static GetBoolean($jsEnvIdx: number, $isolate: System.IntPtr, $getValueApi: Puerts.IGetValueFromJs, $holder: System.IntPtr, $isByRef: boolean): boolean
+            public static PushString($jsEnvIdx: number, $isolate: System.IntPtr, $setValueApi: Puerts.ISetValueToJs, $holder: System.IntPtr, $i: string): void
+            public static GetString($jsEnvIdx: number, $isolate: System.IntPtr, $getValueApi: Puerts.IGetValueFromJs, $holder: System.IntPtr, $isByRef: boolean): string
+            public static PushDateTime($jsEnvIdx: number, $isolate: System.IntPtr, $setValueApi: Puerts.ISetValueToJs, $holder: System.IntPtr, $date: Date): void
+            public static GetDateTime($jsEnvIdx: number, $isolate: System.IntPtr, $getValueApi: Puerts.IGetValueFromJs, $holder: System.IntPtr, $isByRef: boolean): Date
+            public static PushArrayBuffer($jsEnvIdx: number, $isolate: System.IntPtr, $setValueApi: Puerts.ISetValueToJs, $holder: System.IntPtr, $arrayBuffer: ArrayBuffer): void
+            public static GetArrayBuffer($jsEnvIdx: number, $isolate: System.IntPtr, $getValueApi: Puerts.IGetValueFromJs, $holder: System.IntPtr, $isByRef: boolean): ArrayBuffer
+        }
+        class TypeExtensions extends System.Object {
+            protected [__keep_incompatibility]: never;
+            public static GetFriendlyName($type: System.Type, $genericArguments?: System.Array$1<System.Type>): string
+        }
+        class Utils extends System.Object {
+            protected [__keep_incompatibility]: never;
+            public static TwoIntToLong($b: number, $a: number): bigint
+            public static LongToTwoInt($c: bigint, $b: $Ref<number>, $a: $Ref<number>): void
+            public static GetObjectPtr($jsEnvIdx: number, $type: System.Type, $obj: any): System.IntPtr
+            public static GetSelf($jsEnvIdx: number, $self: System.IntPtr): any
+            public static SetSelf($jsEnvIdx: number, $self: System.IntPtr, $obj: any): void
+            public static IsNotGenericOrValidGeneric($method: System.Reflection.MethodInfo, $pinfos?: System.Array$1<System.Reflection.ParameterInfo>): boolean
+            public static IsSupportedMethod($method: System.Reflection.MethodInfo): boolean
+            public static GetMethodAndOverrideMethodByName($type: System.Type, $name: string): System.Array$1<System.Reflection.MethodInfo>
+            public static GetMethodAndOverrideMethod($type: System.Type, $flag: System.Reflection.BindingFlags): System.Array$1<System.Reflection.MethodInfo>
+            public static GetExtensionMethodsOf($type_to_be_extend: System.Type): System.Collections.Generic.IEnumerable$1<System.Reflection.MethodInfo>
+            public static IsJsValueTypeMatchType($jsType: Puerts.JsValueType, $csType: System.Type, $csTypeMask: Puerts.JsValueType, $valueGetter?: Puerts.Utils.GetValueForCheck, $value?: any): boolean
+            public static GetAllTypes($exclude_generic_definition?: boolean): System.Collections.Generic.List$1<System.Type>
+        }
+        class GenericMethodWrap extends System.Object {
+            protected [__keep_incompatibility]: never;
+            public Invoke($isolate: System.IntPtr, $info: System.IntPtr, $self: System.IntPtr, $argumentsLen: number): void
+            public constructor($memberName: string, $env: Puerts.JsEnv, $definitionType: System.Type, $genericArguments: System.Array$1<System.Type>)
+            public constructor()
+        }
+        class LazyMembersWrap extends System.Object {
+            protected [__keep_incompatibility]: never;
+            public constructor($memberName: string, $jsEnv: Puerts.JsEnv, $definitionType: System.Type)
+            public constructor()
+        }
+        class LazyFieldWrap extends Puerts.LazyMembersWrap {
+            protected [__keep_incompatibility]: never;
+            public InvokeSetter($isolate: System.IntPtr, $info: System.IntPtr, $self: System.IntPtr, $argumentsLen: number): void
+            public InvokeGetter($isolate: System.IntPtr, $info: System.IntPtr, $self: System.IntPtr, $argumentsLen: number): void
+            public constructor($memberName: string, $jsEnv: Puerts.JsEnv, $definitionType: System.Type)
+        }
+        class LazyPropertyWrap extends Puerts.LazyMembersWrap {
+            protected [__keep_incompatibility]: never;
+            public Invoke($isolate: System.IntPtr, $info: System.IntPtr, $self: System.IntPtr, $argumentsLen: number): void
+            public constructor($memberName: string, $jsEnv: Puerts.JsEnv, $definitionType: System.Type)
+        }
+        class LazyMethodWrap extends Puerts.LazyMembersWrap {
+            protected [__keep_incompatibility]: never;
+            public Invoke($isolate: System.IntPtr, $info: System.IntPtr, $self: System.IntPtr, $argumentsLen: number): void
+            public constructor($memberName: string, $jsEnv: Puerts.JsEnv, $definitionType: System.Type)
+        }
+        class JSCallInfo extends System.ValueType {
+            protected [__keep_incompatibility]: never;
+            public Isolate: System.IntPtr
+            public Info: System.IntPtr
+            public Self: System.IntPtr
+            public Length: number
+            public JsTypes: System.Array$1<Puerts.JsValueType>
+            public Values: System.Array$1<any>
+            public NativePtrs: System.Array$1<System.IntPtr>
+            public constructor($isolate: System.IntPtr, $info: System.IntPtr, $self: System.IntPtr, $len: number)
+            public constructor()
+        }
+        class Parameters extends System.Object {
+            protected [__keep_incompatibility]: never;
+            public IsMatch($jsCallInfo: Puerts.JSCallInfo): boolean
+            public GetArguments($callInfo: Puerts.JSCallInfo): System.Array$1<any>
+            public FillByRefParameters($callInfo: Puerts.JSCallInfo): void
+            public ClearArguments(): void
+            public constructor($parameterInfos: System.Array$1<System.Reflection.ParameterInfo>, $jsEnv: Puerts.JsEnv)
+            public constructor()
+        }
+        class OverloadReflectionWrap extends System.Object {
+            protected [__keep_incompatibility]: never;
+            public IsMatch($jsCallInfo: Puerts.JSCallInfo): boolean
+            public Invoke($jsCallInfo: Puerts.JSCallInfo): void
+            public Construct($callInfo: Puerts.JSCallInfo): any
+            public constructor($methodBase: System.Reflection.MethodBase, $jsEnv: Puerts.JsEnv, $extensionMethod?: boolean)
+            public constructor($type: System.Type, $jsEnv: Puerts.JsEnv)
+            public constructor()
+        }
+        class DelegateConstructWrap extends System.Object {
+            protected [__keep_incompatibility]: never;
+            public Construct($isolate: System.IntPtr, $info: System.IntPtr, $argumentsLen: number): any
+            public constructor($delegateType: System.Type, $jsEnv: Puerts.JsEnv)
+            public constructor()
+        }
+        class MethodReflectionWrap extends System.Object {
+            protected [__keep_incompatibility]: never;
+            public Invoke($isolate: System.IntPtr, $info: System.IntPtr, $self: System.IntPtr, $argumentsLen: number): void
+            public Construct($isolate: System.IntPtr, $info: System.IntPtr, $argumentsLen: number): any
+            public constructor($name: string, $overloads: System.Collections.Generic.List$1<Puerts.OverloadReflectionWrap>)
+            public constructor()
+        }
+        enum LazyMemberType { Constructor = 1, Method = 2, Property = 3, Field = 4 }
+        class LazyMemberRegisterInfo extends System.ValueType {
+            protected [__keep_incompatibility]: never;
+            public IsStatic: boolean
+            public Name: string
+            public Type: Puerts.LazyMemberType
+            public HasGetter: boolean
+            public HasSetter: boolean
+        }
+        class PropertyRegisterInfo extends System.ValueType {
+            protected [__keep_incompatibility]: never;
+            public IsStatic: boolean
+            public Getter: Puerts.V8FunctionCallback
+            public Setter: Puerts.V8FunctionCallback
+        }
+        class MethodKey extends System.ValueType {
+            protected [__keep_incompatibility]: never;
+            public Name: string
+            public IsStatic: boolean
+            public IsExtension: boolean
+        }
+    }
     namespace UnityEngine.UI {
         class AnimationTriggers extends System.Object {
             protected [__keep_incompatibility]: never;
@@ -29568,6 +30296,11 @@ declare namespace CS {
         class AxisEventData extends UnityEngine.EventSystems.BaseEventData {
             protected [__keep_incompatibility]: never;
         }
+        class EventTrigger extends UnityEngine.MonoBehaviour implements UnityEngine.EventSystems.IInitializePotentialDragHandler, UnityEngine.EventSystems.IDragHandler, UnityEngine.EventSystems.IEndDragHandler, UnityEngine.EventSystems.IDropHandler, UnityEngine.EventSystems.IScrollHandler, UnityEngine.EventSystems.IEventSystemHandler, UnityEngine.EventSystems.IUpdateSelectedHandler, UnityEngine.EventSystems.IPointerEnterHandler, UnityEngine.EventSystems.ISelectHandler, UnityEngine.EventSystems.IPointerExitHandler, UnityEngine.EventSystems.IDeselectHandler, UnityEngine.EventSystems.IPointerDownHandler, UnityEngine.EventSystems.IMoveHandler, UnityEngine.EventSystems.IPointerUpHandler, UnityEngine.EventSystems.ISubmitHandler, UnityEngine.EventSystems.IPointerClickHandler, UnityEngine.EventSystems.ICancelHandler, UnityEngine.EventSystems.IBeginDragHandler {
+            protected [__keep_incompatibility]: never;
+        }
+        interface IDropHandler extends UnityEngine.EventSystems.IEventSystemHandler {
+        }
     }
     namespace UnityEngine.UI.Button {
         class ButtonClickedEvent extends UnityEngine.Events.UnityEvent implements UnityEngine.ISerializationCallbackReceiver {
@@ -29717,609 +30450,6 @@ declare namespace CS {
             public mask: UnityEngine.Sprite
         }
     }
-    namespace Puerts {
-        class ArrayBuffer extends System.Object {
-            protected [__keep_incompatibility]: never;
-            public Bytes: System.Array$1<number>
-            public Count: number
-            public constructor($bytes: System.Array$1<number>)
-            public constructor($bytes: System.Array$1<number>, $count: number)
-            public constructor($ptr: System.IntPtr, $length: number)
-            public constructor()
-        }
-        class GenericDelegate extends System.Object {
-            protected [__keep_incompatibility]: never;
-            public TryGetDelegate($key: System.Type, $value: $Ref<Function>): boolean
-            public AddDelegate($key: System.Type, $value: Function): void
-            public Action(): void
-        }
-        type JSObject = any;
-        interface TypedValue {
-            Target: any
-        }
-        class Any$1<T> extends System.Object implements Puerts.TypedValue {
-            protected [__keep_incompatibility]: never;
-            public get Target(): any;
-        }
-        class ByteValue extends Puerts.Any$1<number> implements Puerts.TypedValue {
-            protected [__keep_incompatibility]: never;
-            public get Target(): any;
-            public constructor($i: number)
-        }
-        class SByteValue extends Puerts.Any$1<number> implements Puerts.TypedValue {
-            protected [__keep_incompatibility]: never;
-            public get Target(): any;
-            public constructor($i: number)
-        }
-        class CharValue extends Puerts.Any$1<number> implements Puerts.TypedValue {
-            protected [__keep_incompatibility]: never;
-            public get Target(): any;
-            public constructor($i: number)
-        }
-        class Int16Value extends Puerts.Any$1<number> implements Puerts.TypedValue {
-            protected [__keep_incompatibility]: never;
-            public get Target(): any;
-            public constructor($i: number)
-        }
-        class UInt16Value extends Puerts.Any$1<number> implements Puerts.TypedValue {
-            protected [__keep_incompatibility]: never;
-            public get Target(): any;
-            public constructor($i: number)
-        }
-        class Int32Value extends Puerts.Any$1<number> implements Puerts.TypedValue {
-            protected [__keep_incompatibility]: never;
-            public get Target(): any;
-            public constructor($i: number)
-        }
-        class UInt32Value extends Puerts.Any$1<number> implements Puerts.TypedValue {
-            protected [__keep_incompatibility]: never;
-            public get Target(): any;
-            public constructor($i: number)
-        }
-        class Int64Value extends Puerts.Any$1<bigint> implements Puerts.TypedValue {
-            protected [__keep_incompatibility]: never;
-            public get Target(): any;
-            public constructor($i: bigint)
-            public constructor($str: string)
-        }
-        class UInt64Value extends Puerts.Any$1<bigint> implements Puerts.TypedValue {
-            protected [__keep_incompatibility]: never;
-            public get Target(): any;
-            public constructor($i: bigint)
-            public constructor($str: string)
-        }
-        class FloatValue extends Puerts.Any$1<number> implements Puerts.TypedValue {
-            protected [__keep_incompatibility]: never;
-            public get Target(): any;
-            public constructor($i: number)
-        }
-        class DoubleValue extends Puerts.Any$1<number> implements Puerts.TypedValue {
-            protected [__keep_incompatibility]: never;
-            public get Target(): any;
-            public constructor($i: number)
-        }
-        interface JSFunctionCallback {
-            (isolate: System.IntPtr, info: System.IntPtr, self: System.IntPtr, argumentsLen: number): void;
-            Invoke?: (isolate: System.IntPtr, info: System.IntPtr, self: System.IntPtr, argumentsLen: number) => void;
-        }
-        var JSFunctionCallback: { new(func: (isolate: System.IntPtr, info: System.IntPtr, self: System.IntPtr, argumentsLen: number) => void): JSFunctionCallback; }
-        interface JSConstructorCallback {
-            (isolate: System.IntPtr, info: System.IntPtr, argumentsLen: number): any;
-            Invoke?: (isolate: System.IntPtr, info: System.IntPtr, argumentsLen: number) => any;
-        }
-        var JSConstructorCallback: { new(func: (isolate: System.IntPtr, info: System.IntPtr, argumentsLen: number) => any): JSConstructorCallback; }
-        class JsEnv extends System.Object implements System.IDisposable {
-            protected [__keep_incompatibility]: never;
-            public static jsEnvs: System.Collections.Generic.List$1<Puerts.JsEnv>
-            public Backend: Puerts.Backend
-            public get Index(): number;
-            public ExecuteModule($filename: string): void
-            public Eval($chunk: string, $chunkName?: string): void
-            public ClearModuleCache(): void
-            public static ClearAllModuleCaches(): void
-            public AddLazyStaticWrapLoader($type: System.Type, $lazyStaticWrapLoader: System.Func$1<Puerts.TypeRegisterInfo>): void
-            public AddLazyStaticWrapLoaderGenericDefinition($typeDefinition: System.Type, $genericArgumentsType: System.Array$1<System.Type>, $wrapperDefinition: System.Type): void
-            public RegisterGeneralGetSet($type: System.Type, $getter: Puerts.GeneralGetter, $setter: Puerts.GeneralSetter): void
-            public GetTypeId($type: System.Type): number
-            public Tick(): void
-            public WaitDebugger(): void
-            public WaitDebuggerAsync(): $Task<any>
-            public Dispose(): void
-            public constructor()
-            public constructor($loader: Puerts.ILoader, $debugPort?: number)
-            public constructor($loader: Puerts.ILoader, $externalRuntime: System.IntPtr, $externalContext: System.IntPtr)
-            public constructor($loader: Puerts.ILoader, $debugPort: number, $externalRuntime: System.IntPtr, $externalContext: System.IntPtr)
-        }
-        interface JsEnv {
-            AutoUsing(): void;
-            UsingAction(...args: string[]): void;
-            UsingFunc(...args: string[]): void;
-            UsingGeneric($usingAction: boolean, ...types: System.Type[]): void;
-            GlobalListenerQuit(): void;
-            TryAutoUsing($printWarning?: boolean): void;
-            SupportCommonJS(): void;
-            RequireXORModules(): void;
-            RequireXORModules($throwOnFailure: boolean): void;
-            ComponentJSObjectCreator(): System.Func$3<XOR.TsComponent, string, Puerts.JSObject>;
-            UsingTick(): void;
-        }
-        class Backend extends System.Object {
-            protected [__keep_incompatibility]: never;
-            public constructor($env: Puerts.JsEnv)
-            public constructor()
-        }
-        interface ILoader {
-            FileExists($filepath: string): boolean
-            ReadFile($filepath: string, $debugpath: $Ref<string>): string
-        }
-        class TypeRegisterInfo extends System.Object {
-            protected [__keep_incompatibility]: never;
-            public BlittableCopy: boolean
-            public Constructor: Puerts.V8ConstructorCallback
-            public Methods: System.Collections.Generic.Dictionary$2<Puerts.MethodKey, Puerts.V8FunctionCallback>
-            public Properties: System.Collections.Generic.Dictionary$2<string, Puerts.PropertyRegisterInfo>
-            public LazyMembers: System.Collections.Generic.List$1<Puerts.LazyMemberRegisterInfo>
-            public constructor()
-        }
-        interface GeneralGetter {
-            (jsEnvIdx: number, isolate: System.IntPtr, getValueApi: Puerts.IGetValueFromJs, value: System.IntPtr, isByRef: boolean): any;
-            Invoke?: (jsEnvIdx: number, isolate: System.IntPtr, getValueApi: Puerts.IGetValueFromJs, value: System.IntPtr, isByRef: boolean) => any;
-        }
-        var GeneralGetter: { new(func: (jsEnvIdx: number, isolate: System.IntPtr, getValueApi: Puerts.IGetValueFromJs, value: System.IntPtr, isByRef: boolean) => any): GeneralGetter; }
-        interface IGetValueFromJs {
-            GetJsValueType($isolate: System.IntPtr, $holder: System.IntPtr, $isByRef: boolean): Puerts.JsValueType
-            GetNumber($isolate: System.IntPtr, $holder: System.IntPtr, $isByRef: boolean): number
-            GetDate($isolate: System.IntPtr, $holder: System.IntPtr, $isByRef: boolean): number
-            GetString($isolate: System.IntPtr, $holder: System.IntPtr, $isByRef: boolean): string
-            GetBoolean($isolate: System.IntPtr, $holder: System.IntPtr, $isByRef: boolean): boolean
-            GetBigInt($isolate: System.IntPtr, $holder: System.IntPtr, $isByRef: boolean): bigint
-            GetNativeObject($isolate: System.IntPtr, $holder: System.IntPtr, $isByRef: boolean): System.IntPtr
-            GetTypeId($isolate: System.IntPtr, $holder: System.IntPtr, $isByRef: boolean): number
-            GetJSObject($isolate: System.IntPtr, $holder: System.IntPtr, $isByRef: boolean): System.IntPtr
-            GetFunction($isolate: System.IntPtr, $holder: System.IntPtr, $isByRef: boolean): System.IntPtr
-            GetArrayBuffer($isolate: System.IntPtr, $holder: System.IntPtr, $isByRef: boolean): ArrayBuffer
-        }
-        interface GeneralSetter {
-            (jsEnvIdx: number, isolate: System.IntPtr, setValueApi: Puerts.ISetValueToJs, holder: System.IntPtr, obj: any): void;
-            Invoke?: (jsEnvIdx: number, isolate: System.IntPtr, setValueApi: Puerts.ISetValueToJs, holder: System.IntPtr, obj: any) => void;
-        }
-        var GeneralSetter: { new(func: (jsEnvIdx: number, isolate: System.IntPtr, setValueApi: Puerts.ISetValueToJs, holder: System.IntPtr, obj: any) => void): GeneralSetter; }
-        interface ISetValueToJs {
-            SetNativeObject($isolate: System.IntPtr, $holder: System.IntPtr, $classID: number, $self: System.IntPtr): void
-            SetJSObject($isolate: System.IntPtr, $holder: System.IntPtr, $JSObject: System.IntPtr): void
-            SetFunction($isolate: System.IntPtr, $holder: System.IntPtr, $JSFunction: System.IntPtr): void
-            SetNumber($isolate: System.IntPtr, $holder: System.IntPtr, $number: number): void
-            SetString($isolate: System.IntPtr, $holder: System.IntPtr, $str: string): void
-            SetBigInt($isolate: System.IntPtr, $holder: System.IntPtr, $number: bigint): void
-            SetBoolean($isolate: System.IntPtr, $holder: System.IntPtr, $b: boolean): void
-            SetDate($isolate: System.IntPtr, $holder: System.IntPtr, $date: number): void
-            SetNull($isolate: System.IntPtr, $holder: System.IntPtr): void
-            SetArrayBuffer($isolate: System.IntPtr, $holder: System.IntPtr, $arrayBuffer: ArrayBuffer): void
-        }
-        interface IModuleChecker {
-            IsESM($filepath: string): boolean
-        }
-        class DefaultLoader extends System.Object implements Puerts.ILoader, Puerts.IModuleChecker {
-            protected [__keep_incompatibility]: never;
-            public FileExists($filepath: string): boolean
-            public ReadFile($filepath: string, $debugpath: $Ref<string>): string
-            public IsESM($filepath: string): boolean
-            public constructor()
-            public constructor($root: string)
-        }
-        class BackendV8 extends Puerts.Backend {
-            protected [__keep_incompatibility]: never;
-            public IdleNotificationDeadline($DeadlineInSeconds: number): boolean
-            public LowMemoryNotification(): void
-            public RequestMinorGarbageCollectionForTesting(): void
-            public RequestFullGarbageCollectionForTesting(): void
-            public constructor($env: Puerts.JsEnv)
-        }
-        class BackendNodeJS extends Puerts.BackendV8 {
-            protected [__keep_incompatibility]: never;
-            public constructor($env: Puerts.JsEnv)
-        }
-        class BackendQuickJS extends Puerts.Backend {
-            protected [__keep_incompatibility]: never;
-            public LowMemoryNotification(): void
-            public constructor($env: Puerts.JsEnv)
-        }
-        class MonoPInvokeCallbackAttribute extends System.Attribute implements System.Runtime.InteropServices._Attribute {
-            protected [__keep_incompatibility]: never;
-            public constructor($t: System.Type)
-            public constructor()
-        }
-        interface V8FunctionCallback {
-            (isolate: System.IntPtr, info: System.IntPtr, self: System.IntPtr, paramLen: number, data: bigint): void;
-            Invoke?: (isolate: System.IntPtr, info: System.IntPtr, self: System.IntPtr, paramLen: number, data: bigint) => void;
-        }
-        var V8FunctionCallback: { new(func: (isolate: System.IntPtr, info: System.IntPtr, self: System.IntPtr, paramLen: number, data: bigint) => void): V8FunctionCallback; }
-        interface V8ConstructorCallback {
-            (isolate: System.IntPtr, info: System.IntPtr, paramLen: number, data: bigint): System.IntPtr;
-            Invoke?: (isolate: System.IntPtr, info: System.IntPtr, paramLen: number, data: bigint) => System.IntPtr;
-        }
-        var V8ConstructorCallback: { new(func: (isolate: System.IntPtr, info: System.IntPtr, paramLen: number, data: bigint) => System.IntPtr): V8ConstructorCallback; }
-        interface ModuleResolveCallback {
-            (identifer: string, jsEnvIdx: number, pathForDebug: $Ref<string>): string;
-            Invoke?: (identifer: string, jsEnvIdx: number, pathForDebug: $Ref<string>) => string;
-        }
-        var ModuleResolveCallback: { new(func: (identifer: string, jsEnvIdx: number, pathForDebug: $Ref<string>) => string): ModuleResolveCallback; }
-        interface V8DestructorCallback {
-            (self: System.IntPtr, data: bigint): void;
-            Invoke?: (self: System.IntPtr, data: bigint) => void;
-        }
-        var V8DestructorCallback: { new(func: (self: System.IntPtr, data: bigint) => void): V8DestructorCallback; }
-        interface LogCallback {
-            (content: string): void;
-            Invoke?: (content: string) => void;
-        }
-        var LogCallback: { new(func: (content: string) => void): LogCallback; }
-        enum JsValueType { Invalid = 0, NullOrUndefined = 1, BigInt = 2, Number = 4, String = 8, Boolean = 16, NativeObject = 32, JsObject = 64, Array = 128, Function = 256, Date = 512, ArrayBuffer = 1024, Unknow = 2048, Any = 2047 }
-        class PuertsDLL extends System.Object {
-            protected [__keep_incompatibility]: never;
-            public static GetLibVersion(): number
-            public static GetApiLevel(): number
-            public static GetLibBackend(): number
-            public static CreateJSEngine(): System.IntPtr
-            public static CreateJSEngineWithExternalEnv($externalRuntime: System.IntPtr, $externalContext: System.IntPtr): System.IntPtr
-            public static DestroyJSEngine($isolate: System.IntPtr): void
-            public static SetGlobalFunction($isolate: System.IntPtr, $name: string, $v8FunctionCallback: System.IntPtr, $data: bigint): void
-            public static SetGlobalFunction($isolate: System.IntPtr, $name: string, $v8FunctionCallback: Puerts.V8FunctionCallback, $data: bigint): void
-            public static GetLastExceptionInfo($isolate: System.IntPtr, $strlen: $Ref<number>): System.IntPtr
-            public static GetLastExceptionInfo($isolate: System.IntPtr): string
-            public static LowMemoryNotification($isolate: System.IntPtr): void
-            public static IdleNotificationDeadline($isolate: System.IntPtr, $DeadlineInSeconds: number): boolean
-            public static RequestMinorGarbageCollectionForTesting($isolate: System.IntPtr): void
-            public static RequestFullGarbageCollectionForTesting($isolate: System.IntPtr): void
-            public static SetGeneralDestructor($isolate: System.IntPtr, $generalDestructor: System.IntPtr): void
-            public static SetGeneralDestructor($isolate: System.IntPtr, $generalDestructor: Puerts.V8DestructorCallback): void
-            public static SetModuleResolver($isolate: System.IntPtr, $callback: Puerts.ModuleResolveCallback, $jsEnvIdx: number): void
-            public static ExecuteModule($isolate: System.IntPtr, $path: string, $exportee: string): System.IntPtr
-            public static Eval($isolate: System.IntPtr, $code: string, $path: string): System.IntPtr
-            public static EvalChecked($isolate: System.IntPtr, $code: string, $path: string): System.IntPtr
-            public static _RegisterClass($isolate: System.IntPtr, $BaseTypeId: number, $fullName: string, $constructor: System.IntPtr, $destructor: System.IntPtr, $data: bigint): number
-            public static RegisterClass($isolate: System.IntPtr, $BaseTypeId: number, $fullName: string, $constructor: Puerts.V8ConstructorCallback, $destructor: Puerts.V8DestructorCallback, $data: bigint): number
-            public static RegisterStruct($isolate: System.IntPtr, $BaseTypeId: number, $fullName: string, $constructor: System.IntPtr, $destructor: System.IntPtr, $data: bigint, $size: number): number
-            public static RegisterStruct($isolate: System.IntPtr, $BaseTypeId: number, $fullName: string, $constructor: Puerts.V8ConstructorCallback, $destructor: Puerts.V8DestructorCallback, $data: bigint, $size: number): number
-            public static RegisterFunction($isolate: System.IntPtr, $classID: number, $name: string, $isStatic: boolean, $callback: System.IntPtr, $data: bigint): boolean
-            public static RegisterFunction($isolate: System.IntPtr, $classID: number, $name: string, $isStatic: boolean, $callback: Puerts.V8FunctionCallback, $data: bigint): boolean
-            public static RegisterProperty($isolate: System.IntPtr, $classID: number, $name: string, $isStatic: boolean, $getter: System.IntPtr, $getterData: bigint, $setter: System.IntPtr, $setterData: bigint, $dontDelete: boolean): boolean
-            public static RegisterProperty($isolate: System.IntPtr, $classID: number, $name: string, $isStatic: boolean, $getter: Puerts.V8FunctionCallback, $getterData: bigint, $setter: Puerts.V8FunctionCallback, $setterData: bigint, $dontDelete: boolean): boolean
-            public static ReturnClass($isolate: System.IntPtr, $info: System.IntPtr, $classID: number): void
-            public static ReturnObject($isolate: System.IntPtr, $info: System.IntPtr, $classID: number, $self: System.IntPtr): void
-            public static ReturnNumber($isolate: System.IntPtr, $info: System.IntPtr, $number: number): void
-            public static __ReturnString($isolate: System.IntPtr, $info: System.IntPtr, $str: string): void
-            public static ReturnString($isolate: System.IntPtr, $info: System.IntPtr, $str: string): void
-            public static ReturnBigInt($isolate: System.IntPtr, $info: System.IntPtr, $number: bigint): void
-            public static ReturnBoolean($isolate: System.IntPtr, $info: System.IntPtr, $b: boolean): void
-            public static ReturnDate($isolate: System.IntPtr, $info: System.IntPtr, $date: number): void
-            public static ReturnNull($isolate: System.IntPtr, $info: System.IntPtr): void
-            public static ReturnFunction($isolate: System.IntPtr, $info: System.IntPtr, $JSFunction: System.IntPtr): void
-            public static ReturnCSharpFunctionCallback($isolate: System.IntPtr, $info: System.IntPtr, $v8FunctionCallback: Puerts.V8FunctionCallback, $data: bigint): void
-            public static ReturnJSObject($isolate: System.IntPtr, $info: System.IntPtr, $JSObject: System.IntPtr): void
-            public static GetArgumentValue($info: System.IntPtr, $index: number): System.IntPtr
-            public static GetJsValueType($isolate: System.IntPtr, $value: System.IntPtr, $isByRef: boolean): Puerts.JsValueType
-            public static GetArgumentType($isolate: System.IntPtr, $info: System.IntPtr, $index: number, $isByRef: boolean): Puerts.JsValueType
-            public static GetNumberFromValue($isolate: System.IntPtr, $value: System.IntPtr, $isByRef: boolean): number
-            public static GetDateFromValue($isolate: System.IntPtr, $value: System.IntPtr, $isByRef: boolean): number
-            public static GetStringFromValue($isolate: System.IntPtr, $value: System.IntPtr, $len: $Ref<number>, $isByRef: boolean): System.IntPtr
-            public static GetStringFromValue($isolate: System.IntPtr, $value: System.IntPtr, $isByRef: boolean): string
-            public static GetBooleanFromValue($isolate: System.IntPtr, $value: System.IntPtr, $isByRef: boolean): boolean
-            public static ValueIsBigInt($isolate: System.IntPtr, $value: System.IntPtr, $isByRef: boolean): boolean
-            public static GetBigIntFromValue($isolate: System.IntPtr, $value: System.IntPtr, $isByRef: boolean): bigint
-            public static GetBigIntFromValueChecked($isolate: System.IntPtr, $value: System.IntPtr, $isByRef: boolean): bigint
-            public static GetObjectFromValue($isolate: System.IntPtr, $value: System.IntPtr, $isByRef: boolean): System.IntPtr
-            public static GetTypeIdFromValue($isolate: System.IntPtr, $value: System.IntPtr, $isByRef: boolean): number
-            public static GetFunctionFromValue($isolate: System.IntPtr, $value: System.IntPtr, $isByRef: boolean): System.IntPtr
-            public static GetJSObjectFromValue($isolate: System.IntPtr, $value: System.IntPtr, $isByRef: boolean): System.IntPtr
-            public static SetNumberToOutValue($isolate: System.IntPtr, $value: System.IntPtr, $number: number): void
-            public static SetDateToOutValue($isolate: System.IntPtr, $value: System.IntPtr, $date: number): void
-            public static SetStringToOutValue($isolate: System.IntPtr, $value: System.IntPtr, $str: string): void
-            public static SetBooleanToOutValue($isolate: System.IntPtr, $value: System.IntPtr, $b: boolean): void
-            public static SetBigIntToOutValue($isolate: System.IntPtr, $value: System.IntPtr, $bigInt: bigint): void
-            public static SetObjectToOutValue($isolate: System.IntPtr, $value: System.IntPtr, $classId: number, $ptr: System.IntPtr): void
-            public static SetNullToOutValue($isolate: System.IntPtr, $value: System.IntPtr): void
-            public static ThrowException($isolate: System.IntPtr, $message: System.Array$1<number>): void
-            public static ThrowException($isolate: System.IntPtr, $message: string): void
-            public static PushNullForJSFunction($function: System.IntPtr): void
-            public static PushDateForJSFunction($function: System.IntPtr, $dateValue: number): void
-            public static PushBooleanForJSFunction($function: System.IntPtr, $b: boolean): void
-            public static PushBigIntForJSFunction($function: System.IntPtr, $l: bigint): void
-            public static __PushStringForJSFunction($function: System.IntPtr, $str: string): void
-            public static PushStringForJSFunction($function: System.IntPtr, $str: string): void
-            public static PushNumberForJSFunction($function: System.IntPtr, $d: number): void
-            public static PushObjectForJSFunction($function: System.IntPtr, $classId: number, $objectId: System.IntPtr): void
-            public static PushJSFunctionForJSFunction($function: System.IntPtr, $JSFunction: System.IntPtr): void
-            public static PushJSObjectForJSFunction($function: System.IntPtr, $JSObject: System.IntPtr): void
-            public static InvokeJSFunction($function: System.IntPtr, $hasResult: boolean): System.IntPtr
-            public static GetFunctionLastExceptionInfo($function: System.IntPtr, $len: $Ref<number>): System.IntPtr
-            public static ReleaseJSFunction($isolate: System.IntPtr, $function: System.IntPtr): void
-            public static ReleaseJSObject($isolate: System.IntPtr, $obj: System.IntPtr): void
-            public static GetFunctionLastExceptionInfo($function: System.IntPtr): string
-            public static GetResultType($resultInfo: System.IntPtr): Puerts.JsValueType
-            public static GetNumberFromResult($resultInfo: System.IntPtr): number
-            public static GetDateFromResult($resultInfo: System.IntPtr): number
-            public static GetStringFromResult($resultInfo: System.IntPtr, $len: $Ref<number>): System.IntPtr
-            public static GetStringFromResult($resultInfo: System.IntPtr): string
-            public static GetBooleanFromResult($resultInfo: System.IntPtr): boolean
-            public static ResultIsBigInt($resultInfo: System.IntPtr): boolean
-            public static GetBigIntFromResult($resultInfo: System.IntPtr): bigint
-            public static GetBigIntFromResultCheck($resultInfo: System.IntPtr): bigint
-            public static GetObjectFromResult($resultInfo: System.IntPtr): System.IntPtr
-            public static GetTypeIdFromResult($resultInfo: System.IntPtr): number
-            public static GetFunctionFromResult($resultInfo: System.IntPtr): System.IntPtr
-            public static GetJSObjectFromResult($resultInfo: System.IntPtr): System.IntPtr
-            public static ResetResult($resultInfo: System.IntPtr): void
-            public static CreateInspector($isolate: System.IntPtr, $port: number): void
-            public static DestroyInspector($isolate: System.IntPtr): void
-            public static InspectorTick($isolate: System.IntPtr): boolean
-            public static LogicTick($isolate: System.IntPtr): void
-            public static SetLogCallback($log: System.IntPtr, $logWarning: System.IntPtr, $logError: System.IntPtr): void
-            public static SetLogCallback($log: Puerts.LogCallback, $logWarning: Puerts.LogCallback, $logError: Puerts.LogCallback): void
-            public static ReturnArrayBuffer($isolate: System.IntPtr, $info: System.IntPtr, $bytes: System.Array$1<number>, $Length: number): void
-            public static SetArrayBufferToOutValue($isolate: System.IntPtr, $value: System.IntPtr, $bytes: System.Array$1<number>, $length: number): void
-            public static PushArrayBufferForJSFunction($function: System.IntPtr, $bytes: System.Array$1<number>, $length: number): void
-            public static GetArrayBufferFromValue($isolate: System.IntPtr, $value: System.IntPtr, $length: $Ref<number>, $isOut: boolean): System.IntPtr
-            public static GetArrayBufferFromResult($function: System.IntPtr, $length: $Ref<number>): System.IntPtr
-            public constructor()
-        }
-        class ArgHelper extends System.ValueType {
-            protected [__keep_incompatibility]: never;
-            public static IsMatchParams($jsEnvIdx: number, $isolate: System.IntPtr, $info: System.IntPtr, $expectJsType: Puerts.JsValueType, $expectCsType: System.Type, $start: number, $end: number, $v8Value: System.IntPtr, $arg: $Ref<any>, $argValueType: $Ref<Puerts.JsValueType>): boolean
-            public static IsMatch($jsEnvIdx: number, $isolate: System.IntPtr, $expectJsType: Puerts.JsValueType, $expectCsType: System.Type, $isByRef: boolean, $isOut: boolean, $v8Value: System.IntPtr, $arg: $Ref<any>, $argValueType: $Ref<Puerts.JsValueType>): boolean
-        }
-        class ResultHelper extends System.ValueType {
-            protected [__keep_incompatibility]: never;
-        }
-        class GeneralGetterManager extends System.Object {
-            protected [__keep_incompatibility]: never;
-            public GetTranslateFunc($type: System.Type): Puerts.GeneralGetter
-            public RegisterGetter($type: System.Type, $generalGetter: Puerts.GeneralGetter): void
-            public GetSelf($jsEnvIdx: number, $Self: System.IntPtr): any
-            public static GetJsTypeMask($type: System.Type): Puerts.JsValueType
-        }
-        class GeneralSetterManager extends System.Object {
-            protected [__keep_incompatibility]: never;
-            public GetTranslateFunc($type: System.Type): Puerts.GeneralSetter
-            public RegisterSetter($type: System.Type, $generalSetter: Puerts.GeneralSetter): void
-            public constructor()
-        }
-        class NativeValueApi extends System.Object {
-            protected [__keep_incompatibility]: never;
-            public static GetValueFromArgument: Puerts.IGetValueFromJs
-            public static GetValueFromResult: Puerts.IGetValueFromJs
-            public static SetValueToResult: Puerts.ISetValueToJs
-            public static SetValueToByRefArgument: Puerts.ISetValueToJs
-            public static SetValueToArgument: Puerts.ISetValueToJs
-        }
-        class GetValueFromResultImpl extends System.Object implements Puerts.IGetValueFromJs {
-            protected [__keep_incompatibility]: never;
-            public GetBigInt($isolate: System.IntPtr, $holder: System.IntPtr, $isByRef: boolean): bigint
-            public GetBoolean($isolate: System.IntPtr, $holder: System.IntPtr, $isByRef: boolean): boolean
-            public GetDate($isolate: System.IntPtr, $holder: System.IntPtr, $isByRef: boolean): number
-            public GetFunction($isolate: System.IntPtr, $holder: System.IntPtr, $isByRef: boolean): System.IntPtr
-            public GetJSObject($isolate: System.IntPtr, $holder: System.IntPtr, $isByRef: boolean): System.IntPtr
-            public GetJsValueType($isolate: System.IntPtr, $holder: System.IntPtr, $isByRef: boolean): Puerts.JsValueType
-            public GetNumber($isolate: System.IntPtr, $holder: System.IntPtr, $isByRef: boolean): number
-            public GetNativeObject($isolate: System.IntPtr, $holder: System.IntPtr, $isByRef: boolean): System.IntPtr
-            public GetTypeId($isolate: System.IntPtr, $holder: System.IntPtr, $isByRef: boolean): number
-            public GetString($isolate: System.IntPtr, $holder: System.IntPtr, $isByRef: boolean): string
-            public GetArrayBuffer($isolate: System.IntPtr, $holder: System.IntPtr, $isByRef: boolean): ArrayBuffer
-            public constructor()
-        }
-        class GetValueFromArgumentImpl extends System.Object implements Puerts.IGetValueFromJs {
-            protected [__keep_incompatibility]: never;
-            public GetBigInt($isolate: System.IntPtr, $holder: System.IntPtr, $isByRef: boolean): bigint
-            public GetBoolean($isolate: System.IntPtr, $holder: System.IntPtr, $isByRef: boolean): boolean
-            public GetDate($isolate: System.IntPtr, $holder: System.IntPtr, $isByRef: boolean): number
-            public GetFunction($isolate: System.IntPtr, $holder: System.IntPtr, $isByRef: boolean): System.IntPtr
-            public GetJSObject($isolate: System.IntPtr, $holder: System.IntPtr, $isByRef: boolean): System.IntPtr
-            public GetJsValueType($isolate: System.IntPtr, $holder: System.IntPtr, $isByRef: boolean): Puerts.JsValueType
-            public GetNumber($isolate: System.IntPtr, $holder: System.IntPtr, $isByRef: boolean): number
-            public GetNativeObject($isolate: System.IntPtr, $holder: System.IntPtr, $isByRef: boolean): System.IntPtr
-            public GetTypeId($isolate: System.IntPtr, $holder: System.IntPtr, $isByRef: boolean): number
-            public GetString($isolate: System.IntPtr, $holder: System.IntPtr, $isByRef: boolean): string
-            public GetArrayBuffer($isolate: System.IntPtr, $holder: System.IntPtr, $isByRef: boolean): ArrayBuffer
-            public constructor()
-        }
-        class SetValueToResultImpl extends System.Object implements Puerts.ISetValueToJs {
-            protected [__keep_incompatibility]: never;
-            public SetArrayBuffer($isolate: System.IntPtr, $holder: System.IntPtr, $arrayBuffer: ArrayBuffer): void
-            public SetBigInt($isolate: System.IntPtr, $holder: System.IntPtr, $number: bigint): void
-            public SetBoolean($isolate: System.IntPtr, $holder: System.IntPtr, $b: boolean): void
-            public SetDate($isolate: System.IntPtr, $holder: System.IntPtr, $date: number): void
-            public SetNull($isolate: System.IntPtr, $holder: System.IntPtr): void
-            public SetNumber($isolate: System.IntPtr, $holder: System.IntPtr, $number: number): void
-            public SetNativeObject($isolate: System.IntPtr, $holder: System.IntPtr, $classID: number, $self: System.IntPtr): void
-            public SetFunction($isolate: System.IntPtr, $holder: System.IntPtr, $JSFunction: System.IntPtr): void
-            public SetJSObject($isolate: System.IntPtr, $holder: System.IntPtr, $JSObject: System.IntPtr): void
-            public SetString($isolate: System.IntPtr, $holder: System.IntPtr, $str: string): void
-            public constructor()
-        }
-        class SetValueToByRefArgumentImpl extends System.Object implements Puerts.ISetValueToJs {
-            protected [__keep_incompatibility]: never;
-            public SetArrayBuffer($isolate: System.IntPtr, $holder: System.IntPtr, $arrayBuffer: ArrayBuffer): void
-            public SetBigInt($isolate: System.IntPtr, $holder: System.IntPtr, $number: bigint): void
-            public SetBoolean($isolate: System.IntPtr, $holder: System.IntPtr, $b: boolean): void
-            public SetDate($isolate: System.IntPtr, $holder: System.IntPtr, $date: number): void
-            public SetNull($isolate: System.IntPtr, $holder: System.IntPtr): void
-            public SetNumber($isolate: System.IntPtr, $holder: System.IntPtr, $number: number): void
-            public SetNativeObject($isolate: System.IntPtr, $holder: System.IntPtr, $classID: number, $self: System.IntPtr): void
-            public SetFunction($isolate: System.IntPtr, $holder: System.IntPtr, $JSFunction: System.IntPtr): void
-            public SetJSObject($isolate: System.IntPtr, $holder: System.IntPtr, $JSObject: System.IntPtr): void
-            public SetString($isolate: System.IntPtr, $holder: System.IntPtr, $str: string): void
-            public constructor()
-        }
-        class SetValueToArgumentImpl extends System.Object implements Puerts.ISetValueToJs {
-            protected [__keep_incompatibility]: never;
-            public SetArrayBuffer($isolate: System.IntPtr, $holder: System.IntPtr, $arrayBuffer: ArrayBuffer): void
-            public SetBigInt($isolate: System.IntPtr, $holder: System.IntPtr, $number: bigint): void
-            public SetBoolean($isolate: System.IntPtr, $holder: System.IntPtr, $b: boolean): void
-            public SetDate($isolate: System.IntPtr, $holder: System.IntPtr, $date: number): void
-            public SetNull($isolate: System.IntPtr, $holder: System.IntPtr): void
-            public SetNumber($isolate: System.IntPtr, $holder: System.IntPtr, $number: number): void
-            public SetNativeObject($isolate: System.IntPtr, $holder: System.IntPtr, $classID: number, $self: System.IntPtr): void
-            public SetFunction($isolate: System.IntPtr, $holder: System.IntPtr, $JSFunction: System.IntPtr): void
-            public SetJSObject($isolate: System.IntPtr, $holder: System.IntPtr, $JSObject: System.IntPtr): void
-            public SetString($isolate: System.IntPtr, $holder: System.IntPtr, $str: string): void
-            public constructor()
-        }
-        class ObjectPool extends System.Object {
-            protected [__keep_incompatibility]: never;
-            public Clear(): void
-            public FindOrAddObject($obj: any): number
-            public AddBoxedValueType($obj: any): number
-            public TryGetValue($index: number, $obj: $Ref<any>): boolean
-            public Get($index: number): any
-            public Remove($index: number): any
-            public ReplaceValueType($index: number, $o: any): any
-            public Check($checkPos: number, $maxCheck: number, $checker: System.Func$2<any, boolean>, $reverseMap: System.Collections.Generic.Dictionary$2<any, number>): number
-            public constructor()
-        }
-        class PrimitiveTypeTranslate extends System.Object {
-            protected [__keep_incompatibility]: never;
-            public static PushChar($jsEnvIdx: number, $isolate: System.IntPtr, $setValueApi: Puerts.ISetValueToJs, $holder: System.IntPtr, $i: number): void
-            public static GetChar($jsEnvIdx: number, $isolate: System.IntPtr, $getValueApi: Puerts.IGetValueFromJs, $holder: System.IntPtr, $isByRef: boolean): number
-            public static PushSByte($jsEnvIdx: number, $isolate: System.IntPtr, $setValueApi: Puerts.ISetValueToJs, $holder: System.IntPtr, $i: number): void
-            public static GetSByte($jsEnvIdx: number, $isolate: System.IntPtr, $getValueApi: Puerts.IGetValueFromJs, $holder: System.IntPtr, $isByRef: boolean): number
-            public static PushByte($jsEnvIdx: number, $isolate: System.IntPtr, $setValueApi: Puerts.ISetValueToJs, $holder: System.IntPtr, $i: number): void
-            public static GetByte($jsEnvIdx: number, $isolate: System.IntPtr, $getValueApi: Puerts.IGetValueFromJs, $holder: System.IntPtr, $isByRef: boolean): number
-            public static PushInt16($jsEnvIdx: number, $isolate: System.IntPtr, $setValueApi: Puerts.ISetValueToJs, $holder: System.IntPtr, $i: number): void
-            public static GetInt16($jsEnvIdx: number, $isolate: System.IntPtr, $getValueApi: Puerts.IGetValueFromJs, $holder: System.IntPtr, $isByRef: boolean): number
-            public static PushUInt16($jsEnvIdx: number, $isolate: System.IntPtr, $setValueApi: Puerts.ISetValueToJs, $holder: System.IntPtr, $i: number): void
-            public static GetUInt16($jsEnvIdx: number, $isolate: System.IntPtr, $getValueApi: Puerts.IGetValueFromJs, $holder: System.IntPtr, $isByRef: boolean): number
-            public static PushInt32($jsEnvIdx: number, $isolate: System.IntPtr, $setValueApi: Puerts.ISetValueToJs, $holder: System.IntPtr, $i: number): void
-            public static GetInt32($jsEnvIdx: number, $isolate: System.IntPtr, $getValueApi: Puerts.IGetValueFromJs, $holder: System.IntPtr, $isByRef: boolean): number
-            public static PushUInt32($jsEnvIdx: number, $isolate: System.IntPtr, $setValueApi: Puerts.ISetValueToJs, $holder: System.IntPtr, $i: number): void
-            public static GetUInt32($jsEnvIdx: number, $isolate: System.IntPtr, $getValueApi: Puerts.IGetValueFromJs, $holder: System.IntPtr, $isByRef: boolean): number
-            public static PushInt64($jsEnvIdx: number, $isolate: System.IntPtr, $setValueApi: Puerts.ISetValueToJs, $holder: System.IntPtr, $i: bigint): void
-            public static GetInt64($jsEnvIdx: number, $isolate: System.IntPtr, $getValueApi: Puerts.IGetValueFromJs, $holder: System.IntPtr, $isByRef: boolean): bigint
-            public static PushUInt64($jsEnvIdx: number, $isolate: System.IntPtr, $setValueApi: Puerts.ISetValueToJs, $holder: System.IntPtr, $i: bigint): void
-            public static GetUInt64($jsEnvIdx: number, $isolate: System.IntPtr, $getValueApi: Puerts.IGetValueFromJs, $holder: System.IntPtr, $isByRef: boolean): bigint
-            public static PushDouble($jsEnvIdx: number, $isolate: System.IntPtr, $setValueApi: Puerts.ISetValueToJs, $holder: System.IntPtr, $i: number): void
-            public static GetDouble($jsEnvIdx: number, $isolate: System.IntPtr, $getValueApi: Puerts.IGetValueFromJs, $holder: System.IntPtr, $isByRef: boolean): number
-            public static PushFloat($jsEnvIdx: number, $isolate: System.IntPtr, $setValueApi: Puerts.ISetValueToJs, $holder: System.IntPtr, $i: number): void
-            public static GetFloat($jsEnvIdx: number, $isolate: System.IntPtr, $getValueApi: Puerts.IGetValueFromJs, $holder: System.IntPtr, $isByRef: boolean): number
-            public static PushBoolean($jsEnvIdx: number, $isolate: System.IntPtr, $setValueApi: Puerts.ISetValueToJs, $holder: System.IntPtr, $i: boolean): void
-            public static GetBoolean($jsEnvIdx: number, $isolate: System.IntPtr, $getValueApi: Puerts.IGetValueFromJs, $holder: System.IntPtr, $isByRef: boolean): boolean
-            public static PushString($jsEnvIdx: number, $isolate: System.IntPtr, $setValueApi: Puerts.ISetValueToJs, $holder: System.IntPtr, $i: string): void
-            public static GetString($jsEnvIdx: number, $isolate: System.IntPtr, $getValueApi: Puerts.IGetValueFromJs, $holder: System.IntPtr, $isByRef: boolean): string
-            public static PushDateTime($jsEnvIdx: number, $isolate: System.IntPtr, $setValueApi: Puerts.ISetValueToJs, $holder: System.IntPtr, $date: Date): void
-            public static GetDateTime($jsEnvIdx: number, $isolate: System.IntPtr, $getValueApi: Puerts.IGetValueFromJs, $holder: System.IntPtr, $isByRef: boolean): Date
-            public static PushArrayBuffer($jsEnvIdx: number, $isolate: System.IntPtr, $setValueApi: Puerts.ISetValueToJs, $holder: System.IntPtr, $arrayBuffer: ArrayBuffer): void
-            public static GetArrayBuffer($jsEnvIdx: number, $isolate: System.IntPtr, $getValueApi: Puerts.IGetValueFromJs, $holder: System.IntPtr, $isByRef: boolean): ArrayBuffer
-        }
-        class TypeExtensions extends System.Object {
-            protected [__keep_incompatibility]: never;
-            public static GetFriendlyName($type: System.Type, $genericArguments?: System.Array$1<System.Type>): string
-        }
-        class Utils extends System.Object {
-            protected [__keep_incompatibility]: never;
-            public static TwoIntToLong($b: number, $a: number): bigint
-            public static LongToTwoInt($c: bigint, $b: $Ref<number>, $a: $Ref<number>): void
-            public static GetObjectPtr($jsEnvIdx: number, $type: System.Type, $obj: any): System.IntPtr
-            public static GetSelf($jsEnvIdx: number, $self: System.IntPtr): any
-            public static SetSelf($jsEnvIdx: number, $self: System.IntPtr, $obj: any): void
-            public static IsNotGenericOrValidGeneric($method: System.Reflection.MethodInfo, $pinfos?: System.Array$1<System.Reflection.ParameterInfo>): boolean
-            public static IsSupportedMethod($method: System.Reflection.MethodInfo): boolean
-            public static GetMethodAndOverrideMethodByName($type: System.Type, $name: string): System.Array$1<System.Reflection.MethodInfo>
-            public static GetMethodAndOverrideMethod($type: System.Type, $flag: System.Reflection.BindingFlags): System.Array$1<System.Reflection.MethodInfo>
-            public static GetExtensionMethodsOf($type_to_be_extend: System.Type): System.Collections.Generic.IEnumerable$1<System.Reflection.MethodInfo>
-            public static IsJsValueTypeMatchType($jsType: Puerts.JsValueType, $csType: System.Type, $csTypeMask: Puerts.JsValueType, $valueGetter?: Puerts.Utils.GetValueForCheck, $value?: any): boolean
-            public static GetAllTypes($exclude_generic_definition?: boolean): System.Collections.Generic.List$1<System.Type>
-        }
-        class GenericMethodWrap extends System.Object {
-            protected [__keep_incompatibility]: never;
-            public Invoke($isolate: System.IntPtr, $info: System.IntPtr, $self: System.IntPtr, $argumentsLen: number): void
-            public constructor($memberName: string, $env: Puerts.JsEnv, $definitionType: System.Type, $genericArguments: System.Array$1<System.Type>)
-            public constructor()
-        }
-        class LazyMembersWrap extends System.Object {
-            protected [__keep_incompatibility]: never;
-            public constructor($memberName: string, $jsEnv: Puerts.JsEnv, $definitionType: System.Type)
-            public constructor()
-        }
-        class LazyFieldWrap extends Puerts.LazyMembersWrap {
-            protected [__keep_incompatibility]: never;
-            public InvokeSetter($isolate: System.IntPtr, $info: System.IntPtr, $self: System.IntPtr, $argumentsLen: number): void
-            public InvokeGetter($isolate: System.IntPtr, $info: System.IntPtr, $self: System.IntPtr, $argumentsLen: number): void
-            public constructor($memberName: string, $jsEnv: Puerts.JsEnv, $definitionType: System.Type)
-        }
-        class LazyPropertyWrap extends Puerts.LazyMembersWrap {
-            protected [__keep_incompatibility]: never;
-            public Invoke($isolate: System.IntPtr, $info: System.IntPtr, $self: System.IntPtr, $argumentsLen: number): void
-            public constructor($memberName: string, $jsEnv: Puerts.JsEnv, $definitionType: System.Type)
-        }
-        class LazyMethodWrap extends Puerts.LazyMembersWrap {
-            protected [__keep_incompatibility]: never;
-            public Invoke($isolate: System.IntPtr, $info: System.IntPtr, $self: System.IntPtr, $argumentsLen: number): void
-            public constructor($memberName: string, $jsEnv: Puerts.JsEnv, $definitionType: System.Type)
-        }
-        class JSCallInfo extends System.ValueType {
-            protected [__keep_incompatibility]: never;
-            public Isolate: System.IntPtr
-            public Info: System.IntPtr
-            public Self: System.IntPtr
-            public Length: number
-            public JsTypes: System.Array$1<Puerts.JsValueType>
-            public Values: System.Array$1<any>
-            public NativePtrs: System.Array$1<System.IntPtr>
-            public constructor($isolate: System.IntPtr, $info: System.IntPtr, $self: System.IntPtr, $len: number)
-            public constructor()
-        }
-        class Parameters extends System.Object {
-            protected [__keep_incompatibility]: never;
-            public IsMatch($jsCallInfo: Puerts.JSCallInfo): boolean
-            public GetArguments($callInfo: Puerts.JSCallInfo): System.Array$1<any>
-            public FillByRefParameters($callInfo: Puerts.JSCallInfo): void
-            public ClearArguments(): void
-            public constructor($parameterInfos: System.Array$1<System.Reflection.ParameterInfo>, $jsEnv: Puerts.JsEnv)
-            public constructor()
-        }
-        class OverloadReflectionWrap extends System.Object {
-            protected [__keep_incompatibility]: never;
-            public IsMatch($jsCallInfo: Puerts.JSCallInfo): boolean
-            public Invoke($jsCallInfo: Puerts.JSCallInfo): void
-            public Construct($callInfo: Puerts.JSCallInfo): any
-            public constructor($methodBase: System.Reflection.MethodBase, $jsEnv: Puerts.JsEnv, $extensionMethod?: boolean)
-            public constructor($type: System.Type, $jsEnv: Puerts.JsEnv)
-            public constructor()
-        }
-        class DelegateConstructWrap extends System.Object {
-            protected [__keep_incompatibility]: never;
-            public Construct($isolate: System.IntPtr, $info: System.IntPtr, $argumentsLen: number): any
-            public constructor($delegateType: System.Type, $jsEnv: Puerts.JsEnv)
-            public constructor()
-        }
-        class MethodReflectionWrap extends System.Object {
-            protected [__keep_incompatibility]: never;
-            public Invoke($isolate: System.IntPtr, $info: System.IntPtr, $self: System.IntPtr, $argumentsLen: number): void
-            public Construct($isolate: System.IntPtr, $info: System.IntPtr, $argumentsLen: number): any
-            public constructor($name: string, $overloads: System.Collections.Generic.List$1<Puerts.OverloadReflectionWrap>)
-            public constructor()
-        }
-        enum LazyMemberType { Constructor = 1, Method = 2, Property = 3, Field = 4 }
-        class LazyMemberRegisterInfo extends System.ValueType {
-            protected [__keep_incompatibility]: never;
-            public IsStatic: boolean
-            public Name: string
-            public Type: Puerts.LazyMemberType
-            public HasGetter: boolean
-            public HasSetter: boolean
-        }
-        class PropertyRegisterInfo extends System.ValueType {
-            protected [__keep_incompatibility]: never;
-            public IsStatic: boolean
-            public Getter: Puerts.V8FunctionCallback
-            public Setter: Puerts.V8FunctionCallback
-        }
-        class MethodKey extends System.ValueType {
-            protected [__keep_incompatibility]: never;
-            public Name: string
-            public IsStatic: boolean
-            public IsExtension: boolean
-        }
-    }
     namespace Puerts.JsEnv {
         interface JsEnvCreateCallback {
             (env: Puerts.JsEnv, loader: Puerts.ILoader, debugPort: number): void;
@@ -30371,6 +30501,10 @@ declare namespace CS {
         protected [__keep_incompatibility]: never;
         public constructor()
     }
+    class Sample_05 extends UnityEngine.MonoBehaviour {
+        protected [__keep_incompatibility]: never;
+        public constructor()
+    }
     class Sample_10 extends UnityEngine.MonoBehaviour {
         protected [__keep_incompatibility]: never;
         public m_Target: UnityEngine.GameObject
@@ -30384,9 +30518,6 @@ declare namespace CS {
         protected [__keep_incompatibility]: never;
         public name: string
         public action: string
-    }
-    class DelegateUtil extends System.Object {
-        protected [__keep_incompatibility]: never;
     }
     namespace XOR.Serializables {
         interface IAccessor {
@@ -30546,14 +30677,22 @@ declare namespace CS {
             public static GetImplicitAssignableValue($targetType: System.Type, $value: any): any
         }
     }
-    namespace PuertsStaticWrap {
-        class AutoStaticCodeUsing extends System.Object {
-            protected [__keep_incompatibility]: never;
-            public static AutoUsing($jsEnv: Puerts.JsEnv): void
-            public static UsingAction($jsEnv: Puerts.JsEnv, ...args: string[]): void
-            public static UsingFunc($jsEnv: Puerts.JsEnv, ...args: string[]): void
-            public static UsingGeneric($jsEnv: Puerts.JsEnv, $usingAction: boolean, ...types: System.Type[]): void
+    namespace Sample_05 {
+        interface ITest {
+            a: number
+            b: string
+            d: Puerts.JSObject
+            e: Puerts.JSObject
+            f: number
+            c(): string
         }
+    }
+    namespace XOR.EventEmitter {
+        interface DynamicHandler {
+            (args: System.Array$1<any>): void;
+            Invoke?: (args: System.Array$1<any>) => void;
+        }
+        var DynamicHandler: { new(func: (args: System.Array$1<any>) => void): DynamicHandler; }
     }
     namespace XOR.MixerLoader {
         enum RegexMode { Original = 1, CommonJS = 2, ESM = 4, FileExtension = 8, Content = 16 }
@@ -30579,6 +30718,44 @@ declare namespace CS {
             public done: boolean
             public value: any
             public constructor($value: any, $done: boolean)
+            public constructor()
+        }
+    }
+    namespace XOR.UI {
+        class ButtonWrapper extends UnityEngine.UI.Button implements UnityEngine.EventSystems.IEventSystemHandler, UnityEngine.EventSystems.IPointerEnterHandler, UnityEngine.EventSystems.ISelectHandler, UnityEngine.EventSystems.IPointerExitHandler, UnityEngine.EventSystems.IDeselectHandler, UnityEngine.EventSystems.IPointerDownHandler, UnityEngine.EventSystems.IPointerUpHandler, UnityEngine.EventSystems.IMoveHandler, UnityEngine.EventSystems.ISubmitHandler, UnityEngine.EventSystems.IPointerClickHandler {
+            protected [__keep_incompatibility]: never;
+            public GetWrapperEventCount(): number
+            public constructor()
+        }
+        class DropdownWrapper extends UnityEngine.UI.Dropdown implements UnityEngine.EventSystems.IEventSystemHandler, UnityEngine.EventSystems.IPointerEnterHandler, UnityEngine.EventSystems.ISelectHandler, UnityEngine.EventSystems.IPointerExitHandler, UnityEngine.EventSystems.IDeselectHandler, UnityEngine.EventSystems.IPointerDownHandler, UnityEngine.EventSystems.IPointerUpHandler, UnityEngine.EventSystems.IMoveHandler, UnityEngine.EventSystems.ISubmitHandler, UnityEngine.EventSystems.IPointerClickHandler, UnityEngine.EventSystems.ICancelHandler {
+            protected [__keep_incompatibility]: never;
+            public GetOnValueChangedEventCount(): number
+            public constructor()
+        }
+        class EventTriggerWrapper extends UnityEngine.EventSystems.EventTrigger implements UnityEngine.EventSystems.IInitializePotentialDragHandler, UnityEngine.EventSystems.IDragHandler, UnityEngine.EventSystems.IEndDragHandler, UnityEngine.EventSystems.IDropHandler, UnityEngine.EventSystems.IScrollHandler, UnityEngine.EventSystems.IEventSystemHandler, UnityEngine.EventSystems.IUpdateSelectedHandler, UnityEngine.EventSystems.IPointerEnterHandler, UnityEngine.EventSystems.ISelectHandler, UnityEngine.EventSystems.IPointerExitHandler, UnityEngine.EventSystems.IDeselectHandler, UnityEngine.EventSystems.IPointerDownHandler, UnityEngine.EventSystems.IMoveHandler, UnityEngine.EventSystems.IPointerUpHandler, UnityEngine.EventSystems.ISubmitHandler, UnityEngine.EventSystems.IPointerClickHandler, UnityEngine.EventSystems.ICancelHandler, UnityEngine.EventSystems.IBeginDragHandler {
+            protected [__keep_incompatibility]: never;
+            public GetEventCount(): number
+            public constructor()
+        }
+        class InputFieldWrapper extends UnityEngine.UI.InputField implements UnityEngine.EventSystems.IDragHandler, UnityEngine.EventSystems.IEndDragHandler, UnityEngine.UI.ICanvasElement, UnityEngine.EventSystems.IEventSystemHandler, UnityEngine.EventSystems.IPointerEnterHandler, UnityEngine.EventSystems.IUpdateSelectedHandler, UnityEngine.EventSystems.ISelectHandler, UnityEngine.EventSystems.IPointerExitHandler, UnityEngine.EventSystems.IDeselectHandler, UnityEngine.EventSystems.IPointerDownHandler, UnityEngine.EventSystems.IPointerUpHandler, UnityEngine.EventSystems.IMoveHandler, UnityEngine.UI.ILayoutElement, UnityEngine.EventSystems.ISubmitHandler, UnityEngine.EventSystems.IPointerClickHandler, UnityEngine.EventSystems.IBeginDragHandler {
+            protected [__keep_incompatibility]: never;
+            public GetOnValueChangedEventCount(): number
+            public GetOnEndEditEventCount(): number
+            public constructor()
+        }
+        class ScrollbarWrapper extends UnityEngine.UI.Scrollbar implements UnityEngine.EventSystems.IInitializePotentialDragHandler, UnityEngine.EventSystems.IDragHandler, UnityEngine.UI.ICanvasElement, UnityEngine.EventSystems.IEventSystemHandler, UnityEngine.EventSystems.IPointerEnterHandler, UnityEngine.EventSystems.ISelectHandler, UnityEngine.EventSystems.IPointerExitHandler, UnityEngine.EventSystems.IDeselectHandler, UnityEngine.EventSystems.IPointerDownHandler, UnityEngine.EventSystems.IPointerUpHandler, UnityEngine.EventSystems.IMoveHandler, UnityEngine.EventSystems.IBeginDragHandler {
+            protected [__keep_incompatibility]: never;
+            public GetOnValueChangedEventCount(): number
+            public constructor()
+        }
+        class SliderWrapper extends UnityEngine.UI.Slider implements UnityEngine.EventSystems.IInitializePotentialDragHandler, UnityEngine.EventSystems.IDragHandler, UnityEngine.UI.ICanvasElement, UnityEngine.EventSystems.IEventSystemHandler, UnityEngine.EventSystems.IPointerEnterHandler, UnityEngine.EventSystems.ISelectHandler, UnityEngine.EventSystems.IPointerExitHandler, UnityEngine.EventSystems.IDeselectHandler, UnityEngine.EventSystems.IPointerDownHandler, UnityEngine.EventSystems.IPointerUpHandler, UnityEngine.EventSystems.IMoveHandler {
+            protected [__keep_incompatibility]: never;
+            public GetOnValueChangedEventCount(): number
+            public constructor()
+        }
+        class ToggleWrapper extends UnityEngine.UI.Toggle implements UnityEngine.UI.ICanvasElement, UnityEngine.EventSystems.IEventSystemHandler, UnityEngine.EventSystems.IPointerEnterHandler, UnityEngine.EventSystems.ISelectHandler, UnityEngine.EventSystems.IPointerExitHandler, UnityEngine.EventSystems.IDeselectHandler, UnityEngine.EventSystems.IPointerDownHandler, UnityEngine.EventSystems.IPointerUpHandler, UnityEngine.EventSystems.IMoveHandler, UnityEngine.EventSystems.ISubmitHandler, UnityEngine.EventSystems.IPointerClickHandler {
+            protected [__keep_incompatibility]: never;
+            public GetOnValueChangedEventCount(): number
             public constructor()
         }
     }
