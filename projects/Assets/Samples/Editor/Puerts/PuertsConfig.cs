@@ -44,6 +44,7 @@ public class PuertsConfig
                 typeof(XOR.Services.Statement),
                 typeof(XOR.Services.EnumDeclaration),
                 typeof(XOR.Services.TypeDeclaration),
+                typeof(XOR.Services.MethodDeclaration),
                 typeof(XOR.Services.PropertyDeclaration),
                 typeof(XOR.Services.EnumPropertyDeclaration),
                 typeof(XOR.ReflectionUtil),

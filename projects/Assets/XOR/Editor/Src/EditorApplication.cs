@@ -109,11 +109,11 @@ namespace XOR
     internal static class EditorApplicationHandler
     {
 #if UNITY_EDITOR
-        /*
         static EditorApplicationHandler()
         {
             RegisterHandlers();
         }
+        /*
         [UnityEditor.Callbacks.DidReloadScripts]
         static void DidReloadScripts()
         {

@@ -142,6 +142,16 @@ namespace XOR.Services
             this.Properties.Remove(propertyName);
         }
     }
+    public class EnumPropertyDeclaration
+    {
+        /// <summary>字段名 </summary>
+        public string name;
+        /// <summary>字段值 </summary>
+        public string value;
+        /// <summary>此属性是否可用 </summary>
+        public bool active;
+    }
+
     public class TypeDeclaration : Statement
     {
         /// <summary>类路由值 </summary>
@@ -149,20 +159,18 @@ namespace XOR.Services
 
         /// <summary>成员信息 </summary>
         public Dictionary<string, PropertyDeclaration> Properties { get; private set; }
+        /// <summary>成员方法(仅限受支持C#类型) </summary>
+        public Dictionary<string, List<MethodDeclaration>> Methods { get; private set; }
 
         public TypeDeclaration()
         {
             this.Properties = new Dictionary<string, PropertyDeclaration>();
-        }
-        public string[] GetNames()
-        {
-            return Properties.Keys.ToArray();
+            this.Methods = new Dictionary<string, List<MethodDeclaration>>();
         }
         public PropertyDeclaration[] GetProperties()
         {
             return Properties.Values.ToArray();
         }
-
         public PropertyDeclaration GetProperty(string propertyName)
         {
             if (propertyName == null)
@@ -180,6 +188,49 @@ namespace XOR.Services
         public void RemoveProperty(string propertyName)
         {
             this.Properties.Remove(propertyName);
+        }
+
+        public MethodDeclaration[] GetMethods()
+        {
+            return Methods.Values.SelectMany(methods => methods).ToArray();
+        }
+        public MethodDeclaration[] GetMethods(string methodName)
+        {
+            if (methodName == null)
+                return null;
+            List<MethodDeclaration> methods;
+            this.Methods.TryGetValue(methodName, out methods);
+            return methods != null ? methods.ToArray() : null;
+        }
+        public MethodDeclaration GetMethod(string methodName)
+        {
+            if (methodName == null)
+                return null;
+            List<MethodDeclaration> methods;
+            this.Methods.TryGetValue(methodName, out methods);
+            return methods != null && methods.Count > 0 ? methods[0] : null;
+        }
+        public void AddMethod(MethodDeclaration method)
+        {
+            List<MethodDeclaration> methods;
+            if (!this.Methods.TryGetValue(method.name, out methods))
+            {
+                methods = new List<MethodDeclaration>();
+                this.Methods.Add(method.name, methods);
+            }
+            methods.Add(method);
+        }
+        public void RemoveMethod(MethodDeclaration method)
+        {
+            List<MethodDeclaration> methods;
+            if (this.Methods.TryGetValue(method.name, out methods))
+            {
+                methods.Remove(method);
+            }
+        }
+        public void RemoveMethods(string methodName)
+        {
+            this.Methods.Remove(methodName);
         }
     }
     public class PropertyDeclaration
@@ -277,13 +328,13 @@ namespace XOR.Services
             return this._tooltip;
         }
     }
-    public class EnumPropertyDeclaration
+    public class MethodDeclaration
     {
-        /// <summary>字段名 </summary>
+        /// <summary>方法名 </summary>
         public string name;
-        /// <summary>字段值 </summary>
-        public string value;
-        /// <summary>此属性是否可用 </summary>
-        public bool active;
+        /// <summary>方法返回值类型  </summary>
+        public Type returnType;
+        /// <summary>方法参数类型  </summary>
+        public Type[] parameterTypes;
     }
 }

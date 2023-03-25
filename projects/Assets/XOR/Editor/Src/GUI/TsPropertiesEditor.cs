@@ -197,7 +197,7 @@ namespace XOR
             {
                 return display.GetHeight(nodes[index]);
             };
-            reorderableList.drawHeaderCallback = (Rect rect) =>
+            reorderableList.drawHeaderCallback = (rect) =>
             {   //绘制表头
                 //UnityEngine.GUI.Label(rect, "成员属性");
             };
@@ -211,13 +211,13 @@ namespace XOR
                     root.Update();
                 }
             };
-            reorderableList.onRemoveCallback = (ReorderableList list) =>
+            reorderableList.onRemoveCallback = (list) =>
             {
                 nodes[list.index].RemoveFromArrayParent();
                 root.ApplyModifiedProperties();
                 TsPropertiesHelper.RebuildNodes(root, nodes);
             };
-            reorderableList.onAddCallback = (ReorderableList list) =>
+            reorderableList.onAddCallback = (list) =>
             {
                 XOR.Serializables.TsProperties.Utility.PopupCreate(root, nodes.Count, () =>
                 {
@@ -225,7 +225,7 @@ namespace XOR
                     TsPropertiesHelper.RebuildNodes(root, nodes);
                 });
             };
-            reorderableList.onChangedCallback = (a) =>
+            reorderableList.onChangedCallback = (list) =>
             {
                 for (int i = 0; i < nodes.Count; i++)
                 {

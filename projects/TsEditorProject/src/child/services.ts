@@ -29,7 +29,7 @@ enum ClassesFlags {
     TsComponent = "xor.TsComponent",
 }
 enum DecoratorFlags {
-    GUID = "xor.guid",
+    Guid = "xor.guid",
     Route = "xor.route",
     Field = "xor.field",
 }
@@ -423,7 +423,7 @@ export class Program {
             if (this.getModuleFromNode(target) !== ModuleFlags.Global || args.length === 0 || args[0].kind !== ts.SyntaxKind.StringLiteral)
                 continue;
             switch (this.getFullName(target)) {
-                case DecoratorFlags.GUID:
+                case DecoratorFlags.Guid:
                     define.guid = this.getExpressionValue<string>(args[0]);
                     break;
                 case DecoratorFlags.Route:
@@ -625,9 +625,9 @@ export class Program {
             ctd.path = node.getSourceFile().fileName;
             ctd.line = util.getTextLine(node.getSourceFile().text, node.getStart());
             //成员声明
-            let members = this.getFields(node, true);
-            if (members) {
-                for (let [name, property] of members) {
+            let fields = this.getFields(node, true);
+            if (fields) {
+                for (let [name, property] of fields) {
                     let fieldArgs = this.getFieldArguments(property),
                         fieldType = this.convertToCSharpType([property.type, fieldArgs?.type]);
                     if (!fieldType || !fieldType.type) {
@@ -649,6 +649,13 @@ export class Program {
                     if (fieldArgs && fieldArgs.value !== undefined) {
                         cpd.defaultValue = fieldArgs.value;
                     }
+                }
+            }
+            //方法声明
+            let methods = this.getMethods(node, true);
+            if (methods) {
+                for (let [name, ms] of methods) {
+
                 }
             }
             this.cp.AddStatement(ctd);
@@ -690,7 +697,7 @@ export class Program {
         return false;
     }
     /**是否为序列化字段声明(public丶declare或xor.field装饰器) */
-    private isField(node: ts.PropertyDeclaration): boolean {
+    private isExportField(node: ts.PropertyDeclaration): boolean {
         if (util.isDeclare(node, false) || util.isPublic(node))
             return true;
         if (!node.modifiers)
@@ -701,6 +708,14 @@ export class Program {
         }
         return false;
     }
+    /**是否为导出的方法声明 */
+    private isExportMethod(node: ts.MethodDeclaration): boolean {
+        if (util.isPublic(node))
+            return true;
+        if (!node.modifiers)
+            return false;
+        return false;
+    }
     /**获取Class中所有序列化字段 */
     private getFields(node: ts.ClassDeclaration, inherit?: boolean): Map<string, ts.PropertyDeclaration> {
         if (this.isTsComponent(node)) {
@@ -709,7 +724,7 @@ export class Program {
         const members = new Map<string, ts.PropertyDeclaration>();
         if (node.members) {
             for (let m of node.members) {
-                if (m.kind !== ts.SyntaxKind.PropertyDeclaration || !this.isField(<ts.PropertyDeclaration>m))
+                if (m.kind !== ts.SyntaxKind.PropertyDeclaration || !this.isExportField(<ts.PropertyDeclaration>m))
                     continue;
                 let name = (<ts.PropertyDeclaration>m).name;
                 if (name.kind === ts.SyntaxKind.StringLiteral || name.kind === ts.SyntaxKind.Identifier) {
@@ -732,6 +747,53 @@ export class Program {
                 for (let [name, type] of _members) {
                     if (members.has(name)) continue;
                     members.set(name, type);
+                }
+            }
+        }
+        return members;
+    }
+    /**获取class中所有导出方法 */
+    private getMethods(node: ts.ClassDeclaration, inherit?: boolean): Map<string, ts.MethodDeclaration[]> {
+        if (this.isTsComponent(node)) {
+            return null;
+        }
+        const members = new Map<string, ts.MethodDeclaration[]>();
+        if (node.members) {
+            for (let m of node.members) {
+                if (m.kind !== ts.SyntaxKind.MethodDeclaration || !this.isExportMethod(<ts.MethodDeclaration>m))
+                    continue;
+                let name = (<ts.MethodDeclaration>m).name;
+                if (name.kind === ts.SyntaxKind.StringLiteral || name.kind === ts.SyntaxKind.Identifier) {
+                    let ms = members.get(name.text);
+                    if (!ms) {
+                        ms = [];
+                        members.set(name.text, ms);
+                    }
+                    ms.push(<ts.MethodDeclaration>m);
+                }
+            }
+        }
+        if (inherit && node.heritageClauses) {
+            let ewtaList = node.heritageClauses.map(clause => clause.types).flat();
+            for (let ewta of ewtaList) {
+                let cd = this.types.get(this.getAbsoluteName(ewta.expression));
+                if (!cd) {
+                    //console.warn(`无效的继承对象:${this.getAbsoluteName(ewta.expression)}`);
+                    continue;
+                }
+                const _members = this.getMethods(cd, true);
+                if (!_members) {
+                    continue;
+                }
+                for (let [name, ms] of _members) {
+                    let _ms = members.get(name);
+                    if (_ms) {
+                        _ms = [..._ms, ...ms];      //TODO 函数签名校验
+                    }
+                    else {
+                        _ms = ms;
+                    }
+                    members.set(name, _ms);
                 }
             }
         }
@@ -795,6 +857,11 @@ export class Program {
                 break;
         }
         return { type, range, value };
+    }
+    /**获取导出函数的参数声明 */
+    private getMethodParameters(node: ts.MethodDeclaration) {
+      const type =  this.checker.getTypeAtLocation(node);
+      
     }
 
     //#region 类型方法
