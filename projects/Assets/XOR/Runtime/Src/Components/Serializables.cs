@@ -183,7 +183,7 @@ namespace XOR.Serializables
             if (memberAccessor == null)
             {
                 memberAccessor = typeof(TComponent).GetFields(Flags)
-                    .Where(m => typeof(IEnumerable<IPair>).IsAssignableFrom(m.FieldType) && (m.IsPublic || m.GetCustomAttribute<UnityEngine.SerializeField>() != null))
+                    .Where(m => typeof(IEnumerable<IPair>).IsAssignableFrom(m.FieldType) && (m.IsPublic || m.IsDefined(typeof(UnityEngine.SerializeField), true)))
                     .Select(m => DelegateUtil.CreateDelegate<Func<TComponent, IEnumerable<IPair>>>(m, false))
                     .Where(func => func != null)
                     .ToArray();
