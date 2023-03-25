@@ -163,6 +163,29 @@ namespace XOR
             return create;
         }
         /// <summary>
+        /// 获取Puerts.JSObject对象调用方法(值将进行装箱操作)
+        /// </summary>
+        /// <param name="env"></param>
+        /// <returns></returns>
+        public static Action<Puerts.JSObject, string, object[]> ComponentInvokeMethod(this JsEnv env)
+        {
+            Action<Puerts.JSObject, string, object[]> invoke = null;
+#if UNITY_EDITOR || !UNITY_WEBGL
+            ILoader loader = Helper.GetLoader(env, false);
+            if (loader == null || !loader.FileExists(XORComponent))
+            {
+                Logger.LogWarning($"Module missing: {XORComponent}");
+                return null;
+            }
+            invoke = Helper.IsESM(loader, XORComponent) ?
+                env.ExecuteModule<Action<Puerts.JSObject, string, object[]>>(XORComponent, "invokeMethod") :
+                env.Eval<Action<Puerts.JSObject, string, object[]>>($"require('{XORComponent}').invokeMethod;");
+#else
+            invoke = env.ExecuteModule<Action<Puerts.JSObject, string, object[]>>(XORComponent, "invokeMethod");
+#endif
+            return invoke;
+        }
+        /// <summary>
         /// 绑定ThreadWorker实例(仅ThreadWorker子线程可调用)
         /// </summary>
         /// <param name="env"></param>

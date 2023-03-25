@@ -210,5 +210,20 @@ namespace XOR
                 Language.Default.Get("cancel")
             );
         }
+
+        /// <summary>
+        /// 弹出必须启动TsComponent服务窗口
+        /// </summary>
+        public static void RenderMustLaunchServices()
+        {
+            bool startup = EditorUtility.DisplayDialog(
+                Language.Default.Get("tip"),
+                Language.Default.Get("must_start_services"),
+                Language.Default.Get("launch"),
+                Language.Default.Get("cancel")
+            );
+            if (startup && !EditorApplicationUtil.IsRunning())
+                EditorApplicationUtil.Start();
+        }
     }
 }

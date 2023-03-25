@@ -102,7 +102,7 @@ declare global {
         class ThreadWorker extends ThreadWorkerConstructor {
         }
         /**
-         * 只能在JsWorker内部访问, 与主线程交互的对象
+         * 只能在ThreadWorker内部访问, 与主线程交互的对象
          */
         const globalWorker: ThreadWorker;
     }

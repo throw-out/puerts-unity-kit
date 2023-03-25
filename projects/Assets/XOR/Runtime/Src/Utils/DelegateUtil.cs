@@ -11,6 +11,8 @@ namespace XOR
     /// </summary>
     public static class DelegateUtil
     {
+        const BindingFlags Flags = BindingFlags.Static | BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic;
+
         public static TDelegate CreateMethodDelegate<TDelegate>(MethodInfo memberInfo, object firstArgument = null, bool throwOnBindFailure = true)
             where TDelegate : Delegate
         {
@@ -145,6 +147,49 @@ namespace XOR
             return null;
         }
 
+        /// <summary>
+        /// 使用反射查找System.Type并获取MemberInfo, 然后创建Delegate
+        /// </summary>
+        /// <param name="typeName"></param>
+        /// <param name="memberName"></param>
+        /// <param name="isStatic">(如果是方法)此参数指明方法是否为static</param>
+        /// <typeparam name="TDelegate"></typeparam>
+        /// <returns></returns>
+        public static TDelegate CreateMemberBridge<TDelegate>(string typeName, string memberName, bool isStatic = true)
+            where TDelegate : System.Delegate
+        {
+            try
+            {
+                Type type = Type.GetType(typeName, false);
+                if (type == null)
+                {
+                    foreach (var assembly in AppDomain.CurrentDomain.GetAssemblies())
+                    {
+                        type = assembly.GetType(typeName, false);
+                        if (type != null) break;
+                    }
+                }
+                if (type == null)
+                {
+                    return null;
+                }
+                var memberInfos = type.GetMember(memberName, Flags);
+                foreach (var memberInfo in memberInfos)
+                {
+                    if (memberInfo is MethodInfo && ((MethodInfo)memberInfo).IsStatic != isStatic)
+                        continue;
+                    var func = CreateDelegate<TDelegate>(memberInfo, null, false);
+                    if (func != null)
+                    {
+                        return func;
+                    }
+                }
+            }
+            catch (Exception /**/)
+            {
+            }
+            return null;
+        }
 
         static class Helper
         {

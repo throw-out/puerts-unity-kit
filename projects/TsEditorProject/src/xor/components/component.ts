@@ -158,3 +158,17 @@ export function create(component: CS.XOR.TsComponent, guid: string): TsComponent
     }
     return null;
 }
+export function invokeMethod(obj: object, methodName: string, args: CS.System.Array$1<any>) {
+    if (!obj || !(methodName in obj))
+        return;
+    let func: Function = obj[methodName];
+    if (typeof (func) !== "function")
+        return;
+    let _args = args && args.Length > 0 ? new Array(args.Length) : null;
+    if (_args) {
+        for (let i = 0; i < args.Length; i++) {
+            _args.push(args[i]);
+        }
+    }
+    func.apply(obj, _args);
+}

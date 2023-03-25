@@ -68,4 +68,5 @@ declare module "csharp" {
     }
 }
 export declare function create(component: CS.XOR.TsComponent, guid: string): TsComponentConstructor;
+export declare function invokeMethod(obj: object, methodName: string, args: CS.System.Array$1<any>): void;
 export {};

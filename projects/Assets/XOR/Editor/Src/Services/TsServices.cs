@@ -190,6 +190,10 @@ namespace XOR.Services
             this.Properties.Remove(propertyName);
         }
 
+        public bool HasMethods()
+        {
+            return this.Methods.Count > 0;
+        }
         public MethodDeclaration[] GetMethods()
         {
             return Methods.Values.SelectMany(methods => methods).ToArray();

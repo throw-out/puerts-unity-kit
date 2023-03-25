@@ -410,14 +410,7 @@ namespace XOR
             XOR.Services.Program program = EditorApplicationUtil.GetProgram();
             if (program == null || program.state != XOR.Services.ProgramState.Completed)
             {
-                bool startup = EditorUtility.DisplayDialog(
-                    Language.Default.Get("tip"),
-                    Language.Default.Get("must_start_services"),
-                    Language.Default.Get("launch"),
-                    Language.Default.Get("cancel")
-                );
-                if (startup && !EditorApplicationUtil.IsRunning())
-                    EditorApplicationUtil.Start();
+                GUIUtil.RenderMustLaunchServices();
                 return;
             }
             string currentScene = UnityEditor.SceneManagement.EditorSceneManager.GetActiveScene().path;

@@ -121,6 +121,15 @@ namespace XOR
         });
 
 
+        public static readonly Accessor<GUIStyle> dropDown = new Accessor<GUIStyle>(() =>
+        {
+            //DropDownButton/DropDown/OffsetDropDown
+            GUIStyle style = new GUIStyle("DropDownButton");
+            style.alignment = TextAnchor.MiddleLeft;
+            return style;
+        });
+
+
         public class Accessor<T>
             where T : class
         {
