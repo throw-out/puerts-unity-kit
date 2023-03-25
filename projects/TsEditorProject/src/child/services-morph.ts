@@ -201,7 +201,6 @@ export class Program {
             //skipLoadingLibFiles: true,
         });
         //this.project.addSourceFilesFromTsConfig(tsConfigFile);
-        //this.project.addSourceFilesAtPaths(rootNames);
 
         this.mapping = new Map();
 
@@ -989,15 +988,17 @@ const util = new class {
                 type = csharp.XOR.ReflectionUtil.GetType(util.getCSharpTypeName(moduleName, className));
             }
             else if (_node.isKind(tsm.SyntaxKind.TypeReference)) {
-                let declaration = this.getDeclaration(_node);
-                if (declaration) {
-                    return this.toCSharpType(declaration, depth + 1);
-                }
                 if (_node.getTypeName().getText() === "Array" && _node.getTypeArguments().length === 1) {
                     let element = this.toCSharpType([_node.getTypeArguments().at(0), _explicit], depth + 1);
                     if (element && element.type) {
                         type = csharp.System.Array.CreateInstance(element.type, 0).GetType();
                         enumerable = element.enumerable;
+                    }
+                }
+                else {
+                    let declaration = this.getDeclaration(_node);
+                    if (declaration) {
+                        return this.toCSharpType(declaration, depth + 1);
                     }
                 }
             }
