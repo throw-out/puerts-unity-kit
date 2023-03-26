@@ -75,4 +75,18 @@ export function create(component, guid) {
     }
     return null;
 }
+export function invokeMethod(obj, methodName, args) {
+    if (!obj || !(methodName in obj))
+        return;
+    let func = obj[methodName];
+    if (typeof (func) !== "function")
+        return;
+    let _args = [];
+    if (args) {
+        for (let i = 0; i < args.Length; i++) {
+            _args.push(args.get_Item(i));
+        }
+    }
+    func.apply(obj, _args);
+}
 //# sourceMappingURL=component.js.map

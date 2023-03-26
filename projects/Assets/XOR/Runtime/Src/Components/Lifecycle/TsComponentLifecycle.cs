@@ -181,6 +181,13 @@ namespace XOR
             UnityEngine.Debug.Log(!string.IsNullOrEmpty(result) ? result : "Empty");
         }
 
+        public static void Invoke(Puerts.JSObject jsObject, string methodName, params object[] args)
+        {
+            if (runtime == null || !runtime.IsAlive)
+                return;
+            runtime.Invoke(jsObject, methodName, args);
+        }
+
         static bool IsNullPointer(object obj)
         {
             return (obj?.GetHashCode() ?? 0) == 0;
@@ -241,6 +248,7 @@ namespace XOR
             private readonly Puerts.JsEnv env;
             private readonly HashSet<string> resolvePaths;
             private Func<TsComponent, string, Puerts.JSObject> create;
+            private Action<Puerts.JSObject, string, object[]> invoke;
             public bool IsAlive => true;
             public Runtime(Puerts.JsEnv env)
             {
@@ -277,6 +285,25 @@ namespace XOR
                     }
                 }
                 return result;
+            }
+            /// <summary>
+            /// 调用Puerts.JSObject上的方法
+            /// </summary>
+            /// <param name="jsObject"></param>
+            /// <param name="methodName"></param>
+            /// <param name="args"></param>
+            public void Invoke(Puerts.JSObject jsObject, string methodName, object[] args)
+            {
+                if (invoke == null)
+                {
+                    invoke = this.env.ComponentInvokeMethod();
+                    if (invoke == null)
+                    {
+                        Logger.LogWarning($"XOR Modules Unregisted.");
+                        return;
+                    }
+                }
+                invoke(jsObject, methodName, args);
             }
         }
     }

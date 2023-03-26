@@ -407,10 +407,16 @@ export class Program {
             if (methods && methods.size > 0) {
                 for (let [name, ms] of methods) {
                     for (let method of ms) {
+                        let parameterTypes = method.getParameters()
+                            .map(p => util.toCSharpTypeByTypeNode(p.getTypeNode()));
+                        if (parameterTypes.findIndex(t => !t) >= 0) {
+                            continue;
+                        }
+
                         let cmd = new csharp.XOR.Services.MethodDeclaration();
                         cmd.name = name;
                         cmd.returnType = util.toCSharpType(util.getDeclaration(method.getReturnType()))?.type;
-                        cmd.parameterTypes = util.toCSharpArray(method.getParameters().map(p => util.toCSharpType(util.getDeclaration(p.getTypeNode())))) as typeof cmd.parameterTypes;
+                        cmd.parameterTypes = util.toCSharpArray(parameterTypes) as typeof cmd.parameterTypes;
 
                         ctd.AddMethod(cmd);
                     }
@@ -567,14 +573,15 @@ export class Program {
                 if (method.isStatic() || !this.isExportMethod(method))
                     continue;
                 let nameNode = method.getNameNode();
-                if (nameNode.isKind(tsm.SyntaxKind.StringLiteral) || nameNode.isKind(tsm.SyntaxKind.Identifier)) {
-                    let name = method.getName(), _ms = members.get(name)
-                    if (!_ms) {
-                        _ms = new Set();
-                        members.set(name, _ms);
-                    }
-                    _ms.add(method);
+                if (!nameNode.isKind(tsm.SyntaxKind.StringLiteral) && !nameNode.isKind(tsm.SyntaxKind.Identifier)) {
+                    continue;
                 }
+                let name = method.getName(), _ms = members.get(name)
+                if (!_ms) {
+                    _ms = new Set();
+                    members.set(name, _ms);
+                }
+                _ms.add(method);
             }
         }
         if (inherit && node.getBaseClass()) {
@@ -759,10 +766,11 @@ const util = new class {
             declaration = node;
         }
         else {
-            if (node instanceof tsm.Node) {
-                node = node.getType();
+            let symbol = node.getSymbol();
+            if (!symbol && node instanceof tsm.Node) {
+                symbol = node.getType().getSymbol();
             }
-            let declarations = node.getSymbol().getDeclarations();
+            let declarations = symbol?.getDeclarations();
             if (declarations && declarations.length > 0) {
                 declaration = (declarations.find(d =>
                     d.isKind(tsm.SyntaxKind.EnumDeclaration) ||
@@ -936,6 +944,9 @@ const util = new class {
         } else {
             _node = node;
         }
+        if (!_node && !_explicit) {
+            return null;
+        }
 
         let type: Type, enumerable: Map<string, string | number>;
         if (_node.isKind(tsm.SyntaxKind.ParenthesizedType)) {
@@ -1004,6 +1015,21 @@ const util = new class {
             }
         }
         return { type, enumerable };
+    }
+    public toCSharpTypeByTypeNode(node: tsm.TypeNode): Type {
+        if (node.isKind(tsm.SyntaxKind.BooleanKeyword)) {
+            return this._baseTypes["boolean"];
+        }
+        else if (node.isKind(tsm.SyntaxKind.NumberKeyword)) {
+            return this._baseTypes["number"];
+        }
+        else if (node.isKind(tsm.SyntaxKind.StringKeyword)) {
+            return this._baseTypes["string"];
+        }
+        else if (node.isKind(tsm.SyntaxKind.BigIntKeyword)) {
+            return this._baseTypes["bigint"];
+        }
+        return util.toCSharpType(util.getDeclaration(node))?.type;
     }
     /**转为C#数组类型
      * @param array 

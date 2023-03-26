@@ -6,6 +6,7 @@ namespace XOR
 {
     public partial class TsComponent : XOR.TsBehaviour, XOR.Serializables.IAccessor
     {
+#pragma warning disable
         [SerializeField]
         protected string guid;
         [SerializeField]
@@ -46,6 +47,7 @@ namespace XOR
         [SerializeField]
         private XOR.Serializables.ObjectArray[] ObjectArrayPairs;
         #endregion
+#pragma warning restore
 
         private Action<string, object> onPropertyChange;
         public XOR.Serializables.ResultPair[] GetProperties()
@@ -129,6 +131,17 @@ namespace XOR
             {
                 TsComponentLifecycle.DestroyComponent(_reference, this);
             }
+        }
+        /// <summary>
+        /// 调用JS方法
+        /// </summary>
+        /// <param name="methodName"></param>
+        /// <param name="args"></param>
+        internal void InvokeMethod(string methodName, params object[] args)
+        {
+            if (JSObject == null || string.IsNullOrEmpty(methodName))
+                return;
+            TsComponentLifecycle.Invoke(jsObject, methodName, args);
         }
         public string GetGuid() => guid;
         public string GetRoute() => route;
