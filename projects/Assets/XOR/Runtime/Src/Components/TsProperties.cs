@@ -8,6 +8,7 @@ namespace XOR
     [DisallowMultipleComponent]
     public partial class TsProperties : MonoBehaviour, XOR.Serializables.IAccessor
     {
+#pragma warning disable
         #region 序列化字段
         [SerializeField]
         private XOR.Serializables.String[] StringPairs;
@@ -39,6 +40,7 @@ namespace XOR
         [SerializeField]
         private XOR.Serializables.ObjectArray[] ObjectArrayPairs;
         #endregion
+#pragma warning restore
 
         private Action<string, object> onPropertyChange;
         public XOR.Serializables.ResultPair[] GetProperties()
