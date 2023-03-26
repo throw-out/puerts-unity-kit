@@ -28,7 +28,7 @@ namespace XOR.UI
         }
 
         [System.Serializable]
-        protected class DropdownWrapperEvent : XOR.EventBase<int>
+        protected class DropdownWrapperEvent : XOR.Events.EventBase<int>
         {
         }
     }

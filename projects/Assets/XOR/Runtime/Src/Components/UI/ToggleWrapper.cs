@@ -27,7 +27,7 @@ namespace XOR.UI
         }
 
         [System.Serializable]
-        protected class ToggleWrapperEvent : XOR.EventBase<bool>
+        protected class ToggleWrapperEvent : XOR.Events.EventBase<bool>
         {
         }
     }

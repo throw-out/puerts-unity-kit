@@ -419,7 +419,6 @@ export class Program {
                         cmd.parameterTypes = util.toCSharpArray(parameterTypes) as typeof cmd.parameterTypes;
 
                         ctd.AddMethod(cmd);
-                        console.log(`registed --->: ${className}: ${name}`)
                     }
                 }
             }

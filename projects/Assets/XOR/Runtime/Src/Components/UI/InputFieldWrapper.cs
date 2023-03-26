@@ -40,11 +40,11 @@ namespace XOR.UI
         }
 
         [System.Serializable]
-        protected class SubmitWrapperEvent : XOR.EventBase<string>
+        protected class SubmitWrapperEvent : XOR.Events.EventBase<string>
         {
         }
         [System.Serializable]
-        protected class OnChangeWrapperEvent : XOR.EventBase<string>
+        protected class OnChangeWrapperEvent : XOR.Events.EventBase<string>
         {
         }
     }

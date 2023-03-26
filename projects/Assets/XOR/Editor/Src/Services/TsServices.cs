@@ -194,6 +194,14 @@ namespace XOR.Services
         {
             return this.Methods.Count > 0;
         }
+        public int GetMethodsCount(string methodName)
+        {
+            if (methodName == null)
+                return 0;
+            List<MethodDeclaration> methods;
+            this.Methods.TryGetValue(methodName, out methods);
+            return methods != null ? methods.Count : 0;
+        }
         public MethodDeclaration[] GetMethods()
         {
             return Methods.Values.SelectMany(methods => methods).ToArray();
@@ -340,5 +348,22 @@ namespace XOR.Services
         public Type returnType;
         /// <summary>方法参数类型  </summary>
         public Type[] parameterTypes;
+
+        private string _tooltip;
+        public string BuildTooltip(bool force = false)
+        {
+            if (this._tooltip == null || force)
+            {
+                if (parameterTypes != null && parameterTypes.Length > 0)
+                {
+                    this._tooltip = $"{name}({string.Join(",", parameterTypes.Select(p => p.Name))})";
+                }
+                else
+                {
+                    this._tooltip = $"{name}()";
+                }
+            }
+            return this._tooltip;
+        }
     }
 }

@@ -27,7 +27,7 @@ namespace XOR.UI
         }
 
         [System.Serializable]
-        protected class SliderWrapperEvent : XOR.EventBase<float>
+        protected class SliderWrapperEvent : XOR.Events.EventBase<float>
         {
         }
     }

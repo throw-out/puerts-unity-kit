@@ -81,10 +81,10 @@ export function invokeMethod(obj, methodName, args) {
     let func = obj[methodName];
     if (typeof (func) !== "function")
         return;
-    let _args = args && args.Length > 0 ? new Array(args.Length) : null;
-    if (_args) {
+    let _args = [];
+    if (args) {
         for (let i = 0; i < args.Length; i++) {
-            _args.push(args[i]);
+            _args.push(args.get_Item(i));
         }
     }
     func.apply(obj, _args);

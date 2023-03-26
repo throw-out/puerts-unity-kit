@@ -59,7 +59,7 @@ namespace XOR.UI
             public TriggerWrapperEvent callback = new TriggerWrapperEvent();
         }
         [System.Serializable]
-        protected class TriggerWrapperEvent : XOR.EventBase<BaseEventData>
+        protected class TriggerWrapperEvent : XOR.Events.EventBase<BaseEventData>
         {
         }
     }

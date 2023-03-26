@@ -139,7 +139,7 @@ namespace XOR
         /// <param name="args"></param>
         internal void InvokeMethod(string methodName, params object[] args)
         {
-            if (jsObject == null || string.IsNullOrEmpty(methodName))
+            if (JSObject == null || string.IsNullOrEmpty(methodName))
                 return;
             TsComponentLifecycle.Invoke(jsObject, methodName, args);
         }

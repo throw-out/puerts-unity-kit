@@ -28,7 +28,7 @@ namespace XOR.UI
         }
 
         [System.Serializable]
-        protected class ButtonWrapperEvent : XOR.EventBase
+        protected class ButtonWrapperEvent : XOR.Events.EventBase
         {
         }
     }
