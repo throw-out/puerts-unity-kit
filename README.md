@@ -25,7 +25,8 @@
   > [[查看文档]](./docs/TsProperties.md)
 
 - TsComponent:
-  > 对TsBehaviour和TsProperties的结合实现, 可序列化ts脚本中的成员变量, 并实现ts对象的生命周期管理;  
+  > 对TsBehaviour和TsProperties的结合实现, 可序列化ts脚本中的成员变量和使用Unity生命周期方法, 并实现对ts对象的生命周期管理;  
+  > 允许UGUI事件绑定到ts脚本上([UGUI事件](./docs/TsComponentBindUGUIEvents.md));  
   > [[查看文档]](./docs/TsComponent.md)
 
 - ThreadWorker:
