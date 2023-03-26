@@ -89,3 +89,6 @@
 > 在Sample06.OnGUI中修改this._value将会同步到Inspector, 反之在Inspector中修改_value字段亦会同步到Sample06._value上
 
 ![image](https://user-images.githubusercontent.com/45587825/216810151-6f5d8d6d-c51e-49b3-a976-92d167202d82.png)
+
+## UGUI事件绑定
+ 请查看[UGUI页面](./TsComponentBindUGUIEvents.md)
