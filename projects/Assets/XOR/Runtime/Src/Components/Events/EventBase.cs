@@ -5,25 +5,29 @@ using UnityEngine;
 
 namespace XOR.Events
 {
-    public enum EventBaseParameter
+    public enum ParameterType
     {
         None,
         String = 1,
         Double = 2,
         Bool = 4,
-        Object = 8,
+        Long = 8,
+        Object = 16,
+        Vector2 = 32,
+        Vector3 = 64,
+        Color = 128,
+        Color32 = 256,
         Post = 4096,
     }
+
     [System.Serializable]
     public class EventBaseData
     {
         public UnityEngine.Object target;
         public string method;
-        public EventBaseParameter parameter = EventBaseParameter.None;
+        public ParameterType parameter = ParameterType.None;
 
         public string stringValue;
-        public double doubleValue;
-        public bool boolValue;
         public UnityEngine.Object objectValue;
     }
 
@@ -82,19 +86,34 @@ namespace XOR.Events
         {
             switch (@event.parameter)
             {
-                case EventBaseParameter.String:
+                case ParameterType.String:
                     component.InvokeMethod(@event.method, @event.stringValue);
                     break;
-                case EventBaseParameter.Double:
-                    component.InvokeMethod(@event.method, @event.doubleValue);
+                case ParameterType.Double:
+                    component.InvokeMethod(@event.method, Serializer.ToData<double>(@event.stringValue));
                     break;
-                case EventBaseParameter.Bool:
-                    component.InvokeMethod(@event.method, @event.boolValue);
+                case ParameterType.Bool:
+                    component.InvokeMethod(@event.method, Serializer.ToData<bool>(@event.stringValue));
                     break;
-                case EventBaseParameter.Object:
+                case ParameterType.Long:
+                    component.InvokeMethod(@event.method, Serializer.ToData<long>(@event.stringValue));
+                    break;
+                case ParameterType.Object:
                     component.InvokeMethod(@event.method, @event.objectValue);
                     break;
-                case EventBaseParameter.Post:
+                case ParameterType.Vector2:
+                    component.InvokeMethod(@event.method, Serializer.ToData<Vector2>(@event.stringValue));
+                    break;
+                case ParameterType.Vector3:
+                    component.InvokeMethod(@event.method, Serializer.ToData<Vector3>(@event.stringValue));
+                    break;
+                case ParameterType.Color:
+                    component.InvokeMethod(@event.method, Serializer.ToData<Color>(@event.stringValue));
+                    break;
+                case ParameterType.Color32:
+                    component.InvokeMethod(@event.method, Serializer.ToData<Color32>(@event.stringValue));
+                    break;
+                case ParameterType.Post:
                     component.InvokeMethod(@event.method, value);
                     break;
                 default:

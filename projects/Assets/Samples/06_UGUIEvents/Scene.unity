@@ -38,7 +38,7 @@ RenderSettings:
   m_ReflectionIntensity: 1
   m_CustomReflection: {fileID: 0}
   m_Sun: {fileID: 0}
-  m_IndirectSpecularColor: {r: 0.44657898, g: 0.4964133, b: 0.5748178, a: 1}
+  m_IndirectSpecularColor: {r: 0.44657874, g: 0.49641258, b: 0.5748172, a: 1}
   m_UseRadianceAmbientProbe: 0
 --- !u!157 &3
 LightmapSettings:
@@ -209,8 +209,6 @@ MonoBehaviour:
       method: method3
       parameter: 1
       stringValue: test string parameter
-      doubleValue: 0
-      boolValue: 0
       objectValue: {fileID: 0}
 --- !u!114 &88782426
 MonoBehaviour:
@@ -335,10 +333,8 @@ MonoBehaviour:
     m_Events:
     - target: {fileID: 1739975479}
       method: method5
-      parameter: 8
+      parameter: 16
       stringValue: 
-      doubleValue: 0
-      boolValue: 0
       objectValue: {fileID: 1739975477}
 --- !u!114 &142615526
 MonoBehaviour:
@@ -664,9 +660,7 @@ MonoBehaviour:
     - target: {fileID: 1739975479}
       method: method4
       parameter: 2
-      stringValue: 
-      doubleValue: 3.1415926
-      boolValue: 0
+      stringValue: 3.1415926
       objectValue: {fileID: 0}
 --- !u!114 &449046288
 MonoBehaviour:
@@ -1114,9 +1108,7 @@ MonoBehaviour:
     - target: {fileID: 1739975479}
       method: method2
       parameter: 4
-      stringValue: 
-      doubleValue: 0
-      boolValue: 0
+      stringValue: False
       objectValue: {fileID: 0}
 --- !u!114 &1377754836
 MonoBehaviour:
@@ -1361,7 +1353,7 @@ MonoBehaviour:
   guid: 276b5325-5f85-4631-ab46-3107005e3c3d
   route: 
   path: samples/06_UGUIEvents
-  version: 51BB368C636F68C26604A3718A031DF3868FB702BB9558D4CB1C5F3657DE2107
+  version: 7BE3AE02F7B513FBCD65C7DB2D8807AA3DDA291EB497AC9B896FE8FA6EAAD678
   StringPairs:
   - index: 0
     key: _prop1
@@ -1468,10 +1460,8 @@ MonoBehaviour:
     m_Events:
     - target: {fileID: 1739975479}
       method: method6
-      parameter: 8
+      parameter: 16
       stringValue: 
-      doubleValue: 0
-      boolValue: 0
       objectValue: {fileID: 1739975478}
 --- !u!114 &1907557506
 MonoBehaviour:

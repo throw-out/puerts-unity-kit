@@ -10,17 +10,12 @@ namespace XOR.UI
     internal class NodeWrap
     {
         public SerializedProperty Node { get; private set; }
-        public SerializedProperty ArrayParent { get; private set; }
-        public int ArrayIndex { get; private set; }
-
 
         private SerializedProperty _targetNode;
         private SerializedProperty _methodNode;
         private SerializedProperty _parameterNode;
 
         private SerializedProperty _stringValue;
-        private SerializedProperty _floatValue;
-        private SerializedProperty _boolValue;
         private SerializedProperty _objectValue;
 
         public SerializedProperty TragetNode
@@ -56,22 +51,6 @@ namespace XOR.UI
                 return _stringValue;
             }
         }
-        public SerializedProperty DoubleValueNode
-        {
-            get
-            {
-                if (_floatValue == null) _floatValue = this.Node.FindPropertyRelative("doubleValue");
-                return _floatValue;
-            }
-        }
-        public SerializedProperty BoolValueNode
-        {
-            get
-            {
-                if (_boolValue == null) _boolValue = this.Node.FindPropertyRelative("boolValue");
-                return _boolValue;
-            }
-        }
         public SerializedProperty ObjectValueNode
         {
             get
@@ -91,9 +70,9 @@ namespace XOR.UI
             get { return this.MethodNode.stringValue; }
             set { this.MethodNode.stringValue = value; }
         }
-        public XOR.Events.EventBaseParameter Parameter
+        public XOR.Events.ParameterType Parameter
         {
-            get { return (XOR.Events.EventBaseParameter)this.ParameterNode.intValue; }
+            get { return (XOR.Events.ParameterType)this.ParameterNode.intValue; }
             set { this.ParameterNode.intValue = (int)value; }
         }
 
@@ -104,13 +83,38 @@ namespace XOR.UI
         }
         public double DoubleValue
         {
-            get { return this.DoubleValueNode.doubleValue; }
-            set { this.DoubleValueNode.doubleValue = value; }
+            get { return XOR.Events.Serializer.ToData<double>(this.StringValueNode.stringValue); }
+            set { this.StringValueNode.stringValue = XOR.Events.Serializer.ToString(value); }
         }
         public bool BoolValue
         {
-            get { return this.BoolValueNode.boolValue; }
-            set { this.BoolValueNode.boolValue = value; }
+            get { return XOR.Events.Serializer.ToData<bool>(this.StringValueNode.stringValue); }
+            set { this.StringValueNode.stringValue = XOR.Events.Serializer.ToString(value); }
+        }
+        public long LongValue
+        {
+            get { return XOR.Events.Serializer.ToData<long>(this.StringValueNode.stringValue); }
+            set { this.StringValueNode.stringValue = XOR.Events.Serializer.ToString(value); }
+        }
+        public Vector2 Vector2Value
+        {
+            get { return XOR.Events.Serializer.ToData<Vector2>(this.StringValueNode.stringValue); }
+            set { this.StringValueNode.stringValue = XOR.Events.Serializer.ToString(value); }
+        }
+        public Vector3 Vector3Value
+        {
+            get { return XOR.Events.Serializer.ToData<Vector3>(this.StringValueNode.stringValue); }
+            set { this.StringValueNode.stringValue = XOR.Events.Serializer.ToString(value); }
+        }
+        public Color ColorValue
+        {
+            get { return XOR.Events.Serializer.ToData<Color>(this.StringValueNode.stringValue); }
+            set { this.StringValueNode.stringValue = XOR.Events.Serializer.ToString(value); }
+        }
+        public Color32 Color32Value
+        {
+            get { return XOR.Events.Serializer.ToData<Color32>(this.StringValueNode.stringValue); }
+            set { this.StringValueNode.stringValue = XOR.Events.Serializer.ToString(value); }
         }
         public UnityEngine.Object ObjectValue
         {
@@ -118,32 +122,18 @@ namespace XOR.UI
             set { this.ObjectValueNode.objectReferenceValue = value; }
         }
 
-        public NodeWrap(SerializedProperty node, int arrayIndex, SerializedProperty arrayParent)
+        public NodeWrap(SerializedProperty node)
         {
             this.Node = node;
-            this.ArrayParent = arrayParent;
-            this.ArrayIndex = arrayIndex;
         }
 
-        /// <summary>从(数组)父节点上移除当前节点 </summary>
-        public void RemoveFromArrayParent()
-        {
-            ArrayParent.DeleteArrayElementAtIndex(ArrayIndex);
-        }
         /// <summary>清除值存储的数据 </summary>
         public void Clean()
         {
             this.Target = null;
             this.Method = string.Empty;
-            this.Parameter = XOR.Events.EventBaseParameter.None;
+            this.Parameter = XOR.Events.ParameterType.None;
             this.StringValue = default;
-            this.DoubleValue = default;
-            this.BoolValue = default;
-            this.ObjectValue = default;
-        }
-        public void DecreaseIndex()
-        {
-            this.ArrayIndex--;
         }
         public void ApplyModifiedProperties()
         {
@@ -172,23 +162,12 @@ namespace XOR.UI
                 return;
             list.DoLayoutList();
         }
-        List<NodeWrap> CreateNodes()
-        {
-            if (elementParent == null || !elementParent.isArray)
-                return null;
 
-            var nodes = new List<NodeWrap>();
-            for (int i = 0; i < elementParent.arraySize; i++)
-            {
-                nodes.Add(new NodeWrap(elementParent.GetArrayElementAtIndex(i), i, elementParent));
-            }
-            return nodes;
-        }
         void CreateReorderableList()
         {
             if (elementParent == null || !elementParent.isArray)
                 return;
-            List<NodeWrap> nodes = CreateNodes();
+            List<NodeWrap> nodes = RebuildNodes(elementParent);
 
             list = new ReorderableList(nodes, typeof(NodeWrap),
                 false, true, true, true
@@ -210,22 +189,35 @@ namespace XOR.UI
             list.onRemoveCallback = (list) =>
             {
                 int index = list.index;
-                for (int i = index + 1; i < nodes.Count; i++)
-                {
-                    nodes[i].DecreaseIndex();
-                }
-                nodes[index].RemoveFromArrayParent();
+                elementParent.DeleteArrayElementAtIndex(index);
                 root.ApplyModifiedProperties();
+                RebuildNodes(elementParent, in nodes);
             };
             list.onAddCallback = (list) =>
             {
                 elementParent.arraySize++;
-                int lastIndex = elementParent.arraySize - 1;
-                nodes.Add(new NodeWrap(elementParent.GetArrayElementAtIndex(lastIndex), lastIndex, elementParent));
                 root.ApplyModifiedProperties();
+                int lastIndex = elementParent.arraySize - 1;
+                nodes.Add(new NodeWrap(elementParent.GetArrayElementAtIndex(lastIndex)));
             };
         }
-        void RenderNode(Rect rect, NodeWrap node)
+        static List<NodeWrap> RebuildNodes(SerializedProperty parent)
+        {
+            if (parent == null || !parent.isArray)
+                return null;
+            var nodes = new List<NodeWrap>();
+            RebuildNodes(parent, in nodes);
+            return nodes;
+        }
+        static void RebuildNodes(SerializedProperty parent, in List<NodeWrap> nodes)
+        {
+            nodes.Clear();
+            for (int i = 0; i < parent.arraySize; i++)
+            {
+                nodes.Add(new NodeWrap(parent.GetArrayElementAtIndex(i)));
+            }
+        }
+        static void RenderNode(Rect rect, NodeWrap node)
         {
             float x = rect.x, y = rect.y, w = rect.width, h = rect.height;
 
@@ -251,13 +243,14 @@ namespace XOR.UI
                 string methodName = newGo != null ? node.Method : string.Empty;
                 using (new EditorGUI.DisabledScope(newGo == null))
                 {
+                    var position = new Rect(new Vector2(x + w * HeaderFixed + Spacing, y + 2f), new Vector2(w * (1 - HeaderFixed) - Spacing, h * 0.5f));
                     if (GUI.Button(
                         new Rect(new Vector2(x + w * HeaderFixed + Spacing, y + 2f), new Vector2(w * (1 - HeaderFixed) - Spacing, h * 0.5f)),
                         string.IsNullOrEmpty(methodName) ? "No Function" : methodName,
                         Skin.dropDown
                     ))
                     {
-                        Helper.DropdownMethodsMenu(node, (compoent, md) =>
+                        Helper.DropdownMethodsMenu(node, position, (compoent, md) =>
                         {
                             node.Clean();
                             node.Target = compoent;
@@ -271,21 +264,34 @@ namespace XOR.UI
                     }
                 }
                 //Render Parameter
-                if (newGo != null && !string.IsNullOrEmpty(methodName) && node.Parameter != XOR.Events.EventBaseParameter.None)
+                if (newGo != null && !string.IsNullOrEmpty(methodName) && node.Parameter != XOR.Events.ParameterType.None)
                 {
                     var parameterRect = new Rect(new Vector2(x + w * HeaderFixed + Spacing, y + h * 0.5f), new Vector2(w * (1 - HeaderFixed) - Spacing, h * 0.5f));
                     switch (node.Parameter)
                     {
-                        case XOR.Events.EventBaseParameter.String:
+                        case XOR.Events.ParameterType.String:
                             node.StringValue = EditorGUI.TextField(parameterRect, node.StringValue);
                             break;
-                        case XOR.Events.EventBaseParameter.Double:
+                        case XOR.Events.ParameterType.Double:
                             node.DoubleValue = EditorGUI.DoubleField(parameterRect, node.DoubleValue);
                             break;
-                        case XOR.Events.EventBaseParameter.Bool:
+                        case XOR.Events.ParameterType.Bool:
                             node.BoolValue = EditorGUI.Toggle(parameterRect, node.BoolValue);
                             break;
-                        case XOR.Events.EventBaseParameter.Object:
+                        case XOR.Events.ParameterType.Long:
+                            node.LongValue = EditorGUI.LongField(parameterRect, node.LongValue);
+                            break;
+                        case XOR.Events.ParameterType.Vector2:
+                            node.Vector2Value = EditorGUI.Vector2Field(parameterRect, string.Empty, node.Vector2Value);
+                            break;
+                        case XOR.Events.ParameterType.Vector3:
+                            node.Vector3Value = EditorGUI.Vector3Field(parameterRect, string.Empty, node.Vector3Value);
+                            break;
+                        case XOR.Events.ParameterType.Color:
+                        case XOR.Events.ParameterType.Color32:
+                            node.ColorValue = EditorGUI.ColorField(parameterRect, node.ColorValue);
+                            break;
+                        case XOR.Events.ParameterType.Object:
                             var md = Helper.GetMethodDeclaration(node);
                             var targetType = md != null && md.parameterTypes != null && md.parameterTypes.Length > 0 ? md.parameterTypes[0] : typeof(UnityEngine.Object);
                             var targetValue = node.ObjectValue != null && targetType.IsAssignableFrom(node.ObjectValue.GetType()) ? node.ObjectValue : null;
@@ -294,7 +300,7 @@ namespace XOR.UI
                                 node.ObjectValue = EditorGUI.ObjectField(parameterRect, targetValue, targetType, true);
                             }
                             break;
-                        case XOR.Events.EventBaseParameter.Post:
+                        case XOR.Events.ParameterType.Post:
                             break;
                     }
                     node.ApplyModifiedProperties();
@@ -320,61 +326,26 @@ namespace XOR.UI
             }
             public static void DropdownMethodsMenu(NodeWrap node, Action<UnityEngine.Object, XOR.Services.MethodDeclaration> callback)
             {
-                var program = EditorApplicationUtil.GetProgram();
-                if (program == null || program.state != XOR.Services.ProgramState.Completed)
-                {
-                    GUIUtil.RenderMustLaunchServices();
-                    return;
-                }
-                GameObject target = GetGamObject(node.Target);
-                string methodName = node.Method;
-
-                var menu = new UnityEditor.GenericMenu();
-                menu.allowDuplicateNames = true;
-                menu.AddItem(new GUIContent($"No Function"), false, () => callback(target, null));
-                menu.AddSeparator(string.Empty);
-
-                var components = target.GetComponents<XOR.TsComponent>();
-                for (int i = 0; i < components.Length; i++)
-                {
-                    var header = components.Length > 1 ? $"{nameof(TsComponent)}-{i + 1}/" : $"{nameof(TsComponent)}/";
-                    var component = components[i];
-                    var statement = program.GetStatement(component.GetGuid());
-                    if (statement == null || !(statement is XOR.Services.TypeDeclaration type))
-                    {
-                        menu.AddDisabledItem(new GUIContent($"{header}Missing"), false);
-                        continue;
-                    }
-                    if (!type.HasMethods())
-                    {
-                        menu.AddDisabledItem(new GUIContent($"{header}Empty"), false);
-                        continue;
-                    }
-                    foreach (var method in type.GetMethods())
-                    {
-                        if (!IsAvailableMethod(method))
-                            continue;
-                        menu.AddItem(
-                            new GUIContent($"{header}{method.BuildTooltip()}"),
-                            methodName == method.name && IsMatchMethod(node, method, type.GetMethodsCount(methodName)),
-                            () => callback(component, method)
-                        );
-                    }
-                }
-                menu.ShowAsContext();
+                var menu = GenerateMethodsMenu(node, callback);
+                if (menu != null) menu.ShowAsContext();
+            }
+            public static void DropdownMethodsMenu(NodeWrap node, Rect position, Action<UnityEngine.Object, XOR.Services.MethodDeclaration> callback)
+            {
+                var menu = GenerateMethodsMenu(node, callback);
+                if (menu != null) menu.DropDown(position);
             }
 
-            public static XOR.Events.EventBaseParameter GetMethodParameter(XOR.Services.MethodDeclaration method)
+            public static XOR.Events.ParameterType GetMethodParameter(XOR.Services.MethodDeclaration method)
             {
                 Type firstParameterType = method.parameterTypes != null && method.parameterTypes.Length > 0 ? method.parameterTypes[0] : null;
                 if (firstParameterType == null)
                 {
-                    return XOR.Events.EventBaseParameter.None;
+                    return XOR.Events.ParameterType.None;
                 }
-                XOR.Events.EventBaseParameter type;
+                XOR.Events.ParameterType type;
                 if (!methodParameters.TryGetValue(firstParameterType, out type))
                 {
-                    type = XOR.Events.EventBaseParameter.Object;
+                    type = XOR.Events.ParameterType.Object;
                 }
                 return type;
             }
@@ -400,13 +371,65 @@ namespace XOR.UI
                 return null;
             }
 
-            static Dictionary<Type, XOR.Events.EventBaseParameter> methodParameters = new Dictionary<Type, XOR.Events.EventBaseParameter>(){
-                {typeof(bool), XOR.Events.EventBaseParameter.Bool},
-                {typeof(string), XOR.Events.EventBaseParameter.String},
-                {typeof(double), XOR.Events.EventBaseParameter.Double},
-                {typeof(UnityEngine.Object), XOR.Events.EventBaseParameter.Object},
+
+            static UnityEditor.GenericMenu GenerateMethodsMenu(NodeWrap node, Action<UnityEngine.Object, XOR.Services.MethodDeclaration> callback)
+            {
+                var program = EditorApplicationUtil.GetProgram();
+                if (program == null || program.state != XOR.Services.ProgramState.Completed)
+                {
+                    GUIUtil.RenderMustLaunchServices();
+                    return null;
+                }
+                GameObject target = GetGamObject(node.Target);
+                string methodName = node.Method;
+
+                var menu = new UnityEditor.GenericMenu();
+                menu.allowDuplicateNames = true;
+                menu.AddItem(new GUIContent($"No Function"), false, () => callback(target, null));
+                menu.AddSeparator(string.Empty);
+
+                var components = target.GetComponents<XOR.TsComponent>();
+                for (int i = 0; i < components.Length; i++)
+                {
+                    var header = components.Length > 1 ? $"{nameof(TsComponent)}({i + 1})/" : $"{nameof(TsComponent)}/";
+                    var component = components[i];
+                    var statement = program.GetStatement(component.GetGuid());
+                    if (statement == null || !(statement is XOR.Services.TypeDeclaration type))
+                    {
+                        menu.AddDisabledItem(new GUIContent($"{header}Missing"), false);
+                        continue;
+                    }
+                    if (!type.HasMethods())
+                    {
+                        menu.AddDisabledItem(new GUIContent($"{header}Empty"), false);
+                        continue;
+                    }
+                    foreach (var method in type.GetMethods())
+                    {
+                        if (!IsAvailableMethod(method))
+                            continue;
+                        menu.AddItem(
+                            new GUIContent($"{header}{method.BuildTooltip()}"),
+                            methodName == method.name && IsMatchMethod(node, method, type.GetMethodsCount(methodName)),
+                            () => callback(component, method)
+                        );
+                    }
+                }
+                return menu;
+            }
+
+            static Dictionary<Type, XOR.Events.ParameterType> methodParameters = new Dictionary<Type, XOR.Events.ParameterType>(){
+                {typeof(string), XOR.Events.ParameterType.String},
+                {typeof(double), XOR.Events.ParameterType.Double},
+                {typeof(bool), XOR.Events.ParameterType.Bool},
+                {typeof(long), XOR.Events.ParameterType.Long},
+                {typeof(UnityEngine.Vector2), XOR.Events.ParameterType.Vector2},
+                {typeof(UnityEngine.Vector3), XOR.Events.ParameterType.Vector3},
+                {typeof(UnityEngine.Color), XOR.Events.ParameterType.Color},
+                {typeof(UnityEngine.Color32), XOR.Events.ParameterType.Color32},
+                {typeof(UnityEngine.Object), XOR.Events.ParameterType.Object},
             };
-            static Dictionary<XOR.Events.EventBaseParameter, Type> methodParametersReverse = new Dictionary<XOR.Events.EventBaseParameter, Type>(
+            static Dictionary<XOR.Events.ParameterType, Type> methodParametersReverse = new Dictionary<XOR.Events.ParameterType, Type>(
                 methodParameters.ToDictionary(o => o.Value, o => o.Key)
             );
             static bool IsAvailableMethod(XOR.Services.MethodDeclaration method)

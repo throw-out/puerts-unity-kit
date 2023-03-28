@@ -1,4 +1,4 @@
-import { GameObject, Transform } from "csharp.UnityEngine";
+import { Color, Color32, GameObject, Transform, Vector2, Vector3 } from "csharp.UnityEngine";
 
 /**
  * 演示如何将方法绑定到实例对象上
@@ -14,20 +14,32 @@ export class Sample01 extends xor.TsComponent {
     }
     //带参数的方法
     public method2(value: boolean) {
-        console.log(`invoke ${this.method2.name}: ${value}`);
+        console.log(`invoke ${this.method2?.name}: ${value}`);
     }
-    public method3(value: string) {
-        console.log(`invoke ${this.method3.name}: ${value}`);
+    public method3(value: number) {
+        console.log(`invoke ${this.method3?.name}: ${value}`);
     }
-    public method4(value: number) {
-        console.log(`invoke ${this.method4.name}: ${value}`);
+    public method4(value: string) {
+        console.log(`invoke ${this.method4?.name}: ${value}`);
     }
     public method5(value: GameObject) {
-        console.log(`invoke ${this.method5.name}: ${value?.GetType()?.FullName}`);
+        console.log(`invoke ${this.method5?.name}: ${value?.GetType().FullName}`);
     }
     //重载参数类型的方法
     public method6(value: Transform) {
-        console.log(`invoke ${this.method6.name}: ${value?.GetType()?.FullName}`);
+        console.log(`invoke ${this.method6?.name}: ${value?.GetType().FullName}`);
+    }
+    public method7(value: Color) {
+        console.log(`invoke ${this.method7?.name}: ${value}`);
+    }
+    public method8(value: Color32) {
+        console.log(`invoke ${this.method8?.name}: ${value}`);
+    }
+    public method9(value: Vector2) {
+        console.log(`invoke ${this.method9?.name}: ${value}`);
+    }
+    public method10(value: Vector3) {
+        console.log(`invoke ${this.method10?.name}: ${value}`);
     }
 
     //多个参数: 不支持
