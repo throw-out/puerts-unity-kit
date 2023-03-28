@@ -91,10 +91,13 @@ namespace XOR
         }
         public Puerts.JSObject JSObject
         {
-            get => jsObject;
-            internal set
+            get
             {
                 if (!initialized) Init();
+                return jsObject;
+            }
+            internal set
+            {
                 jsObject = value;
                 registered = true;
             }
