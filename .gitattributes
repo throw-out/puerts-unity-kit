@@ -1,0 +1,7 @@
+*.js    eol=lf
+*.jsx   eol=lf
+*.json  eol=lf
+*.cs    eol=lf
+*.meta  eol=lf
+*.prefab    eol=lf
+*.scene eol=lf
