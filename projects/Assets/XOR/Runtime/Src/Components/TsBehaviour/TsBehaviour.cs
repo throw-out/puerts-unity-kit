@@ -8,7 +8,7 @@ using UnityEditor;
 
 namespace XOR
 {
-    [DisallowMultipleComponent]
+    //[DisallowMultipleComponent]
     public class TsBehaviour : MonoBehaviour, IDisposable
     {
         private static HashSet<WeakReference<TsBehaviour>> referenceInstances;
