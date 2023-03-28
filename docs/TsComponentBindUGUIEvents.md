@@ -2,6 +2,11 @@
 - string
 - number
 - boolean
+- bigint
+- UnityEngine.Vector2
+- UnityEngine.Vector3
+- UnityEngine.Color
+- UnityEngine.Color32
 - UnityEngine.Object及其子类型
 
 ## 使用说明
