@@ -14,22 +14,28 @@ namespace Puerts.Editor
         [MenuItem("PuerTS/Generate ECMAScript/ESM", false, 1)]
         public static void GenerateESM()
         {
-            GenerateCode(true, false);
+            GenerateCode(true, null);
         }
-        [MenuItem("PuerTS/Generate ECMAScript/ESM(AppDomain)", false, 1)]
+        [MenuItem("PuerTS/Generate ECMAScript/ESM(Selector)", false, 1)]
         public static void GenerateESMAppDomain()
         {
-            GenerateCode(true, true);
+            ModuleSelector.Get().Once((targets) =>
+            {
+                GenerateCode(true, targets);
+            });
         }
         [MenuItem("PuerTS/Generate ECMAScript/CommonJS", false, 1)]
         public static void GenerateCommonjs()
         {
-            GenerateCode(false, false);
+            GenerateCode(false, null);
         }
-        [MenuItem("PuerTS/Generate ECMAScript/CommonJS(AppDomain)", false, 1)]
+        [MenuItem("PuerTS/Generate ECMAScript/CommonJS(Selector)", false, 1)]
         public static void GenerateCommonjsAppDomain()
         {
-            GenerateCode(false, true);
+            ModuleSelector.Get().Once((targets) =>
+            {
+                GenerateCode(false, targets);
+            });
         }
         [MenuItem("PuerTS/Generate ECMAScript/Clear", false, 1)]
         public static void Clear()
@@ -41,38 +47,29 @@ namespace Puerts.Editor
             AssetDatabase.Refresh();
         }
 
-        static void GenerateCode(bool isESM, bool isDomain)
+        static void GenerateCode(bool isESM, IEnumerable<string> targets)
         {
             Clear();
 
+            var set = targets != null ? new HashSet<string>(targets) : null;
+
             var start = DateTime.Now;
             var saveTo = Configure.GetCodeOutputDirectory();
-            GenerateCode(saveTo, isESM, isDomain);
-            GenerateDTS(saveTo);
+            GenerateCode(saveTo, isESM, set);
+            GenerateDTS(saveTo, set);
             Debug.Log("finished! use " + (DateTime.Now - start).TotalMilliseconds + " ms");
             AssetDatabase.Refresh();
         }
-        static void GenerateCode(string saveTo, bool isESM, bool isAppDomain)
+        static void GenerateCode(string saveTo, bool isESM, HashSet<string> targets)
         {
+            var configure = Configure.GetConfigureByTags(new List<string>() {
+                "Puerts.BindingAttribute",
+            });
+            var genTypes = configure["Puerts.BindingAttribute"].Select(kv => kv.Key)
+                .Where(o => o is Type)
+                .Cast<Type>()
+                .Where(t => !t.IsGenericTypeDefinition);
 
-            IEnumerable<Type> genTypes;
-            if (isAppDomain)
-            {
-                genTypes = (from assembly in AppDomain.CurrentDomain.GetAssemblies()
-                            where !(assembly.ManifestModule is System.Reflection.Emit.ModuleBuilder)
-                            from type in assembly.GetExportedTypes()
-                            select type);
-            }
-            else
-            {
-                var configure = Configure.GetConfigureByTags(new List<string>() {
-                    "Puerts.BindingAttribute",
-                });
-                genTypes = configure["Puerts.BindingAttribute"].Select(kv => kv.Key)
-                    .Where(o => o is Type)
-                    .Cast<Type>()
-                    .Where(t => !t.IsGenericTypeDefinition);
-            }
             var genInfos = Puerts.Editor.Generator.DTS.TypingGenInfo.FromTypes(genTypes).NamespaceInfos
                 .ToDictionary(
                     info => info.Name == null ? string.Empty : info.Name,
@@ -100,6 +97,8 @@ namespace Puerts.Editor
             Directory.CreateDirectory(GetDirectoryPath(saveTo, false));
             foreach (var info in genInfos)
             {
+                if (targets != null && !targets.Contains(info.Key))
+                    continue;
                 string filepath = GetFilePath(
                     saveTo,
                     string.IsNullOrEmpty(info.Key) ? "csharp" : $"csharp.{info.Key}",
@@ -121,7 +120,7 @@ namespace Puerts.Editor
                 }
             }
         }
-        static void GenerateDTS(string saveTo)
+        static void GenerateDTS(string saveTo, HashSet<string> targets)
         {
             var configure = Configure.GetConfigureByTags(new List<string>() {
                     "Puerts.BindingAttribute",
@@ -133,8 +132,17 @@ namespace Puerts.Editor
 
             var namespaces = Puerts.Editor.Generator.DTS.TypingGenInfo.FromTypes(genTypes).NamespaceInfos
                 .Select(info => info.Name);
+            if (targets != null)
+            {
+                namespaces = namespaces.Where(name => targets.Contains(name));
+            }
 
             string filepath = GetDTSPath(saveTo);
+            if (namespaces.Count() == 0)
+            {
+                if (File.Exists(filepath)) File.Delete(filepath);
+                return;
+            }
             Directory.CreateDirectory(Path.GetDirectoryName(filepath));
             using (StreamWriter textWriter = new StreamWriter(filepath, false, Encoding.UTF8))
             {

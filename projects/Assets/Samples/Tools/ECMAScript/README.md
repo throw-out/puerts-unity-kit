@@ -7,9 +7,9 @@
 | - | - |
 |-----|-----|
 |PuerTS/Generate ECMAScript/ESM | 生成ESM模块运行时代码(仅限Binding列表) |
-|PuerTS/Generate ECMAScript/ESM(AppDomain) | [`★推荐`]生成ESM模块运行时代码(完整程序集) |
+|PuerTS/Generate ECMAScript/ESM(Selector) | [`★推荐`]生成ESM模块运行时代码(指定Namespace) |
 |PuerTS/Generate ECMAScript/CommonJS | 生成commonjs模块运行时代码(仅限Binding列表) |
-|PuerTS/Generate ECMAScript/CommonJS(AppDomain) | [`★推荐`]生成commonjs模块运行时代码(完整程序集) |
+|PuerTS/Generate ECMAScript/CommonJS(Selector) | [`★推荐`]生成commonjs模块运行时代码(指定Namespace) |
 
 ## 使用
 - d.ts声明文件位置: Assets/Gen/Typing/csharp/namespaces.d.ts;  
