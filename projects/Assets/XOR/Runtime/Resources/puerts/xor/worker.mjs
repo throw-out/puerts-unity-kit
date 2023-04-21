@@ -466,9 +466,6 @@ class ThreadWorkerConstructor {
                     let list = value;
                     for (let i = 0; i < list.Count; i++) {
                         let member = list.get_Item(i);
-                        if (member.key == "type") {
-                            debugger;
-                        }
                         result[member.key] = this._unpackByRefs(member, refs);
                     }
                 }

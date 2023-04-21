@@ -518,9 +518,6 @@ class ThreadWorkerConstructor {
                     let list = value as $CS.System.Collections.Generic.List$1<$CS.XOR.ThreadWorker.EventData>;
                     for (let i = 0; i < list.Count; i++) {
                         let member = list.get_Item(i);
-                        if (member.key == "type") {
-                            debugger;
-                        }
                         result[member.key] = this._unpackByRefs(member, refs);
                     }
                 }
