@@ -61,6 +61,7 @@ class FileSystemHost implements tsm.FileSystemHost {
     public readDirSync(dirPath: string): tsm.RuntimeDirEntry[] {
         let results: tsm.RuntimeDirEntry[] = [];
         if (Directory.Exists(dirPath)) {
+            this._currentDirectory = dirPath;
             let dir = new DirectoryInfo(dirPath),
                 dirInfos = dir.GetDirectories(),
                 fileInfos = dir.GetFiles();
@@ -88,7 +89,10 @@ class FileSystemHost implements tsm.FileSystemHost {
         return this.readFileSync(filePath, encoding);
     }
     public readFileSync(filePath: string, encoding?: string): string {
-        return File.ReadAllText(filePath);
+        if (File.Exists(filePath)) {
+            return File.ReadAllText(filePath);
+        }
+        return null;
     }
     public async writeFile(filePath: string, fileText: string): Promise<void> {
         await this.waitNextTick();
