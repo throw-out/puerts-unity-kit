@@ -17,3 +17,12 @@
 
 > 在tsconfig.json文件中, 向选项`files`或`include`中添加d.ts声明文件;  
 > 而js运行时代码会通过`Puerts.ILoader`实例读取, 需自行处理csharp/puerts模块的读取, 或可参考示例([ModuleLoader](./ModuleLoader.cs)).
+
+```csharp
+//基于本项目中的MixerLoader的使用示例:
+var loader = new XOR.MixerLoader();
+loader.AddLoader(Puerts.ModuleLoader.ESM());//添加ESM模块Loader
+loader.AddLoader(Puerts.ModuleLoader.Commonjs());//添加Commonjs模块Loader
+
+var env = new Puerts.JsEnv(loader);
+```
