@@ -90,7 +90,7 @@ namespace CDP
         }
         public void RemoveAll(string eventName)
         {
-            if (this.events == null || this.events.ContainsKey(eventName))
+            if (this.events == null)
                 return;
             this.events.Remove(eventName);
         }
