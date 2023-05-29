@@ -84,7 +84,7 @@ namespace XOR
         {
             if (!this.IsAlive) return;
             ProcessMainThreadMessages();
-            syncr.ProcessMainThredMessages();
+            syncr.ProcessMainThreadMessages();
             ProcessMainThreadProcesses();
         }
 
@@ -304,7 +304,7 @@ namespace XOR
                 {
                     env.Tick();
                     ProcessChildThreadMessages();
-                    syncr.ProcessChildThredMessages();
+                    syncr.ProcessChildThreadMessages();
                     ProcessChildThreadEval();
                 }
                 catch (Exception e)
@@ -316,7 +316,7 @@ namespace XOR
             {
                 env.Tick();
                 ProcessChildThreadMessages();
-                syncr.ProcessChildThredMessages();
+                syncr.ProcessChildThreadMessages();
                 ProcessChildThreadEval();
             }
         }
@@ -454,12 +454,12 @@ namespace XOR
         {
             if (Thread.CurrentThread.ManagedThreadId == MAIN_THREAD_ID)
             {
-                syncr.ProcessMainThredMessages();
+                syncr.ProcessMainThreadMessages();
                 ProcessMainThreadProcesses();
             }
             else
             {
-                syncr.ProcessChildThredMessages();
+                syncr.ProcessChildThreadMessages();
             }
         }
         internal bool AcquireSyncing(bool threadSleep = true)

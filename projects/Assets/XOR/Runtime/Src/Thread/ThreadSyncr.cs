@@ -150,8 +150,8 @@ namespace XOR
             }
         }
 
-        internal void ProcessMainThredMessages() => Process(this._syncToMainThread, worker.MainThreadHandler);
-        internal void ProcessChildThredMessages() => Process(this._syncToChildThread, worker.ChildThreadHandler);
+        internal void ProcessMainThreadMessages() => Process(this._syncToMainThread, worker.MainThreadHandler);
+        internal void ProcessChildThreadMessages() => Process(this._syncToChildThread, worker.ChildThreadHandler);
 
         void Process(SyncEventData d, Func<string, ThreadWorker.EventData, ThreadWorker.EventData> invoke)
         {
