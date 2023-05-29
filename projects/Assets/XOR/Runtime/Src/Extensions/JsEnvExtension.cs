@@ -229,7 +229,7 @@ namespace XOR
             ILoader loader = Helper.GetLoader(env, false);
             if (loader == null || !loader.FileExists(filepath))
             {
-                Logger.LogWarning($"Module missing: {filepath}");
+                Logger.LogError($"Module missing: {filepath}");
                 return;
             }
             if (Helper.IsESM(loader, filepath))
@@ -257,7 +257,7 @@ namespace XOR
             ILoader loader = Helper.GetLoader(env, false);
             if (loader == null || !loader.FileExists(filepath))
             {
-                Logger.LogWarning($"Module missing: {filepath}");
+                Logger.LogError($"Module missing: {filepath}");
                 return default;
             }
             if (Helper.IsESM(loader, filepath))
