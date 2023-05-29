@@ -274,10 +274,13 @@ namespace XOR
             }
             public void OnCompleted(Action continuation)
             {
-                /*
-                var operation = System.ComponentModel.AsyncOperationManager.CreateOperation(null);
-                operation.Post(state => continuation(), null);
-                this._awaiter.OnCompleted(operation.OperationCompleted);
+                if (IsCompleted)
+                {
+                    continuation();
+                    return;
+                }
+                /* TryCreateAsyncOperation();
+                this._operation.Post(PostCallback, continuation); */
 
                 var syncContext = System.Threading.SynchronizationContext.Current;
                 if (syncContext == null)
@@ -286,16 +289,8 @@ namespace XOR
                 }
                 this._awaiter.OnCompleted(() =>
                 {
-                    syncContext.Post(state => continuation(), null);
+                    syncContext.Post(PostCallback, continuation);
                 });
-                //*/
-                if (IsCompleted)
-                {
-                    continuation();
-                    return;
-                }
-                TryCreateAsyncOperation();
-                this._operation.Post(PostCallback, continuation);
             }
             public void UnsafeOnCompleted(Action continuation)
             {
@@ -568,8 +563,18 @@ namespace XOR
                     continuation();
                     return;
                 }
-                TryCreateAsyncOperation();
-                this._operation.Post(PostCallback, continuation);
+                /* TryCreateAsyncOperation();
+                this._operation.Post(PostCallback, continuation); */
+
+                var syncContext = System.Threading.SynchronizationContext.Current;
+                if (syncContext == null)
+                {
+                    throw new InvalidProgramException();
+                }
+                this._awaiter.OnCompleted(() =>
+                {
+                    syncContext.Post(PostCallback, continuation);
+                });
             }
             public void UnsafeOnCompleted(Action continuation)
             {
