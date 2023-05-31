@@ -8,12 +8,24 @@ import Collision2D = CS.UnityEngine.Collision2D;
 import Collider = CS.UnityEngine.Collider;
 import Collider2D = CS.UnityEngine.Collider2D;
 import Time = CS.UnityEngine.Time;
+import CSObject = CS.System.Object;
 
 const { File, Path } = CS.System.IO;
 const isEditor = Application.isEditor;
 
 type AccessorType = CS.UnityEngine.Component & CS.XOR.Serializables.IAccessor;
 type AccessorUnionType = AccessorType | AccessorType[] | CS.System.Array$1<AccessorType>;
+
+type ConstructorEvent = <T extends TsBehaviourConstructor = any>(this: T) => void;
+type ConstructorOptions = {
+    accessor?: AccessorUnionType | boolean;
+    /**传递给onConstructor的参数 */
+    args?: any[];
+    /**在绑定Unity生命周期之前调用 */
+    before?: ConstructorEvent;
+    /**在绑定Unity生命周期之后调用 */
+    after?: ConstructorEvent;
+};
 
 /**
  * 详情参阅: https://docs.unity3d.com/cn/current/ScriptReference/MonoBehaviour.html
@@ -22,7 +34,7 @@ abstract class IBehaviour {
     /**
      * 创建实例时被调用 
      */
-    protected onConstructor?(): void;
+    protected onConstructor?(...args: any[]): void;
 
     /**
      * Awake在加载脚本实例时调用。
@@ -274,7 +286,32 @@ class TsBehaviourConstructor {
     private __listeners__: Map<string, Function[]>;
     private __listenerProxy__: CS.XOR.TsMessages;
 
-    public constructor(object: GameObject | Transform | CS.XOR.TsBehaviour, accessor?: AccessorUnionType | boolean) {
+    public constructor(object: GameObject | Transform | CS.XOR.TsBehaviour, accessor?: AccessorUnionType | boolean);
+    public constructor(object: GameObject | Transform | CS.XOR.TsBehaviour, options?: ConstructorOptions);
+    public constructor() {
+        let object: GameObject | Transform | CS.XOR.TsBehaviour = arguments[0],
+            accessor: AccessorUnionType | boolean,
+            args: any[],
+            before: ConstructorEvent,
+            after: ConstructorEvent;
+        let p2 = arguments[1];
+        switch (typeof (p2)) {
+            case "object":
+                if (p2 === null) { }
+                else if (p2 instanceof CSObject || Array.isArray(p2)) {
+                    accessor = <any>p2;
+                } else {
+                    accessor = (<ConstructorOptions>p2).accessor;
+                    args = (<ConstructorOptions>p2).args;
+                    before = (<ConstructorOptions>p2).before;
+                    after = (<ConstructorOptions>p2).after;
+                }
+                break;
+            case "boolean":
+                accessor = <any>p2;
+                break;
+        }
+
         let gameObject: GameObject;
         if (object instanceof CS.XOR.TsBehaviour) {
             gameObject = object.gameObject;
@@ -304,20 +341,21 @@ class TsBehaviourConstructor {
             );
         }
         //call constructor
-        let ctor: Function = this["onConstructor"];
-        if (ctor && typeof (ctor) === "function") {
-            try {
-                ctor.call(this);
-            }
-            catch (e) {
-                console.error(e.message + "\n" + e.stack);
-            }
+        let onctor: Function = this["onConstructor"];
+        if (onctor && typeof (onctor) === "function") {
+            call(this, onctor, args);
         }
+
+        //call before callback
+        if (before) call(this, before);
 
         this._bindProxies();
         this._bindUpdateProxies();
         this._bindListeners();
         this._bindModuleOfEditor();
+
+        //call after callback
+        if (after) call(this, after);
     }
     //协程
     public StartCoroutine(routine: ((...args: any[]) => Generator) | Generator, ...args: any[]): CS.UnityEngine.Coroutine {
@@ -1013,6 +1051,20 @@ function bind(thisArg: object, funcname: string | Function, waitAsyncComplete?: 
         };
     }
     return undefined;
+}
+
+/**调用方法并catch error
+ * @param func 
+ * @param thisArg 
+ * @param args 
+ */
+function call(thisArg: any, func: Function, args?: any[]) {
+    try {
+        func.apply(thisArg, args);
+    }
+    catch (e) {
+        console.error(e.message + "\n" + e.stack);
+    }
 }
 
 /**创建C#迭代器 */

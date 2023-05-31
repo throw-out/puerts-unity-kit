@@ -9,6 +9,16 @@ import Collider = CS.UnityEngine.Collider;
 import Collider2D = CS.UnityEngine.Collider2D;
 type AccessorType = CS.UnityEngine.Component & CS.XOR.Serializables.IAccessor;
 type AccessorUnionType = AccessorType | AccessorType[] | CS.System.Array$1<AccessorType>;
+type ConstructorEvent = <T extends TsBehaviourConstructor = any>(this: T) => void;
+type ConstructorOptions = {
+    accessor?: AccessorUnionType | boolean;
+    /**传递给onConstructor的参数 */
+    args?: any[];
+    /**在绑定Unity生命周期之前调用 */
+    before?: ConstructorEvent;
+    /**在绑定Unity生命周期之后调用 */
+    after?: ConstructorEvent;
+};
 /**
  * 详情参阅: https://docs.unity3d.com/cn/current/ScriptReference/MonoBehaviour.html
  */
@@ -16,7 +26,7 @@ declare abstract class IBehaviour {
     /**
      * 创建实例时被调用
      */
-    protected onConstructor?(): void;
+    protected onConstructor?(...args: any[]): void;
     /**
      * Awake在加载脚本实例时调用。
      * (如果游戏对象在启动期间处于非活动状态，则在激活之后才会调用 Awake。)
@@ -259,6 +269,7 @@ declare class TsBehaviourConstructor {
     private __listeners__;
     private __listenerProxy__;
     constructor(object: GameObject | Transform | CS.XOR.TsBehaviour, accessor?: AccessorUnionType | boolean);
+    constructor(object: GameObject | Transform | CS.XOR.TsBehaviour, options?: ConstructorOptions);
     StartCoroutine(routine: ((...args: any[]) => Generator) | Generator, ...args: any[]): CS.UnityEngine.Coroutine;
     StopCoroutine(routine: CS.UnityEngine.Coroutine): void;
     StopAllCoroutines(): void;

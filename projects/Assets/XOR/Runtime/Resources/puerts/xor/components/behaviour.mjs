@@ -2,6 +2,7 @@ var Transform = CS.UnityEngine.Transform;
 var RectTransform = CS.UnityEngine.RectTransform;
 var Application = CS.UnityEngine.Application;
 var Time = CS.UnityEngine.Time;
+var CSObject = CS.System.Object;
 const { File, Path } = CS.System.IO;
 const isEditor = Application.isEditor;
 /**
@@ -32,7 +33,26 @@ class IOnMouse {
  * @see standalone 如果需要绑定独立的组件, 在对应方法上添加此标注
  */
 class TsBehaviourConstructor {
-    constructor(object, accessor) {
+    constructor() {
+        let object = arguments[0], accessor, args, before, after;
+        let p2 = arguments[1];
+        switch (typeof (p2)) {
+            case "object":
+                if (p2 === null) { }
+                else if (p2 instanceof CSObject || Array.isArray(p2)) {
+                    accessor = p2;
+                }
+                else {
+                    accessor = p2.accessor;
+                    args = p2.args;
+                    before = p2.before;
+                    after = p2.after;
+                }
+                break;
+            case "boolean":
+                accessor = p2;
+                break;
+        }
         let gameObject;
         if (object instanceof CS.XOR.TsBehaviour) {
             gameObject = object.gameObject;
@@ -54,19 +74,20 @@ class TsBehaviourConstructor {
             TsBehaviourConstructor.bindAccessor(this, accessor, true);
         }
         //call constructor
-        let ctor = this["onConstructor"];
-        if (ctor && typeof (ctor) === "function") {
-            try {
-                ctor.call(this);
-            }
-            catch (e) {
-                console.error(e.message + "\n" + e.stack);
-            }
+        let onctor = this["onConstructor"];
+        if (onctor && typeof (onctor) === "function") {
+            call(this, onctor, args);
         }
+        //call before callback
+        if (before)
+            call(this, before);
         this._bindProxies();
         this._bindUpdateProxies();
         this._bindListeners();
         this._bindModuleOfEditor();
+        //call after callback
+        if (after)
+            call(this, after);
     }
     //协程
     StartCoroutine(routine, ...args) {
@@ -745,6 +766,19 @@ function bind(thisArg, funcname, waitAsyncComplete) {
         };
     }
     return undefined;
+}
+/**调用方法并catch error
+ * @param func
+ * @param thisArg
+ * @param args
+ */
+function call(thisArg, func, args) {
+    try {
+        func.apply(thisArg, args);
+    }
+    catch (e) {
+        console.error(e.message + "\n" + e.stack);
+    }
 }
 /**创建C#迭代器 */
 function cs_generator(func, ...args) {
