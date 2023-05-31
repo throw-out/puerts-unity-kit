@@ -36,6 +36,9 @@
 | `@xor.TsBehaviour.throttle(boolean): PropertyDecorator` | 适用于async/Promise方法, 在上一次调用完成后才会再次调用(Awake丶Update丶FixedUpdate...) |
 </details>
 
+## 执行顺序
+![image](../images/execution_order.png)
+
 ## 简单演示
 > 示例场景:[projects/Assets/Samples/03_TsBehaviour](../projects/Assets/Samples/03_TsBehaviour)  
 > 示例typescript代码: [projects/TsProject/src/samples/03_Behaviour.ts](../projects/TsProject/src/samples/03_TsBehaviour.ts)  
