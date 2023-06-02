@@ -137,6 +137,9 @@ namespace XOR.Serializables
                     if (m == null) continue;
                     results.AddRange(m);
                 }
+#if UNITY_EDITOR
+                results.Sort((o1, o2) => o1.Index < o2.Index ? -1 : o1.Index > o2.Index ? 1 : 0);
+#endif
                 return results;
             }
             return null;
