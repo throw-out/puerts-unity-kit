@@ -232,7 +232,8 @@ namespace XOR
                     nodes[i].Index = i;
                 }
                 root.ApplyModifiedProperties();
-                //TsPropertiesHelper.RebuildNodes(root, nodes);
+                root.Update();
+                TsPropertiesHelper.RebuildNodes(root, nodes);
             };
         }
     }
@@ -287,7 +288,7 @@ namespace XOR
                     ));
                 }
             }
-            outputNodes.Sort((n1, n2) => n1.Index < n2.Index ? -1 : n1.Index < n2.Index ? 1 : 0);
+            outputNodes.Sort((n1, n2) => n1.Index < n2.Index ? -1 : n1.Index > n2.Index ? 1 : 0);
         }
 
         public static void SetDirty(UnityEngine.Object obj)
