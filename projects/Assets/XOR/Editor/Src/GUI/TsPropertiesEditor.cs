@@ -121,6 +121,8 @@ namespace XOR
                 var code = editor.text;
                 if (string.IsNullOrEmpty(code))
                     return;
+                XOR.Serializables.TsProperties.Utility.ParseDeclareCode(root, nodes, code);
+                TsPropertiesHelper.RebuildNodes(root, nodes);
             }
             EditorGUILayout.EndHorizontal();
 

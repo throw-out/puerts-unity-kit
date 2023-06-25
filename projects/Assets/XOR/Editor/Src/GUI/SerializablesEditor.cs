@@ -1144,22 +1144,9 @@ namespace XOR.Serializables.TsProperties
             string[] menuItems = root.FieldMapping.Select(o => o.Value.Menu).ToArray();
             CustomMenu(menuItems, null, null, null, (selectIndex) =>
             {
-                //Create Element
-                var arrayParent = root.GetProperty(root.FieldMapping.Keys.ElementAt(selectIndex));
-                arrayParent.arraySize++;
-                var newNode = new NodeWrap(
-                    arrayParent.GetArrayElementAtIndex(arrayParent.arraySize - 1),
-                    root.FieldMapping.Values.ElementAt(selectIndex).Element.Type
-                );
-                newNode.Index = index;
-                newNode.Key = "key" + index;
-                if (newNode.ValueNode.isArray)
-                {
-                    newNode.ValueNode.arraySize = 0;
-                    newNode.ValueNode.isExpanded = true;
-                }
-                newNode.CleanValue();
-                //应用更改
+                //create Element
+                CreateNode(root, index, selectIndex);
+                //apply change
                 root.ApplyModifiedProperties();
 
                 if (callback != null) callback.Invoke();
@@ -1431,6 +1418,25 @@ namespace XOR.Serializables.TsProperties
                 }
             }
         }
+        public static NodeWrap CreateNode(RootWrap root, int index, int fieldIndex)
+        {
+            var arrayParent = root.GetProperty(root.FieldMapping.Keys.ElementAt(fieldIndex));
+            arrayParent.arraySize++;
+            var newNode = new NodeWrap(
+                arrayParent.GetArrayElementAtIndex(arrayParent.arraySize - 1),
+                root.FieldMapping.Values.ElementAt(fieldIndex).Element.Type
+            );
+            newNode.Index = index;
+            newNode.Key = "key" + index;
+            if (newNode.ValueNode.isArray)
+            {
+                newNode.ValueNode.arraySize = 0;
+                newNode.ValueNode.isExpanded = true;
+            }
+            newNode.CleanValue();
+
+            return newNode;
+        }
 
         private static List<string> reservedKeywords = new List<string>()
         {
@@ -1526,6 +1532,49 @@ namespace XOR.Serializables.TsProperties
                 builder.Append(";");
             }
             return builder.ToString();
+        }
+        /// <summary>解析typescript声明代码获取字段信息 </summary>
+        public static void ParseDeclareCode(RootWrap root, List<NodeWrap> nodes, string code)
+        {
+            if (string.IsNullOrEmpty(code))
+                return;
+            string[] lines = code.Replace("\r\n", string.Empty).Replace("\n", string.Empty).Split(';');
+            foreach (var line in lines)
+            {
+                if (string.IsNullOrWhiteSpace(line))
+                    continue;
+                string fieldName, typeName;
+                int declareFlag = line.IndexOf(":");
+                if (declareFlag > 0)
+                {
+                    fieldName = line.Substring(0, declareFlag).Trim().Split(' ').Last();
+                    typeName = line.Substring(declareFlag + 1).Trim();
+                }
+                else
+                {
+                    fieldName = line.Trim().Split(' ').Last();
+                    typeName = null;
+                }
+                if (fieldName.StartsWith("[") && fieldName.EndsWith("]"))
+                {
+                    fieldName = fieldName.Substring(2, fieldName.Length - 4);
+                }
+
+                if (nodes.Find(n => fieldName.Equals(n.Key)) != null)
+                    continue;
+                Type fielType = GetTypeFromName(typeName);
+                if (fielType == null)
+                    continue;
+                int fieldIndex = FindIndex(root.FieldMapping.Values, f => f.Element.ValueType.IsAssignableFrom(fielType));
+                if (fieldIndex < 0)
+                    continue;
+                var newNode = CreateNode(root, nodes.Count, fieldIndex);
+                newNode.Key = fieldName;
+                nodes.Add(newNode);
+            }
+            //apply change
+            root.ApplyModifiedProperties();
+            root.Update();
         }
 
         /// <summary>
@@ -1680,6 +1729,55 @@ namespace XOR.Serializables.TsProperties
                 return name;
             }
             return useFullname ? type.FullName.Replace("+", ".") : type.Name;
+        }
+
+        static readonly Dictionary<string, Type> typeMapping = new Dictionary<string, Type>()
+        {
+            {"string", typeof(string)},
+            {"number", typeof(double)},
+            {"boolean", typeof(bool)},
+            {"bigint", typeof(long)},
+            {"Vector2", typeof(UnityEngine.Vector2)},
+            {"Vector3", typeof(UnityEngine.Vector3)},
+            {"Color", typeof(UnityEngine.Color)},
+            {"Color32", typeof(UnityEngine.Color32)},
+        };
+        static Type GetTypeFromName(string typeName)
+        {
+            if (string.IsNullOrEmpty(typeName))
+                return null;
+            //is an array type
+            if (typeName.EndsWith("[]"))
+            {
+                Type elementType = GetTypeFromName(typeName.Substring(0, typeName.Length - 2));
+                if (elementType != null)
+                {
+                    return Array.CreateInstance(elementType, 0).GetType();
+                }
+            }
+
+            Type type;
+            if (!typeMapping.TryGetValue(typeName, out type))
+            {
+                type = Type.GetType(typeName, false);
+            }
+            if (type == null)
+            {
+                type = typeof(UnityEngine.Object);
+            }
+            return type;
+        }
+
+        static int FindIndex<T>(IEnumerable<T> array, Func<T, bool> fn)
+        {
+            int i = 0;
+            foreach (var item in array)
+            {
+                if (fn(item))
+                    return i;
+                i++;
+            }
+            return -1;
         }
     }
 
