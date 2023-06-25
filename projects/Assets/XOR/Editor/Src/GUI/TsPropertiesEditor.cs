@@ -121,7 +121,21 @@ namespace XOR
                 var code = editor.text;
                 if (string.IsNullOrEmpty(code))
                     return;
-                XOR.Serializables.TsProperties.Utility.ParseDeclareCode(root, nodes, code);
+                var fields = XOR.Serializables.TsProperties.Utility.ParseDeclareCode(code);
+                if (fields == null || fields.Count == 0)
+                    return;
+                var builder = new System.Text.StringBuilder();
+                foreach (var field in fields)
+                {
+                    builder.AppendLine();
+                    builder.Append(field.Key);
+                    builder.Append(" : ");
+                    builder.Append(field.Value.FullName);
+                }
+                bool ok = EditorUtility.DisplayDialog("提示", $"解析结果为:{builder.ToString()}", "创建", "取消");
+                if (!ok)
+                    return;
+                XOR.Serializables.TsProperties.Utility.CreateFields(root, nodes, fields);
                 TsPropertiesHelper.RebuildNodes(root, nodes);
             }
             EditorGUILayout.EndHorizontal();

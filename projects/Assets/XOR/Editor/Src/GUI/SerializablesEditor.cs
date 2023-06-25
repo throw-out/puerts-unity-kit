@@ -1534,10 +1534,11 @@ namespace XOR.Serializables.TsProperties
             return builder.ToString();
         }
         /// <summary>解析typescript声明代码获取字段信息 </summary>
-        public static void ParseDeclareCode(RootWrap root, List<NodeWrap> nodes, string code)
+        public static Dictionary<string, Type> ParseDeclareCode(string code)
         {
             if (string.IsNullOrEmpty(code))
-                return;
+                return null;
+            Dictionary<string, Type> fields = new Dictionary<string, Type>();
             string[] lines = code.Replace("\r\n", string.Empty).Replace("\n", string.Empty).Split(';');
             foreach (var line in lines)
             {
@@ -1559,13 +1560,22 @@ namespace XOR.Serializables.TsProperties
                 {
                     fieldName = fieldName.Substring(2, fieldName.Length - 4);
                 }
-
-                if (nodes.Find(n => fieldName.Equals(n.Key)) != null)
-                    continue;
                 Type fielType = GetTypeFromName(typeName);
                 if (fielType == null)
                     continue;
-                int fieldIndex = FindIndex(root.FieldMapping.Values, f => f.Element.ValueType.IsAssignableFrom(fielType));
+                fields.Add(fieldName, fielType);
+            }
+            return fields;
+        }
+        public static void CreateFields(RootWrap root, List<NodeWrap> nodes, Dictionary<string, Type> fields)
+        {
+            foreach (var field in fields)
+            {
+                string fieldName = field.Key;
+                Type fileType = field.Value;
+                if (nodes.Find(n => fieldName.Equals(n.Key)) != null)
+                    continue;
+                int fieldIndex = FindIndex(root.FieldMapping.Values, f => f.Element.ValueType.IsAssignableFrom(fileType));
                 if (fieldIndex < 0)
                     continue;
                 var newNode = CreateNode(root, nodes.Count, fieldIndex);
