@@ -25,37 +25,37 @@ namespace XOR
         public string Encrypt(string source) => Convert.ToBase64String(Encrypt(Encoding.GetBytes(source)));
         public byte[] Encrypt(byte[] source)
         {
-            if (Key != null && IV != null && Key.Length == 16 && IV.Length == 16)
+            if (Key != null && IV != null && Key.Length == keySize && IV.Length == keySize)
             {
-                return Operation(source, Key, IV, true);
+                return Operation(source, keySize, Key, IV, true);
             }
             throw new Exception("Invalid key");
         }
         public string Decrypt(string source) => Encoding.GetString(Decrypt(Convert.FromBase64String(source)));
         public byte[] Decrypt(byte[] source)
         {
-            if (Key != null && IV != null && Key.Length == 16 && IV.Length == 16)
+            if (Key != null && IV != null && Key.Length == keySize && IV.Length == keySize)
             {
-                return Operation(source, Key, IV, false);
+                return Operation(source, keySize, Key, IV, false);
             }
             throw new Exception("Invalid key");
         }
 
-        protected static byte[] Operation(byte[] src, string key, string iv, bool isEncrypt)
+        protected static byte[] Operation(byte[] src, int keySize, string key, string iv, bool isEncrypt)
         {
             byte[] keyRaw = Encoding.UTF8.GetBytes(key);
             byte[] ivRaw = Encoding.UTF8.GetBytes(iv);
-            if (keyRaw.Length > 16)
+            if (keyRaw.Length > keySize)
             {
-                byte[] temp = new byte[16];
-                Array.Copy(keyRaw, temp, 16);
+                byte[] temp = new byte[keySize];
+                Array.Copy(keyRaw, temp, keySize);
                 keyRaw = temp;
             }
             RijndaelManaged cipher = new RijndaelManaged();
             cipher.Mode = CipherMode.CBC;
             cipher.Padding = PaddingMode.Zeros;
-            cipher.KeySize = 128;
-            cipher.BlockSize = 128;
+            cipher.KeySize = keySize * 8;
+            cipher.BlockSize = keySize * 8;
             cipher.Key = keyRaw;
             cipher.IV = ivRaw;
             ICryptoTransform cTransform = isEncrypt ? cipher.CreateEncryptor() : cipher.CreateDecryptor();
