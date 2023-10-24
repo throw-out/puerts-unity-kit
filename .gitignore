@@ -17,3 +17,5 @@ projects/TsProject/node_modules
 projects/TsProject/yarn.lock
 projects/Assets/XOR-Publish.meta
 projects/Assets/XOR-Publish/**
+projects/Assets/Gen/AutoStaticCodeInterfaceBridge.cs
+projects/Assets/Gen/AutoStaticCodeInterfaceBridge.cs.meta
