@@ -3,17 +3,23 @@
     "version": "1.0.0",
     "description": "ts project assets",
     "scripts": {
-        "tsc:watch": "tsc -watch -p tsconfig.json",
-        "xor:compile": "tsc -p tsconfig.json",
-        "xor:compile-esm": "tsc -p tsconfig.json --module ES6",
-        "xor:rm-js": "node ./xor-workflow.mjs rmdir --target=../Assets/XOR/Runtime/Resources/puerts/xor",
-        "xor:copy-cjs": "node ./xor-workflow.mjs copydir --filter=.js/.mjs/.cjs --extname=.cjs --source=./output/xor --target=../Assets/XOR/Runtime/Resources/puerts/xor",
-        "xor:copy-mjs": "node ./xor-workflow.mjs copydir --filter=.js/.mjs/.cjs --extname=.mjs --source=./output/xor --target=../Assets/XOR/Runtime/Resources/puerts/xor",
-        "xor:copy-dts": "node ./xor-workflow.mjs copydir --filter=.ts --source=./output/xor --target=../Assets/XOR/Typing/puerts/xor",
-        "xor:publish": 
-            "npm run xor:compile && npm run xor:rm-js && npm run xor:copy-cjs && npm run xor:copy-dts",
-        "xor:publish-esm": 
-            "npm run xor:compile-esm && npm run xor:rm-js && npm run xor:copy-mjs && npm run xor:copy-dts && npm run xor:compile"
+        "editor:compile": "webpack --config webpack.config.js",
+        "editor:rm": "node ./xor-workflow.mjs rmdir --target=../Assets/XOR/Editor/Resources/puerts/xor-editor",
+        "editor:copy": "node ./xor-workflow.mjs copydir --filter=.js/.mjs/.cjs --extname=.cjs --source=./output/webpack --target=../Assets/XOR/Editor/Resources/puerts/xor-editor",
+        "editor:copy-license": "node ./xor-workflow.mjs copydir --filter=.txt --source=./output/webpack --target=../Assets/XOR/Editor/Resources/puerts/xor-editor",
+        "editor:publish": 
+            "npm run editor:compile && npm run editor:rm && npm run editor:copy && npm run editor:copy-license",
+        
+        "runtime:compile": "tsc -p tsconfig.json",
+        "runtime:compile-esm": "tsc -p tsconfig.json --module ES6",
+        "runtime:rm-js": "node ./xor-workflow.mjs rmdir --target=../Assets/XOR/Runtime/Resources/puerts/xor",
+        "runtime:copy-cjs": "node ./xor-workflow.mjs copydir --filter=.js/.mjs/.cjs --extname=.cjs --source=./output/xor --target=../Assets/XOR/Runtime/Resources/puerts/xor",
+        "runtime:copy-mjs": "node ./xor-workflow.mjs copydir --filter=.js/.mjs/.cjs --extname=.mjs --source=./output/xor --target=../Assets/XOR/Runtime/Resources/puerts/xor",
+        "runtime:copy-dts": "node ./xor-workflow.mjs copydir --filter=.ts --source=./output/xor --target=../Assets/XOR/Typing/puerts/xor",
+        "runtime:publish": 
+            "npm run runtime:compile && npm run runtime:rm-js && npm run runtime:copy-cjs && npm run runtime:copy-dts",
+        "runtime:publish-esm": 
+            "npm run runtime:compile-esm && npm run runtime:rm-js && npm run runtime:copy-mjs && npm run runtime:copy-dts && npm run runtime:compile"
     },
     "dependencies": {},
     "devDependencies": {

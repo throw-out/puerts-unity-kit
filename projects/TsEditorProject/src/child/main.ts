@@ -4,8 +4,8 @@ import * as csharp from "csharp";
 import { WorkerEvent } from "../common/event";
 import * as services from "./services-morph";
 
-require("puerts/console-track");
-require("puerts/puerts-source-map-support");
+//require("puerts/console-track");
+//require("puerts/puerts-source-map-support");
 
 let program: services.Program;
 //let program: services.Program;

@@ -309,10 +309,6 @@ declare namespace CS {
             (arg1: T1, arg2: T2): void;
             Invoke?: (arg1: T1, arg2: T2) => void;
         }
-        interface Action$3<T1, T2, T3> {
-            (arg1: T1, arg2: T2, arg3: T3): void;
-            Invoke?: (arg1: T1, arg2: T2, arg3: T3) => void;
-        }
         class Type extends System.Reflection.MemberInfo implements System.Reflection.IReflect, System.Runtime.InteropServices._Type, System.Reflection.ICustomAttributeProvider, System.Runtime.InteropServices._MemberInfo {
             protected [__keep_incompatibility]: never;
             public static FilterAttribute: System.Reflection.MemberFilter
@@ -630,6 +626,10 @@ declare namespace CS {
         }
         class SystemException extends System.Exception implements System.Runtime.InteropServices._Exception, System.Runtime.Serialization.ISerializable {
             protected [__keep_incompatibility]: never;
+        }
+        interface Action$3<T1, T2, T3> {
+            (arg1: T1, arg2: T2, arg3: T3): void;
+            Invoke?: (arg1: T1, arg2: T2, arg3: T3) => void;
         }
         interface Func$2<T, TResult> {
             (arg: T): TResult;
@@ -25943,7 +25943,7 @@ declare namespace CS {
             public static DisposeAll(): void
             public constructor()
         }
-        class TsComponent extends XOR.TsBehaviour implements XOR.Serializables.IAccessor, System.IDisposable {
+        class TsComponent extends XOR.TsBehaviour implements System.IDisposable, XOR.Serializables.IAccessor {
             protected [__keep_incompatibility]: never;
             public get JSObject(): Puerts.JSObject;
             public GetProperties(): System.Array$1<XOR.Serializables.ResultPair>
@@ -26055,24 +26055,6 @@ declare namespace CS {
             public constructor()
             public constructor($executor: XOR.PromiseResolve)
             public constructor($executor: XOR.PromiseExecutor)
-        }
-        enum EventBaseParameter { None = 0 }
-        class EventBaseData extends System.Object {
-            protected [__keep_incompatibility]: never;
-            public target: UnityEngine.Object
-            public method: string
-            public parameter: XOR.EventBaseParameter
-            public stringValue: string
-            public floatValue: string
-            public boolValue: string
-            public objectValue: UnityEngine.Object
-            public constructor()
-        }
-        class EventBase extends System.Object {
-            protected [__keep_incompatibility]: never;
-            public Invoke(): void
-            public GetEventCount(): number
-            public constructor()
         }
         class OnDragProxy extends XOR.Proxy implements UnityEngine.EventSystems.IDragHandler, UnityEngine.EventSystems.IEndDragHandler, UnityEngine.EventSystems.IEventSystemHandler, System.IDisposable, UnityEngine.EventSystems.IBeginDragHandler {
             protected [__keep_incompatibility]: never;
@@ -26408,7 +26390,6 @@ declare namespace CS {
         {
             protected [__keep_incompatibility]: never;
             public project: string
-            public editorProject: string
             public isESM: boolean
             public autoLoadScript: boolean
             public watchType: XOR.Settings.WacthType
@@ -26469,7 +26450,7 @@ declare namespace CS {
             public constructor($millisecondsTimeout: number)
             public constructor()
         }
-        class ThreadLoader extends System.Object implements Puerts.ILoader, Puerts.IModuleChecker, XOR.ISyncProcess {
+        class ThreadLoader extends System.Object implements XOR.ISyncProcess, Puerts.ILoader, Puerts.IModuleChecker {
             protected [__keep_incompatibility]: never;
             public FileExists($filepath: string): boolean
             public ReadFile($filepath: string, $debugpath: $Ref<string>): string
@@ -26582,7 +26563,7 @@ declare namespace CS {
         }
         class TSInterfaces extends System.Object {
             protected [__keep_incompatibility]: never;
-            public Start: System.Action$3<string, string, boolean>
+            public Start: System.Action$2<string, boolean>
             public Stop: System.Action
             public FileChanged: System.Action$1<string>
             public constructor()
@@ -26628,6 +26609,8 @@ declare namespace CS {
             public AddProperty($property: XOR.Services.PropertyDeclaration): void
             public RemoveProperty($property: XOR.Services.PropertyDeclaration): void
             public RemoveProperty($propertyName: string): void
+            public HasMethods(): boolean
+            public GetMethodsCount($methodName: string): number
             public GetMethods(): System.Array$1<XOR.Services.MethodDeclaration>
             public GetMethods($methodName: string): System.Array$1<XOR.Services.MethodDeclaration>
             public GetMethod($methodName: string): XOR.Services.MethodDeclaration
@@ -26653,6 +26636,7 @@ declare namespace CS {
             public name: string
             public returnType: System.Type
             public parameterTypes: System.Array$1<System.Type>
+            public BuildTooltip($force?: boolean): string
             public constructor()
         }
     }
@@ -30757,6 +30741,28 @@ declare namespace CS {
             protected [__keep_incompatibility]: never;
             public GetOnValueChangedEventCount(): number
             public constructor()
+        }
+    }
+    namespace XOR.Events {
+        enum ParameterType { None = 0, String = 1, Double = 2, Bool = 4, Long = 8, Object = 16, Vector2 = 32, Vector3 = 64, Color = 128, Color32 = 256, Post = 4096 }
+        class EventBaseData extends System.Object {
+            protected [__keep_incompatibility]: never;
+            public target: UnityEngine.Object
+            public method: string
+            public parameter: XOR.Events.ParameterType
+            public stringValue: string
+            public objectValue: UnityEngine.Object
+            public constructor()
+        }
+        class EventBase extends System.Object {
+            protected [__keep_incompatibility]: never;
+            public Invoke(): void
+            public GetEventCount(): number
+            public constructor()
+        }
+        class Serializer extends System.Object {
+            protected [__keep_incompatibility]: never;
+            public static IsSupport($type: System.Type): boolean
         }
     }
     namespace XOR.TsComponent {

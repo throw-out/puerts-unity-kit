@@ -72,12 +72,8 @@
         "en_us": "File Missing:\n{0}"
     },
     "project_config_title": {
-        "zh_cn": "游戏项目",
-        "en_us": "Editor Project"
-    },
-    "editor_project_config_title": {
-        "zh_cn": "编辑器项目",
-        "en_us": "Game Project"
+        "zh_cn": "项目路径",
+        "en_us": "Project Path"
     },
     "select_tscofnig": {
         "zh_cn": "请选择typescript配置文件(tsconfig.json)",

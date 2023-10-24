@@ -109,44 +109,6 @@ namespace XOR
             GUILayout.EndVertical();
         }
 
-
-        /// <summary>
-        /// 选择编辑器项目路径, 并将结果存储到Settings资源
-        /// </summary>
-        /// <param name="currentPath"></param>
-        /// <returns></returns>
-        public static string RenderSelectEditorProject(string currentPath)
-        {
-            if (!string.IsNullOrEmpty(currentPath))
-            {
-                bool ok = EditorUtility.DisplayDialog(
-                    Language.Default.Get("file_missing"),
-                    string.Format(Language.Default.Get("file_missing_details"), currentPath),
-                    Language.Default.Get("config"),
-                    Language.Default.Get("cancel")
-                );
-                if (!ok)
-                {
-                    return string.Empty;
-                }
-            }
-            string newPath = EditorUtility.OpenFilePanelWithFilters(
-                Language.Default.Get("editor_project_config_title"),
-                Language.Default.Get("select_tscofnig"),
-                new string[] { "NPM", "json" }
-            );
-            if (!string.IsNullOrEmpty(newPath) && File.Exists(newPath))
-            {
-                Settings asset = Settings.Load(true, true);
-                asset.editorProject = PathUtil.GetLocalPath(newPath);
-
-                EditorUtility.SetDirty(asset);
-                AssetDatabase.SaveAssets();
-                AssetDatabase.Refresh();
-                return asset.editorProject;
-            }
-            return string.Empty;
-        }
         /// <summary>
         /// 选择项目路径, 并将结果存储到Settings资源
         /// </summary>

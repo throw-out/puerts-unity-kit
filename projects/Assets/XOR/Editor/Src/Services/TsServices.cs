@@ -14,7 +14,7 @@ namespace XOR.Services
     }
     public class TSInterfaces
     {
-        public Action<string, string, bool> Start;
+        public Action<string, bool> Start;
         public Action Stop;
 
         /// <summary>文件更新: 修改/新增/删除 </summary>

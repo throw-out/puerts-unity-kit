@@ -39,8 +39,6 @@ namespace XOR
             {
                 GUIUtil.RenderGroup(RenderProject, Settings.Load(true, true));
                 GUILayout.Space(HeightSpace);
-                GUIUtil.RenderGroup(RenderEditorProject, Settings.Load(true, true));
-                GUILayout.Space(HeightSpace);
                 GUIUtil.RenderGroup(RenderOther, Settings.Load(true, true));
                 GUILayout.Space(HeightSpace);
                 GUIUtil.RenderGroup(RenderWatchType, Settings.Load(true, true));
@@ -85,34 +83,6 @@ namespace XOR
             if (GUILayout.Button(Language.Default.Get("look")))
             {
                 string path = PathUtil.GetFullPath(settings.project);
-                if (File.Exists(path))
-                {
-                    EditorUtility.RevealInFinder(path);
-                }
-                else
-                {
-                    Debug.LogErrorFormat(Language.Default.Get("file_missing_details"), path);
-                }
-            }
-            GUILayout.EndHorizontal();
-        }
-        void RenderEditorProject(Settings settings)
-        {
-            GUILayout.Label(Language.Default.Get("editor_project_config_title"));
-
-            using (new EditorGUI.DisabledScope(true))
-            {
-                GUILayout.TextField(settings.editorProject);
-            }
-
-            GUILayout.BeginHorizontal();
-            if (GUILayout.Button(Language.Default.Get("edit")))
-            {
-                GUIUtil.RenderSelectEditorProject(null);
-            }
-            if (GUILayout.Button(Language.Default.Get("look")))
-            {
-                string path = PathUtil.GetFullPath(settings.editorProject);
                 if (File.Exists(path))
                 {
                     EditorUtility.RevealInFinder(path);
@@ -242,7 +212,6 @@ namespace XOR
             var _current = Settings.Load(true, true);
 
             _current.project = _default.project;
-            _current.editorProject = _default.editorProject;
             _current.isESM = _default.isESM;
             _current.logger = _default.logger;
             _current.watchType = _default.watchType;

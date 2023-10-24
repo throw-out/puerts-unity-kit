@@ -85,22 +85,9 @@ namespace XOR
             Prefs.ASTEnable.SetValue(true);
             try
             {
-                string editorProjectConfig = Settings.Load().editorProject,
-                    projectConfig = Settings.Load().project;
+                string projectConfig = PathUtil.GetFullPath(Settings.Load().project);
                 bool useNodejsWatch = Settings.Load().watchType == Settings.WacthType.Nodejs && PuertsUtil.IsSupportNodejs();
 
-                editorProjectConfig = PathUtil.GetFullPath(editorProjectConfig);
-                projectConfig = PathUtil.GetFullPath(projectConfig);
-                if (!File.Exists(editorProjectConfig))
-                {
-                    string newPath = GUIUtil.RenderSelectEditorProject(editorProjectConfig);
-                    if (string.IsNullOrEmpty(newPath))
-                    {
-                        Prefs.ASTEnable.SetValue(false);
-                        return;
-                    }
-                    editorProjectConfig = PathUtil.GetFullPath(newPath);
-                }
                 if (!File.Exists(projectConfig))
                 {
                     string newPath = GUIUtil.RenderSelectProject(projectConfig);
@@ -111,28 +98,29 @@ namespace XOR
                     }
                     projectConfig = PathUtil.GetFullPath(newPath);
                 }
-                if (!Check(editorProjectConfig)) return;
                 if (!Check(projectConfig)) return;
 
-                string editorRoot = Path.GetDirectoryName(editorProjectConfig);
-                string editorOutput = Path.Combine(editorRoot, "output");
-
-                Logger.Log($"<b>XOR.{nameof(EditorApplication)}: <color=green>Executing</color></b> \neditorRoot: {editorRoot}\neditorOutput: {editorOutput}");
+                Logger.Log($"<b>XOR.{nameof(EditorApplication)}: <color=green>Executing</color></b>");
 
                 //创建EditorApplication实例
                 EditorApplication app = EditorApplication.GetInstance();
-                app.Loader.AddLoader(new FileLoader(editorOutput, editorRoot));
-                app.Env.UsingAction<string, string, bool>();
+                app.Env.UsingAction<string, bool>();
                 //create interfaces
                 CSharpInterfaces ci = new CSharpInterfaces();
                 ci.SetWorker = app.SetWorker;
                 ci.SetProgram = app.SetProgram;
                 //init application
-                Func<CSharpInterfaces, TSInterfaces> Init = app.Env.Eval<Func<CSharpInterfaces, TSInterfaces>>(@"var m = require('./main/main'); m.init; ");
+                Func<CSharpInterfaces, TSInterfaces> Init = app.Env.Eval<Func<CSharpInterfaces, TSInterfaces>>(@"
+(function(){
+    require('puerts/xor-editor/main'); 
+    var _g = global || globalThis || this;
+    return _g.init;
+})()");
+
                 TSInterfaces ti = Init(ci);
                 app.SetInterfaces(ti);
 
-                ti.Start(editorOutput, projectConfig, useNodejsWatch);
+                ti.Start(projectConfig, useNodejsWatch);
 
                 //监听文件修改
                 EditorFileWatcher.ReleaseInstance();
