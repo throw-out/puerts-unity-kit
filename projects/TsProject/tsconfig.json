@@ -74,8 +74,6 @@
         //"noImplicitThis": true,
         //es模块支持
         "esModuleInterop": true,
-        //禁用在函数类型里对泛型签名进行严格检查
-        "noStrictGenericChecks": true,
         //不对具有 /** @internal */ JSDoc注解的代码生成代码。
         "stripInternal": false,
     }
