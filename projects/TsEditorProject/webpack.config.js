@@ -7,7 +7,8 @@ const webpack = require('webpack');
 module.exports = {
     mode: "production",
     //mode: "development",
-    //devtool: false,
+    //devtool: false, //"inline-source-map",
+    target: "node",
     entry: {
         main: path.resolve(__dirname, "./src/main/main.ts"),
         child: path.resolve(__dirname, "./src/child/main.ts"),
@@ -20,7 +21,7 @@ module.exports = {
         }]
     },
     resolve: {
-        extensions: [".ts", ".js"]
+        extensions: [".ts", "..."]
     },
     output: {
         filename: "[name].js",
@@ -35,6 +36,7 @@ module.exports = {
         fs: "commonjs2 fs",
         path: "commonjs2 path",
         util: "commonjs2 util",
+        perf_hooks: "commonjs2 perf_hooks",
 
         "puerts/console-track": "commonjs2 puerts/console-track",
         "puerts/puerts-source-map-support": "commonjs2 puerts/puerts-source-map-support",
