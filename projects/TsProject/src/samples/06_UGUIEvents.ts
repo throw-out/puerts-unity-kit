@@ -1,4 +1,9 @@
-import { Color, Color32, GameObject, Transform, Vector2, Vector3 } from "csharp.UnityEngine";
+type Color = CS.UnityEngine.Color;
+type Color32 = CS.UnityEngine.Color32;
+type GameObject = CS.UnityEngine.GameObject;
+type Transform = CS.UnityEngine.Transform;
+type Vector2 = CS.UnityEngine.Vector2;
+type Vector3 = CS.UnityEngine.Vector3;
 
 /**
  * 演示如何将方法绑定到实例对象上
