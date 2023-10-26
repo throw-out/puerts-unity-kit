@@ -1,7 +1,4 @@
-using System;
 using System.Collections.Generic;
-using Puerts;
-using UnityEditor.iOS;
 using UnityEngine;
 
 namespace Puerts
