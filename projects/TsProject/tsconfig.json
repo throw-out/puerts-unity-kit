@@ -10,6 +10,7 @@
         "./type/*.d.ts",
         "./type/*/*.d.ts",
         "../Assets/XOR/Typing/",
+        "../Assets/Gen/Typing/",
         "../Library/PackageCache/com.tencent.puerts.core@**/Typing/",
     ],
     //黑名单目录,支持文件夹丶后缀名识别
