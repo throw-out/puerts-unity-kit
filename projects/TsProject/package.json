@@ -3,9 +3,9 @@
     "version": "1.0.0",
     "description": "ts project assets",
     "scripts": {
-        "tsc:watch": "tsc -watch -p tsconfig.json",
-        "webpack:debug": "webpack --config webpack.config.debug.js --watch",
-        "webpack:publish": "webpack --config webpack.config.release.js",
+        "build:dev": "tsc -watch -p tsconfig.json",
+        "build:webpack:debug": "webpack --config webpack.config.debug.js --watch",
+        "build:webpack:publish": "webpack --config webpack.config.release.js",
         "javascript:obfuscator": "javascript-obfuscator ./output --output ./output-obfuscated --options-preset medium-obfuscation --compact false"
     },
     "dependencies": {},
