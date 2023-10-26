@@ -8,18 +8,18 @@
       "url": "https://package.openupm.cn"
     },
     "com.tencent.puerts.core": {
-      "version": "1.4.0",
-      "depth": 0,
+      "version": "1.4.2",
+      "depth": 1,
       "source": "registry",
       "dependencies": {},
       "url": "https://package.openupm.cn"
     },
     "com.tencent.puerts.webgl": {
-      "version": "1.0.0-rc.1",
+      "version": "1.4.2",
       "depth": 0,
       "source": "registry",
       "dependencies": {
-        "com.tencent.puerts.core": "1.4.0"
+        "com.tencent.puerts.core": "1.4.2"
       },
       "url": "https://package.openupm.cn"
     },

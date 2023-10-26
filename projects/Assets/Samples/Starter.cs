@@ -103,6 +103,7 @@ public class Starter : MonoBehaviour
         {
             WriteTextFile(script.Key.Replace(Path.GetExtension(script.Key), extName), script.Value);
         }
+
         Debug.Log($"Publish Scripts: {scripts.Count}\n{string.Join("\n", scripts.Keys)}");
         if (moduleNames != null && moduleNames.Length > 0)
         {
@@ -113,6 +114,13 @@ public class Starter : MonoBehaviour
             }
             Debug.Log($"Publish Module Scripts: {scripts.Count}\n{string.Join("\n", scripts.Keys)}");
         }
+
+        Puerts.ECMAScriptWebglHelper.Inject(
+            Path.Combine(UnityEngine.Application.dataPath, "XOR-Publish/Resources"),
+            index == 1,
+            true
+        );
+        Debug.Log($"ECMAScriptWebgl Inject Completed!");
 
         UnityEditor.AssetDatabase.Refresh();
     }

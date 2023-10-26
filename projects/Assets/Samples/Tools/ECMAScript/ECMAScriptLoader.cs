@@ -9,7 +9,7 @@ namespace Puerts
         private readonly ILoader inner;
         private bool isESM;
 
-        private HashSet<string> manifest;
+        public HashSet<string> Manifest { get; private set; }
 
         public ECMAScriptLoader() : this(null, new Puerts.DefaultLoader()) { }
         public ECMAScriptLoader(ILoader other, ILoader inner)
@@ -20,7 +20,7 @@ namespace Puerts
         }
         public bool FileExists(string filepath)
         {
-            if (manifest.Contains(filepath))
+            if (Manifest.Contains(filepath))
             {
                 return this.inner.FileExists(ResolveModulePath(filepath, true));
             }
@@ -32,7 +32,7 @@ namespace Puerts
         }
         public string ReadFile(string filepath, out string debugpath)
         {
-            if (manifest.Contains(filepath))
+            if (Manifest.Contains(filepath))
             {
                 return this.inner.ReadFile(ResolveModulePath(filepath, true), out debugpath);
             }
@@ -45,7 +45,7 @@ namespace Puerts
         }
         public bool IsESM(string filepath)
         {
-            if (manifest.Contains(filepath))
+            if (Manifest.Contains(filepath))
             {
                 return this.isESM;
             }
@@ -58,9 +58,9 @@ namespace Puerts
 
         void Init()
         {
-            if (manifest != null)
+            if (Manifest != null)
                 return;
-            manifest = new HashSet<string>();
+            Manifest = new HashSet<string>();
 
             var asset = Resources.Load<TextAsset>(ResolveManifestPath(false));
             if (asset == null || string.IsNullOrEmpty(asset.text))
@@ -74,7 +74,7 @@ namespace Puerts
                 }
                 else
                 {
-                    manifest.Add(line);
+                    Manifest.Add(line);
                 }
             }
         }
