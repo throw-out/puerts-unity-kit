@@ -40,7 +40,7 @@ namespace Puerts.Editor
         [MenuItem("PuerTS/Generate ECMAScript/Clear", false, 1)]
         public static void Clear()
         {
-            string dirpath = GetDirectoryPath(Configure.GetCodeOutputDirectory(), true);
+            string dirpath = GetRootPath(Configure.GetCodeOutputDirectory(), true);
             if (!Directory.Exists(dirpath))
                 return;
             Directory.Delete(dirpath, true);
@@ -57,14 +57,15 @@ namespace Puerts.Editor
             var saveTo = Configure.GetCodeOutputDirectory();
             GenerateCode(saveTo, isESM, set);
             GenerateDTS(saveTo, set);
+            GenerateManifest(saveTo, isESM, set);
             Debug.Log("finished! use " + (DateTime.Now - start).TotalMilliseconds + " ms");
             AssetDatabase.Refresh();
         }
         static void GenerateCode(string saveTo, bool isESM, HashSet<string> targets)
         {
             var configure = Configure.GetConfigureByTags(new List<string>() {
-                "Puerts.BindingAttribute",
-            });
+                    "Puerts.BindingAttribute",
+                });
             var genTypes = configure["Puerts.BindingAttribute"].Select(kv => kv.Key)
                 .Where(o => o is Type)
                 .Cast<Type>()
@@ -94,22 +95,22 @@ namespace Puerts.Editor
                 parent.AddChildNamespace(info.Name);
             }
 
-            Directory.CreateDirectory(GetDirectoryPath(saveTo, false));
+            Directory.CreateDirectory(GetRootPath(saveTo, false));
             foreach (var info in genInfos)
             {
-                if (targets != null && !targets.Contains(info.Key))
+                if (string.IsNullOrEmpty(info.Key) && !isESM ||
+                    !string.IsNullOrEmpty(info.Key) && targets != null && !targets.Contains(info.Key))
                     continue;
-                string filepath = GetFilePath(
-                    saveTo,
-                    string.IsNullOrEmpty(info.Key) ? "csharp" : $"csharp.{info.Key}",
-                    isESM
-                );
-                using (StreamWriter textWriter = new StreamWriter(filepath, false, Encoding.UTF8))
+
+                string fileName = string.IsNullOrEmpty(info.Key) ? "csharp" : $"csharp.{info.Key}";
+                string filePath = GetFilePath(saveTo, fileName, isESM);
+                using (StreamWriter textWriter = new StreamWriter(filePath, false, Encoding.UTF8))
                 {
                     textWriter.Write(isESM ? GenerateTemplateESMCode(info.Key, info.Value) : GenerateTemplateCommonjsCode(info.Key, info.Value));
                     textWriter.Flush();
                 }
             }
+
             if (isESM)
             {
                 string filepath = GetFilePath(saveTo, "puerts", isESM);
@@ -131,7 +132,9 @@ namespace Puerts.Editor
                 .Where(t => !t.IsGenericTypeDefinition);
 
             var namespaces = Puerts.Editor.Generator.DTS.TypingGenInfo.FromTypes(genTypes).NamespaceInfos
-                .Select(info => info.Name);
+                .Select(info => info.Name)
+                .Distinct()
+                .Where(name => !string.IsNullOrEmpty(name));
             if (targets != null)
             {
                 namespaces = namespaces.Where(name => targets.Contains(name));
@@ -150,8 +153,47 @@ namespace Puerts.Editor
                 textWriter.Flush();
             }
         }
+        static void GenerateManifest(string saveTo, bool isESM, HashSet<string> targets)
+        {
+            var configure = Configure.GetConfigureByTags(new List<string>() {
+                    "Puerts.BindingAttribute",
+                });
+            var genTypes = configure["Puerts.BindingAttribute"].Select(kv => kv.Key)
+                .Where(o => o is Type)
+                .Cast<Type>()
+                .Where(t => !t.IsGenericTypeDefinition);
 
-        static string ProxyFunctions = @"
+            var namespaces = Puerts.Editor.Generator.DTS.TypingGenInfo.FromTypes(genTypes).NamespaceInfos
+                .Select(info => info.Name)
+                .Distinct()
+                .Where(name => !string.IsNullOrEmpty(name));
+            if (targets != null)
+            {
+                namespaces = namespaces.Where(name => targets.Contains(name));
+            }
+
+            List<string> manifestList = new List<string>(namespaces.Select(name => $"csharp.{name}"));
+            if (isESM)
+            {
+                manifestList.Add("csharp");
+                manifestList.Add("puerts");
+            }
+
+            string filepath = GetManifestPath(saveTo);
+            if (manifestList.Count == 0)
+            {
+                if (File.Exists(filepath)) File.Delete(filepath);
+                return;
+            }
+            Directory.CreateDirectory(Path.GetDirectoryName(filepath));
+            using (StreamWriter textWriter = new StreamWriter(filepath, false, Encoding.UTF8))
+            {
+                textWriter.Write($"isESM:{isESM}\n{string.Join("\n", manifestList)}");
+                textWriter.Flush();
+            }
+        }
+
+        static readonly string ESMProxyFunctionCode = @"
 function __proxy__(getter) {
     let target;
     function tryload() {
@@ -236,7 +278,7 @@ const csharp = (function () {{
     return _g['CS'] || _g['csharp'] || require('csharp');
 }})();
 
-{ProxyFunctions}
+{ESMProxyFunctionCode}
 
 export default {firstName};
 
@@ -300,7 +342,6 @@ export const {name} = puerts.{name};"))}
         }
         static string GenerateTemplateDTS(IEnumerable<string> namespaceNames)
         {
-            namespaceNames = namespaceNames.Distinct().Where(name => !string.IsNullOrEmpty(name));
             return $@"
 //===========================================================================================
 //@ts-nocheck | ignore global error checking
@@ -325,21 +366,26 @@ declare module ""csharp.{name}"" {{
 ";
         }
 
+
         static string GetFilePath(string saveTo, string filename, bool isESM)
         {
             string extensionName = isESM ? "mjs" : "cjs";
 #if !UNITY_2018_1_OR_NEWER
             extensionName += ".txt";
 #endif
-            return $"{GetDirectoryPath(saveTo, false)}/{filename}.{extensionName}";
+            return $"{GetRootPath(saveTo, false)}/{filename}.{extensionName}";
         }
-        static string GetDirectoryPath(string saveTo, bool isRoot = false)
+        static string GetRootPath(string saveTo, bool isRoot = false)
         {
             return isRoot ? $"{saveTo}/Resources" : $"{saveTo}/Resources/puerts/modules";
         }
         static string GetDTSPath(string saveTo)
         {
             return $"{saveTo}/Typing/csharp/namespaces.d.ts";
+        }
+        static string GetManifestPath(string saveTo)
+        {
+            return $"{GetRootPath(saveTo, false)}/manifest.txt";
         }
 
         class NamespaceGenInfo
