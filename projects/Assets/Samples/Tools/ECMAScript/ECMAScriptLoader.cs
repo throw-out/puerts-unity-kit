@@ -12,6 +12,7 @@ namespace Puerts
         public HashSet<string> Manifest { get; private set; }
 
         public ECMAScriptLoader() : this(null, new Puerts.DefaultLoader()) { }
+        public ECMAScriptLoader(ILoader other) : this(other, new Puerts.DefaultLoader()) { }
         public ECMAScriptLoader(ILoader other, ILoader inner)
         {
             this.other = other;

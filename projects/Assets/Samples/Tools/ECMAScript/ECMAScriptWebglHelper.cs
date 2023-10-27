@@ -42,23 +42,16 @@ namespace Puerts
             {
                 if (!targetExtensionNames.Contains(file.Extension))
                     continue;
-                InjectFile(file.FullName, settings);
+                string content = File.ReadAllText(file.FullName);
+                if (!settings.Inject(content, out string newContent))
+                    continue;
+                File.WriteAllText(file.FullName, newContent);
             }
             settings.AddDepth();
             foreach (var dir in current.GetDirectories())
             {
                 InjectDirectory(dir.FullName, new InjectSettings(settings));
             }
-        }
-        static void InjectFile(string filePath, InjectSettings settings)
-        {
-            string content = File.ReadAllText(filePath);
-
-            foreach (var name in settings.manifest)
-            {
-                content = content.Replace(settings.GetReplaceOldString(name), settings.GetReplaceNewString(name));
-            }
-            File.WriteAllText(filePath, content);
         }
 
         struct InjectSettings
@@ -79,13 +72,22 @@ namespace Puerts
             {
                 this.prefix += "../";
             }
-            public string GetReplaceOldString(string name)
+            public bool Inject(string content, out string newContent)
+            {
+                newContent = content;
+                foreach (var name in manifest)
+                {
+                    newContent = newContent.Replace(GetReplaceOldString(name), GetReplaceNewString(name));
+                }
+                return content != newContent;
+            }
+            string GetReplaceOldString(string name)
             {
                 return isESM ?
                     $"from \"{name}\"" :
                     $"require(\"{name}\")";
             }
-            public string GetReplaceNewString(string name)
+            string GetReplaceNewString(string name)
             {
                 return isESM ?
                     $"from \"{prefix}puerts/modules/{name}{suffix}\"" :
