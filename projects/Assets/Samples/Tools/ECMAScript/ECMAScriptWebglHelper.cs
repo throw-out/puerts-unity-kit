@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Text;
 
 namespace Puerts
 {
@@ -15,7 +14,15 @@ namespace Puerts
                 return;
             if (!Directory.Exists(rootPath))
                 throw new ArgumentException("Invaild Path");
-            InjectDirectory(rootPath, manifest, isESM, isAppendExtensionName, 0);
+
+            InjectSettings settings = new InjectSettings()
+            {
+                manifest = manifest,
+                isESM = isESM,
+                prefix = string.Empty,
+                suffix = !isAppendExtensionName ? string.Empty : isESM ? ".mjs" : ".cjs",
+            };
+            InjectDirectory(rootPath, settings);
 #else
             throw new InvalidOperationException();
 #endif
@@ -27,52 +34,63 @@ namespace Puerts
            ".cjs",
            ".js",
         };
-        static void InjectDirectory(string dirPath, HashSet<string> manifest, bool isESM, bool isAppendExtensionName, int depth)
+        static void InjectDirectory(string dirPath, InjectSettings settings)
         {
-            string prefix = depth > 0 ? GetDepthPath(depth) : string.Empty,
-                suffix = !isAppendExtensionName ? string.Empty : isESM ? ".mjs" : ".cjs";
-
             DirectoryInfo current = new DirectoryInfo(dirPath);
 
             foreach (var file in current.GetFiles())
             {
                 if (!targetExtensionNames.Contains(file.Extension))
                     continue;
-                InjectFile(file.FullName, manifest, isESM, prefix, suffix);
+                InjectFile(file.FullName, settings);
             }
+            settings.AddDepth();
             foreach (var dir in current.GetDirectories())
             {
-                InjectDirectory(dir.FullName, manifest, isESM, isAppendExtensionName, depth + 1);
+                InjectDirectory(dir.FullName, new InjectSettings(settings));
             }
         }
-        static void InjectFile(string filePath, HashSet<string> manifest, bool isESM, string prefix, string suffix)
+        static void InjectFile(string filePath, InjectSettings settings)
         {
             string content = File.ReadAllText(filePath);
 
-            foreach (var name in manifest)
+            foreach (var name in settings.manifest)
             {
-                if (isESM)
-                {
-                    content = content.Replace($"from \"{name}\"", $"from \"{prefix}puerts/modules/{name}{suffix}\"");
-                }
-                else
-                {
-                    content = content.Replace($"require(\"{name}\")", $"require(\"{prefix}puerts/modules/{name}{suffix}\")");
-                }
+                content = content.Replace(settings.GetReplaceOldString(name), settings.GetReplaceNewString(name));
             }
             File.WriteAllText(filePath, content);
         }
 
-        static string GetDepthPath(int depth)
+        struct InjectSettings
         {
-            StringBuilder builder = new StringBuilder();
-            for (int i = 0; i < depth; i++)
+            public HashSet<string> manifest;
+            public bool isESM;
+            public string prefix;
+            public string suffix;
+
+            public InjectSettings(InjectSettings other)
             {
-                if (i > 0) builder.Append("/");
-                builder.Append("..");
+                this.manifest = other.manifest;
+                this.isESM = other.isESM;
+                this.prefix = other.prefix;
+                this.suffix = other.suffix;
             }
-            builder.Append("/");
-            return builder.ToString();
+            public void AddDepth()
+            {
+                this.prefix += "../";
+            }
+            public string GetReplaceOldString(string name)
+            {
+                return isESM ?
+                    $"from \"{name}\"" :
+                    $"require(\"{name}\")";
+            }
+            public string GetReplaceNewString(string name)
+            {
+                return isESM ?
+                    $"from \"{prefix}puerts/modules/{name}{suffix}\"" :
+                    $"require(\"{prefix}puerts/modules/{name}{suffix}\")";
+            }
         }
 #endif
     }
