@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -282,11 +281,19 @@ const csharp = (function () {{
 
 export default {firstName};
 
+//导出名称为Object的类可能与全局域中的Object冲突, 此处生成别名在末尾再一次性导出
 {string.Join("", typeNames.Select(name => $@"
-export const {name} = __proxy__(() => {firstName}.{name});"))}
-
+const ${name} = __proxy__(() => {firstName}.{name});"))}
 {string.Join("", namespaceNames.Select(name => $@"
-export const {name} = __proxy__(() => {firstName}.{name});"))}
+const ${name} = __proxy__(() => {firstName}.{name});"))}
+
+export {{
+{string.Join("", typeNames.Select(name => $@"
+    ${name} as {name},"))}
+{string.Join("", namespaceNames.Select(name => $@"
+    ${name} as {name},"))}
+}}
+
 ";
         }
         static string GenerateTemplateCommonjsCode(string firstName, NamespaceGenInfo genInfo)
