@@ -19,3 +19,7 @@ projects/Assets/XOR-Publish.meta
 projects/Assets/XOR-Publish/**
 projects/Assets/Gen/AutoStaticCodeInterfaceBridge.cs
 projects/Assets/Gen/AutoStaticCodeInterfaceBridge.cs.meta
+projects/Assets/Gen/AutoStaticCodeRegister.cs
+projects/Assets/Gen/AutoStaticCodeRegister.cs.meta
+projects/Assets/Gen/*_Wrap.cs
+projects/Assets/Gen/*_Wrap.cs.meta
