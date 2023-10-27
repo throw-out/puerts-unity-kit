@@ -16,8 +16,8 @@ public class Starter : MonoBehaviour
         //添加Editor Loader
         var output = GetOutputPath();
         app.Loader.AddLoader(new FileLoader(output, Path.GetDirectoryName(output)));
-#else
-        //添加Runtime Loader
+#elif !UNITY_WEBGL
+        //添加Runtime Loader(非WebGL环境)
         //ScriptPacker打包后的数据就是一串普通的二进制数据, 可以以任意方式从其他地方获取.
         //此处示例将ScriptPacker打包后的数据写入Resources目录, Runtime也将从Resources读取. 
         //webpack等构建的脚本也可以使用ScriptPacker进行一样的打包操作, 但需注意使用ThreadWorker时, webpack应为不同线程的脚本分别配置入口脚本
