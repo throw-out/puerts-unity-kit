@@ -30,6 +30,7 @@
             jsEnv.UsingFunc<System.Object, System.Boolean>();
             jsEnv.UsingFunc<System.Reflection.Assembly, System.String, System.Boolean, System.Type>();
             jsEnv.UsingFunc<System.Reflection.MemberInfo, System.Object, System.Boolean>();
+            jsEnv.UsingFunc<System.String, System.Boolean>();
             jsEnv.UsingFunc<System.String, System.Int32, System.Char, System.Char>();
             jsEnv.UsingFunc<System.Type, System.Object, System.Boolean>();
             jsEnv.UsingFunc<UnityEngine.UI.ILayoutElement, System.Single>();
