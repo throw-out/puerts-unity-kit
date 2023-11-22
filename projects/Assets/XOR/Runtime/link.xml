@@ -1,0 +1,6 @@
+<linker>
+    <!--DelegateUtil依赖类型-->
+    <assembly fullname="System.Core">
+        <type fullname="System.Linq.Expressions.Interpreter.LightLambda" preserve="all" />
+    </assembly>
+</linker>
