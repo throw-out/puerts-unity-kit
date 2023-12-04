@@ -110,10 +110,11 @@ namespace XOR
                 ci.SetWorker = app.SetWorker;
                 ci.SetProgram = app.SetProgram;
                 //init application
+                app.Env.Load("puerts/xor-editor/main");
                 Func<CSharpInterfaces, TSInterfaces> Init = app.Env.Eval<Func<CSharpInterfaces, TSInterfaces>>(@"
 (function(){
-    require('puerts/xor-editor/main'); 
-    var _g = global || globalThis || this;
+    //require('puerts/xor-editor/main'); 
+    let _g = global || globalThis || this;
     return _g.init;
 })()");
 

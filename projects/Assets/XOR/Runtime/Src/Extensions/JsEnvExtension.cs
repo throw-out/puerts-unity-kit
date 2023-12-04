@@ -219,7 +219,7 @@ namespace XOR
         /// </summary>
         /// <param name="env"></param>
         /// <param name="filepath"></param>
-        internal static void Load(this JsEnv env, string filepath)
+        public static void Load(this JsEnv env, string filepath)
         {
             if (filepath != null && (filepath.StartsWith("./") || filepath.StartsWith(".\\")))
             {
@@ -247,7 +247,7 @@ namespace XOR
         /// <summary>
         /// 加载模块并获取export(通过IsESM判定使用ExecuteModule或者Eval)
         /// </summary>
-        internal static TResult Load<TResult>(this JsEnv env, string filepath, string exportee = "")
+        public static TResult Load<TResult>(this JsEnv env, string filepath, string exportee = "")
         {
             if (filepath != null && (filepath.StartsWith("./") || filepath.StartsWith(".\\")))
             {
