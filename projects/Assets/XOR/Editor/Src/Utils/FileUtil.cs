@@ -37,6 +37,14 @@ namespace XOR
                         column
                     );
                     break;
+                case "Rider":
+                    arguments = CodeEditor.ParseArgument(
+                        "--line $(Line) --column $(Column) $(File)",
+                        filepath,
+                        line,
+                        column
+                    );
+                    break;
             }
             if (string.IsNullOrEmpty(arguments))
                 return false;
