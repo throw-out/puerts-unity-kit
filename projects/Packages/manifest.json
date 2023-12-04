@@ -1,8 +1,8 @@
 {
   "dependencies": {
-    "com.tencent.puerts.commonjs": "1.0.1",
+    "com.tencent.puerts.commonjs": "2.0.1",
     "com.tencent.puerts.core": "1.4.0",
-    "com.tencent.puerts.webgl": "1.4.2",
+    "com.tencent.puerts.webgl": "2.0.2",
     "com.unity.collab-proxy": "1.14.18",
     "com.unity.ide.rider": "1.2.1",
     "com.unity.ide.visualstudio": "2.0.15",

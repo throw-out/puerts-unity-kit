@@ -5,7 +5,7 @@ import { $generic } from "puerts";
 console.log(Application.dataPath);
 console.log(SystemInfo.deviceUniqueIdentifier);
 
-let List_String = $generic(System.Collections.Generic.List$1, System.String) as {
+let List_String = puerts.$generic(System.Collections.Generic.List$1, System.String) as {
     new(): System.Collections.Generic.List$1<string>
 };
 let list = new List_String();
