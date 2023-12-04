@@ -2,8 +2,8 @@
     "name": "puerts.unity.kit.xor",
     "references": [
         "GUID:9b79b96f12870c2449e05764a16cea5f",
-        "GUID:a8d427c0690ff7941b52bcf1dd7d9c07",
-        "GUID:f0c5253c92c684b46bd2d7164d58951b"
+        "GUID:f0c5253c92c684b46bd2d7164d58951b",
+        "GUID:c173aae61b9c7475a9e89edb29370744"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

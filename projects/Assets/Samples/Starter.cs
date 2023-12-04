@@ -51,6 +51,17 @@ public class Starter : MonoBehaviour
         TsComponent.Register(app.Env);
     }
 
+    /// <summary>
+    /// XOR.Application.OnDestroy可能先于XOR.TsBehaviour或XOR.TsComponent执行, 导致XOR.TsBehaviour和XOR.TsComponent的OnDestroy回调报错:
+    /// Unity生命周期调用顺序: OnApplicationQuit -> OnDisable -> OnDestroy
+    /// </summary>
+    void OnApplicationQuit()
+    {
+        TsComponent.Unregister();
+        TsBehaviour.DisposeAll();
+        TsComponent.DisposeAll();
+    }
+
     static readonly string scriptPath = "scripts";
     static readonly string moduleScriptPath = "modulesScripts";
     static readonly string[] moduleNames = new string[0];
