@@ -1,4 +1,6 @@
+using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Text;
 
@@ -33,62 +35,68 @@ namespace XOR
             {
                 rootPath = UnityEngine.Application.dataPath;
             }
-            if (!IsSameDriver(rootPath, fullPath))
+            string[] fullPathArray = GetPathSplit(fullPath);
+            string[] rootPathArray = GetPathSplit(rootPath);
+            if (!IsSameDriver(fullPathArray, rootPathArray))
                 return null;
 
-            string[] fullpathArray = fullPath.Replace("\\", "/").Split('/');
-            string[] datapathArray = rootPath.Replace("\\", "/").Split('/');
-
             bool fork = false;
-            List<string> buidler = new List<string>();
-            for (int i = 0; i < fullpathArray.Length; i++)
+            List<string> paths = new List<string>();
+            for (int i = 0; i < fullPathArray.Length; i++)
             {
-                if (i >= datapathArray.Length)
+                if (i >= rootPathArray.Length)
                 {
-                    buidler.Add(fullpathArray[i]);
+                    paths.Add(fullPathArray[i]);
                 }
-                else if (fork || !fullpathArray[i].ToLower().Equals(datapathArray[i].ToLower()))
+                else if (fork || !fullPathArray[i].ToLower().Equals(rootPathArray[i].ToLower()))
                 {
                     fork = true;
-                    buidler.Insert(0, "..");
-                    buidler.Add(fullpathArray[i]);
+                    paths.Insert(0, "..");
+                    paths.Add(fullPathArray[i]);
                 }
             }
-            for (int i = fullpathArray.Length; i < datapathArray.Length; i++)
+            for (int i = fullPathArray.Length; i < rootPathArray.Length; i++)
             {
-                buidler.Insert(0, "..");
+                paths.Insert(0, "..");
             }
-
-            return string.Join("/", buidler);
+            return string.Join("/", paths);
         }
-
-
-        static bool IsSameDriver(string path1, string path2)
+        static bool IsSameDriver(string[] pathArray1, string[] pathArray2)
         {
-            string dl1 = GetDriverLetter(path1, true),
-                dl2 = GetDriverLetter(path2, true);
-            if (string.IsNullOrEmpty(dl1) && !string.IsNullOrEmpty(dl2) ||
-                !string.IsNullOrEmpty(dl1) && string.IsNullOrEmpty(dl2)
-            )
+            if (pathArray1 == null || pathArray2 == null ||
+                pathArray1.Length == 0 || pathArray2.Length == 0)
             {
                 return false;
             }
-            return dl1.Equals(dl2);
+            for (int i = 0; i < pathArray1.Length; i++)
+            {
+                if (i >= pathArray2.Length)
+                    return false;
+                if (string.IsNullOrEmpty(pathArray1[i]))
+                {
+                    if (!string.IsNullOrEmpty(pathArray2[i]))
+                        return false;
+                    continue;
+                }
+                return pathArray1[i].Equals(pathArray2[i]);
+            }
+            return true;
         }
-        static string GetDriverLetter(string path, bool caseLower = true)
+        static string[] GetPathSplit(string path)
         {
-            path = path.Replace("\\", "/");
-            int idx = path.IndexOf("/");
-            if (idx >= 0)
+            string[] pathArray = path.Replace("\\", "/").Split('/');
+            if (pathArray == null || pathArray.Length == 0)
+                return null;
+            //remove last empty
+            if (string.IsNullOrEmpty(pathArray[pathArray.Length - 1]))
             {
-                path = path.Substring(0, idx + 1);
+                if (pathArray.Length == 1)
+                    return null;
+                var newPathArray = new string[pathArray.Length - 1];
+                Array.Copy(pathArray, newPathArray, newPathArray.Length);
+                pathArray = newPathArray;
             }
-            idx = path.IndexOf(":");
-            if (idx >= 0)
-            {
-                return path.Substring(0, idx + 1);
-            }
-            return null;
+            return pathArray;
         }
     }
 }
