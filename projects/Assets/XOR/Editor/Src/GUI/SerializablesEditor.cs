@@ -820,7 +820,7 @@ namespace XOR.Serializables.TsComponent
         public static bool RenderEnumValue(NodeWrap nw, SerializedProperty node)
         {
             string[] keyOptions = nw.ExplicitValueEnum.Keys.ToArray();
-            int[] valueOptions = nw.ExplicitValueEnum.Values.Cast<int>().ToArray();
+            int[] valueOptions = nw.ExplicitValueEnum.Values.Select(v => CastToInt32(v)).ToArray();
             var value = (int)node.doubleValue;
             var newValue = EditorGUILayout.IntPopup(value, keyOptions, valueOptions);
             if (newValue != value || Math.Abs(newValue - node.doubleValue) > float.Epsilon)
@@ -856,6 +856,18 @@ namespace XOR.Serializables.TsComponent
                 return true;
             }
             return false;
+        }
+
+        static int CastToInt32(object v)
+        {
+            if (v is int intv)
+                return intv;
+            if (v is float floatv)
+                return (int)floatv;
+            if (v is double doublev)
+                return (int)doublev;
+            UnityEngine.Debug.LogError($"Expect to get int/float/double, but get {v?.GetType().FullName}.");
+            return 0;
         }
     }
     [RenderTarget(typeof(XOR.Serializables.Bigint))]
