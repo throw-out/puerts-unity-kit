@@ -42,9 +42,9 @@
 
 | OpenUPM     |  版本           |
 | ------------ | ------------ |
-| [puerts](https://openupm.com/packages/com.tencent.puerts.core/) | 1.4.0 |
-| [puerts-webgl-support](https://openupm.com/packages/com.tencent.puerts.webgl/) | 1.0.0-rc.1 |
-| [puerts-commonjs-support](https://openupm.com/packages/com.tencent.puerts.commonjs/) |  1.0.1 |
+| [puerts](https://openupm.com/packages/com.tencent.puerts.core/) | 2.0.2 |
+| [puerts-webgl-support](https://openupm.com/packages/com.tencent.puerts.webgl/) | 2.0.2 |
+| [puerts-commonjs-support](https://openupm.com/packages/com.tencent.puerts.commonjs/) |  2.0.1 |
 
 ## 开始使用
 1. 下载本模板项目;
