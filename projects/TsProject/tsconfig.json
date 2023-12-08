@@ -7,8 +7,7 @@
     "include": [
         "./src/*",
         "./src/**/*.ts",
-        "./type/*.d.ts",
-        "./type/*/*.d.ts",
+        "./types/**.d.ts",
         "../Assets/XOR/Typing/",
         "../Assets/Gen/Typing/",
         "../Library/PackageCache/com.tencent.puerts.core@**/Typing/",

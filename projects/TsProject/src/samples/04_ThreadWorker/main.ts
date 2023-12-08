@@ -2,9 +2,9 @@ const ThreadId: number = CS.System.Threading["Thread"]["CurrentThread"]["Managed
 
 export async function init(loader: CS.Puerts.ILoader) {
     const worker = new xor.ThreadWorker(loader);
-    
+
     const module = "./samples/04_ThreadWorker/child";
-    worker.start(module, loader["IsESM"] ? loader["IsESM"](module) : false);
+    worker.start(module);
     xor.globalListener.quit.add(() => worker.stop());
 
     worker.on("main_test1", (msg) => {
