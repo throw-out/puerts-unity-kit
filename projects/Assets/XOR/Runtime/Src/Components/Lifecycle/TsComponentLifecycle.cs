@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using UnityEngine;
 
@@ -26,7 +27,7 @@ namespace XOR
 
             if (pending.Count > 0)
             {
-                var components = pending.ToArray();
+                var components = pending.Where(o => !o.Registered).ToArray();
                 pending.Clear();
                 CreateJSObject(components);
             }
@@ -40,6 +41,17 @@ namespace XOR
         {
             return GetReference(gameObject, true);
         }
+        public static void UpdateComponent(TsComponent component)
+        {
+            if (runtime != null && runtime.IsAlive)
+            {
+                CreateJSObject(component);
+            }
+            else
+            {
+                pending.Add(component);
+            }
+        }
         public static void AddComponent(WeakReference<GameObject> reference, TsComponent component)
         {
             if (reference == null || IsNullPointer(component))
@@ -50,16 +62,16 @@ namespace XOR
                 componentReferences.Add(reference, components);
             }
             components.Add(component);
-            if (!component.Registered)
+
+            if (component.Registered)
+                return;
+            if (runtime != null && runtime.IsAlive)
             {
-                if (runtime != null && runtime.IsAlive)
-                {
-                    CreateJSObject(component);
-                }
-                else
-                {
-                    pending.Add(component);
-                }
+                CreateJSObject(component);
+            }
+            else
+            {
+                pending.Add(component);
             }
         }
         public static void DestroyComponent(WeakReference<GameObject> reference, TsComponent component)
@@ -168,7 +180,7 @@ namespace XOR
                             builder.AppendLine();
                             builder.Append("    -");
                             builder.Append(components[k] == null ? "null" : nameof(TsComponent));
-                            builder.Append($"({components[k].GetHashCode()}): \t{components[k].GetGuid()}");
+                            builder.Append($"({components[k].GetHashCode()}): \t{components[k].Guid}");
                         }
                     }
                     else
@@ -231,14 +243,15 @@ namespace XOR
         {
             foreach (var component in components)
             {
-                if (component == null)
+                if (component == null || string.IsNullOrEmpty(component.Guid))
+                {
+                    component.JSObject = null;
                     continue;
-                if (string.IsNullOrEmpty(component.GetGuid()))
-                    continue;
+                }
                 component.JSObject = runtime.Create(component);
                 if (component.JSObject == null)
                 {
-                    Logger.LogWarning($"{component.name} {nameof(XOR.TsComponent)} JSObject create fail: {component.GetGuid()}");
+                    Logger.LogWarning($"{component.name} {nameof(XOR.TsComponent)} JSObject create fail: {component.Guid}");
                 }
             }
         }
@@ -249,7 +262,7 @@ namespace XOR
             private readonly HashSet<string> resolvePaths;
             private Func<TsComponent, string, Puerts.JSObject> create;
             private Action<Puerts.JSObject, string, object[]> invoke;
-            public bool IsAlive => true;
+            public bool IsAlive => GetIsolate(env) != IntPtr.Zero;
             public Runtime(Puerts.JsEnv env)
             {
                 this.env = env;
@@ -272,16 +285,16 @@ namespace XOR
                         return null;
                     }
                 }
-                Puerts.JSObject result = create.Invoke(component, component.GetGuid());
+                Puerts.JSObject result = create.Invoke(component, component.Guid);
 
                 //execute module, after retry create js object
-                if (result == null && !resolvePaths.Contains(component.GetPath()))
+                if (result == null && !resolvePaths.Contains(component.Path))
                 {
-                    resolvePaths.Add(component.GetPath());
-                    if (!string.IsNullOrEmpty(component.GetPath()))
+                    resolvePaths.Add(component.Path);
+                    if (!string.IsNullOrEmpty(component.Path))
                     {
-                        env.Load(component.GetPath());
-                        result = create.Invoke(component, component.GetGuid());
+                        env.Load(component.Path);
+                        result = create.Invoke(component, component.Guid);
                     }
                 }
                 return result;
@@ -304,6 +317,23 @@ namespace XOR
                     }
                 }
                 invoke(jsObject, methodName, args);
+            }
+
+            static Func<Puerts.JsEnv, IntPtr> _getIsolate = null;
+            public static Func<Puerts.JsEnv, IntPtr> GetIsolate
+            {
+                get
+                {
+                    if (_getIsolate == null)
+                    {
+                        FieldInfo fieldInfo = typeof(Puerts.JsEnv).GetField("isolate", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+                        if (fieldInfo != null)
+                        {
+                            _getIsolate = DelegateUtil.CreateFieldDelegate<Func<Puerts.JsEnv, IntPtr>>(fieldInfo, null, false);
+                        }
+                    }
+                    return _getIsolate;
+                }
             }
         }
     }

@@ -132,3 +132,22 @@ export class Sample06 extends xor.TsComponent {
         GUILayout.EndHorizontal();
     }
 }
+
+/**
+ * GameObject.GetCompoment和GameObject.AddCompoment示例
+ */
+class Sample07 extends xor.TsComponent {
+    public value: number;
+}
+
+let sample7GO = new GameObject(Sample07.name);
+console.log(`GetComponent: ${Sample07.name}.value = ${sample7GO.GetComponent(Sample07)?.value}`);
+
+console.log(`AddComponent: ${Sample07.name}`);
+let sample7 = sample7GO.AddComponent(Sample07);
+sample7.value = 10;
+console.log(`GetComponent: ${Sample07.name}.value = ${sample7GO.GetComponent(Sample07)?.value}`);
+sample7.value = 20;
+console.log(`GetComponent: ${Sample07.name}.value = ${sample7GO.GetComponent(Sample07)?.value}`);
+sample7.value = 30;
+console.log(`GetComponent: ${Sample07.name}.value = ${sample7GO.GetComponent(Sample07)?.value}`);

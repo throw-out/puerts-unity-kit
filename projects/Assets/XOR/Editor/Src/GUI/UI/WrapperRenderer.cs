@@ -358,7 +358,7 @@ namespace XOR.UI
                 {
                     return null;
                 }
-                var statement = program.GetStatement(component.GetGuid());
+                var statement = program.GetStatement(component.Guid);
                 if (statement == null || !(statement is XOR.Services.TypeDeclaration type))
                 {
                     return null;
@@ -393,7 +393,7 @@ namespace XOR.UI
                 {
                     var header = components.Length > 1 ? $"{nameof(TsComponent)}({i + 1})/" : $"{nameof(TsComponent)}/";
                     var component = components[i];
-                    var statement = program.GetStatement(component.GetGuid());
+                    var statement = program.GetStatement(component.Guid);
                     if (statement == null || !(statement is XOR.Services.TypeDeclaration type))
                     {
                         menu.AddDisabledItem(new GUIContent($"{header}Missing"), false);

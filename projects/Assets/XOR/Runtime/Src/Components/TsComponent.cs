@@ -102,6 +102,31 @@ namespace XOR
                 registered = true;
             }
         }
+        public string Guid
+        {
+            get => guid;
+            internal set
+            {
+                guid = value;
+            }
+        }
+        public string Route
+        {
+            get => route;
+            internal set
+            {
+                route = value;
+            }
+        }
+        public string Path
+        {
+            get => path;
+            internal set
+            {
+                path = value;
+            }
+        }
+
         internal bool Registered { get => registered; }
         internal bool Initialized { get => initialized; }
         /// <summary>
@@ -112,7 +137,8 @@ namespace XOR
         /// <returns>是否成功</returns>
         internal void Init()
         {
-            if (initialized) return;
+            if (initialized)
+                return;
             initialized = true;
             if (reference != null || this.IsDestroyed || this == null)
                 return;
@@ -146,9 +172,6 @@ namespace XOR
                 return;
             TsComponentLifecycle.Invoke(jsObject, methodName, args);
         }
-        public string GetGuid() => guid;
-        public string GetRoute() => route;
-        public string GetPath() => path;
 
         /// <summary>
         /// 回收无效的TsComponent实例

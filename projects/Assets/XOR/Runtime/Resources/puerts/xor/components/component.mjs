@@ -1,6 +1,6 @@
 class TsComponentConstructor extends xor.TsBehaviour {
     constructor(component) {
-        super(component, component);
+        super(component, component instanceof CS.XOR.TsComponent ? component : false);
     }
 }
 const RegisterFlag = Symbol("__guid__");
@@ -19,6 +19,12 @@ function field(options) {
     return (target, key) => {
     };
 }
+function dynamic(target) {
+    let guid = `dynamic-${Date.now()}`;
+    target[RegisterFlag] = guid;
+    RegisterTypes[guid] = target;
+    return guid;
+}
 function register() {
     let _g = (global ?? globalThis ?? this);
     _g.xor = _g.xor || {};
@@ -34,8 +40,11 @@ function overrideGetComponent() {
         return function () {
             let ctor = arguments[0];
             if (typeof (ctor) === "function") {
-                if (RegisterFlag in ctor) {
-                    return this.GetTsComponent(ctor[RegisterFlag]);
+                if (ctor.prototype instanceof TsComponentConstructor) {
+                    let guid = ctor[RegisterFlag];
+                    if (!guid)
+                        return null;
+                    return this.GetTsComponent(guid);
                 }
                 if (ctor.prototype instanceof CS.UnityEngine.Component) {
                     return original.call(this, puerts.$typeof(ctor));
@@ -60,11 +69,28 @@ function overrideGetComponent() {
             return original.apply(this, arguments);
         };
     }
+    function createAddComponent(original) {
+        return function () {
+            let ctor = arguments[0];
+            if (typeof (ctor) === "function") {
+                if (ctor.prototype instanceof TsComponentConstructor) {
+                    let guid = ctor[RegisterFlag] || dynamic(ctor), obj = new ctor(this);
+                    this.AddTsComponent(guid, obj);
+                    return obj;
+                }
+                if (ctor.prototype instanceof CS.UnityEngine.Component) {
+                    return original.call(this, puerts.$typeof(ctor));
+                }
+            }
+            return original.apply(this, arguments);
+        };
+    }
     const Component = CS.UnityEngine.Component, GameObject = CS.UnityEngine.GameObject;
     Component.prototype.GetComponent = createGetComponent(Component.prototype.GetComponent);
     GameObject.prototype.GetComponent = createGetComponent(GameObject.prototype.GetComponent);
     Component.prototype.GetComponents = createGetComponents(Component.prototype.GetComponents);
     GameObject.prototype.GetComponents = createGetComponents(GameObject.prototype.GetComponents);
+    GameObject.prototype.AddComponent = createAddComponent(GameObject.prototype.AddComponent);
 }
 overrideGetComponent();
 //export to csharp
