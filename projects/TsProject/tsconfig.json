@@ -38,7 +38,7 @@
             "DOM.Iterable",
         ],
         "types": [
-            "node",
+            //"node",
         ],
         "preserveSymlinks": true,
         "allowJs": true,
