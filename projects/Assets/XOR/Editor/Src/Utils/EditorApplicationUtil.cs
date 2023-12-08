@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using Puerts;
 using XOR.Services;
 
 namespace XOR
@@ -98,32 +99,46 @@ namespace XOR
                     }
                     projectConfig = PathUtil.GetFullPath(newPath);
                 }
-                if (!Check(projectConfig)) return;
+                if (!ValidateProjectEnv(projectConfig))
+                    return;
 
                 Logger.Log($"<b>XOR.{nameof(EditorApplication)}: <color=green>Executing</color></b>");
 
                 //创建EditorApplication实例
                 EditorApplication app = EditorApplication.GetInstance();
-                app.Env.UsingAction<string, bool>();
                 //create interfaces
-                CSharpInterfaces ci = new CSharpInterfaces();
-                ci.SetWorker = app.SetWorker;
-                ci.SetProgram = app.SetProgram;
+                CSharpInterfaces ci = new CSharpInterfaces
+                {
+                    SetWorker = app.SetWorker,
+                    SetProgram = app.SetProgram
+                };
                 //init application
-                app.Env.Load("puerts/xor-editor/main");
-                Func<CSharpInterfaces, TSInterfaces> Init = app.Env.Eval<Func<CSharpInterfaces, TSInterfaces>>(@"
-(function(){
-    //require('puerts/xor-editor/main'); 
-    let _g = global || globalThis || this;
-    return _g.init;
-})()");
+                if (Prefs.DeveloperMode)
+                {
+                    string editorProjectOutput = Path.Combine(Path.GetDirectoryName(UnityEngine.Application.dataPath), "TsEditorProject/output");
+                    var loader = new FileLoader(editorProjectOutput, Path.GetDirectoryName(editorProjectOutput));
+                    app.Loader.AddLoader(loader);
+                    app.Env.Load("webpack/main");
 
-                TSInterfaces ti = Init(ci);
-                app.SetInterfaces(ti);
+                    var init = GetGlobal<Func<CSharpInterfaces, ILoader, TSInterfaces>>(app.Env, "init");
+                    app.SetInterfaces(init(ci, loader));
+                    app.Interfaces.Start(projectConfig, "webpack/child");
+                }
+                else
+                {
+                    //app.Env.Eval("require('puerts/xor-editor/main')");
+                    app.Env.Load("puerts/xor-editor/main");
 
-                ti.Start(projectConfig, useNodejsWatch);
+                    var init = GetGlobal<Func<CSharpInterfaces, ILoader, TSInterfaces>>(app.Env, "init");
+                    app.SetInterfaces(init(ci, null));
+                    app.Interfaces.Start(projectConfig, "puerts/xor-editor/child");
+                }
 
                 //监听文件修改
+                if (useNodejsWatch)
+                {
+                    app.Interfaces.Watch(projectConfig);
+                }
                 EditorFileWatcher.ReleaseInstance();
                 if (!useNodejsWatch && Settings.Load().watchType != Settings.WacthType.None)
                 {
@@ -131,7 +146,12 @@ namespace XOR
                     EditorFileWatcher watcher = EditorFileWatcher.GetInstance();
                     watcher.AddWatcher(dirpath, "*.ts");
                     watcher.AddWatcher(dirpath, "*.tsx");
-                    watcher.OnChanged((path, type) => ti.FileChanged(path));
+                    watcher.OnChanged((path, type) =>
+                    {
+                        if (app == null || app.IsDestroyed || app.Interfaces == null)
+                            return;
+                        app.Interfaces.FileChanged(path);
+                    });
                     watcher.Start(true);
                     Logger.Log($"<b>XOR.{nameof(EditorFileWatcher)}:</b> {dirpath}");
                 }
@@ -159,8 +179,12 @@ namespace XOR
             if (print) Logger.Log($"<b>XOR.{nameof(EditorApplication)}: <color=red>Stoped</color>.</b>");
         }
 
-
-        static bool Check(string tsconfigPath)
+        /// <summary>
+        /// 验证TsProject环境是否已安装
+        /// </summary>
+        /// <param name="tsconfigPath"></param>
+        /// <returns></returns>
+        static bool ValidateProjectEnv(string tsconfigPath)
         {
             //check dependents install
             string packagePath = Path.Combine(Path.GetDirectoryName(tsconfigPath), "package.json");
@@ -178,6 +202,14 @@ namespace XOR
             }
             //check compile output
             return true;
+        }
+        static T GetGlobal<T>(JsEnv env, string key)
+        {
+            return env.Eval<T>($@"
+(function(){{
+    let _g = global || globalThis || this;
+    return _g['{key}'];
+}})();");
         }
     }
 }

@@ -5,8 +5,8 @@ const webpack = require('webpack');
  * @type webpack.Configuration
  */
 module.exports = {
-    mode: "production",
-    devtool: false,
+    mode: "development",
+    devtool: "inline-source-map",
     target: "node",
     entry: {
         main: path.resolve(__dirname, "./src/main/main.ts"),

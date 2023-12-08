@@ -14,9 +14,11 @@ namespace XOR.Services
     }
     public class TSInterfaces
     {
-        public Action<string, bool> Start;
+        public Action<string, string> Start;
         public Action Stop;
 
+        /// <summary>启动nodejs.watch </summary>
+        public Action<string> Watch;
         /// <summary>文件更新: 修改/新增/删除 </summary>
         public Action<string> FileChanged;
     }

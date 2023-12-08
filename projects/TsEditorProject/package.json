@@ -3,6 +3,7 @@
     "version": "1.0.0",
     "description": "ts project assets",
     "scripts": {
+        "editor:compile:dev": "webpack --config webpack.config.dev.js --watch",
         "editor:compile": "webpack --config webpack.config.js",
         "editor:rm": "node ./xor-workflow.mjs rmdir --target=../Assets/XOR/Editor/Resources/puerts/xor-editor",
         "editor:copy": "node ./xor-workflow.mjs copydir --filter=.js/.mjs/.cjs --extname=.cjs --source=./output/webpack --target=../Assets/XOR/Editor/Resources/puerts/xor-editor",

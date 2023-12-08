@@ -14,19 +14,21 @@ const BatchProcess = true,      //批量处理file change事件
 
 class Workflow {
     private readonly ci: csharp.XOR.Services.CSharpInterfaces;
+    private readonly dev: csharp.Puerts.ILoader;
     private _worker: xor.ThreadWorker;
     private _watcher: ReturnType<typeof this._createWatcher>;
     private _changeEvents: Set<string>;
 
-    constructor(ci: csharp.XOR.Services.CSharpInterfaces) {
+    constructor(ci: csharp.XOR.Services.CSharpInterfaces, dev: csharp.Puerts.ILoader) {
         this.ci = ci;
+        this.dev = dev;
     }
-    public start(project: string, useWatcher: boolean) {
+    public start(project: string, childStartup: string) {
         if (this._worker && this._worker.isAlive)
             throw new Error("invalid operation");
         //console.log(`workflow start: \neditorProject: ${editorProject}\nproject: ${project}`);
 
-        const worker = this._createWorker();
+        const worker = this._createWorker(childStartup);
 
         const program = new csharp.XOR.Services.Program();
         program.root = Path.GetDirectoryName(project);
@@ -37,15 +39,14 @@ class Workflow {
         this._worker = worker;
         this.ci.SetWorker.Invoke(worker.source);
         this.ci.SetProgram.Invoke(program);
-
-        if (useWatcher) {
-            try {
-                let dirpath = Path.GetDirectoryName(project);
-                this._watcher = this._createWatcher(dirpath);
-                csharp.XOR.Logger.Log(`<b>nodejs.FSWacther:</b> ${dirpath}`);
-            } catch (e) {
-                console.error(e);
-            }
+    }
+    public watch(project: string) {
+        try {
+            let dirpath = Path.GetDirectoryName(project);
+            this._watcher = this._createWatcher(dirpath);
+            csharp.XOR.Logger.Log(`<b>nodejs.FSWacther:</b> ${dirpath}`);
+        } catch (e) {
+            console.error(e);
         }
     }
     public stop() {
@@ -60,7 +61,8 @@ class Workflow {
     public bind(): csharp.XOR.Services.TSInterfaces {
         let ti = new csharp.XOR.Services.TSInterfaces();
         ti.Stop = () => this.stop();
-        ti.Start = (p, useWatcher) => this.start(p, useWatcher);
+        ti.Start = (p, s) => this.start(p, s);
+        ti.Watch = (path) => this.watch(path);
         ti.FileChanged = (path) => this.change(path);
         return ti;
     }
@@ -89,7 +91,7 @@ class Workflow {
         this._worker.post(WorkerEvent.FileChanged, paths, true);
     }
 
-    private _createWorker() {
+    private _createWorker(startup: string) {
         const debug = new csharp.XOR.ThreadDebuggerOptions();
         //debug.port = 9090;
         //debug.wait = false;
@@ -99,8 +101,9 @@ class Workflow {
         options.debugger = debug;
 
         const loader = new csharp.XOR.MixerLoader();
+        if (this.dev) loader.AddLoader(this.dev);
         const worker = new xor.ThreadWorker(loader, options);
-        worker.start("puerts/xor-editor/child");
+        worker.start(startup);
 
         xor.globalListener.quit.add(() => worker.stop());
 
@@ -124,8 +127,9 @@ class Workflow {
     }
 }
 
-function init(ci: csharp.XOR.Services.CSharpInterfaces) {
-    return new Workflow(ci).bind();
+function init(ci: csharp.XOR.Services.CSharpInterfaces, devLoader: csharp.Puerts.ILoader) {
+    return new Workflow(ci, devLoader)
+        .bind();
 }
 (function () {
     var _g = global || globalThis || this;

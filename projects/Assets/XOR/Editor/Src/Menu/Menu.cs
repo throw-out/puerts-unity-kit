@@ -61,6 +61,19 @@ namespace XOR
         #endregion
 
 
+
+        #region 开发者模式
+        [MenuItem("Tools/XOR/DeveloperMode/Enable", false, 0)]
+        static void DeveloperEnable() => Prefs.DeveloperMode.SetValue(true);
+        [MenuItem("Tools/XOR/DeveloperMode/Enable", true, 0)]
+        static bool DeveloperEnableValidate() => !Prefs.DeveloperMode.GetValue();
+        [MenuItem("Tools/XOR/DeveloperMode/Disable", false, 0)]
+        static void DeveloperDisable() => Prefs.DeveloperMode.SetValue(false);
+        [MenuItem("Tools/XOR/DeveloperMode/Disable", true, 0)]
+        static bool DeveloperDisableValidate() => Prefs.DeveloperMode.GetValue();
+        #endregion
+
+
         #region Servies菜单项
         [MenuItem("Tools/XOR/Servies/Restart")]
         static void Reload()

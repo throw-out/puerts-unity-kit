@@ -26,6 +26,11 @@ namespace XOR
         internal static readonly Accessor<int> Language = new Accessor<int>("Language", (int)XOR.Language.Env.ZH_CN);
 
         /// <summary>
+        /// 开发者模式
+        /// </summary>
+        internal static readonly Accessor<bool> DeveloperMode = new Accessor<bool>("DeveloperMode", false);
+
+        /// <summary>
         /// puerts环境版本信息
         /// </summary>
         /// <typeparam name="int"></typeparam>
