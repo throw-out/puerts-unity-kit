@@ -67,6 +67,7 @@ namespace XOR.Serializables
         public Type ExplicitValueType { get; set; }
         public Tuple<float, float> ExplicitValueRange { get; set; }
         public Dictionary<string, object> ExplicitValueEnum { get; set; }
+        public Dictionary<string, string> ExplicitValueReferences { get; set; }
         public string Tooltip { get; set; }
 
         public SerializedProperty KeyNode
@@ -969,12 +970,26 @@ namespace XOR.Serializables.TsComponent
     {
         protected override void RenderValue()
         {
-            var newValue = EditorGUILayout.ObjectField(string.Empty, Node.ValueNode.objectReferenceValue, Node.ExplicitValueType ?? typeof(UnityEngine.Object), true);
-            if (newValue != Node.ValueNode.objectReferenceValue)
+            if (IsTsReference(Node.ExplicitValueType))
             {
-                Node.ValueNode.objectReferenceValue = newValue;
-                Dirty |= true;
+
             }
+            else
+            {
+                var newValue = EditorGUILayout.ObjectField(string.Empty, Node.ValueNode.objectReferenceValue, Node.ExplicitValueType ?? typeof(UnityEngine.Object), true);
+                if (newValue != Node.ValueNode.objectReferenceValue)
+                {
+                    Node.ValueNode.objectReferenceValue = newValue;
+                    Dirty |= true;
+                }
+            }
+        }
+
+        protected virtual bool IsTsReference(Type type)
+        {
+            return type == typeof(XOR.TsComponent) &&
+                Node.ExplicitValueReferences != null &&
+                Node.ExplicitValueReferences.Count > 0;
         }
     }
 

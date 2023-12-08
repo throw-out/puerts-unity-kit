@@ -20,6 +20,8 @@ export class Sample01 extends xor.TsComponent {
     declare private _prop7: GameObject;
     declare private _prop8: Transform;
     //declare private _prop9: Transform;
+
+    public get prop1() { return this._prop1; }
 }
 /**
  * 数组类型演示
@@ -35,6 +37,8 @@ export class Sample02 extends xor.TsComponent {
     declare private _prop6: Vector3[];
     declare private _prop7: GameObject[];
     declare private _prop8: Transform[];
+
+    public get prop1() { return this._prop1; }
 }
 /**
  * 指定RawType丶DefaultValue和Range的演示
@@ -57,6 +61,8 @@ export class Sample03 extends xor.TsComponent {
     declare private _prop6: number[];
     @xor.field({ range: [0, 100], value: [1, 33.333, 67.67] })
     declare private _prop7: number[];
+
+    public get prop1() { return this._prop1; }
 }
 
 namespace Types {
@@ -81,18 +87,23 @@ namespace Types {
  */
 @xor.guid("70292285-10d5-44e0-9031-e12b14a05d15")
 export class Sample04 extends xor.TsComponent {
+    @xor.field({ value: 3 })
     declare private _prop1: 1 | 3 | 5 | 6 | 7;
+    @xor.field({ value: "string2" })
     declare private _prop2: "string1" | "string2" | "string3";
+    @xor.field({ value: Types.Type1.P1 })
     declare private _prop3: Types.Type1;
     declare private _prop4: Types.Type2;
     declare private _prop5: Types.Type3;
 
     @xor.field({ value: [1] })
     declare private _prop6: Array<1 | 3 | 5>;
-    @xor.field({ value: [Types.Type1.P1] })
+    @xor.field({ value: [Types.Type1.P1, Types.Type1.P2] })
     declare private _prop7: Array<Types.Type1>;
     @xor.field({ value: [Types.Type3.P6] })
     declare private _prop8: Array<Types.Type3>;
+
+    public get prop1() { return this._prop1; }
 }
 
 /**
@@ -134,20 +145,57 @@ export class Sample06 extends xor.TsComponent {
 }
 
 /**
+ * ts类型引用例子
+ */
+@xor.guid("30641f2f-bdeb-436e-8586-349ee2323a15")
+export class Sample07 extends xor.TsComponent {
+    declare private _sample01: Sample01;
+    declare private _sample02: Sample02;
+    declare private _sample03: Sample03;
+    declare private _sample04: Sample04;
+
+    declare private _sample10: xor.TsComponent;
+    declare private _sample11: CS.XOR.TsComponent;
+    declare private _sampleList: xor.TsComponent[];
+
+    protected Awake(): void {
+        console.log(`=================${Sample07.name}====================`);
+        console.log(`this._sample01._prop1 = ${this._sample01?.prop1}`);
+        console.log(`this._sample02._prop1.length = ${this._sample02?.prop1?.length}`);
+        console.log(`this._sample03._prop1 = ${this._sample03?.prop1}`);
+        console.log(`this._sample04._prop1 = ${this._sample04?.prop1}`);
+
+        console.log(`this._sample10.name = ${this.getName(this._sampleList)}`);
+        console.log(`this._sample11.name = ${this.getName(this._sample11)}`);
+        console.log(`this._sampleList.length = ${this._sampleList?.length}, memebrs = ${this._sampleList?.map(s => this.getName(s)).join(", ")}`);
+    }
+
+    private getName(obj: object) {
+        if (obj instanceof xor.TsComponent) {
+            return this.getName(obj.gameObject);
+        }
+        if (obj instanceof CS.UnityEngine.Object && !obj.Equals(null)) {
+            return obj.name;
+        }
+        return null;
+    }
+}
+
+/**
  * GameObject.GetCompoment和GameObject.AddCompoment示例
  */
-class Sample07 extends xor.TsComponent {
+class Sample10 extends xor.TsComponent {
     public value: number;
 }
 
-let sample7GO = new GameObject(Sample07.name);
-console.log(`GetComponent: ${Sample07.name}.value = ${sample7GO.GetComponent(Sample07)?.value}`);
+let sample7GO = new GameObject(Sample10.name);
+console.log(`GetComponent: ${Sample10.name}.value = ${sample7GO.GetComponent(Sample10)?.value}`);
 
-console.log(`AddComponent: ${Sample07.name}`);
-let sample7 = sample7GO.AddComponent(Sample07);
+console.log(`AddComponent: ${Sample10.name}`);
+let sample7 = sample7GO.AddComponent(Sample10);
 sample7.value = 10;
-console.log(`GetComponent: ${Sample07.name}.value = ${sample7GO.GetComponent(Sample07)?.value}`);
+console.log(`GetComponent: ${Sample10.name}.value = ${sample7GO.GetComponent(Sample10)?.value}`);
 sample7.value = 20;
-console.log(`GetComponent: ${Sample07.name}.value = ${sample7GO.GetComponent(Sample07)?.value}`);
+console.log(`GetComponent: ${Sample10.name}.value = ${sample7GO.GetComponent(Sample10)?.value}`);
 sample7.value = 30;
-console.log(`GetComponent: ${Sample07.name}.value = ${sample7GO.GetComponent(Sample07)?.value}`);
+console.log(`GetComponent: ${Sample10.name}.value = ${sample7GO.GetComponent(Sample10)?.value}`);

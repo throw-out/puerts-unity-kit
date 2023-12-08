@@ -27201,8 +27201,10 @@ declare namespace CS {
             public defaultValue: any
             public valueRange: System.Tuple$2<number, number>
             public valueEnum: System.Collections.Generic.Dictionary$2<string, any>
+            public valueReferences: System.Collections.Generic.Dictionary$2<string, string>
             public SetRange($left: number, $right: number): void
             public AddEnum($key: string, $value: any): void
+            public AddReference($guid: string, $name: string): void
             public BuildTooltip($force?: boolean): string
             public constructor()
         }
@@ -31527,6 +31529,7 @@ declare namespace CS {
             public GetTypeId($isolate: System.IntPtr, $holder: System.IntPtr, $isByRef: boolean): number
             public GetJSObject($isolate: System.IntPtr, $holder: System.IntPtr, $isByRef: boolean): System.IntPtr
             public GetFunction($isolate: System.IntPtr, $holder: System.IntPtr, $isByRef: boolean): System.IntPtr
+
             public static __Create($target: Puerts.JSObject): XOR.JsBase
             public constructor($target: Puerts.JSObject)
             GetArrayBuffer($isolate: System.IntPtr, $holder: System.IntPtr, $isByRef: boolean): Puerts.ArrayBuffer;

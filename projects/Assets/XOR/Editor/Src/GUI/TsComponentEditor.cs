@@ -283,6 +283,7 @@ namespace XOR
                         nw.ExplicitValueType = property.valueType;
                         nw.ExplicitValueRange = property.valueRange;
                         nw.ExplicitValueEnum = property.valueEnum;
+                        nw.ExplicitValueReferences = property.valueReferences;
                         nw.Tooltip = property.BuildTooltip();
                     }
                     outputNodes.Add(nw);

@@ -1,7 +1,7 @@
 import * as csharp from "csharp";
+import * as glob from "fast-glob";
 import * as puerts from "puerts";
 import * as tsm from "ts-morph";
-import * as glob from "fast-glob";
 
 import File = csharp.System.IO.File;
 import Directory = csharp.System.IO.Directory;
@@ -391,6 +391,11 @@ export class Program {
                     cpd.name = name;
                     cpd.valueType = ftype.type;
 
+                    if (ftype.references && ftype.references.size > 0) {
+                        for (let [guid, name] of ftype.references) {
+                            cpd.AddReference(guid, name);
+                        }
+                    }
                     if (ftype.enumerable) {
                         for (let [name, value] of ftype.enumerable) {
                             cpd.AddEnum(name, value);
@@ -937,7 +942,7 @@ const util = new class {
      * @returns 
      */
     public toCSharpType(node: tsm.Node | [type: tsm.Node, explicitType: tsm.Node], depth: number = 0)
-        : { type: Type, enumerable: Map<string, string | number> } {
+        : { type: Type, enumerable: Map<string, string | number>, references: Map<string, string> } {
         if (depth > 3) {
             return null;
         }
@@ -952,7 +957,7 @@ const util = new class {
             return null;
         }
 
-        let type: Type, enumerable: Map<string, string | number>;
+        let type: Type, enumerable: Map<string, string | number>, references: Map<string, string>;
         if (_node.isKind(tsm.SyntaxKind.ParenthesizedType)) {
             return this.toCSharpType([_node.getTypeNode(), _explicit], depth + 1);
         }
@@ -1018,7 +1023,7 @@ const util = new class {
                 }
             }
         }
-        return { type, enumerable };
+        return { type, enumerable, references };
     }
     public toCSharpTypeByTypeNode(node: tsm.TypeNode): Type {
         if (node.isKind(tsm.SyntaxKind.BooleanKeyword)) {
