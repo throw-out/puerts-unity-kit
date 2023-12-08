@@ -19,8 +19,14 @@ function field(options) {
     return (target, key) => {
     };
 }
+let dynamicTimestamp, dynamicIndex;
 function dynamic(target) {
-    let guid = `dynamic-${Date.now()}`;
+    let ts = Date.now();
+    if (dynamicTimestamp !== ts) {
+        dynamicTimestamp = ts;
+        dynamicIndex = 0;
+    }
+    let guid = `dynamic-${dynamicTimestamp}-${dynamicIndex}`;
     target[RegisterFlag] = guid;
     RegisterTypes[guid] = target;
     return guid;

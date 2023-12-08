@@ -48,8 +48,14 @@ function field(options?: FieldOptions): PropertyDecorator {
     return (target, key) => {
     };
 }
+let dynamicTimestamp: number, dynamicIndex: number;
 function dynamic(target: Function): string {
-    let guid = `dynamic-${Date.now()}`;
+    let ts = Date.now();
+    if (dynamicTimestamp !== ts) {
+        dynamicTimestamp = ts;
+        dynamicIndex = 0;
+    }
+    let guid = `dynamic-${dynamicTimestamp}-${dynamicIndex}`;
     target[RegisterFlag] = guid;
     RegisterTypes[guid] = target;
     return guid;
