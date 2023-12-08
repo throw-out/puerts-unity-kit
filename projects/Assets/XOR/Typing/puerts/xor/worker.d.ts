@@ -18,7 +18,7 @@ declare class ThreadWorkerConstructor {
     get isInitialized(): boolean;
     get source(): $CS.XOR.ThreadWorker;
     constructor(loader: $CS.Puerts.ILoader, options?: $CS.XOR.ThreadOptions);
-    start(filepath: string, isESM?: boolean): void;
+    start(filepath: string): void;
     stop(): void;
     /**异步调用事件, 无返回值
      * @param eventName

@@ -25900,7 +25900,7 @@ declare namespace CS {
             public get Loader(): XOR.MixerLoader;
             public get Options(): XOR.ThreadOptions;
             public Tick(): void
-            public Run($filepath: string, $isESM: boolean): void
+            public Run($filepath: string): void
             public static VerifyThread($isMainThread: boolean, $throwError?: boolean): boolean
             public PostToMainThread($eventName: string, $data: XOR.ThreadWorker.EventData, $resultEventName?: string): void
             public PostToChildThread($eventName: string, $data: XOR.ThreadWorker.EventData, $resultEventName?: string): void
@@ -26475,7 +26475,6 @@ declare namespace CS {
             public remote: boolean
             public stopOnError: boolean
             public isEditor: boolean
-            public isESM: boolean
             public debugger: XOR.ThreadDebuggerOptions
         }
         class ThreadDebuggerOptions extends System.ValueType {

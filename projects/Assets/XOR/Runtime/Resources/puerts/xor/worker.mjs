@@ -24,10 +24,10 @@ class ThreadWorkerConstructor {
         this.events = new Map();
         this.register();
     }
-    start(filepath, isESM) {
+    start(filepath) {
         if (!this.mainThread || xor.globalWorker && xor.globalWorker.worker === this.worker)
             throw new Error("Invalid operation ");
-        this.worker.Run(filepath, !!isESM);
+        this.worker.Run(filepath);
     }
     stop() {
         if (this.mainThread) {
