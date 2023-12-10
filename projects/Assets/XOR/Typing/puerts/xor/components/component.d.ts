@@ -15,7 +15,7 @@ type FieldOptions = NumberConstructor | Partial<{
     value: any;
 }>;
 declare class TsComponentConstructor extends xor.TsBehaviour {
-    constructor(component: CS.XOR.TsComponent);
+    constructor(component: CS.XOR.TsComponent, created?: (thisArg: object) => void);
 }
 /**接口声明 */
 declare global {
@@ -47,6 +47,9 @@ declare global {
          */
         function route(path: string): ClassDecorator;
         /**定义序列化字段
+         * @example
+         * ```
+         * ```
          * @param options
          */
         function field(options?: FieldOptions): PropertyDecorator;
@@ -68,6 +71,6 @@ declare module "csharp" {
         }
     }
 }
-export declare function create(component: CS.XOR.TsComponent, guid: string): TsComponentConstructor;
+export declare function create(component: CS.XOR.TsComponent, guid: string, created?: CS.System.Action$2<CS.XOR.TsComponent, object>): TsComponentConstructor;
 export declare function invokeMethod(obj: object, methodName: string, args: CS.System.Array$1<any>): void;
 export {};

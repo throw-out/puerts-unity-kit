@@ -38,7 +38,7 @@ RenderSettings:
   m_ReflectionIntensity: 1
   m_CustomReflection: {fileID: 0}
   m_Sun: {fileID: 0}
-  m_IndirectSpecularColor: {r: 0.44657874, g: 0.49641275, b: 0.5748171, a: 1}
+  m_IndirectSpecularColor: {r: 0.44657874, g: 0.49641258, b: 0.5748172, a: 1}
   m_UseRadianceAmbientProbe: 0
 --- !u!157 &3
 LightmapSettings:
@@ -172,7 +172,7 @@ MonoBehaviour:
   guid: 36102130-2db9-4d62-9221-98c51c3c138c
   route: 
   path: samples/01_TsComponent
-  version: BD25F694D3FA922F39BD1B90C4EA0311953FFF752776C75A28E542841707591E
+  version: 4969A2E55E482A200A2085373AB33219554436CF92872B6D38DA87B6CC907174
   StringPairs: []
   NumberPairs: []
   BigintPairs: []
@@ -237,7 +237,7 @@ MonoBehaviour:
   guid: 7984a4b8-de57-4af6-a572-6c159bc6dce3
   route: 
   path: samples/01_TsComponent
-  version: DF3B88F8368A2A922870DE2D0898BDD5908C3E69FE83AD33D08B5AE3B8F92C2F
+  version: 01CE398C18ABFD0B7AFD1BAD56784FA45A293C9675230498569802F9E5FCEAEE
   StringPairs: []
   NumberPairs:
   - index: 0
@@ -305,7 +305,7 @@ MonoBehaviour:
   guid: 30641f2f-bdeb-436e-8586-349ee2323a15
   route: 
   path: samples/01_TsComponent
-  version: 6889D3562CEB3B52A694760473636A1580931CDFB7DB51CCC4A23A69BE25619F
+  version: B9B3459454EBBA7F6CFA4FE594252E62EA75A72111572361774EE02495811EAE
   StringPairs: []
   NumberPairs: []
   BigintPairs: []
@@ -314,15 +314,35 @@ MonoBehaviour:
   Vector3Pairs: []
   ObjectPairs:
   - index: 0
+    key: _sample01
+    value: {fileID: 1138852626}
+  - index: 1
+    key: _sample02
+    value: {fileID: 1843313266}
+  - index: 2
+    key: _sample03
+    value: {fileID: 1773476213}
+  - index: 3
+    key: _sample04
+    value: {fileID: 1802207627}
+  - index: 4
+    key: _sample10
+    value: {fileID: 795054123}
+  - index: 5
     key: _sample11
-    value: {fileID: 0}
+    value: {fileID: 932571937}
   StringArrayPairs: []
   NumberArrayPairs: []
   BigintArrayPairs: []
   BooleanArrayPairs: []
   Vector2ArrayPairs: []
   Vector3ArrayPairs: []
-  ObjectArrayPairs: []
+  ObjectArrayPairs:
+  - index: 6
+    key: _sampleList
+    value:
+    - {fileID: 0}
+    - {fileID: 0}
 --- !u!4 &1135157790
 Transform:
   m_ObjectHideFlags: 0
@@ -373,7 +393,7 @@ MonoBehaviour:
   guid: e1cb6fde-b4dd-4fba-b08d-aed2f2bea1f2
   route: 
   path: samples/01_TsComponent
-  version: 9228DEF524134865ACA05918521FA2C872B757B4733BA03647267A1CDC08DCE4
+  version: 347EA5185F94034CAD113EBB7F6BAA2286B60F5AB2B2B0A4DE4181F83283A03A
   StringPairs:
   - index: 0
     key: _prop1
@@ -597,7 +617,7 @@ MonoBehaviour:
   guid: d2ea683a-0e55-41a2-b837-b7e7c2a1fee4
   route: 
   path: samples/01_TsComponent
-  version: 0596E7DA4F698B581F066E2DEC465CA4B2180312D61FD0A8552390703B2BDD06
+  version: 64E93B396F7D5C46757758EF68DC865A78D794E93DC35C8A279666B3E23BB851
   StringPairs:
   - index: 3
     key: _prop4
@@ -781,7 +801,7 @@ MonoBehaviour:
   guid: a071b597-ff11-420a-b7d5-cd586ee4b1a1
   route: 
   path: samples/01_TsComponent
-  version: 567356CD66C8C533814A96DE22D640BFE11C42AF1E07B141BBDCA3D221962E73
+  version: 45F2BBE735FA121FAF8F1DD1A5E0D70690881F7898E769B4F1F8625655384456
   StringPairs: []
   NumberPairs: []
   BigintPairs: []

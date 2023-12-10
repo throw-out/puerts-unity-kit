@@ -163,6 +163,31 @@ namespace XOR
             return create;
         }
         /// <summary>
+        /// 获取TsComponent.JSObject创建方法
+        /// (回调方式获取JSObject, 在绑定Unity生命周期函数之前就回调)
+        /// </summary>
+        /// <param name="env"></param>
+        /// <returns></returns>
+        public static Action<TsComponent, string, Action<TsComponent, Puerts.JSObject>> ComponentJSObjectCreatorCallback(this JsEnv env)
+        {
+            Action<TsComponent, string, Action<TsComponent, Puerts.JSObject>> creator = null;
+#if UNITY_EDITOR || !UNITY_WEBGL
+            ILoader loader = Helper.GetLoader(env, false);
+            if (loader == null || !loader.FileExists(XORComponent))
+            {
+                Logger.LogWarning($"Module missing: {XORComponent}");
+                return null;
+            }
+            creator = Helper.IsESM(loader, XORComponent) ?
+                env.ExecuteModule<Action<TsComponent, string, Action<TsComponent, Puerts.JSObject>>>(XORComponent, "create") :
+                env.Eval<Action<TsComponent, string, Action<TsComponent, Puerts.JSObject>>>($"require('{XORComponent}').create;");
+#else
+            create = env.ExecuteModule<Action<TsComponent, string, Action<TsComponent, Puerts.JSObject>>>(XORComponent, "create");
+#endif
+            return creator;
+        }
+
+        /// <summary>
         /// 获取Puerts.JSObject对象调用方法(值将进行装箱操作)
         /// </summary>
         /// <param name="env"></param>

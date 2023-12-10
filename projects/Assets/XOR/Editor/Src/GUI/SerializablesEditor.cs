@@ -970,9 +970,24 @@ namespace XOR.Serializables.TsComponent
     {
         protected override void RenderValue()
         {
-            if (IsTsReference(Node.ExplicitValueType))
+            if (IsTsReferenceType(Node.ExplicitValueType))
             {
-
+                var value = Node.ValueNode.objectReferenceValue as XOR.TsComponent;
+                if (value != null && !IsTsReferenceTarget(value))
+                {
+                    value = null;
+                    Dirty |= true;
+                }
+                var newValue = EditorGUILayout.ObjectField(string.Empty, value, typeof(XOR.TsComponent), true) as XOR.TsComponent;
+                if (newValue != null && !IsTsReferenceTarget(newValue))
+                {
+                    newValue = value;
+                }
+                if (newValue != value || Dirty)
+                {
+                    Node.ValueNode.objectReferenceValue = newValue;
+                    Dirty |= true;
+                }
             }
             else
             {
@@ -985,11 +1000,15 @@ namespace XOR.Serializables.TsComponent
             }
         }
 
-        protected virtual bool IsTsReference(Type type)
+        protected virtual bool IsTsReferenceType(Type type)
         {
             return type == typeof(XOR.TsComponent) &&
                 Node.ExplicitValueReferences != null &&
                 Node.ExplicitValueReferences.Count > 0;
+        }
+        protected virtual bool IsTsReferenceTarget(XOR.TsComponent component)
+        {
+            return Node.ExplicitValueReferences.ContainsKey(component.Guid);
         }
     }
 

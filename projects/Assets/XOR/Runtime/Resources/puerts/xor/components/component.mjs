@@ -1,43 +1,63 @@
 class TsComponentConstructor extends xor.TsBehaviour {
-    constructor(component) {
-        super(component, component instanceof CS.XOR.TsComponent ? component : false);
+    constructor(component, created) {
+        super(component, {
+            accessor: component instanceof CS.XOR.TsComponent ? component : false,
+            before: created ? function () {
+                created(this);
+            } : null,
+        });
     }
 }
-const RegisterFlag = Symbol("__guid__");
-const RegisterTypes = {};
-function guid(guid) {
-    return (target) => {
+var utils;
+(function (utils) {
+    const RegisterFlag = Symbol("__guid__");
+    const RegisterTypes = {};
+    function guid(guid) {
+        return (target) => {
+            target[RegisterFlag] = guid;
+            RegisterTypes[guid] = target;
+        };
+    }
+    utils.guid = guid;
+    function route(path) {
+        return (target) => {
+        };
+    }
+    utils.route = route;
+    function field(options) {
+        return (target, key) => {
+        };
+    }
+    utils.field = field;
+    let dynamicTimestamp, dynamicIndex;
+    function dynamic(target) {
+        let ts = Date.now();
+        if (dynamicTimestamp !== ts) {
+            dynamicTimestamp = ts;
+            dynamicIndex = 0;
+        }
+        let guid = `dynamic-${dynamicTimestamp}-${dynamicIndex}`;
         target[RegisterFlag] = guid;
         RegisterTypes[guid] = target;
-    };
-}
-function route(path) {
-    return (target) => {
-    };
-}
-function field(options) {
-    return (target, key) => {
-    };
-}
-let dynamicTimestamp, dynamicIndex;
-function dynamic(target) {
-    let ts = Date.now();
-    if (dynamicTimestamp !== ts) {
-        dynamicTimestamp = ts;
-        dynamicIndex = 0;
+        return guid;
     }
-    let guid = `dynamic-${dynamicTimestamp}-${dynamicIndex}`;
-    target[RegisterFlag] = guid;
-    RegisterTypes[guid] = target;
-    return guid;
-}
+    utils.dynamic = dynamic;
+    function getGuid(ctor) {
+        return ctor[RegisterFlag];
+    }
+    utils.getGuid = getGuid;
+    function getConstructor(guid) {
+        return RegisterTypes[guid];
+    }
+    utils.getConstructor = getConstructor;
+})(utils || (utils = {}));
 function register() {
     let _g = (global ?? globalThis ?? this);
     _g.xor = _g.xor || {};
     _g.xor.TsComponent = TsComponentConstructor;
-    _g.xor.guid = guid;
-    _g.xor.route = route;
-    _g.xor.field = field;
+    _g.xor.guid = utils.guid;
+    _g.xor.route = utils.route;
+    _g.xor.field = utils.field;
 }
 register();
 /**重写GetComponent事件, 用于获取 */
@@ -47,7 +67,7 @@ function overrideGetComponent() {
             let ctor = arguments[0];
             if (typeof (ctor) === "function") {
                 if (ctor.prototype instanceof TsComponentConstructor) {
-                    let guid = ctor[RegisterFlag];
+                    let guid = utils.getGuid(ctor);
                     if (!guid)
                         return null;
                     return this.GetTsComponent(guid);
@@ -80,7 +100,7 @@ function overrideGetComponent() {
             let ctor = arguments[0];
             if (typeof (ctor) === "function") {
                 if (ctor.prototype instanceof TsComponentConstructor) {
-                    let guid = ctor[RegisterFlag] || dynamic(ctor), obj = new ctor(this);
+                    let guid = utils.getGuid(ctor) || utils.dynamic(ctor), obj = new ctor(this);
                     this.AddTsComponent(guid, obj);
                     return obj;
                 }
@@ -100,10 +120,17 @@ function overrideGetComponent() {
 }
 overrideGetComponent();
 //export to csharp
-export function create(component, guid) {
-    let ctor = (guid ? RegisterTypes[guid] : null);
+export function create(component, guid, created) {
+    let ctor = guid ? utils.getConstructor(guid) : null;
     if (ctor && typeof (ctor) === "function") {
-        return new ctor(component);
+        if (created) {
+            return new ctor(component, (obj) => {
+                created?.Invoke(component, obj);
+            });
+        }
+        else {
+            return new ctor(component);
+        }
     }
     return null;
 }

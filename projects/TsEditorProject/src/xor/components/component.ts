@@ -1,3 +1,8 @@
+import XOR = CS.XOR;
+import Transform = CS.UnityEngine.Transform;
+import GameObject = CS.UnityEngine.GameObject;
+import RectTransform = CS.UnityEngine.RectTransform;
+
 type ConstructorType<T> = Function & { prototype: T };
 type NumberConstructor = typeof CS.System.Byte |
     typeof CS.System.SByte |
@@ -23,51 +28,62 @@ type FieldOptions = NumberConstructor | Partial<{
 }>;
 
 class TsComponentConstructor extends xor.TsBehaviour {
-    constructor(component: CS.XOR.TsComponent) {
-        super(
-            component,
-            component instanceof CS.XOR.TsComponent ? component : false
-        );
+    constructor(component: CS.XOR.TsComponent, created?: (thisArg: object) => void) {
+        super(component, {
+            accessor: component instanceof CS.XOR.TsComponent ? component : false,
+            before: created ? function () {
+                created(this);
+            } : null,
+        });
     }
 }
-const RegisterFlag = Symbol("__guid__");
-const RegisterTypes: { [guid: string]: Function } = {};
 
-function guid(guid: string): ClassDecorator {
-    return (target) => {
+namespace utils {
+    const RegisterFlag = Symbol("__guid__");
+    const RegisterTypes: { [guid: string]: Function } = {};
+
+    export function guid(guid: string): ClassDecorator {
+        return (target) => {
+            target[RegisterFlag] = guid;
+            RegisterTypes[guid] = target;
+        };
+    }
+    export function route(path: string): ClassDecorator {
+        return (target) => {
+
+        };
+    }
+    export function field(options?: FieldOptions): PropertyDecorator {
+        return (target, key) => {
+        };
+    }
+    let dynamicTimestamp: number, dynamicIndex: number;
+    export function dynamic(target: Function): string {
+        let ts = Date.now();
+        if (dynamicTimestamp !== ts) {
+            dynamicTimestamp = ts;
+            dynamicIndex = 0;
+        }
+        let guid = `dynamic-${dynamicTimestamp}-${dynamicIndex}`;
         target[RegisterFlag] = guid;
         RegisterTypes[guid] = target;
-    };
-}
-function route(path: string): ClassDecorator {
-    return (target) => {
-
-    };
-}
-function field(options?: FieldOptions): PropertyDecorator {
-    return (target, key) => {
-    };
-}
-let dynamicTimestamp: number, dynamicIndex: number;
-function dynamic(target: Function): string {
-    let ts = Date.now();
-    if (dynamicTimestamp !== ts) {
-        dynamicTimestamp = ts;
-        dynamicIndex = 0;
+        return guid;
     }
-    let guid = `dynamic-${dynamicTimestamp}-${dynamicIndex}`;
-    target[RegisterFlag] = guid;
-    RegisterTypes[guid] = target;
-    return guid;
+    export function getGuid(ctor: Function): string {
+        return ctor[RegisterFlag];
+    }
+    export function getConstructor(guid: string) {
+        return RegisterTypes[guid] as new (...args: any[]) => TsComponentConstructor;
+    }
 }
 
 function register() {
     let _g = (global ?? globalThis ?? this);
     _g.xor = _g.xor || {};
     _g.xor.TsComponent = TsComponentConstructor;
-    _g.xor.guid = guid;
-    _g.xor.route = route;
-    _g.xor.field = field;
+    _g.xor.guid = utils.guid;
+    _g.xor.route = utils.route;
+    _g.xor.field = utils.field;
 }
 register();
 
@@ -100,12 +116,14 @@ declare global {
          */
         function route(path: string): ClassDecorator;
         /**定义序列化字段
+         * @example
+         * ```
+         * ```
          * @param options 
          */
         function field(options?: FieldOptions): PropertyDecorator;
     }
 }
-
 /**重写GetComponent事件, 用于获取 */
 function overrideGetComponent() {
     function createGetComponent(original: Function) {
@@ -113,7 +131,7 @@ function overrideGetComponent() {
             let ctor: any = arguments[0];
             if (typeof (ctor) === "function") {
                 if (ctor.prototype instanceof TsComponentConstructor) {
-                    let guid = ctor[RegisterFlag] as string;
+                    let guid = utils.getGuid(ctor);
                     if (!guid)
                         return null;
                     return this.GetTsComponent(guid);
@@ -146,7 +164,7 @@ function overrideGetComponent() {
             let ctor: any = arguments[0];
             if (typeof (ctor) === "function") {
                 if (ctor.prototype instanceof TsComponentConstructor) {
-                    let guid = ctor[RegisterFlag] as string || dynamic(ctor),
+                    let guid = utils.getGuid(ctor) || utils.dynamic(ctor),
                         obj = new ctor(this);
                     this.AddTsComponent(guid, obj);
                     return obj;
@@ -188,10 +206,16 @@ declare module "csharp" {
 }
 
 //export to csharp
-export function create(component: CS.XOR.TsComponent, guid: string): TsComponentConstructor {
-    let ctor = (guid ? RegisterTypes[guid] : null) as new (...args: any[]) => TsComponentConstructor;
+export function create(component: CS.XOR.TsComponent, guid: string, created?: CS.System.Action$2<CS.XOR.TsComponent, object>): TsComponentConstructor {
+    let ctor = guid ? utils.getConstructor(guid) : null;
     if (ctor && typeof (ctor) === "function") {
-        return new ctor(component);
+        if (created) {
+            return new ctor(component, (obj: object) => {
+                created?.Invoke(component, obj);
+            });
+        } else {
+            return new ctor(component);
+        }
     }
     return null;
 }

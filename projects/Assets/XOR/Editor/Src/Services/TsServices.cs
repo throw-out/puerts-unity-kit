@@ -340,7 +340,7 @@ namespace XOR.Services
                 {
                     builder.AppendLine();
                     builder.Append("References:");
-                    foreach (var e in this.valueEnum)
+                    foreach (var e in this.valueReferences)
                     {
                         builder.AppendLine();
                         builder.AppendFormat("\t[{0}, {1}]", e.Key, e.Value);
