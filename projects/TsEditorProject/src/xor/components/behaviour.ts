@@ -280,86 +280,10 @@ abstract class IOnMouse {
  * 注: 为避免多次跨语言调用, Update丶FixedUpdate丶LateUpdate方法将由BatchProxy统一管理(并非绑定到各自的GameObject上)
  * @see standalone 如果需要绑定独立的组件, 在对应方法上添加此标注
  */
-class TsBehaviourConstructor {
-    private __transform__: Transform;
-    private __gameObject__: GameObject;
-    private __component__: CS.XOR.TsBehaviour;
-
+abstract class BehaviourConstructor {
     private __listeners__: Map<string, Function[]>;
     private __listenerProxy__: CS.XOR.TsMessages;
     //--------------------------------------------------------
-
-    public constructor(object: GameObject | Transform | CS.XOR.TsBehaviour, accessor?: AccessorUnionType | boolean);
-    public constructor(object: GameObject | Transform | CS.XOR.TsBehaviour, options?: ConstructorOptions);
-    public constructor() {
-        let object: GameObject | Transform | CS.XOR.TsBehaviour = arguments[0],
-            accessor: AccessorUnionType | boolean,
-            args: any[],
-            before: ConstructorEvent,
-            after: ConstructorEvent;
-        let p2 = arguments[1];
-        switch (typeof (p2)) {
-            case "object":
-                if (p2 === null) { }
-                else if (p2 instanceof CSObject || Array.isArray(p2)) {
-                    accessor = <any>p2;
-                } else {
-                    accessor = (<ConstructorOptions>p2).accessor;
-                    args = (<ConstructorOptions>p2).args;
-                    before = (<ConstructorOptions>p2).before;
-                    after = (<ConstructorOptions>p2).after;
-                }
-                break;
-            case "boolean":
-                accessor = <any>p2;
-                break;
-        }
-
-        let gameObject: GameObject;
-        if (object instanceof CS.XOR.TsBehaviour) {
-            gameObject = object.gameObject;
-            this.__component__ = object;
-        }
-        else if (object instanceof Transform) {
-            gameObject = object.gameObject;
-        }
-        else {
-            gameObject = object;
-        }
-        this.__gameObject__ = gameObject;
-        this.__transform__ = gameObject.transform;
-        //bind props
-        if (accessor === undefined || accessor === true) {
-            utils.bindAccessor(
-                this,
-                object.GetComponents(puerts.$typeof(CS.XOR.TsProperties)) as CS.System.Array$1<CS.XOR.TsProperties>,
-                true
-            );
-        }
-        else if (accessor) {
-            utils.bindAccessor(
-                this,
-                accessor,
-                true
-            );
-        }
-        //call before callback
-        if (before) call(this, before);
-
-        //call constructor
-        let onctor: Function = this["onConstructor"];
-        if (onctor && typeof (onctor) === "function") {
-            call(this, onctor, args);
-        }
-        this.bindProxies();
-        this.bindUpdateProxies();
-        this.bindListeners();
-        this.bindModuleInEditor();
-
-        //call after callback
-        if (after) call(this, after);
-    }
-
     //协程
     public StartCoroutine(routine: ((...args: any[]) => Generator) | Generator, ...args: any[]): CS.UnityEngine.Coroutine {
         //传入了js Generator方法, 转为C#迭代器对象
@@ -462,9 +386,6 @@ class TsBehaviourConstructor {
 
     //protected
     protected disponse() {
-        this.__gameObject__ = undefined;
-        this.__transform__ = undefined;
-        this.__component__ = undefined;
     }
     //绑定Proxy方法
     protected bindProxies() {
@@ -670,21 +591,9 @@ class TsBehaviourConstructor {
     }
 
     //Getter 丶 Setter
-    public get transform(): Transform {
-        return this.__transform__;
-    }
-    public get gameObject(): GameObject {
-        return this.__gameObject__;
-    }
-    protected get component(): XOR.TsBehaviour {
-        if (!this.__component__ || this.__component__.Equals(null)) {
-            this.__component__ = this.__gameObject__.GetComponent(puerts.$typeof(CS.XOR.TsBehaviour)) as CS.XOR.TsBehaviour;
-            if (!this.__component__ || this.__component__.Equals(null)) {
-                this.__component__ = this.__gameObject__.AddComponent(puerts.$typeof(CS.XOR.TsBehaviour)) as CS.XOR.TsBehaviour;
-            }
-        }
-        return this.__component__;
-    }
+    public abstract get transform(): Transform;
+    public abstract get gameObject(): GameObject;
+    protected abstract get component(): XOR.TsBehaviour;
     public get enabled() { return this.component.enabled; }
     public set enabled(value: boolean) { this.component.enabled = value; }
     public get isActiveAndEnabled() { return this.component.isActiveAndEnabled; }
@@ -702,7 +611,104 @@ class TsBehaviourConstructor {
     }
 }
 //无实际意义: 仅作为继承子类提示接口名称用
-interface TsBehaviourConstructor extends IBehaviour, IGizmos, IOnPointerHandler, IOnDragHandler, IOnMouse, IOnCollision, IOnCollision2D, IOnTrigger, IOnTrigger2D {
+interface BehaviourConstructor extends IBehaviour, IGizmos, IOnPointerHandler, IOnDragHandler, IOnMouse, IOnCollision, IOnCollision2D, IOnTrigger, IOnTrigger2D {
+}
+
+class TsBehaviourConstructor extends BehaviourConstructor {
+    private __transform__: Transform;
+    private __gameObject__: GameObject;
+    private __component__: CS.XOR.TsBehaviour;
+    //--------------------------------------------------------
+    public get transform(): Transform {
+        return this.__transform__;
+    }
+    public get gameObject(): GameObject {
+        return this.__gameObject__;
+    }
+    protected get component(): XOR.TsBehaviour {
+        if (!this.__component__ || this.__component__.Equals(null)) {
+            this.__component__ = this.__gameObject__.GetComponent(puerts.$typeof(CS.XOR.TsBehaviour)) as CS.XOR.TsBehaviour;
+            if (!this.__component__ || this.__component__.Equals(null)) {
+                this.__component__ = this.__gameObject__.AddComponent(puerts.$typeof(CS.XOR.TsBehaviour)) as CS.XOR.TsBehaviour;
+            }
+        }
+        return this.__component__;
+    }
+
+    public constructor(object: GameObject | Transform | CS.XOR.TsBehaviour, accessor?: AccessorUnionType | boolean);
+    public constructor(object: GameObject | Transform | CS.XOR.TsBehaviour, options?: ConstructorOptions);
+    public constructor() {
+        super();
+        let object: GameObject | Transform | CS.XOR.TsBehaviour = arguments[0],
+            accessor: AccessorUnionType | boolean,
+            args: any[],
+            before: ConstructorEvent,
+            after: ConstructorEvent;
+        let p2 = arguments[1];
+        switch (typeof (p2)) {
+            case "object":
+                if (p2 === null) { }
+                else if (p2 instanceof CSObject || Array.isArray(p2)) {
+                    accessor = <any>p2;
+                } else {
+                    accessor = (<ConstructorOptions>p2).accessor;
+                    args = (<ConstructorOptions>p2).args;
+                    before = (<ConstructorOptions>p2).before;
+                    after = (<ConstructorOptions>p2).after;
+                }
+                break;
+            case "boolean":
+                accessor = <any>p2;
+                break;
+        }
+
+        let gameObject: GameObject;
+        if (object instanceof CS.XOR.TsBehaviour) {
+            gameObject = object.gameObject;
+            this.__component__ = object;
+        }
+        else if (object instanceof Transform) {
+            gameObject = object.gameObject;
+        }
+        else {
+            gameObject = object;
+        }
+        this.__gameObject__ = gameObject;
+        this.__transform__ = gameObject.transform;
+        //call before callback
+        if (before) call(this, before);
+
+        //bind properties
+        if (accessor === undefined || accessor === true) {
+            utils.bindAccessor(
+                this,
+                object.GetComponents(puerts.$typeof(CS.XOR.TsProperties)) as CS.System.Array$1<CS.XOR.TsProperties>,
+                true
+            );
+        }
+        else if (accessor) {
+            utils.bindAccessor(this, accessor, true);
+        }
+        //call constructor
+        let onctor: Function = this["onConstructor"];
+        if (onctor && typeof (onctor) === "function") {
+            call(this, onctor, args);
+        }
+        //bind methods
+        this.bindProxies();
+        this.bindUpdateProxies();
+        this.bindListeners();
+        this.bindModuleInEditor();
+
+        //call after callback
+        if (after) call(this, after);
+    }
+
+    protected disponse() {
+        this.__gameObject__ = undefined;
+        this.__transform__ = undefined;
+        this.__component__ = undefined;
+    }
 }
 
 /**Update批量调用 */
@@ -994,77 +1000,95 @@ namespace utils {
         });
     }
     function unwatch<T>(obj: T) {
-        if (typeof (obj) !== "object")
+        if (!obj || !Array.isArray(obj))
             return;
         delete obj[WatchFlag];
     }
-    function proxy(source: CS.XOR.TsComponent) {
+    function convertToJsObejctProxy(component: CS.XOR.TsComponent) {
+        if (!component || !component.Guid)
+            return undefined;
         let target: any;
-        function tryload() {
-            if (!source)
+        function getter() {
+            if (!component)
                 return;
-            target = source.JSObject;
-            source = null;
+            if (!CS.XOR.TsComponent.IsRegistered())
+                throw new Error("XOR.TsComponet.Register is required.");
+            if (component.IsPending)
+                CS.XOR.TsComponent.Resolve(component, true);
+            target = component.JSObject;
+            component = null;
         };
         return new Proxy({}, {
             apply: function (_, thisArg, argArray) {
-                tryload();
+                getter();
                 target.apply(thisArg, argArray);
             },
             construct: function (_, argArray, newTarget) {
-                tryload();
+                getter();
                 return new target(...argArray);
             },
             get: function (_, property) {
-                tryload();
+                getter();
                 return target[property];
             },
             set: function (_, property, newValue) {
-                tryload();
+                getter();
                 target[property] = newValue;
                 return true;
             },
             defineProperty: function (_, property, attributes) {
-                tryload();
+                getter();
                 Object.defineProperty(target, property, attributes);
                 return true;
             },
             deleteProperty: function (_, property) {
-                tryload();
+                getter();
                 delete target[property];
                 return true;
             },
             getOwnPropertyDescriptor: function (_, property) {
-                tryload();
+                getter();
                 return Object.getOwnPropertyDescriptor(target, property);
             },
             getPrototypeOf: function (_) {
-                tryload();
+                getter();
                 return Object.getPrototypeOf(target);
             },
             setPrototypeOf: function (_, newValue) {
-                tryload();
+                getter();
                 Object.setPrototypeOf(target, newValue);
                 return true;
             },
             has: function (_, property) {
-                tryload();
+                getter();
                 return property in target;
             },
             isExtensible: function (_) {
-                tryload();
+                getter();
                 return Object.isExtensible(target);
             },
             ownKeys: function (_) {
-                tryload();
+                getter();
                 return Reflect.ownKeys(target)?.filter(key => Object.getOwnPropertyDescriptor(target, key)?.configurable);
             },
             preventExtensions: function (_) {
-                tryload();
+                getter();
                 Object.preventExtensions(target);
                 return true;
             },
+
         });
+    }
+    function createJsObjectProxies(properties: { [key: string]: any }) {
+        let c2jsKeys = [];
+        for (let key of Object.keys(properties)) {
+            let val = properties[key];
+            if (val && val instanceof CS.XOR.TsComponent) {
+                properties[key] = convertToJsObejctProxy(val);
+                c2jsKeys.push(key);
+            }
+        }
+        return c2jsKeys;
     }
 
     export function getAccessorProperties(accessor: AccessorType) {
@@ -1072,27 +1096,38 @@ namespace utils {
 
         let properties = accessor.GetProperties();
         if (properties && properties.Length > 0) {
-            let isTsComponent = accessor instanceof CS.XOR.TsComponent;
             for (let i = 0; i < properties.Length; i++) {
                 let { key, value } = properties.get_Item(i);
                 if (value && value instanceof CS.System.Array) {
                     value = toArray(value);
-                }
-                if (isTsComponent && value instanceof CS.XOR.TsComponent) {
-                    value = proxy(value);
                 }
                 results[key] = value;
             }
         }
         return results;
     }
-    export function bindAccessor(object: object, accessor: AccessorUnionType, bind?: boolean) {
+    export function bindAccessor(object: object, accessor: AccessorUnionType, bind?: boolean): void;
+    export function bindAccessor(object: object, accessor: AccessorUnionType, options?: {
+        /**双向绑定key-value */
+        bind?: boolean;
+        /**XOR.TsComponent自动转js object */
+        convertToJsObejct?: boolean;
+    }): void;
+    export function bindAccessor() {
+        let object: object = arguments[0], accessor: AccessorUnionType = arguments[1], bind: boolean, c2js: boolean;
         if (!accessor)
             return;
+        switch (typeof (arguments[2])) {
+            case "boolean":
+                bind = arguments[2];
+                break;
+            case "object":
+                bind = arguments[2]?.bind;
+                c2js = arguments[2]?.convertToJsObejct;
+                break;
+        }
 
-        let list: AccessorType[] =
-            accessor instanceof CS.System.Array ? toArray(accessor) :
-                Array.isArray(accessor) ? accessor : [accessor];
+        let list: AccessorType[] = accessor instanceof CS.System.Array ? toArray(accessor) : Array.isArray(accessor) ? accessor : [accessor];
         for (let accessor of list) {
             if (!accessor || accessor.Equals(null))
                 continue;
@@ -1101,8 +1136,9 @@ namespace utils {
             if (keys.length === 0)
                 continue;
 
+            let c2jsKeys = c2js ? createJsObjectProxies(properties) : null;
             if (isEditor && bind) {
-                let set = (key: string, newValue: any) => {
+                let setValue = (key: string, newValue: any) => {
                     unwatch(properties[key]);
                     properties[key] = watch(newValue, () => {
                         accessor.SetProperty(key, Array.isArray(newValue) ? toCSharpArray(newValue) : newValue);
@@ -1112,17 +1148,19 @@ namespace utils {
                     if (newValue && newValue instanceof CS.System.Array) {
                         newValue = toArray(newValue);
                     }
-                    set(key, newValue);
+                    setValue(key, newValue);
                 });
                 for (let key of keys) {
                     if (key in object) {
                         console.warn(`Object ${object}(${object["name"]}) already exists prop '${key}' ---> ${object[key]}`);
                     }
-                    set(key, properties[key]);
+                    if (!c2jsKeys || !c2jsKeys.includes(key)) {
+                        setValue(key, properties[key]);
+                    }
                     Object.defineProperty(object, key, {
                         get: () => properties[key],
                         set: (newValue) => {
-                            set(key, newValue);
+                            setValue(key, newValue);
                             accessor.SetProperty(key, Array.isArray(newValue) ? toCSharpArray(newValue) : newValue);
                         },
                         configurable: true,
@@ -1186,6 +1224,7 @@ function register() {
     _g.xor = _g.xor || {};
     Object.assign(_g.xor, utils);
     Object.assign(TsBehaviourConstructor, utils);
+    _g.xor.Behaviour = BehaviourConstructor;
     _g.xor.TsBehaviour = TsBehaviourConstructor;
 }
 register();
@@ -1193,6 +1232,8 @@ register();
 /**接口声明 */
 declare global {
     namespace xor {
+        abstract class Behaviour extends BehaviourConstructor { }
+
         class TsBehaviour extends TsBehaviourConstructor { }
         /**兼容以前的声明 */
         namespace TsBehaviour {

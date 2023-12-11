@@ -970,24 +970,10 @@ namespace XOR.Serializables.TsComponent
     {
         protected override void RenderValue()
         {
-            if (IsTsReferenceType(Node.ExplicitValueType))
+            if (IsTsReferenceType(Node, Node.ExplicitValueType))
             {
-                var value = Node.ValueNode.objectReferenceValue as XOR.TsComponent;
-                if (value != null && !IsTsReferenceTarget(value))
-                {
-                    value = null;
-                    Dirty |= true;
-                }
-                var newValue = EditorGUILayout.ObjectField(string.Empty, value, typeof(XOR.TsComponent), true) as XOR.TsComponent;
-                if (newValue != null && !IsTsReferenceTarget(newValue))
-                {
-                    newValue = value;
-                }
-                if (newValue != value || Dirty)
-                {
-                    Node.ValueNode.objectReferenceValue = newValue;
-                    Dirty |= true;
-                }
+                bool dirty = RenderTsReferenceValue(Node, Node.ValueNode);
+                Dirty |= dirty;
             }
             else
             {
@@ -999,16 +985,36 @@ namespace XOR.Serializables.TsComponent
                 }
             }
         }
-
-        protected virtual bool IsTsReferenceType(Type type)
+        public static bool RenderTsReferenceValue(NodeWrap nw, SerializedProperty node)
+        {
+            bool dirty = false;
+            var value = node.objectReferenceValue as XOR.TsComponent;
+            if (value != null && !IsTsReferenceTarget(nw, value))
+            {
+                value = null;
+                dirty |= true;
+            }
+            var newValue = EditorGUILayout.ObjectField(string.Empty, value, typeof(XOR.TsComponent), true) as XOR.TsComponent;
+            if (newValue != null && !IsTsReferenceTarget(nw, newValue))
+            {
+                newValue = value;
+            }
+            if (newValue != value || dirty)
+            {
+                node.objectReferenceValue = newValue;
+                dirty |= true;
+            }
+            return dirty;
+        }
+        public static bool IsTsReferenceType(NodeWrap nw, Type type)
         {
             return type == typeof(XOR.TsComponent) &&
-                Node.ExplicitValueReferences != null &&
-                Node.ExplicitValueReferences.Count > 0;
+                nw.ExplicitValueReferences != null &&
+                nw.ExplicitValueReferences.Count > 0;
         }
-        protected virtual bool IsTsReferenceTarget(XOR.TsComponent component)
+        public static bool IsTsReferenceTarget(NodeWrap nw, XOR.TsComponent component)
         {
-            return Node.ExplicitValueReferences.ContainsKey(component.Guid);
+            return nw.ExplicitValueReferences.ContainsKey(component.Guid);
         }
     }
 
@@ -1107,6 +1113,11 @@ namespace XOR.Serializables.TsComponent
     {
         protected override void RenderMemberValue(SerializedProperty node, Type type)
         {
+            if (ObjectRenderer.IsTsReferenceType(Node, type))
+            {
+                bool dirty = ObjectRenderer.RenderTsReferenceValue(Node, node);
+                Dirty |= dirty;
+            }
             var newValue = EditorGUILayout.ObjectField(string.Empty, node.objectReferenceValue, type, true);
             if (newValue != node.objectReferenceValue)
             {

@@ -3446,7 +3446,7 @@ declare namespace CS {
             GetTsComponents(): System.Array$1<Puerts.JSObject>;
             GetTsComponent($guid: string): Puerts.JSObject;
             AddTsComponent($guid: string): Puerts.JSObject;
-            AddTsComponent($guid: string, $jsObject: Puerts.JSObject): void;
+            AddTsComponent($guid: string, $jsObject: Puerts.JSObject): XOR.TsComponent;
         }
         /** Store a collection of Keyframes that can be evaluated over time.
         */
@@ -26548,6 +26548,7 @@ declare namespace CS {
             public get Guid(): string;
             public get Route(): string;
             public get Path(): string;
+            public get IsPending(): boolean;
             public GetProperties(): System.Array$1<XOR.Serializables.ResultPair>
             public SetProperty($key: string, $value: any): void
             public SetPropertyListener($handler: System.Action$2<string, any>): void
@@ -26555,6 +26556,8 @@ declare namespace CS {
             public static PrintStatus(): void
             public static Register($env: Puerts.JsEnv): void
             public static Unregister(): void
+            public static IsRegistered(): boolean
+            public static Resolve($component: XOR.TsComponent, $force?: boolean): void
             public constructor()
         }
         class Application extends XOR.SingletonMonoBehaviour$1<XOR.Application>

@@ -43,15 +43,16 @@ namespace XOR
             component.Guid = guid;
             if (component.Registered)
             {
-                TsComponentLifecycle.UpdateComponent(component);
+                TsComponentLifecycle.Resolve(component, false);
             }
             return component.JSObject;
         }
-        public static void AddTsComponent(this GameObject gameObject, string guid, Puerts.JSObject jsObject)
+        public static TsComponent AddTsComponent(this GameObject gameObject, string guid, Puerts.JSObject jsObject)
         {
             TsComponent component = gameObject.AddComponent<TsComponent>();
             component.Guid = guid;
             component.JSObject = jsObject;
+            return component;
         }
     }
 }

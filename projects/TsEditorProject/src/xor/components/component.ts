@@ -27,14 +27,65 @@ type FieldOptions = NumberConstructor | Partial<{
     value: any;
 }>;
 
-class TsComponentConstructor extends xor.TsBehaviour {
-    constructor(component: CS.XOR.TsComponent, created?: (thisArg: object) => void) {
-        super(component, {
-            accessor: component instanceof CS.XOR.TsComponent ? component : false,
-            before: created ? function () {
-                created(this);
-            } : null,
-        });
+class TsComponentConstructor extends xor.Behaviour {
+    private __transform__: Transform;
+    private __gameObject__: GameObject;
+    private __component__: CS.XOR.TsComponent;
+    //--------------------------------------------------------
+    public get transform(): Transform {
+        return this.__transform__;
+    }
+    public get gameObject(): GameObject {
+        return this.__gameObject__;
+    }
+    protected get component(): XOR.TsBehaviour {
+        return this.__component__;
+    }
+
+    constructor(object: GameObject | CS.XOR.TsComponent) {
+        super();
+
+        let gameObject: GameObject;
+        if (object instanceof CS.XOR.TsBehaviour) {
+            gameObject = object.gameObject;
+            this.__component__ = object;
+        }
+        else {
+            gameObject = object;
+        }
+        this.__gameObject__ = gameObject;
+        this.__transform__ = gameObject.transform;
+    }
+
+    protected disponse() {
+        this.__gameObject__ = undefined;
+        this.__transform__ = undefined;
+        this.__component__ = undefined;
+    }
+
+    private bindAll() {
+        if (this.__component__) {
+            xor.bindAccessor(this, this.__component__, {
+                bind: true,
+                convertToJsObejct: true,
+            });
+        }
+        //call constructor
+        let onctor: Function = this["onConstructor"];
+        if (onctor && typeof (onctor) === "function") {
+            try {
+                onctor.apply(this);
+            }
+            catch (e) {
+                console.error(e.message + "\n" + e.stack);
+            }
+        }
+
+        //bind methods
+        this.bindProxies();
+        this.bindUpdateProxies();
+        this.bindListeners();
+        this.bindModuleInEditor();
     }
 }
 
@@ -87,45 +138,8 @@ function register() {
 }
 register();
 
-/**接口声明 */
-declare global {
-    namespace xor {
-        class TsComponent extends TsComponentConstructor { }
-        /**定义组件guid(全局唯一性)
-         * @param guid 
-         * @example
-         * ```
-         * //⚠⚠⚠警告: 此语句由xor生成和管理, 且与class声明绑定, 用户不应该手动创建丶修改丶移动或删除
-         * \@xor.guid('global uniqure identifier')
-         * export class Example extends xor.TsComponent{
-         *      //......
-         * }
-         * ```
-         */
-        function guid(guid: string): ClassDecorator;
-        /**定义组件别名(后续可由此名称Get/Add TsComponent)
-         * @param path 
-         * @example
-         * ```
-         * //⚠⚠⚠警告: 此语句由xor生成和管理, 且与class声明绑定, 用户不应该手动创建丶修改丶移动或删除
-         * \@xor.route('global unique arbitrary string')
-         * export class Example extends xor.TsComponent{
-         *      //......
-         * }
-         * ```
-         */
-        function route(path: string): ClassDecorator;
-        /**定义序列化字段
-         * @example
-         * ```
-         * ```
-         * @param options 
-         */
-        function field(options?: FieldOptions): PropertyDecorator;
-    }
-}
-/**重写GetComponent事件, 用于获取 */
-function overrideGetComponent() {
+/**重写GetComponent/AddComponent事件 */
+function overrideMethods() {
     function createGetComponent(original: Function) {
         return function (this: CS.UnityEngine.GameObject | CS.UnityEngine.Component) {
             let ctor: any = arguments[0];
@@ -165,8 +179,10 @@ function overrideGetComponent() {
             if (typeof (ctor) === "function") {
                 if (ctor.prototype instanceof TsComponentConstructor) {
                     let guid = utils.getGuid(ctor) || utils.dynamic(ctor),
-                        obj = new ctor(this);
-                    this.AddTsComponent(guid, obj);
+                        obj: TsComponentConstructor = new ctor(this);
+                    let component = this.AddTsComponent(guid, obj);
+                    obj["__component__"] = component;
+                    obj["bindAll"]();
                     return obj;
                 }
                 if (ctor.prototype instanceof CS.UnityEngine.Component) {
@@ -186,9 +202,45 @@ function overrideGetComponent() {
     GameObject.prototype.GetComponents = createGetComponents(GameObject.prototype.GetComponents);
     GameObject.prototype.AddComponent = createAddComponent(GameObject.prototype.AddComponent);
 }
-overrideGetComponent();
+overrideMethods();
 
-/**重写GetComponent事件, 用于获取 */
+/**接口声明 */
+declare global {
+    namespace xor {
+        class TsComponent extends TsComponentConstructor { }
+        /**定义组件guid(全局唯一性)
+         * @param guid 
+         * @example
+         * ```
+         * //⚠⚠⚠警告: 此语句由xor生成和管理, 且与class声明绑定, 用户不应该手动创建丶修改丶移动或删除
+         * \@xor.guid('global uniqure identifier')
+         * export class Example extends xor.TsComponent{
+         *      //......
+         * }
+         * ```
+         */
+        function guid(guid: string): ClassDecorator;
+        /**定义组件别名(后续可由此名称Get/Add TsComponent)
+         * @param path 
+         * @example
+         * ```
+         * //⚠⚠⚠警告: 此语句由xor生成和管理, 且与class声明绑定, 用户不应该手动创建丶修改丶移动或删除
+         * \@xor.route('global unique arbitrary string')
+         * export class Example extends xor.TsComponent{
+         *      //......
+         * }
+         * ```
+         */
+        function route(path: string): ClassDecorator;
+        /**定义序列化字段
+         * @example
+         * ```
+         * ```
+         * @param options 
+         */
+        function field(options?: FieldOptions): PropertyDecorator;
+    }
+}
 declare module "csharp" {
     namespace UnityEngine {
         interface GameObject {
@@ -209,13 +261,12 @@ declare module "csharp" {
 export function create(component: CS.XOR.TsComponent, guid: string, created?: CS.System.Action$2<CS.XOR.TsComponent, object>): TsComponentConstructor {
     let ctor = guid ? utils.getConstructor(guid) : null;
     if (ctor && typeof (ctor) === "function") {
+        let obj: TsComponentConstructor = new ctor(component);
         if (created) {
-            return new ctor(component, (obj: object) => {
-                created?.Invoke(component, obj);
-            });
-        } else {
-            return new ctor(component);
+            created.Invoke(component, obj);
         }
+        obj["bindAll"]();
+        return obj;
     }
     return null;
 }

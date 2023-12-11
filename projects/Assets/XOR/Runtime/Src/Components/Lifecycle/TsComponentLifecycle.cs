@@ -36,19 +36,27 @@ namespace XOR
         {
             runtime = null;
         }
+        public static bool IsRegistered()
+        {
+            return runtime != null && runtime.IsAlive;
+        }
 
         public static WeakReference<GameObject> GetReference(GameObject gameObject)
         {
             return GetReference(gameObject, true);
         }
-        public static void UpdateComponent(TsComponent component)
+
+        public static void Resolve(TsComponent component, bool force = false)
         {
             if (runtime != null && runtime.IsAlive)
             {
+                pending.Remove(component);
                 CreateJSObject(component);
             }
             else
             {
+                if (force)
+                    throw new InvalidOperationException("Invalid ");
                 pending.Add(component);
             }
         }

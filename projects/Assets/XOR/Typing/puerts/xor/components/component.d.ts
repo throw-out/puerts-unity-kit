@@ -1,3 +1,6 @@
+import XOR = CS.XOR;
+import Transform = CS.UnityEngine.Transform;
+import GameObject = CS.UnityEngine.GameObject;
 type ConstructorType<T> = Function & {
     prototype: T;
 };
@@ -14,8 +17,16 @@ type FieldOptions = NumberConstructor | Partial<{
      */
     value: any;
 }>;
-declare class TsComponentConstructor extends xor.TsBehaviour {
-    constructor(component: CS.XOR.TsComponent, created?: (thisArg: object) => void);
+declare class TsComponentConstructor extends xor.Behaviour {
+    private __transform__;
+    private __gameObject__;
+    private __component__;
+    get transform(): Transform;
+    get gameObject(): GameObject;
+    protected get component(): XOR.TsBehaviour;
+    constructor(object: GameObject | CS.XOR.TsComponent);
+    protected disponse(): void;
+    private bindAll;
 }
 /**接口声明 */
 declare global {
@@ -55,7 +66,6 @@ declare global {
         function field(options?: FieldOptions): PropertyDecorator;
     }
 }
-/**重写GetComponent事件, 用于获取 */
 declare module "csharp" {
     namespace UnityEngine {
         interface GameObject {

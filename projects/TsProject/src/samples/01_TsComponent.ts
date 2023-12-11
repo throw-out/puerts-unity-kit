@@ -187,7 +187,7 @@ export class Sample07 extends xor.TsComponent {
 class Sample10 extends xor.TsComponent {
     public value: number;
 }
-
+console.log(`=================${Sample10.name}====================`);
 let sample7GO = new GameObject(Sample10.name);
 console.log(`GetComponent: ${Sample10.name}.value = ${sample7GO.GetComponent(Sample10)?.value}`);
 

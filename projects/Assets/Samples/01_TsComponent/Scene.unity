@@ -38,7 +38,7 @@ RenderSettings:
   m_ReflectionIntensity: 1
   m_CustomReflection: {fileID: 0}
   m_Sun: {fileID: 0}
-  m_IndirectSpecularColor: {r: 0.44657874, g: 0.49641258, b: 0.5748172, a: 1}
+  m_IndirectSpecularColor: {r: 0.44657874, g: 0.49641275, b: 0.5748171, a: 1}
   m_UseRadianceAmbientProbe: 0
 --- !u!157 &3
 LightmapSettings:
@@ -237,7 +237,7 @@ MonoBehaviour:
   guid: 7984a4b8-de57-4af6-a572-6c159bc6dce3
   route: 
   path: samples/01_TsComponent
-  version: 01CE398C18ABFD0B7AFD1BAD56784FA45A293C9675230498569802F9E5FCEAEE
+  version: 3DA9F15355283750898C01F5ED7B5ACF31A336005F9757F79E8E20DABF36F78B
   StringPairs: []
   NumberPairs:
   - index: 0
@@ -305,7 +305,7 @@ MonoBehaviour:
   guid: 30641f2f-bdeb-436e-8586-349ee2323a15
   route: 
   path: samples/01_TsComponent
-  version: B9B3459454EBBA7F6CFA4FE594252E62EA75A72111572361774EE02495811EAE
+  version: A802D80ADC42CF3C9FF6A07F5E85F16C2AFCF83D226DD461D2D9D5048EED0DE2
   StringPairs: []
   NumberPairs: []
   BigintPairs: []
@@ -327,10 +327,10 @@ MonoBehaviour:
     value: {fileID: 1802207627}
   - index: 4
     key: _sample10
-    value: {fileID: 795054123}
+    value: {fileID: 0}
   - index: 5
     key: _sample11
-    value: {fileID: 932571937}
+    value: {fileID: 0}
   StringArrayPairs: []
   NumberArrayPairs: []
   BigintArrayPairs: []
@@ -341,8 +341,8 @@ MonoBehaviour:
   - index: 6
     key: _sampleList
     value:
-    - {fileID: 0}
-    - {fileID: 0}
+    - {fileID: 795054123}
+    - {fileID: 932571937}
 --- !u!4 &1135157790
 Transform:
   m_ObjectHideFlags: 0
@@ -393,11 +393,11 @@ MonoBehaviour:
   guid: e1cb6fde-b4dd-4fba-b08d-aed2f2bea1f2
   route: 
   path: samples/01_TsComponent
-  version: 347EA5185F94034CAD113EBB7F6BAA2286B60F5AB2B2B0A4DE4181F83283A03A
+  version: 10AC0C4C0C818E5BDCA23C275C5332336E07E43A20FD8CC1E4254893B5D1D09A
   StringPairs:
   - index: 0
     key: _prop1
-    value: 
+    value: string message
   NumberPairs:
   - index: 1
     key: _prop2
@@ -801,7 +801,7 @@ MonoBehaviour:
   guid: a071b597-ff11-420a-b7d5-cd586ee4b1a1
   route: 
   path: samples/01_TsComponent
-  version: 45F2BBE735FA121FAF8F1DD1A5E0D70690881F7898E769B4F1F8625655384456
+  version: 3FAB41D34EBA5A4174934ACF676DCD4FC80E2254761021A7B7C9F8F902685FBB
   StringPairs: []
   NumberPairs: []
   BigintPairs: []
