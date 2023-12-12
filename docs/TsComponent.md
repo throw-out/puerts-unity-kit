@@ -90,5 +90,20 @@
 
 ![image](https://user-images.githubusercontent.com/45587825/216810151-6f5d8d6d-c51e-49b3-a976-92d167202d82.png)
 
+## ts引用类型绑定
+> //这里的_sample01,_sample03和_sample04是Proxy对象, 不可直接通过'==='进行判断.
+> //调用xxx.valueOf() 获取原始js对象
+> ```typescript
+> let isSample01 = this._sample04?.valueOf() === this._sample01?.valueOf();
+> let isSample03 = this._sample04?.valueOf() === this._sample03?.valueOf();
+> console.log(`this._sample04: is sample01 = ${isSample01},  is sample03 = ${isSample03}`);
+> ```
+![image](https://github.com/throw-out/puerts-unity-kit/assets/45587825/2f6366cf-d506-4c4b-a00f-205adbc5690f)
+
+## 运行时方法(AddComponent/GetComponent)
+![image](https://github.com/throw-out/puerts-unity-kit/assets/45587825/0fa391aa-642b-4cb0-a8a1-a313a2075ab6)
+输出打印如下:
+![image](https://github.com/throw-out/puerts-unity-kit/assets/45587825/8dfb795b-1d60-47fe-93c2-773552eecd2c)
+
 ## UGUI事件绑定
  请查看[UGUI页面](./TsComponentBindUGUIEvents.md)
