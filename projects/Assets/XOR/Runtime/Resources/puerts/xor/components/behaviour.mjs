@@ -721,6 +721,7 @@ var utils;
             return;
         delete obj[WatchFlag];
     }
+    const OriginFlag = Symbol("--origin--");
     function convertToJsObejctProxy(component) {
         if (!component || !component.Guid)
             return undefined;
@@ -747,6 +748,8 @@ var utils;
             },
             get: function (_, property) {
                 getter();
+                if (property === OriginFlag && target)
+                    return target;
                 return target[property];
             },
             set: function (_, property, newValue) {
@@ -803,6 +806,13 @@ var utils;
             if (val && val instanceof CS.XOR.TsComponent) {
                 properties[key] = convertToJsObejctProxy(val);
                 c2jsKeys.push(key);
+            }
+            else if (val && Array.isArray(val)) {
+                for (let i = 0; i < val.length; i++) {
+                    if (val[i] && val[i] instanceof CS.XOR.TsComponent) {
+                        val[i] = convertToJsObejctProxy(val[i]);
+                    }
+                }
             }
         }
         return c2jsKeys;
@@ -880,6 +890,12 @@ var utils;
         }
     }
     utils.bindAccessor = bindAccessor;
+    function getAccessorPropertyOrigin(val) {
+        if (!val || typeof (val) !== "object")
+            return val;
+        return val[OriginFlag] ?? val;
+    }
+    utils.getAccessorPropertyOrigin = getAccessorPropertyOrigin;
     function standalone() {
         return (target, key) => {
             let proto = target.constructor.prototype;

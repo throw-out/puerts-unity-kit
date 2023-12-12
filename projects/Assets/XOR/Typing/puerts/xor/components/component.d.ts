@@ -27,6 +27,11 @@ declare class TsComponentConstructor extends xor.Behaviour {
     constructor(object: GameObject | CS.XOR.TsComponent);
     protected disponse(): void;
     private bindAll;
+    /**xor.TsComponent作为序列化类型时, bindAccessor绑定的是Proxy对象, 在访问它时才会获取实际的js对象.
+     * 如果直接使用"==="比较同一个序列化对象(xor.TsComponent), 它将返回false. 此方法提供访问原始js对象.
+     * @returns
+     */
+    valueOf(): this;
 }
 /**接口声明 */
 declare global {

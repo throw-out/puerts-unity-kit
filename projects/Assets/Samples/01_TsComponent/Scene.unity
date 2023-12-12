@@ -172,7 +172,7 @@ MonoBehaviour:
   guid: 36102130-2db9-4d62-9221-98c51c3c138c
   route: 
   path: samples/01_TsComponent
-  version: 4969A2E55E482A200A2085373AB33219554436CF92872B6D38DA87B6CC907174
+  version: F19ECBB4527D40924AD84BDDF2D90223FB1EB69F8DE3401819CC99A811319089
   StringPairs: []
   NumberPairs: []
   BigintPairs: []
@@ -305,7 +305,7 @@ MonoBehaviour:
   guid: 30641f2f-bdeb-436e-8586-349ee2323a15
   route: 
   path: samples/01_TsComponent
-  version: A802D80ADC42CF3C9FF6A07F5E85F16C2AFCF83D226DD461D2D9D5048EED0DE2
+  version: 85750CB09FD9ED15383D0BA64105A8263EDDF71D91ACD201E360537D2ED92148
   StringPairs: []
   NumberPairs: []
   BigintPairs: []
@@ -322,15 +322,15 @@ MonoBehaviour:
   - index: 2
     key: _sample03
     value: {fileID: 1773476213}
-  - index: 3
-    key: _sample04
-    value: {fileID: 1802207627}
   - index: 4
     key: _sample10
     value: {fileID: 0}
   - index: 5
     key: _sample11
     value: {fileID: 0}
+  - index: 3
+    key: _sample04
+    value: {fileID: 1773476213}
   StringArrayPairs: []
   NumberArrayPairs: []
   BigintArrayPairs: []
@@ -339,10 +339,17 @@ MonoBehaviour:
   Vector3ArrayPairs: []
   ObjectArrayPairs:
   - index: 6
-    key: _sampleList
+    key: _list1
+    value: []
+  - index: 7
+    key: _list2
     value:
-    - {fileID: 795054123}
-    - {fileID: 932571937}
+    - {fileID: 1138852626}
+  - index: 8
+    key: _list3
+    value:
+    - {fileID: 1138852626}
+    - {fileID: 1773476213}
 --- !u!4 &1135157790
 Transform:
   m_ObjectHideFlags: 0
@@ -617,7 +624,7 @@ MonoBehaviour:
   guid: d2ea683a-0e55-41a2-b837-b7e7c2a1fee4
   route: 
   path: samples/01_TsComponent
-  version: 64E93B396F7D5C46757758EF68DC865A78D794E93DC35C8A279666B3E23BB851
+  version: 9999703C0C983CECBAC67C116CD7D8CE03C8CB0E4CF7F1B656A3D13AF65454C9
   StringPairs:
   - index: 3
     key: _prop4
@@ -708,7 +715,7 @@ MonoBehaviour:
   guid: 70292285-10d5-44e0-9031-e12b14a05d15
   route: 
   path: samples/01_TsComponent
-  version: 10382742ABF3A153A47927B1E5C2A453A10B89A3D04A019AA392CE4F81FDDEF8
+  version: D2D9839E8026B34C6505F20EF96CCF5611DB2FC0507EC498A30BD13F3662FF27
   StringPairs:
   - index: 1
     key: _prop2

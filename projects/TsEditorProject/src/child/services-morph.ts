@@ -378,9 +378,6 @@ export class Program {
             ctd.module = moduleName || filePath || "<global>";
             ctd.path = filePath;
             ctd.line = node.getStartLineNumber();       //计算文件所在行
-            if (ctd.name.includes("Sample07")) {
-                debugger;
-            }
             //成员声明
             let properties = this.getExportProperties(node);
             if (properties && properties.size > 0) {
@@ -421,7 +418,7 @@ export class Program {
                     for (let method of ms) {
                         let parameterTypes = method.getParameters()
                             .map(p => util.toCSharpTypeByTypeNode(p.getTypeNode()));
-                        if (parameterTypes.findIndex(t => !t) >= 0) {
+                        if (parameterTypes.some(t => !t)) {
                             continue;
                         }
 
@@ -971,16 +968,29 @@ const util = new class {
             }
         }
         else if (_node.isKind(tsm.SyntaxKind.UnionType)) {
-            let members: Array<number | string> = _node.getTypeNodes().map(n => {
-                if (n.isKind(tsm.SyntaxKind.LiteralType)) {
-                    return this.getExpressionValue(n.getLiteral());
+            let typeNodes = _node.getTypeNodes();
+            //如果是基础数据类型: string, number, bigint, boolean
+            if (typeNodes.every(n => n.isKind(tsm.SyntaxKind.LiteralType))) {
+                let members: Array<number | string> = typeNodes.map(n => this.getExpressionValue((<tsm.LiteralTypeNode>n).getLiteral()));
+                let ce = this.toCSharpEnumerable(members.map(value => ({ name: `${value}`, value })));
+                if (ce) {
+                    enumerable = ce.enumerable;
+                    type = ce.type;
                 }
-                return null;
-            });
-            let ce = this.toCSharpEnumerable(members.map(value => ({ name: `${value}`, value })));
-            if (ce) {
-                enumerable = ce.enumerable;
-                type = ce.type;
+            }
+            //如果是XOR.TsComponent声明
+            else {
+                references = new Map();
+                typeNodes.forEach(n => {
+                    let _node = this.getDeclaration(n);
+                    if (!_node || !_node.isKind(tsm.SyntaxKind.ClassDeclaration) || !this.isInheritTsComponent(_node))
+                        return;
+                    let guid = this.getGuidDecorator(_node);
+                    if (guid || this.isTsComponent(_node)) {
+                        type ??= puerts.$typeof(csharp.XOR.TsComponent);
+                        references.set(guid, _node.getName());
+                    }
+                });
             }
         }
         else if (_node.isKind(tsm.SyntaxKind.EnumDeclaration)) {

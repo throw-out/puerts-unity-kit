@@ -152,11 +152,13 @@ export class Sample07 extends xor.TsComponent {
     declare private _sample01: Sample01;
     declare private _sample02: Sample02;
     declare private _sample03: Sample03;
-    declare private _sample04: Sample04;
+    declare private _sample04: Sample01 | Sample03;
 
     declare private _sample10: xor.TsComponent;
     declare private _sample11: CS.XOR.TsComponent;
-    declare private _sampleList: xor.TsComponent[];
+    declare private _list1: xor.TsComponent[];
+    declare private _list2: Array<Sample01>;
+    declare private _list3: Array<Sample01 | Sample03>;
 
     protected Awake(): void {
         console.log(`=================${Sample07.name}====================`);
@@ -164,10 +166,15 @@ export class Sample07 extends xor.TsComponent {
         console.log(`this._sample02._prop1.length = ${this._sample02?.prop1?.length}`);
         console.log(`this._sample03._prop1 = ${this._sample03?.prop1}`);
         console.log(`this._sample04._prop1 = ${this._sample04?.prop1}`);
+        //这里的_sample01,_sample03和_sample04是Proxy对象, 不可直接通过'==='进行判断.
+        //调用xxx.valueOf() 获取原始js对象
+        console.log(`this._sample04: is sample01 = ${this._sample04?.valueOf() === this._sample01?.valueOf()},  is sample03 = ${this._sample04?.valueOf() === this._sample03?.valueOf()}`);
 
-        console.log(`this._sample10.name = ${this.getName(this._sampleList)}`);
+        console.log(`this._sample10.name = ${this.getName(this._list1)}`);
         console.log(`this._sample11.name = ${this.getName(this._sample11)}`);
-        console.log(`this._sampleList.length = ${this._sampleList?.length}, memebrs = ${this._sampleList?.map(s => this.getName(s)).join(", ")}`);
+        console.log(`this._list1.length = ${this._list1?.length}, memebrs = ${this._list1?.map(s => this.getName(s)).join(", ")}`);
+        console.log(`this._list2.length = ${this._list2?.length}, memebrs = ${this._list2?.map(s => this.getName(s)).join(", ")}`);
+        console.log(`this._list3.length = ${this._list3?.length}, memebrs = ${this._list3?.map(s => this.getName(s)).join(", ")}`);
     }
 
     private getName(obj: object) {

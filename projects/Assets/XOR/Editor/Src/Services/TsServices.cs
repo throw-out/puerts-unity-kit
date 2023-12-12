@@ -324,7 +324,7 @@ namespace XOR.Services
                         foreach (var e in this.valueEnum)
                         {
                             builder.AppendLine();
-                            builder.AppendFormat("\t[{0}]", e.Key);
+                            builder.AppendFormat("\t[value = {0}]", e.Key);
                         }
                     }
                     else
@@ -332,7 +332,7 @@ namespace XOR.Services
                         foreach (var e in this.valueEnum)
                         {
                             builder.AppendLine();
-                            builder.AppendFormat("\t[{0}, {1}]", e.Key, e.Value);
+                            builder.AppendFormat("\t[key = {0}, value = {1}]", e.Key, e.Value);
                         }
                     }
                 }
@@ -343,7 +343,7 @@ namespace XOR.Services
                     foreach (var e in this.valueReferences)
                     {
                         builder.AppendLine();
-                        builder.AppendFormat("\t[{0}, {1}]", e.Key, e.Value);
+                        builder.AppendFormat("  [name = {0}, guid = {1}]", e.Value, e.Key);
                     }
                 }
                 if (this.defaultValue != null)

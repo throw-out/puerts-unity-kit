@@ -531,6 +531,12 @@ namespace XOR.Serializables
         {
             return XOR.Serializables.Convert.GetCastAssignableValue(element.ValueType, value);
         }
+
+        public static bool IsTsReferenceType(Type type)
+        {
+            return type == typeof(XOR.TsComponent);
+        }
+
         static readonly HashSet<Type> IntegerTypes = new HashSet<Type>()
         {
             typeof(byte),
@@ -972,8 +978,7 @@ namespace XOR.Serializables.TsComponent
         {
             if (IsTsReferenceType(Node, Node.ExplicitValueType))
             {
-                bool dirty = RenderTsReferenceValue(Node, Node.ValueNode);
-                Dirty |= dirty;
+                Dirty = RenderTsReferenceValue(Node, Node.ValueNode) || Dirty;
             }
             else
             {
@@ -1115,14 +1120,16 @@ namespace XOR.Serializables.TsComponent
         {
             if (ObjectRenderer.IsTsReferenceType(Node, type))
             {
-                bool dirty = ObjectRenderer.RenderTsReferenceValue(Node, node);
-                Dirty |= dirty;
+                Dirty = ObjectRenderer.RenderTsReferenceValue(Node, node) || Dirty;
             }
-            var newValue = EditorGUILayout.ObjectField(string.Empty, node.objectReferenceValue, type, true);
-            if (newValue != node.objectReferenceValue)
+            else
             {
-                node.objectReferenceValue = newValue;
-                Dirty |= true;
+                var newValue = EditorGUILayout.ObjectField(string.Empty, node.objectReferenceValue, type, true);
+                if (newValue != node.objectReferenceValue)
+                {
+                    node.objectReferenceValue = newValue;
+                    Dirty |= true;
+                }
             }
         }
     }

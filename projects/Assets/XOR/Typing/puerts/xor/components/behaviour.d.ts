@@ -326,6 +326,7 @@ declare namespace utils {
         /**XOR.TsComponent自动转js object */
         convertToJsObejct?: boolean;
     }): void;
+    function getAccessorPropertyOrigin(val: object): any;
     function standalone(): PropertyDecorator;
     function frameskip(value: number): PropertyDecorator;
     function throttle(enable: boolean): PropertyDecorator;
@@ -361,6 +362,8 @@ declare global {
          * @param bind       运行时绑定
          */
         const bindAccessor: typeof utils.bindAccessor;
+        /**获取序列化Ts类型的原始对象 */
+        const getAccessorPropertyOrigin: typeof utils.getAccessorPropertyOrigin;
         /**以独立组件的方式调用
          * 适用于Update丶LateUpdate和FixedUpdate方法, 默认以BatchProxy管理调用以满足更高性能要求
          * @returns

@@ -1004,6 +1004,8 @@ namespace utils {
             return;
         delete obj[WatchFlag];
     }
+
+    const OriginFlag = Symbol("--origin--");
     function convertToJsObejctProxy(component: CS.XOR.TsComponent) {
         if (!component || !component.Guid)
             return undefined;
@@ -1029,6 +1031,8 @@ namespace utils {
             },
             get: function (_, property) {
                 getter();
+                if (property === OriginFlag && target)
+                    return target;
                 return target[property];
             },
             set: function (_, property, newValue) {
@@ -1086,6 +1090,13 @@ namespace utils {
             if (val && val instanceof CS.XOR.TsComponent) {
                 properties[key] = convertToJsObejctProxy(val);
                 c2jsKeys.push(key);
+            }
+            else if (val && Array.isArray(val)) {
+                for (let i = 0; i < val.length; i++) {
+                    if (val[i] && val[i] instanceof CS.XOR.TsComponent) {
+                        val[i] = convertToJsObejctProxy(val[i]);
+                    }
+                }
             }
         }
         return c2jsKeys;
@@ -1173,6 +1184,12 @@ namespace utils {
             }
         }
     }
+    export function getAccessorPropertyOrigin(val: object) {
+        if (!val || typeof (val) !== "object")
+            return val;
+        return val[OriginFlag] ?? val;
+    }
+
     export function standalone(): PropertyDecorator {
         return (target, key: string) => {
             let proto = target.constructor.prototype;
@@ -1259,6 +1276,8 @@ declare global {
          * @param bind       运行时绑定
          */
         const bindAccessor: typeof utils.bindAccessor;
+        /**获取序列化Ts类型的原始对象 */
+        const getAccessorPropertyOrigin: typeof utils.getAccessorPropertyOrigin;
         /**以独立组件的方式调用
          * 适用于Update丶LateUpdate和FixedUpdate方法, 默认以BatchProxy管理调用以满足更高性能要求
          * @returns 
