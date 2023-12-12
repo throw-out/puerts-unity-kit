@@ -55,7 +55,7 @@ namespace XOR
             }
             program = EditorApplicationUtil.GetProgram();
             statement = program?.GetStatement(TsComponentHelper.Guid.Get(component));
-            if (statement != null && !TsComponentHelper.IsSynchronized(statement, component))
+            if (statement != null && !TsComponentHelper.IsSynchronized(component, statement))
             {
                 TsComponentHelper.RebuildProperties(component, statement);
             }
@@ -260,7 +260,7 @@ namespace XOR
             }
             return path;
         }
-        public static bool IsSynchronized(Statement statement, TsComponent component)
+        public static bool IsSynchronized(TsComponent component, Statement statement)
         {
             return statement.version == TsComponentHelper.Version.Get(component) &&
                 TsComponentHelper.GetComponentPath(statement) == TsComponentHelper.Path.Get(component);
@@ -283,6 +283,7 @@ namespace XOR
                         nw.ExplicitValueType = property.valueType;
                         nw.ExplicitValueRange = property.valueRange;
                         nw.ExplicitValueEnum = property.valueEnum;
+                        nw.ExplicitValueReferences = property.valueReferences;
                         nw.Tooltip = property.BuildTooltip();
                     }
                     outputNodes.Add(nw);
@@ -388,6 +389,55 @@ namespace XOR
             TsComponentHelper.Version.Set(component, default);
             TsComponentHelper.SetDirty(component);
         }
+        public static bool RebuildTsReferenceProperties(TsComponent component, Statement statement)
+        {
+            if (statement == null || !(statement is TypeDeclaration))
+                return false;
+
+            ComponentWrap<TsComponent> cw = ComponentWrap<TsComponent>.Create();
+            Dictionary<string, IPair> properties = cw.GetProperties(component)?.ToDictionary(pair => pair.Key);
+            if (properties == null)
+                return false;
+
+            bool dirty = false;
+            TypeDeclaration type = (TypeDeclaration)statement;
+            foreach (var property in type.Properties.Values)
+            {
+                var valueReferences = property.valueReferences;
+                if (valueReferences == null || valueReferences.Count == 0)
+                    continue;
+                var valueType = property.valueType;
+                if (!XOR.Serializables.Utility.IsTsReferenceType(valueType.IsArray ? valueType.GetElementType() : valueType))
+                    continue;
+                IPair current = null;
+                if (!properties.TryGetValue(property.name, out current) || current.Value == null)
+                    continue;
+
+                if (valueType.IsArray)
+                {
+                    var array = current.Value as XOR.TsComponent[];
+                    if (array == null)
+                        continue;
+                    for (int i = 0; i < array.Length; i++)
+                    {
+                        if (array[i] == null || valueReferences.ContainsKey(array[i].Guid))
+                            continue;
+                        dirty |= true;
+                        array[i] = null;
+                    }
+                }
+                else
+                {
+                    var value = current.Value as XOR.TsComponent;
+                    if (value == null || valueReferences.ContainsKey(value.Guid))
+                        continue;
+                    dirty |= true;
+                    cw.SetPropertyValue(component, property.name, default);
+                }
+            }
+            if (dirty) TsComponentHelper.SetDirty(component);
+            return dirty;
+        }
 
         public static void SetDirty(UnityEngine.Object obj)
         {
@@ -442,6 +492,7 @@ namespace XOR
                         {
                             resolveAssets.Add(assetPaths[i]);
                             AssetDatabase.SaveAssets();
+                            UnityEditor.SceneManagement.EditorSceneManager.SaveScene(scene);
                         }
                     }
                 }
@@ -492,11 +543,14 @@ namespace XOR
                     if (unknwonGuids != null) unknwonGuids.Add(guid);
                     continue;
                 }
-                if (isForce || !TsComponentHelper.IsSynchronized(statement, components[i]))
+                //检查属性是否已同步
+                if (isForce || !TsComponentHelper.IsSynchronized(components[i], statement))
                 {
                     TsComponentHelper.RebuildProperties(components[i], statement);
                     dirty |= true;
                 }
+                //检查TsReference类型是否相符
+                dirty = RebuildTsReferenceProperties(components[i], statement) || dirty;
             }
             if (dirty)
             {

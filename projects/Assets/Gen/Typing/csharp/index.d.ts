@@ -3446,7 +3446,7 @@ declare namespace CS {
             GetTsComponents(): System.Array$1<Puerts.JSObject>;
             GetTsComponent($guid: string): Puerts.JSObject;
             AddTsComponent($guid: string): Puerts.JSObject;
-            AddTsComponent($guid: string, $jsObject: Puerts.JSObject): void;
+            AddTsComponent($guid: string, $jsObject: Puerts.JSObject): XOR.TsComponent;
         }
         /** Store a collection of Keyframes that can be evaluated over time.
         */
@@ -26548,6 +26548,7 @@ declare namespace CS {
             public get Guid(): string;
             public get Route(): string;
             public get Path(): string;
+            public get IsPending(): boolean;
             public GetProperties(): System.Array$1<XOR.Serializables.ResultPair>
             public SetProperty($key: string, $value: any): void
             public SetPropertyListener($handler: System.Action$2<string, any>): void
@@ -26555,6 +26556,8 @@ declare namespace CS {
             public static PrintStatus(): void
             public static Register($env: Puerts.JsEnv): void
             public static Unregister(): void
+            public static IsRegistered(): boolean
+            public static Resolve($component: XOR.TsComponent, $force?: boolean): void
             public constructor()
         }
         class Application extends XOR.SingletonMonoBehaviour$1<XOR.Application>
@@ -27201,8 +27204,10 @@ declare namespace CS {
             public defaultValue: any
             public valueRange: System.Tuple$2<number, number>
             public valueEnum: System.Collections.Generic.Dictionary$2<string, any>
+            public valueReferences: System.Collections.Generic.Dictionary$2<string, string>
             public SetRange($left: number, $right: number): void
             public AddEnum($key: string, $value: any): void
+            public AddReference($guid: string, $name: string): void
             public BuildTooltip($force?: boolean): string
             public constructor()
         }
@@ -31527,6 +31532,7 @@ declare namespace CS {
             public GetTypeId($isolate: System.IntPtr, $holder: System.IntPtr, $isByRef: boolean): number
             public GetJSObject($isolate: System.IntPtr, $holder: System.IntPtr, $isByRef: boolean): System.IntPtr
             public GetFunction($isolate: System.IntPtr, $holder: System.IntPtr, $isByRef: boolean): System.IntPtr
+
             public static __Create($target: Puerts.JSObject): XOR.JsBase
             public constructor($target: Puerts.JSObject)
             GetArrayBuffer($isolate: System.IntPtr, $holder: System.IntPtr, $isByRef: boolean): Puerts.ArrayBuffer;

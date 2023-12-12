@@ -126,6 +126,7 @@ namespace XOR
                 path = value;
             }
         }
+        public bool IsPending => initialized && !registered;
 
         internal bool Registered { get => registered; }
         internal bool Initialized { get => initialized; }
@@ -206,6 +207,23 @@ namespace XOR
         public static void Unregister()
         {
             TsComponentLifecycle.Unregister();
+        }
+        /// <summary>
+        /// 是否已注册?
+        /// </summary>
+        public static bool IsRegistered()
+        {
+            return TsComponentLifecycle.IsRegistered();
+        }
+        /// <summary>
+        /// 如果组件在pending列表中, 立即处理此对象
+        /// </summary>
+        /// <param name="component"></param>
+        public static void Resolve(TsComponent component, bool force = false)
+        {
+            if (component == null || !component.IsPending)
+                return;
+            TsComponentLifecycle.Resolve(component, force);
         }
     }
 }

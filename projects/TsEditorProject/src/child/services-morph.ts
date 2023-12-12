@@ -1,7 +1,7 @@
 import * as csharp from "csharp";
+import * as glob from "fast-glob";
 import * as puerts from "puerts";
 import * as tsm from "ts-morph";
-import * as glob from "fast-glob";
 
 import File = csharp.System.IO.File;
 import Directory = csharp.System.IO.Directory;
@@ -259,7 +259,7 @@ export class Program {
         if (!this.isExportClass(node))
             return;
 
-        let guid = this.getGuidDecorator(node);
+        let guid = util.getGuidDecorator(node);
         if (!guid) {
             //分配Decorator
             guid = csharp.System.Guid.NewGuid().ToString();
@@ -382,7 +382,7 @@ export class Program {
             let properties = this.getExportProperties(node);
             if (properties && properties.size > 0) {
                 for (let [name, property] of properties) {
-                    let fargs = this.getFieldArguments(property),
+                    let fargs = util.getFieldArguments(property),
                         ftype = util.toCSharpType([property.getTypeNode(), fargs?.type]);
                     if (!ftype || !ftype.type) {
                         continue;
@@ -391,6 +391,11 @@ export class Program {
                     cpd.name = name;
                     cpd.valueType = ftype.type;
 
+                    if (ftype.references && ftype.references.size > 0) {
+                        for (let [guid, name] of ftype.references) {
+                            cpd.AddReference(guid, name);
+                        }
+                    }
                     if (ftype.enumerable) {
                         for (let [name, value] of ftype.enumerable) {
                             cpd.AddEnum(name, value);
@@ -413,7 +418,7 @@ export class Program {
                     for (let method of ms) {
                         let parameterTypes = method.getParameters()
                             .map(p => util.toCSharpTypeByTypeNode(p.getTypeNode()));
-                        if (parameterTypes.findIndex(t => !t) >= 0) {
+                        if (parameterTypes.some(t => !t)) {
                             continue;
                         }
 
@@ -466,29 +471,6 @@ export class Program {
         }
     }
 
-    /**当前声明类型为xor.TsComponent */
-    private isTsComponent(node: tsm.ClassDeclaration) {
-        let info = util.getTypeInfo(node);
-        if (info.className === Classes.TsComponent && info.moduleName === Module.Global) {
-            return true;
-        }
-        return false;
-    }
-    /**是否继承自xor.TsComponent类
-     * @param node 
-     * @returns 
-     */
-    private isInheritTsComponent(node: tsm.ClassDeclaration) {
-        if (!node) {
-            return false;
-        }
-        if (this.isTsComponent(node)) {
-            return true;
-        }
-        return this.isInheritTsComponent(node.getBaseClass());
-    }
-
-
     /**是否为导出的类型
      * @param node 
      * @returns 
@@ -504,7 +486,7 @@ export class Program {
             return false;
         }
         //*/
-        return this.isInheritTsComponent(node.getBaseClass());
+        return util.isInheritTsComponent(node.getBaseClass());
     }
     /**是否为导出的字段; 使用declare丶public或@xor.field(...)装饰器的字段
      * @param node 
@@ -514,7 +496,7 @@ export class Program {
         if (util.isDeclare(node) || util.isPublic(node)) {
             return true;
         }
-        if (this.getFieldDecorator(node)) {
+        if (util.getFieldDecorator(node)) {
             return true;
         }
         return false;
@@ -535,7 +517,7 @@ export class Program {
      * @param inherit 
      */
     private getExportProperties(node: tsm.ClassDeclaration, inherit?: boolean) {
-        if (this.isTsComponent(node)) {
+        if (util.isTsComponent(node)) {
             return null;
         }
         const members = new Map<string, tsm.PropertyDeclaration>();
@@ -567,7 +549,7 @@ export class Program {
      * @param inherit 
      */
     private getExportMethods(node: tsm.ClassDeclaration, inherit?: boolean) {
-        if (this.isTsComponent(node)) {
+        if (util.isTsComponent(node)) {
             return null;
         }
         const members = new Map<string, Set<tsm.MethodDeclaration>>();
@@ -593,64 +575,6 @@ export class Program {
         }
 
         return members;
-    }
-
-    private getGuidDecorator(node: tsm.ClassDeclaration): string {
-        let decorators = node.getDecorators();
-        if (!decorators) {
-            return null;
-        }
-        let firstArgument = decorators
-            .find(d => d.getFullName() === Decorator.Guid)
-            ?.getArguments().at(0);
-        if (firstArgument && firstArgument.isKind(tsm.SyntaxKind.StringLiteral)) {
-            return firstArgument.getLiteralValue()
-        }
-        return null;
-    }
-    private getFieldDecorator(node: tsm.PropertyDeclaration) {
-        let decorators = node.getDecorators();
-        return decorators?.find(d => d.getFullName() === Decorator.Field);
-    }
-    private getFieldArguments(node: tsm.PropertyDeclaration) {
-        let decorator = this.getFieldDecorator(node);
-        if (!decorator)
-            return null;
-
-        let type: tsm.PropertyAccessExpression, range: [min: number, max: number], value: any;
-
-        let firstArgument = decorator.getArguments()?.at(0);
-        if (firstArgument) {
-            if (firstArgument.isKind(tsm.SyntaxKind.ObjectLiteralExpression)) {
-                for (let property of firstArgument.getProperties()) {
-                    if (!property.isKind(tsm.SyntaxKind.PropertyAssignment))
-                        continue;
-                    let initializer = property.getInitializer();
-                    if (initializer.isKind(tsm.SyntaxKind.NullKeyword) || initializer.isKind(tsm.SyntaxKind.UndefinedKeyword))
-                        continue;
-                    let name = property.getName();
-                    switch (name) {
-                        case "type":
-                            type = <tsm.PropertyAccessExpression>initializer;
-                            break;
-                        case "range":
-                            let [min, max] = (<tsm.ArrayLiteralExpression>initializer).getElements();
-                            if (min && min.isKind(tsm.SyntaxKind.NumericLiteral) &&
-                                max && max.isKind(tsm.SyntaxKind.NumericLiteral)) {
-                                range = [util.getExpressionValue(min), util.getExpressionValue(max)];
-                            }
-                            break;
-                        case "value":
-                            value = util.getExpressionValue(initializer);
-                            break;
-                    }
-                }
-            }
-            else if (firstArgument.isKind(tsm.SyntaxKind.PropertyAccessExpression)) {
-                type = firstArgument;
-            }
-        }
-        return { type, range, value };
     }
 }
 
@@ -707,6 +631,28 @@ const util = new class {
     }
     public isPublic(node: tsm.ModifierableNode): boolean {
         return !this.isPrivateOrProtected(node);
+    }
+
+    /**当前声明类型为xor.TsComponent */
+    public isTsComponent(node: tsm.ClassDeclaration) {
+        let info = util.getTypeInfo(node);
+        if (info.className === Classes.TsComponent && info.moduleName === Module.Global) {
+            return true;
+        }
+        return false;
+    }
+    /**是否继承自xor.TsComponent类
+     * @param node 
+     * @returns 
+     */
+    public isInheritTsComponent(node: tsm.ClassDeclaration) {
+        if (!node) {
+            return false;
+        }
+        if (this.isTsComponent(node)) {
+            return true;
+        }
+        return this.isInheritTsComponent(node.getBaseClass());
     }
 
     /**获取类型的基础信息
@@ -783,6 +729,63 @@ const util = new class {
             }
         }
         return declaration;
+    }
+    public getGuidDecorator(node: tsm.ClassDeclaration): string {
+        let decorators = node.getDecorators();
+        if (!decorators) {
+            return null;
+        }
+        let firstArgument = decorators
+            .find(d => d.getFullName() === Decorator.Guid)
+            ?.getArguments().at(0);
+        if (firstArgument && firstArgument.isKind(tsm.SyntaxKind.StringLiteral)) {
+            return firstArgument.getLiteralValue()
+        }
+        return null;
+    }
+    public getFieldDecorator(node: tsm.PropertyDeclaration) {
+        let decorators = node.getDecorators();
+        return decorators?.find(d => d.getFullName() === Decorator.Field);
+    }
+    public getFieldArguments(node: tsm.PropertyDeclaration) {
+        let decorator = this.getFieldDecorator(node);
+        if (!decorator)
+            return null;
+
+        let type: tsm.PropertyAccessExpression, range: [min: number, max: number], value: any;
+
+        let firstArgument = decorator.getArguments()?.at(0);
+        if (firstArgument) {
+            if (firstArgument.isKind(tsm.SyntaxKind.ObjectLiteralExpression)) {
+                for (let property of firstArgument.getProperties()) {
+                    if (!property.isKind(tsm.SyntaxKind.PropertyAssignment))
+                        continue;
+                    let initializer = property.getInitializer();
+                    if (initializer.isKind(tsm.SyntaxKind.NullKeyword) || initializer.isKind(tsm.SyntaxKind.UndefinedKeyword))
+                        continue;
+                    let name = property.getName();
+                    switch (name) {
+                        case "type":
+                            type = <tsm.PropertyAccessExpression>initializer;
+                            break;
+                        case "range":
+                            let [min, max] = (<tsm.ArrayLiteralExpression>initializer).getElements();
+                            if (min && min.isKind(tsm.SyntaxKind.NumericLiteral) &&
+                                max && max.isKind(tsm.SyntaxKind.NumericLiteral)) {
+                                range = [util.getExpressionValue(min), util.getExpressionValue(max)];
+                            }
+                            break;
+                        case "value":
+                            value = util.getExpressionValue(initializer);
+                            break;
+                    }
+                }
+            }
+            else if (firstArgument.isKind(tsm.SyntaxKind.PropertyAccessExpression)) {
+                type = firstArgument;
+            }
+        }
+        return { type, range, value };
     }
 
     /**解析Expression并获取其值: 基础类型丶C#类型或其数组类型
@@ -937,7 +940,7 @@ const util = new class {
      * @returns 
      */
     public toCSharpType(node: tsm.Node | [type: tsm.Node, explicitType: tsm.Node], depth: number = 0)
-        : { type: Type, enumerable: Map<string, string | number> } {
+        : { type: Type, enumerable: Map<string, string | number>, references: Map<string, string> } {
         if (depth > 3) {
             return null;
         }
@@ -952,7 +955,7 @@ const util = new class {
             return null;
         }
 
-        let type: Type, enumerable: Map<string, string | number>;
+        let type: Type, enumerable: Map<string, string | number>, references: Map<string, string>;
         if (_node.isKind(tsm.SyntaxKind.ParenthesizedType)) {
             return this.toCSharpType([_node.getTypeNode(), _explicit], depth + 1);
         }
@@ -961,19 +964,33 @@ const util = new class {
             if (e && e.type) {
                 type = csharp.System.Array.CreateInstance(e.type, 0).GetType();
                 enumerable = e.enumerable;
+                references = e.references;
             }
         }
         else if (_node.isKind(tsm.SyntaxKind.UnionType)) {
-            let members: Array<number | string> = _node.getTypeNodes().map(n => {
-                if (n.isKind(tsm.SyntaxKind.LiteralType)) {
-                    return this.getExpressionValue(n.getLiteral());
+            let typeNodes = _node.getTypeNodes();
+            //如果是基础数据类型: string, number, bigint, boolean
+            if (typeNodes.every(n => n.isKind(tsm.SyntaxKind.LiteralType))) {
+                let members: Array<number | string> = typeNodes.map(n => this.getExpressionValue((<tsm.LiteralTypeNode>n).getLiteral()));
+                let ce = this.toCSharpEnumerable(members.map(value => ({ name: `${value}`, value })));
+                if (ce) {
+                    enumerable = ce.enumerable;
+                    type = ce.type;
                 }
-                return null;
-            });
-            let ce = this.toCSharpEnumerable(members.map(value => ({ name: `${value}`, value })));
-            if (ce) {
-                enumerable = ce.enumerable;
-                type = ce.type;
+            }
+            //如果是XOR.TsComponent声明
+            else {
+                references = new Map();
+                typeNodes.forEach(n => {
+                    let _node = this.getDeclaration(n);
+                    if (!_node || !_node.isKind(tsm.SyntaxKind.ClassDeclaration) || !this.isInheritTsComponent(_node))
+                        return;
+                    let guid = this.getGuidDecorator(_node);
+                    if (guid || this.isTsComponent(_node)) {
+                        type ??= puerts.$typeof(csharp.XOR.TsComponent);
+                        references.set(guid, _node.getName());
+                    }
+                });
             }
         }
         else if (_node.isKind(tsm.SyntaxKind.EnumDeclaration)) {
@@ -1008,6 +1025,7 @@ const util = new class {
                     if (element && element.type) {
                         type = csharp.System.Array.CreateInstance(element.type, 0).GetType();
                         enumerable = element.enumerable;
+                        references = element.references;
                     }
                 }
                 else {
@@ -1017,8 +1035,18 @@ const util = new class {
                     }
                 }
             }
+            else if (_node.isKind(tsm.SyntaxKind.ClassDeclaration) && this.isInheritTsComponent(_node)) {
+                let guid = this.getGuidDecorator(_node);
+                if (guid) {
+                    references = new Map();
+                    references.set(guid, _node.getName());
+                }
+                if (guid || this.isTsComponent(_node)) {
+                    type = puerts.$typeof(csharp.XOR.TsComponent);
+                }
+            }
         }
-        return { type, enumerable };
+        return { type, enumerable, references };
     }
     public toCSharpTypeByTypeNode(node: tsm.TypeNode): Type {
         if (node.isKind(tsm.SyntaxKind.BooleanKeyword)) {

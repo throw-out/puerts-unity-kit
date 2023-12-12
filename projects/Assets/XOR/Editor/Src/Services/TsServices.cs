@@ -261,9 +261,15 @@ namespace XOR.Services
         /// </summary>
         public Tuple<float, float> valueRange;
         /// <summary>
-        /// 为enum类型时, 此字段作为所有可选值(实际类型为int或string)
+        /// 为enum类型时, 此字段作为所有可选值(实际类型为int或string):
+        /// Dictionary<key, value>
         /// </summary>
         public Dictionary<string, object> valueEnum;
+        /// <summary>
+        /// 目标为ts类型时, 此字段为目标类型的guid: 
+        /// Dictionary<guid, name>
+        /// </summary>
+        public Dictionary<string, string> valueReferences;
 
         public void SetRange(float left, float right)
         {
@@ -280,6 +286,18 @@ namespace XOR.Services
                 this.valueEnum.Remove(key);
             }
             this.valueEnum.Add(key, value);
+        }
+        public void AddReference(string guid, string name)
+        {
+            if (this.valueReferences == null)
+            {
+                this.valueReferences = new Dictionary<string, string>();
+            }
+            else
+            {
+                this.valueReferences.Remove(guid);
+            }
+            this.valueReferences.Add(guid, name);
         }
 
         private string _tooltip;
@@ -306,7 +324,7 @@ namespace XOR.Services
                         foreach (var e in this.valueEnum)
                         {
                             builder.AppendLine();
-                            builder.AppendFormat("\t[{0}]", e.Key);
+                            builder.AppendFormat("\t[value = {0}]", e.Key);
                         }
                     }
                     else
@@ -314,8 +332,18 @@ namespace XOR.Services
                         foreach (var e in this.valueEnum)
                         {
                             builder.AppendLine();
-                            builder.AppendFormat("\t[{0}, {1}]", e.Key, e.Value);
+                            builder.AppendFormat("\t[key = {0}, value = {1}]", e.Key, e.Value);
                         }
+                    }
+                }
+                if (this.valueReferences != null && this.valueReferences.Count > 0)
+                {
+                    builder.AppendLine();
+                    builder.Append("References:");
+                    foreach (var e in this.valueReferences)
+                    {
+                        builder.AppendLine();
+                        builder.AppendFormat("  [name = {0}, guid = {1}]", e.Value, e.Key);
                     }
                 }
                 if (this.defaultValue != null)

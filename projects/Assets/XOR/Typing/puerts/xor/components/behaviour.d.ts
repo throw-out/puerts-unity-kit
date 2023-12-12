@@ -1,4 +1,4 @@
-/// <reference path="component.d.ts" />
+import XOR = CS.XOR;
 import Transform = CS.UnityEngine.Transform;
 import GameObject = CS.UnityEngine.GameObject;
 import RectTransform = CS.UnityEngine.RectTransform;
@@ -262,14 +262,9 @@ declare abstract class IOnMouse {
  * 注: 为避免多次跨语言调用, Update丶FixedUpdate丶LateUpdate方法将由BatchProxy统一管理(并非绑定到各自的GameObject上)
  * @see standalone 如果需要绑定独立的组件, 在对应方法上添加此标注
  */
-declare class TsBehaviourConstructor {
-    private __transform__;
-    private __gameObject__;
-    private __component__;
+declare abstract class BehaviourConstructor {
     private __listeners__;
     private __listenerProxy__;
-    constructor(object: GameObject | Transform | CS.XOR.TsBehaviour, accessor?: AccessorUnionType | boolean);
-    constructor(object: GameObject | Transform | CS.XOR.TsBehaviour, options?: ConstructorOptions);
     StartCoroutine(routine: ((...args: any[]) => Generator) | Generator, ...args: any[]): CS.UnityEngine.Coroutine;
     StopCoroutine(routine: CS.UnityEngine.Coroutine): void;
     StopAllCoroutines(): void;
@@ -291,12 +286,13 @@ declare class TsBehaviourConstructor {
     protected clearListeners(): void;
     private _invokeListeners;
     protected disponse(): void;
-    private _bindProxies;
-    private _bindUpdateProxies;
-    private _bindListeners;
-    private _bindModuleOfEditor;
-    get transform(): Transform;
-    get gameObject(): GameObject;
+    protected bindProxies(): void;
+    protected bindUpdateProxies(): void;
+    protected bindListeners(): any;
+    protected bindModuleInEditor(): void;
+    abstract get transform(): Transform;
+    abstract get gameObject(): GameObject;
+    protected abstract get component(): XOR.TsBehaviour;
     get enabled(): boolean;
     set enabled(value: boolean);
     get isActiveAndEnabled(): boolean;
@@ -305,54 +301,93 @@ declare class TsBehaviourConstructor {
     get name(): string;
     set name(value: string);
     get rectTransform(): RectTransform;
-    protected get component(): import("csharp").XOR.TsBehaviour;
 }
-interface TsBehaviourConstructor extends IBehaviour, IGizmos, IOnPointerHandler, IOnDragHandler, IOnMouse, IOnCollision, IOnCollision2D, IOnTrigger, IOnTrigger2D {
+interface BehaviourConstructor extends IBehaviour, IGizmos, IOnPointerHandler, IOnDragHandler, IOnMouse, IOnCollision, IOnCollision2D, IOnTrigger, IOnTrigger2D {
 }
-declare namespace TsBehaviourConstructor {
-    /**获取IAccessor中的属性
-     * @param accessor
-     * @returns
-     */
+declare class TsBehaviourConstructor extends BehaviourConstructor {
+    private __transform__;
+    private __gameObject__;
+    private __component__;
+    get transform(): Transform;
+    get gameObject(): GameObject;
+    protected get component(): XOR.TsBehaviour;
+    constructor(object: GameObject | Transform | CS.XOR.TsBehaviour, accessor?: AccessorUnionType | boolean);
+    constructor(object: GameObject | Transform | CS.XOR.TsBehaviour, options?: ConstructorOptions);
+    protected disponse(): void;
+}
+declare namespace utils {
     function getAccessorProperties(accessor: AccessorType): {
         [key: string]: any;
     };
-    /**将C# IAccessor中的属性绑定到obj对象上
-     * @param object
-     * @param accessor
-     * @param bind       运行时绑定
-     */
     function bindAccessor(object: object, accessor: AccessorUnionType, bind?: boolean): void;
-    /**以独立组件的方式调用
-     * 适用于Update丶LateUpdate和FixedUpdate方法, 默认以BatchProxy管理调用以满足更高性能要求
-     * @returns
-     */
+    function bindAccessor(object: object, accessor: AccessorUnionType, options?: {
+        /**双向绑定key-value */
+        bind?: boolean;
+        /**XOR.TsComponent自动转js object */
+        convertToJsObejct?: boolean;
+    }): void;
+    function getAccessorPropertyOrigin(val: object): any;
     function standalone(): PropertyDecorator;
-    /**跨帧调用(全局共用/非单独的frameskip分区)
-     * 适用于Update丶LateUpdate和FixedUpdate方法, 仅允许BatchProxy管理调用(与standalone组件冲突)
-     * (如你需要处理Input等事件, 那么就不应该使用它)
-     * @param value  每n帧调用一次(<不包含>大于1时才有效)
-     * @returns
-     */
     function frameskip(value: number): PropertyDecorator;
-    /**节流方法
-     * 适用于async/Promise方法, 在上一次调用完成后才会再次调用(Awake丶Update丶FixedUpdate...)
-     * @param enable
-     * @returns
-     */
     function throttle(enable: boolean): PropertyDecorator;
-    /**注册侦听器
-     * 适用于@see CS.XOR.TsMessages 回调
-     * @param eventName
-     * @returns
-     */
     function listener(eventName?: string): PropertyDecorator;
 }
 /**接口声明 */
 declare global {
     namespace xor {
+        abstract class Behaviour extends BehaviourConstructor {
+        }
         class TsBehaviour extends TsBehaviourConstructor {
         }
+        /**兼容以前的声明 */
+        namespace TsBehaviour {
+            /**@deprecated xor.TsBehaviour.getAccessorProperties has been deprecated.Use xor.getAccessorProperties instead.  */
+            const getAccessorProperties: typeof utils.getAccessorProperties;
+            /**@deprecated xor.TsBehaviour.bindAccessor has been deprecated.Use xor.bindAccessor instead.  */
+            const bindAccessor: typeof utils.bindAccessor;
+            /**@deprecated xor.TsBehaviour.standalone has been deprecated.Use xor.standalone instead.  */
+            const standalone: typeof utils.standalone;
+            /**@deprecated xor.TsBehaviour.frameskip has been deprecated.Use xor.frameskip instead.  */
+            const frameskip: typeof utils.frameskip;
+            /**@deprecated xor.TsBehaviour.throttle has been deprecated.Use xor.throttle instead.  */
+            const throttle: typeof utils.throttle;
+            /**@deprecated xor.TsBehaviour.listener has been deprecated.Use xor.listener instead.  */
+            const listener: typeof utils.listener;
+        }
+        /**获取IAccessor中的属性 */
+        const getAccessorProperties: typeof utils.getAccessorProperties;
+        /**将C# IAccessor中的属性绑定到obj对象上
+         * @param object
+         * @param accessor
+         * @param bind       运行时绑定
+         */
+        const bindAccessor: typeof utils.bindAccessor;
+        /**获取序列化Ts类型的原始对象 */
+        const getAccessorPropertyOrigin: typeof utils.getAccessorPropertyOrigin;
+        /**以独立组件的方式调用
+         * 适用于Update丶LateUpdate和FixedUpdate方法, 默认以BatchProxy管理调用以满足更高性能要求
+         * @returns
+         */
+        const standalone: typeof utils.standalone;
+        /**跨帧调用(全局共用/非单独的frameskip分区)
+         * 适用于Update丶LateUpdate和FixedUpdate方法, 仅允许BatchProxy管理调用(与standalone组件冲突)
+         * (如你需要处理Input等事件, 那么就不应该使用它)
+         * @param value  每n帧调用一次(<不包含>大于1时才有效)
+         * @returns
+         */
+        const frameskip: typeof utils.frameskip;
+        /**节流方法
+         * 适用于async/Promise方法, 在上一次调用完成后才会再次调用(Awake丶Update丶FixedUpdate...)
+         * @param enable
+         * @returns
+         */
+        const throttle: typeof utils.throttle;
+        /**注册侦听器
+         * 适用于@see CS.XOR.TsMessages 回调
+         * @param eventName
+         * @returns
+         */
+        const listener: typeof utils.listener;
     }
 }
 export {};

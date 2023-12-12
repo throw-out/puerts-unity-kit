@@ -36,19 +36,27 @@ namespace XOR
         {
             runtime = null;
         }
+        public static bool IsRegistered()
+        {
+            return runtime != null && runtime.IsAlive;
+        }
 
         public static WeakReference<GameObject> GetReference(GameObject gameObject)
         {
             return GetReference(gameObject, true);
         }
-        public static void UpdateComponent(TsComponent component)
+
+        public static void Resolve(TsComponent component, bool force = false)
         {
             if (runtime != null && runtime.IsAlive)
             {
+                pending.Remove(component);
                 CreateJSObject(component);
             }
             else
             {
+                if (force)
+                    throw new InvalidOperationException("Invalid ");
                 pending.Add(component);
             }
         }
@@ -248,7 +256,7 @@ namespace XOR
                     component.JSObject = null;
                     continue;
                 }
-                component.JSObject = runtime.Create(component);
+                runtime.CreateJSObject(component);
                 if (component.JSObject == null)
                 {
                     Logger.LogWarning($"{component.name} {nameof(XOR.TsComponent)} JSObject create fail: {component.Guid}");
@@ -260,7 +268,7 @@ namespace XOR
         {
             private readonly Puerts.JsEnv env;
             private readonly HashSet<string> resolvePaths;
-            private Func<TsComponent, string, Puerts.JSObject> create;
+            private Action<TsComponent, string, Action<TsComponent, Puerts.JSObject>> create;
             private Action<Puerts.JSObject, string, object[]> invoke;
             public bool IsAlive => GetIsolate(env) != IntPtr.Zero;
             public Runtime(Puerts.JsEnv env)
@@ -274,30 +282,35 @@ namespace XOR
             /// </summary>
             /// <param name="component"></param>
             /// <returns></returns>
-            public Puerts.JSObject Create(TsComponent component)
+            public void CreateJSObject(TsComponent component)
             {
                 if (create == null)
                 {
-                    create = this.env.ComponentJSObjectCreator();
+                    create = this.env.ComponentJSObjectCreatorCallback();
                     if (create == null)
                     {
                         Logger.LogWarning($"XOR Modules Unregisted.");
-                        return null;
+                        return;
                     }
                 }
-                Puerts.JSObject result = create.Invoke(component, component.Guid);
+                bool created = false;
+                void CreatedCallback(TsComponent c, Puerts.JSObject obj)
+                {
+                    created = true;
+                    c.JSObject = obj;
+                }
 
+                create.Invoke(component, component.Guid, CreatedCallback);
                 //execute module, after retry create js object
-                if (result == null && !resolvePaths.Contains(component.Path))
+                if (!created && !resolvePaths.Contains(component.Path))
                 {
                     resolvePaths.Add(component.Path);
                     if (!string.IsNullOrEmpty(component.Path))
                     {
                         env.Load(component.Path);
-                        result = create.Invoke(component, component.Guid);
+                        create.Invoke(component, component.Guid, CreatedCallback);
                     }
                 }
-                return result;
             }
             /// <summary>
             /// 调用Puerts.JSObject上的方法

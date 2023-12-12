@@ -1,3 +1,6 @@
+import XOR = CS.XOR;
+import Transform = CS.UnityEngine.Transform;
+import GameObject = CS.UnityEngine.GameObject;
 type ConstructorType<T> = Function & {
     prototype: T;
 };
@@ -14,8 +17,21 @@ type FieldOptions = NumberConstructor | Partial<{
      */
     value: any;
 }>;
-declare class TsComponentConstructor extends xor.TsBehaviour {
-    constructor(component: CS.XOR.TsComponent);
+declare class TsComponentConstructor extends xor.Behaviour {
+    private __transform__;
+    private __gameObject__;
+    private __component__;
+    get transform(): Transform;
+    get gameObject(): GameObject;
+    protected get component(): XOR.TsBehaviour;
+    constructor(object: GameObject | CS.XOR.TsComponent);
+    protected disponse(): void;
+    private bindAll;
+    /**xor.TsComponent作为序列化类型时, bindAccessor绑定的是Proxy对象, 在访问它时才会获取实际的js对象.
+     * 如果直接使用"==="比较同一个序列化对象(xor.TsComponent), 它将返回false. 此方法提供访问原始js对象.
+     * @returns
+     */
+    valueOf(): this;
 }
 /**接口声明 */
 declare global {
@@ -47,12 +63,14 @@ declare global {
          */
         function route(path: string): ClassDecorator;
         /**定义序列化字段
+         * @example
+         * ```
+         * ```
          * @param options
          */
         function field(options?: FieldOptions): PropertyDecorator;
     }
 }
-/**重写GetComponent事件, 用于获取 */
 declare module "csharp" {
     namespace UnityEngine {
         interface GameObject {
@@ -68,6 +86,6 @@ declare module "csharp" {
         }
     }
 }
-export declare function create(component: CS.XOR.TsComponent, guid: string): TsComponentConstructor;
+export declare function create(component: CS.XOR.TsComponent, guid: string, created?: CS.System.Action$2<CS.XOR.TsComponent, object>): TsComponentConstructor;
 export declare function invokeMethod(obj: object, methodName: string, args: CS.System.Array$1<any>): void;
 export {};

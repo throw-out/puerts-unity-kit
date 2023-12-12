@@ -38,7 +38,7 @@ RenderSettings:
   m_ReflectionIntensity: 1
   m_CustomReflection: {fileID: 0}
   m_Sun: {fileID: 0}
-  m_IndirectSpecularColor: {r: 0.44657898, g: 0.4964133, b: 0.5748178, a: 1}
+  m_IndirectSpecularColor: {r: 0.44657874, g: 0.49641275, b: 0.5748171, a: 1}
   m_UseRadianceAmbientProbe: 0
 --- !u!157 &3
 LightmapSettings:
@@ -172,7 +172,7 @@ MonoBehaviour:
   guid: 36102130-2db9-4d62-9221-98c51c3c138c
   route: 
   path: samples/01_TsComponent
-  version: 4969A2E55E482A200A2085373AB33219554436CF92872B6D38DA87B6CC907174
+  version: F19ECBB4527D40924AD84BDDF2D90223FB1EB69F8DE3401819CC99A811319089
   StringPairs: []
   NumberPairs: []
   BigintPairs: []
@@ -237,7 +237,7 @@ MonoBehaviour:
   guid: 7984a4b8-de57-4af6-a572-6c159bc6dce3
   route: 
   path: samples/01_TsComponent
-  version: 01CE398C18ABFD0B7AFD1BAD56784FA45A293C9675230498569802F9E5FCEAEE
+  version: 3DA9F15355283750898C01F5ED7B5ACF31A336005F9757F79E8E20DABF36F78B
   StringPairs: []
   NumberPairs:
   - index: 0
@@ -268,6 +268,101 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_RootOrder: 8
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &1135157788
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1135157790}
+  - component: {fileID: 1135157789}
+  m_Layer: 0
+  m_Name: Sample07
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &1135157789
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1135157788}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ebff9227b67714d4bbab6c48f78b48c5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  ColorPairs: []
+  ColorArrayPairs: []
+  MyDataPairs: []
+  MyDataArrayPairs: []
+  guid: 30641f2f-bdeb-436e-8586-349ee2323a15
+  route: 
+  path: samples/01_TsComponent
+  version: 85750CB09FD9ED15383D0BA64105A8263EDDF71D91ACD201E360537D2ED92148
+  StringPairs: []
+  NumberPairs: []
+  BigintPairs: []
+  BooleanPairs: []
+  Vector2Pairs: []
+  Vector3Pairs: []
+  ObjectPairs:
+  - index: 0
+    key: _sample01
+    value: {fileID: 1138852626}
+  - index: 1
+    key: _sample02
+    value: {fileID: 1843313266}
+  - index: 2
+    key: _sample03
+    value: {fileID: 1773476213}
+  - index: 4
+    key: _sample10
+    value: {fileID: 0}
+  - index: 5
+    key: _sample11
+    value: {fileID: 0}
+  - index: 3
+    key: _sample04
+    value: {fileID: 1773476213}
+  StringArrayPairs: []
+  NumberArrayPairs: []
+  BigintArrayPairs: []
+  BooleanArrayPairs: []
+  Vector2ArrayPairs: []
+  Vector3ArrayPairs: []
+  ObjectArrayPairs:
+  - index: 6
+    key: _list1
+    value: []
+  - index: 7
+    key: _list2
+    value:
+    - {fileID: 1138852626}
+  - index: 8
+    key: _list3
+    value:
+    - {fileID: 1138852626}
+    - {fileID: 1773476213}
+--- !u!4 &1135157790
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1135157788}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_RootOrder: 9
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1138852625
 GameObject:
@@ -305,11 +400,11 @@ MonoBehaviour:
   guid: e1cb6fde-b4dd-4fba-b08d-aed2f2bea1f2
   route: 
   path: samples/01_TsComponent
-  version: 960F7F8D1E4D198B494362FC261FD8C4E54E299F8E82E9EECFBB80F23B8C0287
+  version: 10AC0C4C0C818E5BDCA23C275C5332336E07E43A20FD8CC1E4254893B5D1D09A
   StringPairs:
   - index: 0
     key: _prop1
-    value: 
+    value: string message
   NumberPairs:
   - index: 1
     key: _prop2
@@ -529,7 +624,7 @@ MonoBehaviour:
   guid: d2ea683a-0e55-41a2-b837-b7e7c2a1fee4
   route: 
   path: samples/01_TsComponent
-  version: 30C390646D3D7D9C75EC01B5E15D1E37F2C2D43362D6C69D1AF848E72355060F
+  version: 9999703C0C983CECBAC67C116CD7D8CE03C8CB0E4CF7F1B656A3D13AF65454C9
   StringPairs:
   - index: 3
     key: _prop4
@@ -549,7 +644,7 @@ MonoBehaviour:
   Vector2Pairs:
   - index: 4
     key: _prop5
-    value: {x: 2, y: 10}
+    value: {x: 1, y: 10}
   Vector3Pairs: []
   ObjectPairs: []
   StringArrayPairs: []
@@ -563,8 +658,8 @@ MonoBehaviour:
     key: _prop7
     value:
     - 1
-    - 33
-    - 67
+    - 33.33300018310547
+    - 67.66999816894531
   BigintArrayPairs: []
   BooleanArrayPairs: []
   Vector2ArrayPairs: []
@@ -620,11 +715,11 @@ MonoBehaviour:
   guid: 70292285-10d5-44e0-9031-e12b14a05d15
   route: 
   path: samples/01_TsComponent
-  version: 3C80A9E71C248430B6DB2694222AF282CB4DBEF9B4334103E0A5407DC45C71A0
+  version: D2D9839E8026B34C6505F20EF96CCF5611DB2FC0507EC498A30BD13F3662FF27
   StringPairs:
   - index: 1
     key: _prop2
-    value: 
+    value: string2
   - index: 3
     key: _prop4
     value: 
@@ -634,7 +729,7 @@ MonoBehaviour:
   NumberPairs:
   - index: 0
     key: _prop1
-    value: 0
+    value: 3
   - index: 2
     key: _prop3
     value: 0
@@ -657,6 +752,7 @@ MonoBehaviour:
     key: _prop7
     value:
     - 0
+    - 1
   BigintArrayPairs: []
   BooleanArrayPairs: []
   Vector2ArrayPairs: []
@@ -712,7 +808,7 @@ MonoBehaviour:
   guid: a071b597-ff11-420a-b7d5-cd586ee4b1a1
   route: 
   path: samples/01_TsComponent
-  version: D1C637C7882EC5DECBAE7473D8679991E6B6E95DDA7DA1F293E31EDC16D38BF0
+  version: 3FAB41D34EBA5A4174934ACF676DCD4FC80E2254761021A7B7C9F8F902685FBB
   StringPairs: []
   NumberPairs: []
   BigintPairs: []

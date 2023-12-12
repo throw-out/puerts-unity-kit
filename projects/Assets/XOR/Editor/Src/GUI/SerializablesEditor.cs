@@ -67,6 +67,7 @@ namespace XOR.Serializables
         public Type ExplicitValueType { get; set; }
         public Tuple<float, float> ExplicitValueRange { get; set; }
         public Dictionary<string, object> ExplicitValueEnum { get; set; }
+        public Dictionary<string, string> ExplicitValueReferences { get; set; }
         public string Tooltip { get; set; }
 
         public SerializedProperty KeyNode
@@ -530,6 +531,12 @@ namespace XOR.Serializables
         {
             return XOR.Serializables.Convert.GetCastAssignableValue(element.ValueType, value);
         }
+
+        public static bool IsTsReferenceType(Type type)
+        {
+            return type == typeof(XOR.TsComponent);
+        }
+
         static readonly HashSet<Type> IntegerTypes = new HashSet<Type>()
         {
             typeof(byte),
@@ -969,12 +976,50 @@ namespace XOR.Serializables.TsComponent
     {
         protected override void RenderValue()
         {
-            var newValue = EditorGUILayout.ObjectField(string.Empty, Node.ValueNode.objectReferenceValue, Node.ExplicitValueType ?? typeof(UnityEngine.Object), true);
-            if (newValue != Node.ValueNode.objectReferenceValue)
+            if (IsTsReferenceType(Node, Node.ExplicitValueType))
             {
-                Node.ValueNode.objectReferenceValue = newValue;
-                Dirty |= true;
+                Dirty = RenderTsReferenceValue(Node, Node.ValueNode) || Dirty;
             }
+            else
+            {
+                var newValue = EditorGUILayout.ObjectField(string.Empty, Node.ValueNode.objectReferenceValue, Node.ExplicitValueType ?? typeof(UnityEngine.Object), true);
+                if (newValue != Node.ValueNode.objectReferenceValue)
+                {
+                    Node.ValueNode.objectReferenceValue = newValue;
+                    Dirty |= true;
+                }
+            }
+        }
+        public static bool RenderTsReferenceValue(NodeWrap nw, SerializedProperty node)
+        {
+            bool dirty = false;
+            var value = node.objectReferenceValue as XOR.TsComponent;
+            if (value != null && !IsTsReferenceTarget(nw, value))
+            {
+                value = null;
+                dirty |= true;
+            }
+            var newValue = EditorGUILayout.ObjectField(string.Empty, value, typeof(XOR.TsComponent), true) as XOR.TsComponent;
+            if (newValue != null && !IsTsReferenceTarget(nw, newValue))
+            {
+                newValue = value;
+            }
+            if (newValue != value || dirty)
+            {
+                node.objectReferenceValue = newValue;
+                dirty |= true;
+            }
+            return dirty;
+        }
+        public static bool IsTsReferenceType(NodeWrap nw, Type type)
+        {
+            return type == typeof(XOR.TsComponent) &&
+                nw.ExplicitValueReferences != null &&
+                nw.ExplicitValueReferences.Count > 0;
+        }
+        public static bool IsTsReferenceTarget(NodeWrap nw, XOR.TsComponent component)
+        {
+            return nw.ExplicitValueReferences.ContainsKey(component.Guid);
         }
     }
 
@@ -1073,11 +1118,18 @@ namespace XOR.Serializables.TsComponent
     {
         protected override void RenderMemberValue(SerializedProperty node, Type type)
         {
-            var newValue = EditorGUILayout.ObjectField(string.Empty, node.objectReferenceValue, type, true);
-            if (newValue != node.objectReferenceValue)
+            if (ObjectRenderer.IsTsReferenceType(Node, type))
             {
-                node.objectReferenceValue = newValue;
-                Dirty |= true;
+                Dirty = ObjectRenderer.RenderTsReferenceValue(Node, node) || Dirty;
+            }
+            else
+            {
+                var newValue = EditorGUILayout.ObjectField(string.Empty, node.objectReferenceValue, type, true);
+                if (newValue != node.objectReferenceValue)
+                {
+                    node.objectReferenceValue = newValue;
+                    Dirty |= true;
+                }
             }
         }
     }
