@@ -721,83 +721,98 @@ var utils;
             return;
         delete obj[WatchFlag];
     }
-    const OriginFlag = Symbol("--origin--");
+    const OriginFlag = Symbol("--origin--"), ProxyFlag = Symbol("--proxy--");
     function convertToJsObejctProxy(component) {
-        if (!component || !component.Guid)
+        if (!component || !(component instanceof CS.XOR.TsComponent))
+            return component;
+        if (!component.Guid)
             return undefined;
-        let target;
-        function getter() {
-            if (!component)
-                return;
-            if (!CS.XOR.TsComponent.IsRegistered())
-                throw new Error("XOR.TsComponet.Register is required.");
-            if (component.IsPending)
-                CS.XOR.TsComponent.Resolve(component, true);
-            target = component.JSObject;
-            component = null;
+        let proxy = component[ProxyFlag];
+        if (proxy === undefined || proxy === null || proxy === void 0) {
+            let target;
+            function getter() {
+                if (!component)
+                    return;
+                if (component.Equals(null)) {
+                    component = null;
+                    return;
+                }
+                if (!CS.XOR.TsComponent.IsRegistered())
+                    throw new Error("XOR.TsComponet.Register is required.");
+                if (component.IsPending)
+                    CS.XOR.TsComponent.Resolve(component, true);
+                target = component.JSObject;
+                component = null;
+            }
+            ;
+            proxy = new Proxy({}, {
+                apply: function (_, thisArg, argArray) {
+                    getter();
+                    target.apply(thisArg, argArray);
+                },
+                construct: function (_, argArray, newTarget) {
+                    getter();
+                    return new target(...argArray);
+                },
+                get: function (_, property) {
+                    getter();
+                    if (property === OriginFlag && target)
+                        return target;
+                    return target[property];
+                },
+                set: function (_, property, newValue) {
+                    getter();
+                    target[property] = newValue;
+                    return true;
+                },
+                defineProperty: function (_, property, attributes) {
+                    getter();
+                    Object.defineProperty(target, property, attributes);
+                    return true;
+                },
+                deleteProperty: function (_, property) {
+                    getter();
+                    delete target[property];
+                    return true;
+                },
+                getOwnPropertyDescriptor: function (_, property) {
+                    getter();
+                    return Object.getOwnPropertyDescriptor(target, property);
+                },
+                getPrototypeOf: function (_) {
+                    getter();
+                    return Object.getPrototypeOf(target);
+                },
+                setPrototypeOf: function (_, newValue) {
+                    getter();
+                    Object.setPrototypeOf(target, newValue);
+                    return true;
+                },
+                has: function (_, property) {
+                    getter();
+                    return property in target;
+                },
+                isExtensible: function (_) {
+                    getter();
+                    return Object.isExtensible(target);
+                },
+                ownKeys: function (_) {
+                    getter();
+                    return Reflect.ownKeys(target)?.filter(key => Object.getOwnPropertyDescriptor(target, key)?.configurable);
+                },
+                preventExtensions: function (_) {
+                    getter();
+                    Object.preventExtensions(target);
+                    return true;
+                },
+            });
+            Object.defineProperty(component, ProxyFlag, {
+                get: () => proxy,
+                enumerable: false,
+                configurable: true,
+            });
         }
-        ;
-        return new Proxy({}, {
-            apply: function (_, thisArg, argArray) {
-                getter();
-                target.apply(thisArg, argArray);
-            },
-            construct: function (_, argArray, newTarget) {
-                getter();
-                return new target(...argArray);
-            },
-            get: function (_, property) {
-                getter();
-                if (property === OriginFlag && target)
-                    return target;
-                return target[property];
-            },
-            set: function (_, property, newValue) {
-                getter();
-                target[property] = newValue;
-                return true;
-            },
-            defineProperty: function (_, property, attributes) {
-                getter();
-                Object.defineProperty(target, property, attributes);
-                return true;
-            },
-            deleteProperty: function (_, property) {
-                getter();
-                delete target[property];
-                return true;
-            },
-            getOwnPropertyDescriptor: function (_, property) {
-                getter();
-                return Object.getOwnPropertyDescriptor(target, property);
-            },
-            getPrototypeOf: function (_) {
-                getter();
-                return Object.getPrototypeOf(target);
-            },
-            setPrototypeOf: function (_, newValue) {
-                getter();
-                Object.setPrototypeOf(target, newValue);
-                return true;
-            },
-            has: function (_, property) {
-                getter();
-                return property in target;
-            },
-            isExtensible: function (_) {
-                getter();
-                return Object.isExtensible(target);
-            },
-            ownKeys: function (_) {
-                getter();
-                return Reflect.ownKeys(target)?.filter(key => Object.getOwnPropertyDescriptor(target, key)?.configurable);
-            },
-            preventExtensions: function (_) {
-                getter();
-                Object.preventExtensions(target);
-                return true;
-            },
-        });
+        return proxy;
     }
     function createJsObjectProxies(properties) {
         let c2jsKeys = [];
