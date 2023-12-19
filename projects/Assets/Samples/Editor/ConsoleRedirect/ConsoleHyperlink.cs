@@ -100,7 +100,49 @@ namespace UnityEditor.Console
 
         public static bool OpenFileInIDE(string filepath, int line, int column)
         {
-            return CodeEditor.CurrentEditor.OpenProject(filepath, line, column);
+#if UNITY_EDITOR && UNITY_2019_2_OR_NEWER
+            bool successfully = CodeEditor.CurrentEditor.OpenProject(filepath, line, column);
+            if (successfully)
+                return true;
+
+            //尝试查找编辑器安装路径
+            string editorPath = CodeEditor.CurrentEditorInstallation,
+                editorName = string.IsNullOrEmpty(editorPath) ? string.Empty : Path.GetFileNameWithoutExtension(editorPath);
+            if (string.IsNullOrEmpty(editorName))
+                return false;
+
+            string arguments = null;
+            switch (editorName)
+            {
+                default:
+                case "Code":        //vscode编辑器
+                    arguments = CodeEditor.ParseArgument(
+                        "$(ProjectPath) -g $(File):$(Line):$(Column)",
+                        filepath,
+                        line,
+                        column
+                    );
+                    break;
+                case "Rider":
+                    arguments = CodeEditor.ParseArgument(
+                        "--line $(Line) --column $(Column) $(File)",
+                        filepath,
+                        line,
+                        column
+                    );
+                    break;
+            }
+            if (string.IsNullOrEmpty(arguments))
+                return false;
+
+#if UNITY_EDITOR_WIN
+            arguments = arguments.Replace("\\", "/");
+#endif
+            return CodeEditor.OSOpenFile(editorPath, arguments);
+#else
+            UnityEngine.Debug.LogWarning($"Unsupport unity version: {UnityEngine.Application.unityVersion}");
+            return false;
+#endif
         }
     }
 }
