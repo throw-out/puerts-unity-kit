@@ -253,10 +253,15 @@ namespace XOR
             public bool FileExists(string filepath)
             {
                 if (this.match != null && !this.match(filepath))
-                {
                     return false;
+                if (!Loader.FileExists(filepath))
+                    return false;
+                if (Loader is Puerts.DefaultLoader)
+                {
+                    string script = Loader.ReadFile(filepath, out var debugpath);
+                    return !string.IsNullOrEmpty(script);
                 }
-                return Loader.FileExists(filepath);
+                return true;
             }
             public string ReadFile(string filepath, out string debugpath)
             {
@@ -335,6 +340,10 @@ namespace XOR
         {
 #if UNITY_EDITOR
             var path = filepath;
+            if (path.StartsWith("/") || path.StartsWith("\\"))
+            {
+                path = path.Substring(1);
+            }
             if (!path.EndsWith(".js") && !path.EndsWith(".cjs") && !path.EndsWith(".mjs") && !path.EndsWith(".json"))
             {
                 //Logger.LogWarning("unknown file extension: " + filepath);
@@ -374,7 +383,10 @@ namespace XOR
         {
             if (string.IsNullOrEmpty(filepath))
                 return false;
-
+            if (filepath.StartsWith("/") || filepath.StartsWith("\\"))
+            {
+                filepath = filepath.Substring(1);
+            }
             filepath = CombinePath(filepath);
             if (ignoreCase)
             {
@@ -392,7 +404,11 @@ namespace XOR
                 debugpath = null;
                 return null;
             }
-
+            if (filepath.StartsWith("/") || filepath.StartsWith("\\"))
+            {
+                filepath = filepath.Substring(1);
+            }
+            
             filepath = debugpath = CombinePath(filepath);
             if (ignoreCase)
             {
