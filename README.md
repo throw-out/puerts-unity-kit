@@ -48,8 +48,8 @@
 
 ## 开始使用
 1. 下载本模板项目;
-2. 进入目录`projects/TsEditorProject`和`projects/TsProject`安装依赖, 使用`npm install` or `yarn install`命令; 
-3. 使用`tsc`命令分别编译以上目录中的typescript脚本;
+2. 进入目录`projects/TsProject`, 执行`npm install` 或 `yarn`命令安装依赖;
+3. 执行`tsc`命令编译typescript项目;
 4. 完成.
 
 ## 规划
