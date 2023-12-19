@@ -166,9 +166,11 @@ export class Sample07 extends xor.TsComponent {
         console.log(`this._sample02._prop1.length = ${this._sample02?.prop1?.length}`);
         console.log(`this._sample03._prop1 = ${this._sample03?.prop1}`);
         console.log(`this._sample04._prop1 = ${this._sample04?.prop1}`);
-        //这里的_sample01,_sample03和_sample04是Proxy对象, 不可直接通过'==='进行判断.
+        //这里的_sample01,_sample03和_sample04是Proxy对象, 不建议通过'==='直接进行判断.
         //调用xxx.valueOf() 获取原始js对象
-        console.log(`this._sample04: is sample01 = ${this._sample04?.valueOf() === this._sample01?.valueOf()},  is sample03 = ${this._sample04?.valueOf() === this._sample03?.valueOf()}`);
+        let isSample01 = this._sample04?.valueOf() === this._sample01?.valueOf(),
+            isSample03 = this._sample04?.valueOf() === this._sample03?.valueOf();
+        console.log(`this._sample04: is sample01 = ${isSample01},  is sample03 = ${isSample03}`);
 
         console.log(`this._sample10.name = ${this.getName(this._list1)}`);
         console.log(`this._sample11.name = ${this.getName(this._sample11)}`);
