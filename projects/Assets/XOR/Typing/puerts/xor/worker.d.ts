@@ -76,15 +76,6 @@ declare class ThreadWorkerConstructor {
     private register;
     private registerRemoteProxy;
     private executeRemoteResolver;
-    private pack;
-    private unpack;
-    private _packByRefs;
-    private _unpackByRefs;
-    /**验证data数据
-     * @param data
-     * @returns 0:纯json数据, 1:引用UnityObject, 2:包含js functon/js symbol等参数
-     */
-    private _validate;
     /**postSync返回值接口事件名
      * @returns
      */

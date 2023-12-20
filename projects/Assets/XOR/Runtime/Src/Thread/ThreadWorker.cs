@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using Puerts;
 using UnityEngine;
@@ -22,8 +23,8 @@ namespace XOR
         public static int RealThread => realThread;
 
         //消息接口
-        public Func<string, EventData, EventData> MainThreadHandler;
-        public Func<string, EventData, EventData> ChildThreadHandler;
+        public Func<string, EventParameter, EventParameter> MainThreadHandler;
+        public Func<string, EventParameter, EventParameter> ChildThreadHandler;
         //消息缓存
         private readonly Queue<Event> mainThreadMessages;
         private readonly Queue<Event> childThreadMessages;
@@ -118,7 +119,7 @@ namespace XOR
         /// </summary>
         /// <param name="eventName"></param>
         /// <param name="data"></param>
-        public void PostToMainThread(string eventName, EventData data, string resultEventName = null)
+        public void PostToMainThread(string eventName, EventParameter data, string resultEventName = null)
         {
             VerifyThread(false, true);
             Logger.Info($"XOR.{nameof(ThreadWorker)}({ThreadId}->Main) Enqueue: {eventName}");
@@ -137,7 +138,7 @@ namespace XOR
         /// </summary>
         /// <param name="eventName"></param>
         /// <param name="data"></param>
-        public void PostToChildThread(string eventName, EventData data, string resultEventName = null)
+        public void PostToChildThread(string eventName, EventParameter data, string resultEventName = null)
         {
             VerifyThread(true, true);
             Logger.Info($"XOR.{nameof(ThreadWorker)}(Main->{ThreadId}) Enqueue: {eventName}");
@@ -332,10 +333,10 @@ namespace XOR
                     events.Add(mainThreadMessages.Dequeue());
             }
 
-            Func<string, EventData, EventData> func = this.MainThreadHandler;
+            Func<string, EventParameter, EventParameter> func = this.MainThreadHandler;
             if (func != null)
             {
-                EventData result = null;
+                EventParameter result = null;
                 for (int i = 0; i < events.Count; i++)
                 {
                     Event _event = events[i];
@@ -353,11 +354,7 @@ namespace XOR
                         Logger.LogError(e.Message);
                         if (!string.IsNullOrEmpty(_event.resultEventName))
                         {
-                            PostToChildThread(_event.resultEventName, new EventData()
-                            {
-                                type = ValueType.Error,
-                                value = e
-                            });
+                            PostToChildThread(_event.resultEventName, EventParameter.Error(e));
                         }
                     }
                 }
@@ -388,10 +385,10 @@ namespace XOR
                     events.Add(childThreadMessages.Dequeue());
             }
 
-            Func<string, EventData, EventData> func = this.ChildThreadHandler;
+            Func<string, EventParameter, EventParameter> func = this.ChildThreadHandler;
             if (func != null)
             {
-                EventData result = null;
+                EventParameter result = null;
                 for (int i = 0; i < events.Count; i++)
                 {
                     Event _event = events[i];
@@ -409,11 +406,7 @@ namespace XOR
                         Logger.LogError(e.Message);
                         if (!string.IsNullOrEmpty(_event.resultEventName))
                         {
-                            PostToMainThread(_event.resultEventName, new EventData()
-                            {
-                                type = ValueType.Error,
-                                value = e
-                            });
+                            PostToMainThread(_event.resultEventName, EventParameter.Error(e));
                         }
                     }
                 }
@@ -549,27 +542,48 @@ namespace XOR
         {
             public string eventName;
             public string resultEventName;
-            public EventData data;
+            public EventParameter data;
         }
-        public class EventData
+        public class EventParameter
         {
-            public ValueType type;
-            public object value;
-            /// <summary>当Type为Array/Object时, 此字段有效 </summary>
-            public object key;
-            /// <summary>当Type为RefObject时, 此字段有效 </summary>
-            public int id = -1;
-        }
-        public enum ValueType
-        {
-            Unknown,
-            Value,
-            Object,
-            Array,
-            ArrayBuffer,
-            RefObject,
-            Json,
-            Error
+            private Dictionary<uint, object> references;
+            public Puerts.ArrayBuffer Data { get; private set; }
+            public Exception Exception { get; private set; }
+            public bool IsError => Exception != null;
+
+            public EventParameter() : this(null) { }
+            public EventParameter(Puerts.ArrayBuffer data)
+            {
+                this.Data = data;
+            }
+
+            public void AddReference(uint objId, object obj)
+            {
+                if (references == null)
+                    references = new Dictionary<uint, object>();
+                references.Add(objId, obj);
+            }
+            public uint[] GetReferenceKeys()
+            {
+                if (references == null)
+                    return null;
+                return references.Keys.ToArray();
+            }
+            public object GetReferenceValue(uint objId)
+            {
+                if (references == null)
+                    return null;
+                references.TryGetValue(objId, out var result);
+                return result;
+            }
+
+            public static EventParameter Error(Exception e)
+            {
+                return new EventParameter()
+                {
+                    Exception = e
+                };
+            }
         }
     }
     public struct ThreadOptions

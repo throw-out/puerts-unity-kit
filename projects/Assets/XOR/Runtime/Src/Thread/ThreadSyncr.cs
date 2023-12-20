@@ -32,7 +32,7 @@ namespace XOR
         /// <param name="data"></param>
         /// <param name="throwOnError"></param>
         /// <returns></returns>
-        public ThreadWorker.EventData PostToMainThread(string eventName, ThreadWorker.EventData data, bool throwOnError = true)
+        public ThreadWorker.EventParameter PostToMainThread(string eventName, ThreadWorker.EventParameter data, bool throwOnError = true)
         {
             ThreadWorker.VerifyThread(false, true);
             //检查worker是否初始化完成
@@ -59,7 +59,7 @@ namespace XOR
                 locker.ReleaseWriter();
 
                 //等待主线程同步
-                ThreadWorker.EventData result = null; Exception exception = null;
+                ThreadWorker.EventParameter result = null; Exception exception = null;
                 while (worker.IsAlive)
                 {
                     locker.AcquireReader();
@@ -94,7 +94,7 @@ namespace XOR
         /// <param name="data"></param>
         /// <param name="throwOnError"></param>
         /// <returns></returns>
-        public ThreadWorker.EventData PostToChildThread(string eventName, ThreadWorker.EventData data, bool throwOnError = true)
+        public ThreadWorker.EventParameter PostToChildThread(string eventName, ThreadWorker.EventParameter data, bool throwOnError = true)
         {
             ThreadWorker.VerifyThread(true, true);
             //检查worker是否初始化完成
@@ -121,7 +121,7 @@ namespace XOR
                 locker.ReleaseWriter();
 
                 //等待子线程同步
-                ThreadWorker.EventData result = null; Exception exception = null;
+                ThreadWorker.EventParameter result = null; Exception exception = null;
                 while (worker.IsAlive)
                 {
                     locker.AcquireReader();
@@ -153,7 +153,7 @@ namespace XOR
         internal void ProcessMainThreadMessages() => Process(this._syncToMainThread, worker.MainThreadHandler);
         internal void ProcessChildThreadMessages() => Process(this._syncToChildThread, worker.ChildThreadHandler);
 
-        void Process(SyncEventData d, Func<string, ThreadWorker.EventData, ThreadWorker.EventData> invoke)
+        void Process(SyncEventData d, Func<string, ThreadWorker.EventParameter, ThreadWorker.EventParameter> invoke)
         {
             if (d == null || d.completed || invoke == null)
                 return;
@@ -182,11 +182,11 @@ namespace XOR
         class SyncEventData
         {
             public readonly string eventName;
-            public readonly ThreadWorker.EventData data;
+            public readonly ThreadWorker.EventParameter data;
             public bool completed;
-            public ThreadWorker.EventData result;
+            public ThreadWorker.EventParameter result;
             public Exception exception;
-            public SyncEventData(string eventName, ThreadWorker.EventData data)
+            public SyncEventData(string eventName, ThreadWorker.EventParameter data)
             {
                 this.eventName = eventName;
                 this.data = data;

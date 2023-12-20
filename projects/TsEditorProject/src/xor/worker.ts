@@ -1,9 +1,5 @@
 import $CS = CS;
 
-let List_Object = puer.$generic($CS.System.Collections.Generic.List$1, $CS.System.Object) as {
-    new(): $CS.System.Collections.Generic.List$1<$CS.System.Object>
-};
-
 const INVOKE_TICK = Symbol("INVOKE_TICK");
 
 const CLOSE_EVENT = "close",
@@ -84,15 +80,15 @@ class ThreadWorkerConstructor {
      * @param notResult 不获取返回值 
      */
     public post<TResult = void>(eventName: string, data?: any, notResult?: true): Promise<TResult> {
-        let edata: $CS.XOR.ThreadWorker.EventData;
+        let parameter: $CS.XOR.ThreadWorker.EventParameter;
         if (data !== undefined && data !== null && data !== void 0) {
-            edata = this.pack(data);
+            parameter = utils.encode(data);
         }
         let resultId = !notResult ? this._getResultId() : null;
         if (this.mainThread) {
-            this.worker.PostToChildThread(eventName, edata, resultId);
+            this.worker.PostToChildThread(eventName, parameter, resultId);
         } else {
-            this.worker.PostToMainThread(eventName, edata, resultId);
+            this.worker.PostToMainThread(eventName, parameter, resultId);
         }
         if (resultId) {
             return new Promise<TResult>((resolve, reject) => {
@@ -110,19 +106,22 @@ class ThreadWorkerConstructor {
      * @returns 
      */
     public postSync<TResult = any>(eventName: string, data?: any, throwOnError: boolean = true): TResult {
-        let edata: $CS.XOR.ThreadWorker.EventData;
+        let parameter: $CS.XOR.ThreadWorker.EventParameter;
         if (data !== undefined && data !== null && data !== void 0) {
-            edata = this.pack(data);
+            parameter = utils.encode(data);
         }
         let result: TResult;
         if (this.mainThread) {
-            edata = this.worker.Syncr.PostToChildThread(eventName, edata, throwOnError);
+            parameter = this.worker.Syncr.PostToChildThread(eventName, parameter, throwOnError);
         } else {
-            edata = this.worker.Syncr.PostToMainThread(eventName, edata, throwOnError);
+            parameter = this.worker.Syncr.PostToMainThread(eventName, parameter, throwOnError);
         }
         //Result
-        if (edata !== undefined && edata !== null && edata !== void 0) {
-            result = this.unpack(edata);
+        if (parameter !== undefined && parameter !== null && parameter !== void 0) {
+            if (parameter.IsError) {
+                throw new Error(`${parameter.Exception}`);
+            }
+            result = utils.decode(parameter);
         }
         return result;
     }
@@ -270,17 +269,17 @@ class ThreadWorkerConstructor {
     }
 
     private register() {
-        let getValue = (data: $CS.XOR.ThreadWorker.EventData) => {
+        let getValue = (data: $CS.XOR.ThreadWorker.EventParameter) => {
             if (data !== undefined && data !== null && data !== void 0) {
-                return this.unpack(data);
+                return utils.decode(data);
             }
             return undefined;
         };
-        let onmessage = (eventName: string, data: $CS.XOR.ThreadWorker.EventData, hasReturn: boolean = true): $CS.XOR.ThreadWorker.EventData => {
+        let onmessage = (eventName: string, data: $CS.XOR.ThreadWorker.EventParameter, hasReturn: boolean = true): $CS.XOR.ThreadWorker.EventParameter => {
             if (this._isResultId(eventName)) {          //post return data event
                 let error: Error, result: any;
-                if (data && data.type === $CS.XOR.ThreadWorker.ValueType.Error) {
-                    error = new Error(`${data.value}`);
+                if (data && data.IsError) {
+                    error = new Error(`${data.Exception}`);
                 } else {
                     result = getValue(data);
                 }
@@ -289,7 +288,7 @@ class ThreadWorkerConstructor {
             }
             let result = this._emit(eventName, getValue(data));
             if (hasReturn && result !== undefined && result !== null && result !== void 0) {
-                return this.pack(result);
+                return utils.encode(result);
             }
             return undefined;
         };
@@ -309,14 +308,14 @@ class ThreadWorkerConstructor {
                                 }
                             }
                             if (closing) this.stop();
-                            return this.pack(closing);
+                            return utils.encode(closing);
                         }
                         break;
                     case REMOTE_EVENT:
                         {
                             let result = this.executeRemoteResolver(getValue(data));
                             if (result !== undefined && result !== null && result !== void 0) {
-                                result = this.pack(result);
+                                result = utils.encode(result);
                             }
                             return result;
                         }
@@ -408,197 +407,12 @@ class ThreadWorkerConstructor {
                 console.error('无效的参数调用');
                 break;
         }
-        if (/**typeof (result) === "object" && */ this._validate(result) === PackValidate.Unsupport) {
+        if (/**typeof (result) === "object" && */ !utils.isSupported(result)) {
             result = undefined;
         }
         return result;
     }
 
-    private pack(data: any): $CS.XOR.ThreadWorker.EventData {
-        switch (this._validate(data)) {
-            case PackValidate.Json:
-                {
-                    let result = new $CS.XOR.ThreadWorker.EventData();
-                    if (typeof (data) === "object") {
-                        result.type = $CS.XOR.ThreadWorker.ValueType.Json;
-                        result.value = JSON.stringify(data);
-                    } else {
-                        result.type = $CS.XOR.ThreadWorker.ValueType.Value;
-                        result.value = data;
-                    }
-                    return result;
-                }
-                break;
-            case PackValidate.Reference:
-                return this._packByRefs(data, { mapping: new WeakMap(), id: 1 });
-                break;
-            case PackValidate.Unsupport:
-                throw new Error("unsupport data");
-                break;
-        }
-        return undefined;
-    }
-    private unpack(data: $CS.XOR.ThreadWorker.EventData): any {
-        switch (data.type) {
-            case $CS.XOR.ThreadWorker.ValueType.Json:
-                return JSON.parse(data.value);
-                break;
-            default:
-                return this._unpackByRefs(data, new Map());
-                break;
-        }
-        return undefined;
-    }
-    private _packByRefs(data: any, refs: { readonly mapping: WeakMap<object, number>, id: number }): $CS.XOR.ThreadWorker.EventData {
-        let result = new $CS.XOR.ThreadWorker.EventData();
-
-        let t = typeof (data);
-        if (t === "object" && refs.mapping.has(data)) {
-            result.type = $CS.XOR.ThreadWorker.ValueType.RefObject;
-            result.value = refs.mapping.get(data) ?? -1;
-        } else {
-            switch (t) {
-                case "object":
-                    //添加对象引用
-                    let id = refs.id++;
-                    refs.mapping.set(data, id);
-                    //创建对象引用
-                    result.id = id;
-                    if (data instanceof $CS.System.Object) {
-                        result.type = $CS.XOR.ThreadWorker.ValueType.Value;
-                        result.value = data;
-                    }
-                    else if (data instanceof ArrayBuffer) {
-                        result.type = $CS.XOR.ThreadWorker.ValueType.ArrayBuffer;
-                        result.value = $CS.XOR.BufferUtil.ToBytes(data);
-                    }
-                    else if (Array.isArray(data)) {
-                        let list = new List_Object();
-                        for (let i = 0; i < data.length; i++) {
-                            let member = this._packByRefs(data[i], refs);
-                            member.key = i;
-                            list.Add(member);
-                        }
-                        result.type = $CS.XOR.ThreadWorker.ValueType.Array;
-                        result.value = list;
-                    } else {
-                        let list = new List_Object();
-                        Object.keys(data).forEach(key => {
-                            let item = this._packByRefs(data[key], refs);
-                            item.key = key;
-                            list.Add(item);
-                        });
-                        result.type = $CS.XOR.ThreadWorker.ValueType.Object;
-                        result.value = list;
-                    }
-                    break;
-                case "string":
-                case "number":
-                case "bigint":
-                case "boolean":
-                    result.type = $CS.XOR.ThreadWorker.ValueType.Value;
-                    result.value = data;
-                    break;
-                default:
-                    result.type = $CS.XOR.ThreadWorker.ValueType.Unknown;
-                    break;
-            }
-        }
-        return result;
-    }
-    private _unpackByRefs(data: $CS.XOR.ThreadWorker.EventData, refs: Map<number, object>) {
-        const { type, value, id } = data;
-
-        let result: any;
-        switch (type) {
-            case $CS.XOR.ThreadWorker.ValueType.Object:
-                {
-                    result = {};
-                    if (id > 0) refs.set(id, result);                   //add object ref
-                    let list = value as $CS.System.Collections.Generic.List$1<$CS.XOR.ThreadWorker.EventData>;
-                    for (let i = 0; i < list.Count; i++) {
-                        let member = list.get_Item(i);
-                        result[member.key] = this._unpackByRefs(member, refs);
-                    }
-                }
-                break;
-            case $CS.XOR.ThreadWorker.ValueType.Array:
-                {
-                    result = [];
-                    if (id > 0) refs.set(id, result);                   //add object ref
-                    let list = value as $CS.System.Collections.Generic.List$1<$CS.XOR.ThreadWorker.EventData>;
-                    for (let i = 0; i < list.Count; i++) {
-                        let member = list.get_Item(i);
-                        result[member.key] = this._unpackByRefs(member, refs);
-                    }
-                }
-                break;
-            case $CS.XOR.ThreadWorker.ValueType.ArrayBuffer:
-                result = $CS.XOR.BufferUtil.ToBuffer(value);
-                if (id > 0) refs.set(id, result);                       //add object ref
-                break;
-            case $CS.XOR.ThreadWorker.ValueType.RefObject:
-                if (refs.has(value)) {
-                    result = refs.get(value);
-                } else {
-                    result = `Error: ref id ${value} not found`;
-                }
-                break;
-            case $CS.XOR.ThreadWorker.ValueType.Json:
-                result = JSON.parse(data.value);
-                if (id > 0) refs.set(id, result);                       //add object ref
-                break;
-            default:
-                result = value;
-                if (id > 0) refs.set(id, result);                       //add object ref
-                break;
-        }
-        return result;
-    }
-    /**验证data数据
-     * @param data 
-     * @returns 0:纯json数据, 1:引用UnityObject, 2:包含js functon/js symbol等参数
-     */
-    private _validate(data: any, refs?: WeakSet<object>,): PackValidate {
-        let t = typeof (data);
-        switch (t) {
-            case "object":
-                if (data === null) {
-                    return PackValidate.Json;
-                }
-                if (data instanceof $CS.System.Object ||
-                    data instanceof ArrayBuffer
-                ) {
-                    return PackValidate.Reference;
-                }
-
-                if (!refs) refs = new WeakSet();
-                if (refs.has(data)) {   //引用自身
-                    return PackValidate.Reference;
-                }
-                refs.add(data);
-                if (Array.isArray(data)) {
-                    for (let _d of data) {
-                        let t = this._validate(_d, refs);
-                        if (t !== PackValidate.Json) return t;
-                    }
-                } else {
-                    for (let key of Object.keys(data)) {
-                        let t = this._validate(key, refs);
-                        if (t !== PackValidate.Json) return t;
-
-                        t = this._validate(data[key], refs);
-                        if (t !== PackValidate.Json) return t;
-                    }
-                }
-                break;
-            case "symbol":
-            case "function":
-                return PackValidate.Unsupport;
-                break;
-        }
-        return PackValidate.Json;
-    }
     /**postSync返回值接口事件名
      * @returns 
      */
@@ -652,7 +466,7 @@ class ThreadWorkerConstructor {
                         type: fullName,
                         key: name as string
                     };
-                    if (this._validate(event) === PackValidate.Unsupport) {
+                    if (!utils.isSupported(event)) {
                         throw new Error("Invalid parameter exception");
                     }
                     return this.postSync(REMOTE_EVENT, event);
@@ -669,7 +483,7 @@ class ThreadWorkerConstructor {
                     key: name as string,
                     value: newValue
                 };
-                if (this._validate(event) === PackValidate.Unsupport) {
+                if (!utils.isSupported(event)) {
                     throw new Error("Invalid parameter exception");
                 }
                 this.postSync(REMOTE_EVENT, event);
@@ -681,7 +495,7 @@ class ThreadWorkerConstructor {
                     type: fullName,
                     args: argArray
                 };
-                if (this._validate(event) === PackValidate.Unsupport) {
+                if (!utils.isSupported(event)) {
                     throw new Error("Invalid parameter exception");
                 }
                 return this.postSync(REMOTE_EVENT, event);
@@ -698,7 +512,7 @@ class ThreadWorkerConstructor {
                     type: fullName,
                     instance: instance,
                 };
-                if (this._validate(event) === PackValidate.Unsupport) {
+                if (!utils.isSupported(event)) {
                     throw new Error("Invalid parameter exception");
                 }
                 return this.postSync(REMOTE_EVENT, event);
@@ -736,7 +550,7 @@ class ThreadWorkerConstructor {
                         key: name as string,
                         type: fullName,
                     };
-                    if (this._validate(event) === PackValidate.Unsupport) {
+                    if (!utils.isSupported(event)) {
                         throw new Error("Invalid parameter exception");
                     }
                     return this.postSync(REMOTE_EVENT, event);
@@ -754,7 +568,7 @@ class ThreadWorkerConstructor {
                     value: newValue,
                     type: fullName,
                 };
-                if (this._validate(event) === PackValidate.Unsupport) {
+                if (!utils.isSupported(event)) {
                     throw new Error("Invalid parameter exception");
                 }
                 this.postSync(REMOTE_EVENT, event);
@@ -763,11 +577,502 @@ class ThreadWorkerConstructor {
         });
     }
 }
-enum PackValidate {
-    Json = 0,
-    Reference = 1,
-    Unsupport = 2,
+
+namespace utils {
+    enum ObjectLevel {
+        /**纯json对象 */
+        Json = 0,
+        /**含引用的对象(引用C# Object或js Object) */
+        Reference = 1,
+        /**不支持: 含有fucntion/symbol等参数 */
+        Unsupport = 2,
+    }
+    function _getObjectLevel(data: any, refs?: WeakSet<object>,): ObjectLevel {
+        let t = typeof (data);
+        switch (t) {
+            case "object":
+                if (data === null) {
+                    return ObjectLevel.Json;
+                }
+                if (data instanceof CS.System.Object || data instanceof ArrayBuffer) {
+                    return ObjectLevel.Reference;
+                }
+
+                refs ??= new WeakSet();
+                if (refs.has(data)) {   //引用自身
+                    return ObjectLevel.Reference;
+                }
+                refs.add(data);
+                if (Array.isArray(data)) {
+                    for (let _d of data) {
+                        let t = _getObjectLevel(_d, refs);
+                        if (t !== ObjectLevel.Json)
+                            return t;
+                    }
+                } else {
+                    for (let key of Object.keys(data)) {
+                        let t = _getObjectLevel(key, refs);
+                        if (t !== ObjectLevel.Json)
+                            return t;
+                        t = _getObjectLevel(data[key], refs);
+                        if (t !== ObjectLevel.Json)
+                            return t;
+                    }
+                }
+                break;
+            case "symbol":
+            case "function":
+                return ObjectLevel.Unsupport;
+                break;
+        }
+        return ObjectLevel.Json;
+    }
+
+    enum DataTypes {
+        Undefined,
+        Null,
+        Boolean,
+        Integer,
+        Number,
+        Bigint,
+        String,
+
+        ArrayBuffer,
+        Array,
+        Object,
+
+        Reference,
+    }
+
+    class BufferWriter {
+        /**初始空间分配大小 */
+        private static readonly ALLOCATE_STEP_MIN = 4 * 1024;
+        /**最大递增分配空间大小 */
+        private static readonly ALLOCATE_STEP_MAX = 4 * 1024 * 1024;
+
+        private _resolved: Uint8Array[];
+        private _allocating: Buffer;
+        private _position: number;
+        private _free: number;
+        private _size: number;
+        constructor() {
+            this._position = 0;
+            this._free = 0;
+            this._size = 0;
+        }
+        public toData(): Uint8Array {
+            if (this._size === 0)
+                return Buffer.alloc(0);
+
+            const allocated = this._resolved ?? [];
+            if (this._allocating && this._position > 0) {
+                if (this._free === 0)
+                    allocated.push(this._allocating);
+                else
+                    allocated.push(this._allocating.subarray(0, this._position));
+            }
+            return Buffer.concat(allocated, this._size);
+        }
+
+        public writeInt8(value: number): void {
+            const size = 1;
+            if (this._free >= size) {
+                this._allocating.writeInt8(value, this._position);
+                this._move(size);
+            } else {
+                let buffer = Buffer.alloc(size);
+                buffer.writeInt8(value);
+                this._append(buffer);
+            }
+        }
+        public writeUInt8(value: number): void {
+            const size = 1;
+            if (this._free >= size) {
+                this._allocating.writeUInt8(value, this._position);
+                this._move(size);
+            } else {
+                let buffer = Buffer.alloc(size);
+                buffer.writeUInt8(value);
+                this._append(buffer);
+            }
+        }
+        public writeInt16(value: number): void {
+            const size = 2;
+            if (this._free >= size) {
+                this._allocating.writeInt16BE(value, this._position);
+                this._move(size);
+            } else {
+                let buffer = Buffer.alloc(size);
+                buffer.writeInt16BE(value);
+                this._append(buffer);
+            }
+        }
+        public writeUInt16(value: number): void {
+            const size = 2;
+            if (this._free >= size) {
+                this._allocating.writeUInt16BE(value, this._position);
+                this._move(size);
+            } else {
+                let buffer = Buffer.alloc(size);
+                buffer.writeUInt16BE(value);
+                this._append(buffer);
+            }
+        }
+        public writeInt32(value: number): void {
+            const size = 4;
+            if (this._free >= size) {
+                this._allocating.writeInt32BE(value, this._position);
+                this._move(size);
+            } else {
+                let buffer = Buffer.alloc(size);
+                buffer.writeInt32BE(value);
+                this._append(buffer);
+            }
+        }
+        public writeUInt32(value: number): void {
+            const size = 4;
+            if (this._free >= size) {
+                this._allocating.writeUInt32BE(value, this._position);
+                this._move(size);
+            } else {
+                let buffer = Buffer.alloc(size);
+                buffer.writeUInt32BE(value);
+                this._append(buffer);
+            }
+        }
+        public writeInt64(value: bigint): void {
+            const size = 8;
+            if (this._free >= size) {
+                this._allocating.writeBigInt64BE(value, this._position);
+                this._move(size);
+            } else {
+                let buffer = Buffer.alloc(size);
+                buffer.writeBigInt64BE(value);
+                this._append(buffer);
+            }
+        }
+        public writeDouble(value: number): void {
+            const size = 8;
+            if (this._free >= size) {
+                this._allocating.writeDoubleBE(value, this._position);
+                this._move(size);
+            } else {
+                let buffer = Buffer.alloc(size);
+                buffer.writeDoubleBE(value);
+                this._append(buffer);
+            }
+        }
+        public writeBuffer(value: Uint8Array): void {
+            this.writeUInt32(value.length);
+            this._append(Buffer.isBuffer(value) ? value : Buffer.from(value));
+        }
+
+        public writeBoolean(value: boolean): void {
+            this.writeUInt8(value ? 1 : 0);
+        }
+        public writeString(value: string, encoding?: BufferEncoding): void {
+            let buffer = Buffer.from(value, encoding ?? 'utf8');
+            this.writeBuffer(buffer);
+        }
+
+        private _append(buffer: Buffer) {
+            const size = buffer.length;
+
+            if (this._free === 0) {
+                this._alloc(size * 2);
+            }
+
+            if (this._free >= size) {
+                //有充足的空间, 拷贝全部数据
+                buffer.copy(this._allocating, this._position, 0, size);
+                this._move(size);
+                return;
+            }
+            else {
+                //进行分片拷贝数据
+                const resolved = this._free, unresolved = size - resolved;
+                //追加数据到末尾
+                buffer.copy(this._allocating, this._position, 0, resolved);
+                this._move(resolved);
+                //分配新空间, 然后拷贝未处理的数据
+                this._alloc(unresolved);
+                buffer.copy(this._allocating, this._position, resolved, size);
+                this._move(unresolved);
+            }
+        }
+        private _move(size: number) {
+            this._position += size;
+            this._free -= size;
+            this._size += size;
+        }
+        private _alloc(expectedSize: number) {
+            if (this._allocating) {
+                this._resolved ??= [];
+                this._resolved.push(this._allocating);
+            }
+
+            let allocSize = Math.min(BufferWriter.ALLOCATE_STEP_MAX, Math.max(BufferWriter.ALLOCATE_STEP_MIN, this._size * 2));
+            if (allocSize < expectedSize) {
+                allocSize = expectedSize;
+            }
+
+            this._allocating = Buffer.alloc(allocSize);
+            this._free = allocSize;
+            this._position = 0;
+        }
+    }
+    class BufferReader {
+        private readonly buffer: Buffer;
+        private _position: number;
+        constructor(buffer: ArrayBuffer) {
+            this.buffer = Buffer.isBuffer(buffer) ? buffer : Buffer.from(buffer);
+            this._position = 0;
+        }
+
+        public readInt8(): number {
+            let result = this.buffer.readInt8(this._position);
+            this._position += 1;
+            return result;
+        }
+        public readUInt8(): number {
+            let result = this.buffer.readUInt8(this._position);
+            this._position += 1;
+            return result;
+        }
+        public readInt16(): number {
+            let result = this.buffer.readInt16BE(this._position);
+            this._position += 2;
+            return result;
+        }
+        public readUInt16(): number {
+            let result = this.buffer.readUInt16BE(this._position);
+            this._position += 2;
+            return result;
+        }
+        public readInt32(): number {
+            let result = this.buffer.readInt32BE(this._position);
+            this._position += 4;
+            return result;
+        }
+        public readUInt32(): number {
+            let result = this.buffer.readUInt32BE(this._position);
+            this._position += 4;
+            return result;
+        }
+        public readInt64(): bigint {
+            let result = this.buffer.readBigInt64BE(this._position);
+            this._position += 8;
+            return result;
+        }
+        public readDouble(): number {
+            let result = this.buffer.readDoubleBE(this._position);
+            this._position += 4;
+            return result;
+        }
+        public readBuffer(): Uint8Array {
+            const size = this.readUInt32();
+            let result = this.buffer.subarray(this._position, this._position + size);
+            this._position += size;
+            return result;
+        }
+
+        public readBoolean(): boolean {
+            let v = this.readUInt8();
+            return v !== 0;
+        }
+        public readString(encoding?: BufferEncoding): string {
+            const size = this.readUInt32();
+            let result = this.buffer.toString(encoding ?? 'utf8', this._position, this._position + size);
+            this._position += size;
+            return result;
+        }
+    }
+
+    const INT32_MAX_VALUE = 2147483647, INT32_MIN_VALUE = -2147483648;
+    function _encode(data: any, result: {
+        id: number
+        readonly csharp: Array<[CS.System.Object, number]>,
+        readonly mapping: WeakMap<object, number>,
+        readonly writer: BufferWriter;
+    }) {
+        let t = typeof (data);
+        if (t === "object" && result.mapping.has(data)) {
+            let objId = result.mapping.get(data) ?? -1;
+            result.writer.writeUInt8(DataTypes.Reference);
+            result.writer.writeUInt16(objId);
+            return;
+        }
+
+        switch (t) {
+            case "object":
+                if (data === null) {
+                    result.writer.writeUInt8(DataTypes.Null);
+                    return;
+                }
+                //添加对象引用
+                let objId = result.id++;
+                result.mapping.set(data, objId);
+                //创建对象信息
+                if (data instanceof CS.System.Object) {
+                    result.writer.writeUInt8(DataTypes.Reference);
+                    result.writer.writeUInt16(objId);
+                    result.csharp.push([data, objId]);
+                }
+                else if (data instanceof ArrayBuffer || data instanceof Uint8Array || Buffer.isBuffer(data)) {
+                    result.writer.writeUInt8(DataTypes.ArrayBuffer);
+                    result.writer.writeUInt16(objId);
+                    result.writer.writeBuffer(Buffer.isBuffer(data) ? data : Buffer.from(data));
+                }
+                else if (Array.isArray(data)) {
+                    result.writer.writeUInt8(DataTypes.Array);
+                    result.writer.writeUInt16(objId);
+                    result.writer.writeUInt32(data.length);
+                    for (let i = 0; i < data.length; i++) {
+                        _encode(data[i], result);
+                    }
+                }
+                else {
+                    let keys = Object.keys(data);
+                    result.writer.writeUInt8(DataTypes.Object);
+                    result.writer.writeUInt16(objId);
+                    result.writer.writeUInt32(keys.length);
+                    keys.forEach(key => {
+                        _encode(key, result);
+                        _encode(data[key], result);
+                    });
+                }
+                break;
+            case "number":
+                if (!Number.isInteger(data) || data < INT32_MIN_VALUE || data > INT32_MAX_VALUE) {
+                    result.writer.writeUInt8(DataTypes.Number);
+                    result.writer.writeDouble(/* Number.isNaN(data) ? 0 :  */data);
+                } else {
+                    result.writer.writeUInt8(DataTypes.Integer);
+                    result.writer.writeInt32(data);
+                }
+                break;
+            case "bigint":
+                result.writer.writeUInt8(DataTypes.Bigint);
+                result.writer.writeInt64(data);
+                break;
+            case "string":
+                result.writer.writeUInt8(DataTypes.String);
+                result.writer.writeString(data);
+                break;
+            case "boolean":
+                result.writer.writeUInt8(DataTypes.Boolean);
+                result.writer.writeBoolean(data);
+                break;
+            default:
+                result.writer.writeUInt8(DataTypes.Undefined);
+                break;
+        }
+    }
+    function _decode(reader: BufferReader, mapping: Map<number, any>) {
+        let type = reader.readUInt8(), result: any;
+        switch (type) {
+            case DataTypes.Reference:
+                {
+                    let objId = reader.readUInt16();
+                    result = mapping.get(objId);
+                }
+                break;
+            case DataTypes.ArrayBuffer:
+                {
+                    let objId = reader.readUInt16();
+                    result = reader.readBuffer();
+                    mapping.set(objId, result);        //add object reference
+                }
+                break;
+            case DataTypes.Array:
+                {
+                    let array = []; result = array;
+
+                    let objId = reader.readUInt16();
+                    let len = reader.readUInt32();
+                    mapping.set(objId, array);         //add object reference
+                    while (len-- > 0) {
+                        array.push(_decode(reader, mapping));
+                    }
+                }
+                break;
+            case DataTypes.Object:
+                {
+                    let obj = {}; result = obj;
+
+                    let objId = reader.readUInt16();
+                    let len = reader.readUInt32();
+                    mapping.set(objId, obj);           //add object reference
+                    while (len-- > 0) {
+                        let key = _decode(reader, mapping), value = _decode(reader, mapping);
+                        obj[key] = value;
+                    }
+                }
+                break;
+
+            case DataTypes.Integer:
+                result = reader.readInt32();
+                break;
+            case DataTypes.Number:
+                result = reader.readDouble();
+                break;
+            case DataTypes.String:
+                result = reader.readString();
+                break;
+            case DataTypes.Bigint:
+                result = reader.readInt64();
+                break;
+            case DataTypes.Boolean:
+                result = reader.readBoolean();
+                break;
+            case DataTypes.Null:
+                result = null;
+                break;
+            case DataTypes.Undefined:
+                result = undefined;
+                break;
+        }
+        return result;
+    }
+
+    export function encode(data: any) {
+        let result: Parameters<typeof _encode>[1] = {
+            id: 0,
+            csharp: [],
+            mapping: new WeakMap(),
+            writer: new BufferWriter(),
+        };
+        _encode(data, result);
+
+        let parameter = new CS.XOR.ThreadWorker.EventParameter(result.writer.toData());
+        if (result.csharp.length > 0) {
+            for (let [obj, objId] of result.csharp) {
+                parameter.AddReference(objId, obj);
+            }
+        }
+        return parameter;
+    }
+    export function decode(parameter: CS.XOR.ThreadWorker.EventParameter) {
+        let mapping = new Map<number, any>();
+        let objIds = parameter.GetReferenceKeys();
+        if (objIds && objIds.Length > 0) {
+            for (let i = 0; i < objIds.Length; i++) {
+                let key = objIds.get_Item(i);
+                mapping.set(key, parameter.GetReferenceValue(key));
+            }
+        }
+
+        return _decode(new BufferReader(parameter.Data), mapping);
+    }
+    /**是否受支持的数据类型
+     * @param data 
+     * @returns 
+     */
+    export function isSupported(data: any) {
+        return _getObjectLevel(data) !== ObjectLevel.Unsupport;
+    }
 }
+
 function register() {
     let _g = (global ?? globalThis ?? this);
     _g.xor = _g.xor || {};
