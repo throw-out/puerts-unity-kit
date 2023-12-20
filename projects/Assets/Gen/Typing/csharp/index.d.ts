@@ -523,11 +523,11 @@ declare namespace CS {
             (): TResult;
             Invoke?: () => TResult;
         }
-        class DateTime extends System.ValueType implements System.IComparable, System.IComparable$1<Date>, System.IConvertible, System.IEquatable$1<Date>, System.Runtime.Serialization.ISerializable, System.IFormattable {
+        class DateTime extends System.ValueType implements System.IComparable, System.IComparable$1<System.DateTime>, System.IConvertible, System.IEquatable$1<System.DateTime>, System.Runtime.Serialization.ISerializable, System.IFormattable {
             protected [__keep_incompatibility]: never;
-            public static MinValue: Date
-            public static MaxValue: Date
-            public get Date(): Date;
+            public static MinValue: System.DateTime
+            public static MaxValue: System.DateTime
+            public get Date(): System.DateTime;
             public get Day(): number;
             public get DayOfWeek(): System.DayOfWeek;
             public get DayOfYear(): number;
@@ -536,49 +536,49 @@ declare namespace CS {
             public get Millisecond(): number;
             public get Minute(): number;
             public get Month(): number;
-            public static get Now(): Date;
-            public static get UtcNow(): Date;
+            public static get Now(): System.DateTime;
+            public static get UtcNow(): System.DateTime;
             public get Second(): number;
             public get Ticks(): bigint;
             public get TimeOfDay(): System.TimeSpan;
-            public static get Today(): Date;
+            public static get Today(): System.DateTime;
             public get Year(): number;
-            public Add($value: System.TimeSpan): Date
-            public AddDays($value: number): Date
-            public AddHours($value: number): Date
-            public AddMilliseconds($value: number): Date
-            public AddMinutes($value: number): Date
-            public AddMonths($months: number): Date
-            public AddSeconds($value: number): Date
-            public AddTicks($value: bigint): Date
-            public AddYears($value: number): Date
-            public static Compare($t1: Date, $t2: Date): number
+            public Add($value: System.TimeSpan): System.DateTime
+            public AddDays($value: number): System.DateTime
+            public AddHours($value: number): System.DateTime
+            public AddMilliseconds($value: number): System.DateTime
+            public AddMinutes($value: number): System.DateTime
+            public AddMonths($months: number): System.DateTime
+            public AddSeconds($value: number): System.DateTime
+            public AddTicks($value: bigint): System.DateTime
+            public AddYears($value: number): System.DateTime
+            public static Compare($t1: System.DateTime, $t2: System.DateTime): number
             public CompareTo($value: any): number
-            public CompareTo($value: Date): number
+            public CompareTo($value: System.DateTime): number
             public static DaysInMonth($year: number, $month: number): number
             public Equals($value: any): boolean
-            public Equals($value: Date): boolean
-            public static Equals($t1: Date, $t2: Date): boolean
-            public static FromBinary($dateData: bigint): Date
-            public static FromFileTime($fileTime: bigint): Date
-            public static FromFileTimeUtc($fileTime: bigint): Date
-            public static FromOADate($d: number): Date
+            public Equals($value: System.DateTime): boolean
+            public static Equals($t1: System.DateTime, $t2: System.DateTime): boolean
+            public static FromBinary($dateData: bigint): System.DateTime
+            public static FromFileTime($fileTime: bigint): System.DateTime
+            public static FromFileTimeUtc($fileTime: bigint): System.DateTime
+            public static FromOADate($d: number): System.DateTime
             public IsDaylightSavingTime(): boolean
-            public static SpecifyKind($value: Date, $kind: System.DateTimeKind): Date
+            public static SpecifyKind($value: System.DateTime, $kind: System.DateTimeKind): System.DateTime
             public ToBinary(): bigint
             public static IsLeapYear($year: number): boolean
-            public static Parse($s: string): Date
-            public static Parse($s: string, $provider: System.IFormatProvider): Date
-            public static Parse($s: string, $provider: System.IFormatProvider, $styles: System.Globalization.DateTimeStyles): Date
-            public static ParseExact($s: string, $format: string, $provider: System.IFormatProvider): Date
-            public static ParseExact($s: string, $format: string, $provider: System.IFormatProvider, $style: System.Globalization.DateTimeStyles): Date
-            public static ParseExact($s: string, $formats: System.Array$1<string>, $provider: System.IFormatProvider, $style: System.Globalization.DateTimeStyles): Date
-            public Subtract($value: Date): System.TimeSpan
-            public Subtract($value: System.TimeSpan): Date
+            public static Parse($s: string): System.DateTime
+            public static Parse($s: string, $provider: System.IFormatProvider): System.DateTime
+            public static Parse($s: string, $provider: System.IFormatProvider, $styles: System.Globalization.DateTimeStyles): System.DateTime
+            public static ParseExact($s: string, $format: string, $provider: System.IFormatProvider): System.DateTime
+            public static ParseExact($s: string, $format: string, $provider: System.IFormatProvider, $style: System.Globalization.DateTimeStyles): System.DateTime
+            public static ParseExact($s: string, $formats: System.Array$1<string>, $provider: System.IFormatProvider, $style: System.Globalization.DateTimeStyles): System.DateTime
+            public Subtract($value: System.DateTime): System.TimeSpan
+            public Subtract($value: System.TimeSpan): System.DateTime
             public ToOADate(): number
             public ToFileTime(): bigint
             public ToFileTimeUtc(): bigint
-            public ToLocalTime(): Date
+            public ToLocalTime(): System.DateTime
             public ToLongDateString(): string
             public ToLongTimeString(): string
             public ToShortDateString(): string
@@ -587,20 +587,20 @@ declare namespace CS {
             public ToString($format: string): string
             public ToString($provider: System.IFormatProvider): string
             public ToString($format: string, $provider: System.IFormatProvider): string
-            public ToUniversalTime(): Date
-            public static TryParse($s: string, $result: $Ref<Date>): boolean
-            public static TryParse($s: string, $provider: System.IFormatProvider, $styles: System.Globalization.DateTimeStyles, $result: $Ref<Date>): boolean
-            public static TryParseExact($s: string, $format: string, $provider: System.IFormatProvider, $style: System.Globalization.DateTimeStyles, $result: $Ref<Date>): boolean
-            public static TryParseExact($s: string, $formats: System.Array$1<string>, $provider: System.IFormatProvider, $style: System.Globalization.DateTimeStyles, $result: $Ref<Date>): boolean
-            public static op_Addition($d: Date, $t: System.TimeSpan): Date
-            public static op_Subtraction($d: Date, $t: System.TimeSpan): Date
-            public static op_Subtraction($d1: Date, $d2: Date): System.TimeSpan
-            public static op_Equality($d1: Date, $d2: Date): boolean
-            public static op_Inequality($d1: Date, $d2: Date): boolean
-            public static op_LessThan($t1: Date, $t2: Date): boolean
-            public static op_LessThanOrEqual($t1: Date, $t2: Date): boolean
-            public static op_GreaterThan($t1: Date, $t2: Date): boolean
-            public static op_GreaterThanOrEqual($t1: Date, $t2: Date): boolean
+            public ToUniversalTime(): System.DateTime
+            public static TryParse($s: string, $result: $Ref<System.DateTime>): boolean
+            public static TryParse($s: string, $provider: System.IFormatProvider, $styles: System.Globalization.DateTimeStyles, $result: $Ref<System.DateTime>): boolean
+            public static TryParseExact($s: string, $format: string, $provider: System.IFormatProvider, $style: System.Globalization.DateTimeStyles, $result: $Ref<System.DateTime>): boolean
+            public static TryParseExact($s: string, $formats: System.Array$1<string>, $provider: System.IFormatProvider, $style: System.Globalization.DateTimeStyles, $result: $Ref<System.DateTime>): boolean
+            public static op_Addition($d: System.DateTime, $t: System.TimeSpan): System.DateTime
+            public static op_Subtraction($d: System.DateTime, $t: System.TimeSpan): System.DateTime
+            public static op_Subtraction($d1: System.DateTime, $d2: System.DateTime): System.TimeSpan
+            public static op_Equality($d1: System.DateTime, $d2: System.DateTime): boolean
+            public static op_Inequality($d1: System.DateTime, $d2: System.DateTime): boolean
+            public static op_LessThan($t1: System.DateTime, $t2: System.DateTime): boolean
+            public static op_LessThanOrEqual($t1: System.DateTime, $t2: System.DateTime): boolean
+            public static op_GreaterThan($t1: System.DateTime, $t2: System.DateTime): boolean
+            public static op_GreaterThanOrEqual($t1: System.DateTime, $t2: System.DateTime): boolean
             public GetDateTimeFormats(): System.Array$1<string>
             public GetDateTimeFormats($provider: System.IFormatProvider): System.Array$1<string>
             public GetDateTimeFormats($format: number): System.Array$1<string>
@@ -7882,7 +7882,7 @@ declare namespace CS {
             protected [__keep_incompatibility]: never;
             /** Time, when the crash occured.
             */
-            public time: Date
+            public time: System.DateTime
             /** Crash report data as formatted text.
             */
             public text: string
@@ -26391,6 +26391,8 @@ declare namespace CS {
         class StreamingContext extends System.ValueType {
             protected [__keep_incompatibility]: never;
         }
+        interface IObjectReference {
+        }
     }
     namespace System.Collections.Generic.Dictionary$2 {
         class KeyCollection<TKey, TValue> extends System.Object implements System.Collections.IEnumerable, System.Collections.Generic.IReadOnlyCollection$1<TKey>, System.Collections.Generic.ICollection$1<TKey>, System.Collections.ICollection, System.Collections.Generic.IEnumerable$1<TKey>
@@ -26460,8 +26462,8 @@ declare namespace CS {
         }
         class ThreadWorker extends XOR.Multiple$1<XOR.ThreadWorker> implements System.IDisposable {
             protected [__keep_incompatibility]: never;
-            public MainThreadHandler: System.Func$3<string, XOR.ThreadWorker.EventData, XOR.ThreadWorker.EventData>
-            public ChildThreadHandler: System.Func$3<string, XOR.ThreadWorker.EventData, XOR.ThreadWorker.EventData>
+            public MainThreadHandler: System.Func$3<string, XOR.ThreadWorker.EventParameter, XOR.ThreadWorker.EventParameter>
+            public ChildThreadHandler: System.Func$3<string, XOR.ThreadWorker.EventParameter, XOR.ThreadWorker.EventParameter>
             public static get RealThread(): number;
             public get IsAlive(): boolean;
             public get IsInitialized(): boolean;
@@ -26474,8 +26476,8 @@ declare namespace CS {
             public Tick(): void
             public Run($filepath: string): void
             public static VerifyThread($isMainThread: boolean, $throwError?: boolean): boolean
-            public PostToMainThread($eventName: string, $data: XOR.ThreadWorker.EventData, $resultEventName?: string): void
-            public PostToChildThread($eventName: string, $data: XOR.ThreadWorker.EventData, $resultEventName?: string): void
+            public PostToMainThread($eventName: string, $data: XOR.ThreadWorker.EventParameter, $resultEventName?: string): void
+            public PostToChildThread($eventName: string, $data: XOR.ThreadWorker.EventParameter, $resultEventName?: string): void
             public PostEvalToChildThread($chunk: string, $chunkName?: string): void
             public Dispose(): void
             public static Create($loader: Puerts.ILoader): XOR.ThreadWorker
@@ -26569,7 +26571,7 @@ declare namespace CS {
             public Load($filepath: string): void
             public constructor()
         }
-        class MixerLoader extends System.Object implements Puerts.ILoader, Puerts.IModuleChecker, System.IDisposable {
+        class MixerLoader extends System.Object implements System.IDisposable, Puerts.ILoader, Puerts.IModuleChecker {
             protected [__keep_incompatibility]: never;
             public get AppendExtension(): boolean;
             public set AppendExtension(value: boolean);
@@ -26862,6 +26864,7 @@ declare namespace CS {
             public static RequireXORModules($env: Puerts.JsEnv): void
             public static RequireXORModules($env: Puerts.JsEnv, $throwOnFailure: boolean): void
             public static ComponentJSObjectCreator($env: Puerts.JsEnv): System.Func$3<XOR.TsComponent, string, Puerts.JSObject>
+            public static ComponentJSObjectCreatorCallback($env: Puerts.JsEnv): System.Action$3<XOR.TsComponent, string, System.Action$2<XOR.TsComponent, Puerts.JSObject>>
             public static ComponentInvokeMethod($env: Puerts.JsEnv): System.Action$3<Puerts.JSObject, string, System.Array$1<any>>
             public static Load($env: Puerts.JsEnv, $filepath: string): void
         }
@@ -26879,7 +26882,7 @@ declare namespace CS {
             public static GetTsComponent($gameObject: UnityEngine.GameObject, $guid: string): Puerts.JSObject
             public static GetTsComponent($component: UnityEngine.Component, $guid: string): Puerts.JSObject
             public static AddTsComponent($gameObject: UnityEngine.GameObject, $guid: string): Puerts.JSObject
-            public static AddTsComponent($gameObject: UnityEngine.GameObject, $guid: string, $jsObject: Puerts.JSObject): void
+            public static AddTsComponent($gameObject: UnityEngine.GameObject, $guid: string, $jsObject: Puerts.JSObject): XOR.TsComponent
         }
         class FileLoader extends System.Object implements Puerts.ILoader {
             protected [__keep_incompatibility]: never;
@@ -26888,7 +26891,7 @@ declare namespace CS {
             public constructor($outputRoot: string, $projectRoot?: string)
             public constructor()
         }
-        class CacheLoader extends System.Object implements Puerts.ILoader, System.IDisposable {
+        class CacheLoader extends System.Object implements System.IDisposable, Puerts.ILoader {
             protected [__keep_incompatibility]: never;
             public get rootPath(): string;
             public set rootPath(value: string);
@@ -27042,8 +27045,8 @@ declare namespace CS {
         }
         class ThreadSyncr extends System.Object {
             protected [__keep_incompatibility]: never;
-            public PostToMainThread($eventName: string, $data: XOR.ThreadWorker.EventData, $throwOnError?: boolean): XOR.ThreadWorker.EventData
-            public PostToChildThread($eventName: string, $data: XOR.ThreadWorker.EventData, $throwOnError?: boolean): XOR.ThreadWorker.EventData
+            public PostToMainThread($eventName: string, $data: XOR.ThreadWorker.EventParameter, $throwOnError?: boolean): XOR.ThreadWorker.EventParameter
+            public PostToChildThread($eventName: string, $data: XOR.ThreadWorker.EventParameter, $throwOnError?: boolean): XOR.ThreadWorker.EventParameter
             public constructor($worker: XOR.ThreadWorker)
             public constructor()
         }
@@ -27298,7 +27301,7 @@ declare namespace CS {
             public static op_Inequality($left: System.Reflection.MethodBase, $right: System.Reflection.MethodBase): boolean
             public static op_Inequality($left: System.Reflection.MemberInfo, $right: System.Reflection.MemberInfo): boolean
         }
-        class ParameterInfo extends System.Object implements System.Reflection.ICustomAttributeProvider {
+        class ParameterInfo extends System.Object implements System.Runtime.InteropServices._ParameterInfo, System.Runtime.Serialization.IObjectReference, System.Reflection.ICustomAttributeProvider {
             protected [__keep_incompatibility]: never;
             public get ParameterType(): System.Type;
             public get Attributes(): System.Reflection.ParameterAttributes;
@@ -27466,6 +27469,8 @@ declare namespace CS {
         }
         interface _MethodInfo {
         }
+        interface _ParameterInfo {
+        }
         interface _PropertyInfo {
         }
         interface _ConstructorInfo {
@@ -27562,12 +27567,12 @@ declare namespace CS {
             public static Delete($path: string): void
             public static Exists($path: string): boolean
             public static GetAttributes($path: string): System.IO.FileAttributes
-            public static GetCreationTime($path: string): Date
-            public static GetCreationTimeUtc($path: string): Date
-            public static GetLastAccessTime($path: string): Date
-            public static GetLastAccessTimeUtc($path: string): Date
-            public static GetLastWriteTime($path: string): Date
-            public static GetLastWriteTimeUtc($path: string): Date
+            public static GetCreationTime($path: string): System.DateTime
+            public static GetCreationTimeUtc($path: string): System.DateTime
+            public static GetLastAccessTime($path: string): System.DateTime
+            public static GetLastAccessTimeUtc($path: string): System.DateTime
+            public static GetLastWriteTime($path: string): System.DateTime
+            public static GetLastWriteTimeUtc($path: string): System.DateTime
             public static Move($sourceFileName: string, $destFileName: string): void
             public static Open($path: string, $mode: System.IO.FileMode): System.IO.FileStream
             public static Open($path: string, $mode: System.IO.FileMode, $access: System.IO.FileAccess): System.IO.FileStream
@@ -27578,12 +27583,12 @@ declare namespace CS {
             public static Replace($sourceFileName: string, $destinationFileName: string, $destinationBackupFileName: string): void
             public static Replace($sourceFileName: string, $destinationFileName: string, $destinationBackupFileName: string, $ignoreMetadataErrors: boolean): void
             public static SetAttributes($path: string, $fileAttributes: System.IO.FileAttributes): void
-            public static SetCreationTime($path: string, $creationTime: Date): void
-            public static SetCreationTimeUtc($path: string, $creationTimeUtc: Date): void
-            public static SetLastAccessTime($path: string, $lastAccessTime: Date): void
-            public static SetLastAccessTimeUtc($path: string, $lastAccessTimeUtc: Date): void
-            public static SetLastWriteTime($path: string, $lastWriteTime: Date): void
-            public static SetLastWriteTimeUtc($path: string, $lastWriteTimeUtc: Date): void
+            public static SetCreationTime($path: string, $creationTime: System.DateTime): void
+            public static SetCreationTimeUtc($path: string, $creationTimeUtc: System.DateTime): void
+            public static SetLastAccessTime($path: string, $lastAccessTime: System.DateTime): void
+            public static SetLastAccessTimeUtc($path: string, $lastAccessTimeUtc: System.DateTime): void
+            public static SetLastWriteTime($path: string, $lastWriteTime: System.DateTime): void
+            public static SetLastWriteTimeUtc($path: string, $lastWriteTimeUtc: System.DateTime): void
             public static ReadAllBytes($path: string): System.Array$1<number>
             public static ReadAllLines($path: string): System.Array$1<string>
             public static ReadAllLines($path: string, $encoding: System.Text.Encoding): System.Array$1<string>
@@ -27648,23 +27653,23 @@ declare namespace CS {
             public static Delete($path: string): void
             public static Delete($path: string, $recursive: boolean): void
             public static Exists($path: string): boolean
-            public static GetLastAccessTime($path: string): Date
-            public static GetLastAccessTimeUtc($path: string): Date
-            public static GetLastWriteTime($path: string): Date
-            public static GetLastWriteTimeUtc($path: string): Date
-            public static GetCreationTime($path: string): Date
-            public static GetCreationTimeUtc($path: string): Date
+            public static GetLastAccessTime($path: string): System.DateTime
+            public static GetLastAccessTimeUtc($path: string): System.DateTime
+            public static GetLastWriteTime($path: string): System.DateTime
+            public static GetLastWriteTimeUtc($path: string): System.DateTime
+            public static GetCreationTime($path: string): System.DateTime
+            public static GetCreationTimeUtc($path: string): System.DateTime
             public static GetCurrentDirectory(): string
             public static GetLogicalDrives(): System.Array$1<string>
             public static GetParent($path: string): System.IO.DirectoryInfo
             public static Move($sourceDirName: string, $destDirName: string): void
-            public static SetCreationTime($path: string, $creationTime: Date): void
-            public static SetCreationTimeUtc($path: string, $creationTimeUtc: Date): void
+            public static SetCreationTime($path: string, $creationTime: System.DateTime): void
+            public static SetCreationTimeUtc($path: string, $creationTimeUtc: System.DateTime): void
             public static SetCurrentDirectory($path: string): void
-            public static SetLastAccessTime($path: string, $lastAccessTime: Date): void
-            public static SetLastAccessTimeUtc($path: string, $lastAccessTimeUtc: Date): void
-            public static SetLastWriteTime($path: string, $lastWriteTime: Date): void
-            public static SetLastWriteTimeUtc($path: string, $lastWriteTimeUtc: Date): void
+            public static SetLastAccessTime($path: string, $lastAccessTime: System.DateTime): void
+            public static SetLastAccessTimeUtc($path: string, $lastAccessTimeUtc: System.DateTime): void
+            public static SetLastWriteTime($path: string, $lastWriteTime: System.DateTime): void
+            public static SetLastWriteTimeUtc($path: string, $lastWriteTimeUtc: System.DateTime): void
         }
         enum SearchOption { TopDirectoryOnly = 0, AllDirectories = 1 }
         class FileSystemInfo extends System.MarshalByRefObject implements System.Runtime.Serialization.ISerializable {
@@ -29368,6 +29373,7 @@ declare namespace CS {
             RequireXORModules(): void;
             RequireXORModules($throwOnFailure: boolean): void;
             ComponentJSObjectCreator(): System.Func$3<XOR.TsComponent, string, Puerts.JSObject>;
+            ComponentJSObjectCreatorCallback(): System.Action$3<XOR.TsComponent, string, System.Action$2<XOR.TsComponent, Puerts.JSObject>>;
             ComponentInvokeMethod(): System.Action$3<Puerts.JSObject, string, System.Array$1<any>>;
             Load($filepath: string): void;
             UsingTick(): void;
@@ -31516,9 +31522,9 @@ declare namespace CS {
             public SetBoolean($isolate: System.IntPtr, $holder: System.IntPtr, $b: boolean): void
             public SetDate($isolate: System.IntPtr, $holder: System.IntPtr, $date: number): void
             public SetNull($isolate: System.IntPtr, $holder: System.IntPtr): void
+            SetArrayBuffer($isolate: System.IntPtr, $holder: System.IntPtr, $arrayBuffer: Puerts.ArrayBuffer): void;
             public static __Create($target: Puerts.JSObject): XOR.JsBase
             public constructor($target: Puerts.JSObject)
-            SetArrayBuffer($isolate: System.IntPtr, $holder: System.IntPtr, $arrayBuffer: Puerts.ArrayBuffer): void;
         }
         class Puerts_IGetValueFromJs_Bridge extends XOR.JsBase implements Puerts.IGetValueFromJs {
             protected [__keep_incompatibility]: never;
@@ -31532,10 +31538,9 @@ declare namespace CS {
             public GetTypeId($isolate: System.IntPtr, $holder: System.IntPtr, $isByRef: boolean): number
             public GetJSObject($isolate: System.IntPtr, $holder: System.IntPtr, $isByRef: boolean): System.IntPtr
             public GetFunction($isolate: System.IntPtr, $holder: System.IntPtr, $isByRef: boolean): System.IntPtr
-
+            GetArrayBuffer($isolate: System.IntPtr, $holder: System.IntPtr, $isByRef: boolean): Puerts.ArrayBuffer;
             public static __Create($target: Puerts.JSObject): XOR.JsBase
             public constructor($target: Puerts.JSObject)
-            GetArrayBuffer($isolate: System.IntPtr, $holder: System.IntPtr, $isByRef: boolean): Puerts.ArrayBuffer;
         }
         class Sample_05_ITest_Bridge extends XOR.JsBase implements Sample_05.ITest {
             protected [__keep_incompatibility]: never;
@@ -31642,15 +31647,18 @@ declare namespace CS {
         enum WacthType { None = 0, Csharp = 1, Nodejs = 2 }
     }
     namespace XOR.ThreadWorker {
-        class EventData extends System.Object {
+        class EventParameter extends System.Object {
             protected [__keep_incompatibility]: never;
-            public type: XOR.ThreadWorker.ValueType
-            public value: any
-            public key: any
-            public id: number
+            public get Data(): ArrayBuffer;
+            public get Exception(): System.Exception;
+            public get IsError(): boolean;
+            public AddReference($objId: number, $obj: any): void
+            public GetReferenceKeys(): System.Array$1<number>
+            public GetReferenceValue($objId: number): any
+            public static Error($e: System.Exception): XOR.ThreadWorker.EventParameter
             public constructor()
+            public constructor($data: ArrayBuffer)
         }
-        enum ValueType { Unknown = 0, Value = 1, Object = 2, Array = 3, ArrayBuffer = 4, RefObject = 5, Json = 6, Error = 7 }
     }
     namespace XOR.IEnumeratorUtil {
         class Tick extends System.ValueType {
