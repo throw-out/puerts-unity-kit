@@ -866,7 +866,7 @@ namespace utils {
         }
         public readDouble(): number {
             let result = this.buffer.readDoubleBE(this._position);
-            this._position += 4;
+            this._position += 8;
             return result;
         }
         public readBuffer(): Uint8Array {
