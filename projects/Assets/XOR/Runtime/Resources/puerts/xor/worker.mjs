@@ -585,10 +585,13 @@ var utils;
         DataTypes[DataTypes["Number"] = 4] = "Number";
         DataTypes[DataTypes["Bigint"] = 5] = "Bigint";
         DataTypes[DataTypes["String"] = 6] = "String";
-        DataTypes[DataTypes["ArrayBuffer"] = 7] = "ArrayBuffer";
-        DataTypes[DataTypes["Array"] = 8] = "Array";
-        DataTypes[DataTypes["Object"] = 9] = "Object";
-        DataTypes[DataTypes["Reference"] = 10] = "Reference";
+        DataTypes[DataTypes["NumberNaN"] = 7] = "NumberNaN";
+        DataTypes[DataTypes["NumberPI"] = 8] = "NumberPI";
+        DataTypes[DataTypes["NumberNI"] = 9] = "NumberNI";
+        DataTypes[DataTypes["ArrayBuffer"] = 10] = "ArrayBuffer";
+        DataTypes[DataTypes["Array"] = 11] = "Array";
+        DataTypes[DataTypes["Object"] = 12] = "Object";
+        DataTypes[DataTypes["Reference"] = 13] = "Reference";
     })(DataTypes || (DataTypes = {}));
     class BufferWriter {
         constructor() {
@@ -717,6 +720,8 @@ var utils;
         }
         _append(buffer) {
             const size = buffer.length;
+            if (size === 0)
+                return;
             if (this._free === 0) {
                 this._alloc(size * 2);
             }
@@ -803,12 +808,18 @@ var utils;
         }
         readDouble() {
             let result = this.buffer.readDoubleBE(this._position);
-            this._position += 4;
+            this._position += 8;
             return result;
         }
         readBuffer() {
             const size = this.readUInt32();
-            let result = this.buffer.subarray(this._position, this._position + size);
+            let result;
+            if (size > 0) {
+                result = this.buffer.subarray(this._position, this._position + size);
+            }
+            else {
+                result = Buffer.alloc(0);
+            }
             this._position += size;
             return result;
         }
@@ -818,7 +829,13 @@ var utils;
         }
         readString(encoding) {
             const size = this.readUInt32();
-            let result = this.buffer.toString(encoding ?? 'utf8', this._position, this._position + size);
+            let result;
+            if (size > 0) {
+                result = this.buffer.toString(encoding ?? 'utf8', this._position, this._position + size);
+            }
+            else {
+                result = '';
+            }
             this._position += size;
             return result;
         }
@@ -872,13 +889,22 @@ var utils;
                 }
                 break;
             case "number":
-                if (!Number.isInteger(data) || data < INT32_MIN_VALUE || data > INT32_MAX_VALUE) {
-                    result.writer.writeUInt8(DataTypes.Number);
-                    result.writer.writeDouble(/* Number.isNaN(data) ? 0 :  */ data);
-                }
-                else {
+                if (Number.isInteger(data) && data >= INT32_MIN_VALUE && data <= INT32_MAX_VALUE) {
                     result.writer.writeUInt8(DataTypes.Integer);
                     result.writer.writeInt32(data);
+                }
+                else if (Number.isFinite(data)) {
+                    result.writer.writeUInt8(DataTypes.Number);
+                    result.writer.writeDouble(data);
+                }
+                else if (Number.isNaN(data)) {
+                    result.writer.writeUInt8(DataTypes.NumberNaN);
+                }
+                else if (data === Number.POSITIVE_INFINITY) {
+                    result.writer.writeUInt8(DataTypes.NumberPI);
+                }
+                else if (data === Number.NEGATIVE_INFINITY) {
+                    result.writer.writeUInt8(DataTypes.NumberNI);
                 }
                 break;
             case "bigint":
@@ -919,9 +945,9 @@ var utils;
                     let array = [];
                     result = array;
                     let objId = reader.readUInt16();
-                    let len = reader.readUInt32();
+                    let count = reader.readUInt32();
                     mapping.set(objId, array); //add object reference
-                    while (len-- > 0) {
+                    while (count-- > 0) {
                         array.push(_decode(reader, mapping));
                     }
                 }
@@ -931,9 +957,9 @@ var utils;
                     let obj = {};
                     result = obj;
                     let objId = reader.readUInt16();
-                    let len = reader.readUInt32();
+                    let count = reader.readUInt32();
                     mapping.set(objId, obj); //add object reference
-                    while (len-- > 0) {
+                    while (count-- > 0) {
                         let key = _decode(reader, mapping), value = _decode(reader, mapping);
                         obj[key] = value;
                     }
@@ -959,6 +985,15 @@ var utils;
                 break;
             case DataTypes.Undefined:
                 result = undefined;
+                break;
+            case DataTypes.NumberNaN:
+                result = Number.NaN;
+                break;
+            case DataTypes.NumberPI:
+                result = Number.POSITIVE_INFINITY;
+                break;
+            case DataTypes.NumberNI:
+                result = Number.NEGATIVE_INFINITY;
                 break;
         }
         return result;
