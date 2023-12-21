@@ -637,6 +637,10 @@ namespace utils {
         Bigint,
         String,
 
+        NumberNaN,
+        NumberPI,
+        NumberNI,
+
         ArrayBuffer,
         Array,
         Object,
@@ -777,6 +781,8 @@ namespace utils {
 
         private _append(buffer: Buffer) {
             const size = buffer.length;
+            if (size === 0)
+                return;
 
             if (this._free === 0) {
                 this._alloc(size * 2);
@@ -871,7 +877,12 @@ namespace utils {
         }
         public readBuffer(): Uint8Array {
             const size = this.readUInt32();
-            let result = this.buffer.subarray(this._position, this._position + size);
+            let result: Buffer;
+            if (size > 0) {
+                result = this.buffer.subarray(this._position, this._position + size);
+            } else {
+                result = Buffer.alloc(0);
+            }
             this._position += size;
             return result;
         }
@@ -882,7 +893,12 @@ namespace utils {
         }
         public readString(encoding?: BufferEncoding): string {
             const size = this.readUInt32();
-            let result = this.buffer.toString(encoding ?? 'utf8', this._position, this._position + size);
+            let result: string;
+            if (size > 0) {
+                result = this.buffer.toString(encoding ?? 'utf8', this._position, this._position + size);
+            } else {
+                result = '';
+            }
             this._position += size;
             return result;
         }
@@ -943,12 +959,22 @@ namespace utils {
                 }
                 break;
             case "number":
-                if (!Number.isInteger(data) || data < INT32_MIN_VALUE || data > INT32_MAX_VALUE) {
-                    result.writer.writeUInt8(DataTypes.Number);
-                    result.writer.writeDouble(/* Number.isNaN(data) ? 0 :  */data);
-                } else {
+                if (Number.isInteger(data) && data >= INT32_MIN_VALUE && data <= INT32_MAX_VALUE) {
                     result.writer.writeUInt8(DataTypes.Integer);
                     result.writer.writeInt32(data);
+                }
+                else if (Number.isFinite(data)) {
+                    result.writer.writeUInt8(DataTypes.Number);
+                    result.writer.writeDouble(data);
+                }
+                else if (Number.isNaN(data)) {
+                    result.writer.writeUInt8(DataTypes.NumberNaN);
+                }
+                else if (data === Number.POSITIVE_INFINITY) {
+                    result.writer.writeUInt8(DataTypes.NumberPI);
+                }
+                else if (data === Number.NEGATIVE_INFINITY) {
+                    result.writer.writeUInt8(DataTypes.NumberNI);
                 }
                 break;
             case "bigint":
@@ -989,9 +1015,9 @@ namespace utils {
                     let array = []; result = array;
 
                     let objId = reader.readUInt16();
-                    let len = reader.readUInt32();
+                    let count = reader.readUInt32();
                     mapping.set(objId, array);         //add object reference
-                    while (len-- > 0) {
+                    while (count-- > 0) {
                         array.push(_decode(reader, mapping));
                     }
                 }
@@ -1001,9 +1027,9 @@ namespace utils {
                     let obj = {}; result = obj;
 
                     let objId = reader.readUInt16();
-                    let len = reader.readUInt32();
+                    let count = reader.readUInt32();
                     mapping.set(objId, obj);           //add object reference
-                    while (len-- > 0) {
+                    while (count-- > 0) {
                         let key = _decode(reader, mapping), value = _decode(reader, mapping);
                         obj[key] = value;
                     }
@@ -1030,6 +1056,15 @@ namespace utils {
                 break;
             case DataTypes.Undefined:
                 result = undefined;
+                break;
+            case DataTypes.NumberNaN:
+                result = Number.NaN;
+                break;
+            case DataTypes.NumberPI:
+                result = Number.POSITIVE_INFINITY;
+                break;
+            case DataTypes.NumberNI:
+                result = Number.NEGATIVE_INFINITY;
                 break;
         }
         return result;
