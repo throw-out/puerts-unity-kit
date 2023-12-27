@@ -38,7 +38,7 @@ RenderSettings:
   m_ReflectionIntensity: 1
   m_CustomReflection: {fileID: 0}
   m_Sun: {fileID: 0}
-  m_IndirectSpecularColor: {r: 0.44657874, g: 0.49641258, b: 0.5748172, a: 1}
+  m_IndirectSpecularColor: {r: 0.44657874, g: 0.49641275, b: 0.5748171, a: 1}
   m_UseRadianceAmbientProbe: 0
 --- !u!157 &3
 LightmapSettings:
@@ -148,25 +148,25 @@ MonoBehaviour:
   m_GameObject: {fileID: 795422077}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 0d7c9f09628e9c44c85dc6d486bcdcaa, type: 3}
+  m_Script: {fileID: 11500000, guid: 9c9a9e225a3eb934c840cd7f803127ee, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  StringPairs: []
-  NumberPairs:
+  StringPairs:
   - index: 0
     key: key0
-    value: 12
+    value: string message
+  NumberPairs:
+  - index: 1
+    key: key1
+    value: 3.1415926
   BigintPairs: []
   BooleanPairs:
   - index: 2
-    key: key1
+    key: key2
     value: 0
   Vector2Pairs: []
   Vector3Pairs: []
-  ObjectPairs:
-  - index: 1
-    key: key2
-    value: {fileID: 0}
+  ObjectPairs: []
   StringArrayPairs: []
   NumberArrayPairs: []
   BigintArrayPairs: []
