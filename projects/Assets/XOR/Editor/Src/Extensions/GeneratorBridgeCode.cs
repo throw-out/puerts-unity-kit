@@ -153,6 +153,7 @@ namespace XOR
 
             using (var jsEnv = new JsEnv())
             {
+                Puerts.ThirdParty.CommonJS.InjectSupportForCJS(jsEnv);
                 var autoRegisterRender = jsEnv.Eval<Func<TypeGenInfo[], string>>("require('puerts/templates/wrapper-interface-bridge.tpl.cjs')");
                 using (StreamWriter textWriter = new StreamWriter(saveTo + "AutoStaticCodeInterfaceBridge.cs", false, Encoding.UTF8))
                 {

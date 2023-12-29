@@ -205,6 +205,7 @@ namespace Puerts.Editor
             }
             using (var jsEnv = new JsEnv())
             {
+                Puerts.ThirdParty.CommonJS.InjectSupportForCJS(jsEnv);
                 var autoRegisterRender = jsEnv.Eval<Func<GenInfo[], string>>("require('puerts/templates/wrapper-reg-using.tpl.cjs')");
                 using (StreamWriter textWriter = new StreamWriter(saveTo + "AutoStaticCodeUsing.cs", false, Encoding.UTF8))
                 {
