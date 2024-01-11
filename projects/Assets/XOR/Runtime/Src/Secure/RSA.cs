@@ -14,8 +14,8 @@ namespace XOR
         public string PrivateKey { get; set; }
         public Encoding Encoding { get; set; } = Encoding.UTF8;
 
-        private int maxEncryptSize;
-        private int maxDecryptSize;
+        private readonly int maxEncryptSize;
+        private readonly int maxDecryptSize;
         public RSA() : this(2048) { }
         public RSA(int keySize)
         {
