@@ -182,7 +182,7 @@ namespace XOR
                 env.ExecuteModule<Action<TsComponent, string, Action<TsComponent, Puerts.JSObject>>>(XORComponent, "create") :
                 env.Eval<Action<TsComponent, string, Action<TsComponent, Puerts.JSObject>>>($"require('{XORComponent}').create;");
 #else
-            create = env.ExecuteModule<Action<TsComponent, string, Action<TsComponent, Puerts.JSObject>>>(XORComponent, "create");
+            creator = env.ExecuteModule<Action<TsComponent, string, Action<TsComponent, Puerts.JSObject>>>(XORComponent, "create");
 #endif
             return creator;
         }
