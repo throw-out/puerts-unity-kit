@@ -129,7 +129,7 @@ namespace XOR
             }
         }
 
-        [MenuItem("PuerTS/Generate BridgeCode[Interface]", false, 1)]
+        [MenuItem("Tools/PuerTS/Generate BridgeCode[Interface]", false, 1)]
         public static void GenerateUsingCode()
         {
             var start = DateTime.Now;

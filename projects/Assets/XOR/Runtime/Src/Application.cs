@@ -19,13 +19,13 @@ namespace XOR
             get { return UnityEditor.EditorPrefs.GetBool("Editor.DebugEnable"); }
             set { UnityEditor.EditorPrefs.SetBool("Editor.DebugEnable", value); }
         }
-        [UnityEditor.MenuItem("PuerTS/Enable WaitDebugger")]
+        [UnityEditor.MenuItem("Tools/PuerTS/Enable WaitDebugger")]
         private static void Enable() { IsWaitDebugger = true; }
-        [UnityEditor.MenuItem("PuerTS/Enable WaitDebugger", true)]
+        [UnityEditor.MenuItem("Tools/PuerTS/Enable WaitDebugger", true)]
         private static bool EnableValidate() { return !IsWaitDebugger; }
-        [UnityEditor.MenuItem("PuerTS/Disable WaitDebugger")]
+        [UnityEditor.MenuItem("Tools/PuerTS/Disable WaitDebugger")]
         private static void Disable() { IsWaitDebugger = false; }
-        [UnityEditor.MenuItem("PuerTS/Disable WaitDebugger", true)]
+        [UnityEditor.MenuItem("Tools/PuerTS/Disable WaitDebugger", true)]
         private static bool DisableValidate() { return IsWaitDebugger; }
 #endif
         #endregion
@@ -60,11 +60,11 @@ namespace XOR
                 filepath.StartsWith("puerts/") ||
                 filepath.StartsWith("puer-commonjs/")
             ));
-
 #if UNITY_EDITOR || !UNITY_WEBGL
             Env = new JsEnv(Loader, debugPort);
 #else
-            Env = Puerts.WebGL.GetBrowserEnv(Loader);
+            //Env = Puerts.WebGL.GetBrowserEnv(Loader);   //适用于1.4.x及以下版本, 必须包含在UNITY_WEBGL宏编译条件下
+            Env = Puerts.WebGL.MainEnv.Get(Loader);
 #endif
             Env.TryAutoUsing();
             Env.TryAutoInterfaceBridge();
