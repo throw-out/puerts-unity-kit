@@ -8,7 +8,7 @@
       "url": "https://package.openupm.cn"
     },
     "com.tencent.puerts.core": {
-      "version": "2.0.3",
+      "version": "2.0.4",
       "depth": 0,
       "source": "registry",
       "dependencies": {},
