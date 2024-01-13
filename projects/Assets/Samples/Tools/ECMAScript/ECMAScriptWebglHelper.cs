@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Text.RegularExpressions;
 
 namespace Puerts
 {
@@ -75,17 +76,23 @@ namespace Puerts
             public bool Inject(string content, out string newContent)
             {
                 newContent = content;
+
                 foreach (var name in manifest)
                 {
-                    newContent = newContent.Replace(GetReplaceOldString(name), GetReplaceNewString(name));
+                    Match match = GetMatchOldString(name).Match(newContent);
+                    if (match != null && match.Success)
+                    {
+                        newContent = newContent.Replace(match.Value, GetReplaceNewString(name));
+                    }
                 }
                 return content != newContent;
             }
-            string GetReplaceOldString(string name)
+            Regex GetMatchOldString(string name)
             {
-                return isESM ?
-                    $"from \"{name}\"" :
-                    $"require(\"{name}\")";
+                return new Regex(isESM ?
+                    string.Format("from ('{0}'|\"{0}\"){{1}}", name) :
+                    string.Format("require\\(('{0}'|\"{0}\"){{1}}\\)", name)
+                );
             }
             string GetReplaceNewString(string name)
             {
