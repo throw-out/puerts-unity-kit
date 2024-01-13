@@ -142,7 +142,7 @@ namespace Puerts.Editor
                 .ToList();
         }
 
-        [MenuItem("PuerTS/Generate UsingCode", false, 1)]
+        [MenuItem("Tools/PuerTS/Generate UsingCode", false, 1)]
         public static void GenerateUsingCode()
         {
             var start = DateTime.Now;

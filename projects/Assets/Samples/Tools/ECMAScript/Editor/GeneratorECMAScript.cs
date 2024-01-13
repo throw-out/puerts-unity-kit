@@ -10,12 +10,12 @@ namespace Puerts.Editor
 {
     public static class GeneratorECMAScript
     {
-        [MenuItem("PuerTS/Generate ECMAScript/ESM", false, 1)]
+        [MenuItem("Tools/PuerTS/Generate ECMAScript/ESM", false, 1)]
         public static void GenerateESM()
         {
             GenerateCode(true, null);
         }
-        [MenuItem("PuerTS/Generate ECMAScript/ESM(Selector)", false, 1)]
+        [MenuItem("Tools/PuerTS/Generate ECMAScript/ESM(Selector)", false, 1)]
         public static void GenerateESMAppDomain()
         {
             ModuleSelector.Get().Once((targets) =>
@@ -23,12 +23,12 @@ namespace Puerts.Editor
                 GenerateCode(true, targets);
             });
         }
-        [MenuItem("PuerTS/Generate ECMAScript/CommonJS", false, 1)]
+        [MenuItem("Tools/PuerTS/Generate ECMAScript/CommonJS", false, 1)]
         public static void GenerateCommonjs()
         {
             GenerateCode(false, null);
         }
-        [MenuItem("PuerTS/Generate ECMAScript/CommonJS(Selector)", false, 1)]
+        [MenuItem("Tools/PuerTS/Generate ECMAScript/CommonJS(Selector)", false, 1)]
         public static void GenerateCommonjsAppDomain()
         {
             ModuleSelector.Get().Once((targets) =>
@@ -36,7 +36,7 @@ namespace Puerts.Editor
                 GenerateCode(false, targets);
             });
         }
-        [MenuItem("PuerTS/Generate ECMAScript/Clear", false, 1)]
+        [MenuItem("Tools/PuerTS/Generate ECMAScript/Clear", false, 1)]
         public static void Clear()
         {
             string dirpath = GetRootPath(Configure.GetCodeOutputDirectory(), true);
@@ -97,8 +97,7 @@ namespace Puerts.Editor
             Directory.CreateDirectory(GetRootPath(saveTo, false));
             foreach (var info in genInfos)
             {
-                if (string.IsNullOrEmpty(info.Key) && !isESM ||
-                    !string.IsNullOrEmpty(info.Key) && targets != null && !targets.Contains(info.Key))
+                if (!string.IsNullOrEmpty(info.Key) && targets != null && !targets.Contains(info.Key))
                     continue;
 
                 string fileName = string.IsNullOrEmpty(info.Key) ? "csharp" : $"csharp.{info.Key}";
@@ -110,14 +109,11 @@ namespace Puerts.Editor
                 }
             }
 
-            if (isESM)
+            string filepath = GetFilePath(saveTo, "puerts", isESM);
+            using (StreamWriter textWriter = new StreamWriter(filepath, false, Encoding.UTF8))
             {
-                string filepath = GetFilePath(saveTo, "puerts", isESM);
-                using (StreamWriter textWriter = new StreamWriter(filepath, false, Encoding.UTF8))
-                {
-                    textWriter.Write(GenerateTemplatePuertsCode());
-                    textWriter.Flush();
-                }
+                textWriter.Write(isESM ? GenerateTemplatePuertsESMCode() : GenerateTemplatePuertsCommonjsCode());
+                textWriter.Flush();
             }
         }
         static void GenerateDTS(string saveTo, HashSet<string> targets)
@@ -172,11 +168,8 @@ namespace Puerts.Editor
             }
 
             List<string> manifestList = new List<string>(namespaces.Select(name => $"csharp.{name}"));
-            if (isESM)
-            {
-                manifestList.Add("csharp");
-                manifestList.Add("puerts");
-            }
+            manifestList.Add("csharp");
+            manifestList.Add("puerts");
 
             string filepath = GetManifestPath(saveTo);
             if (manifestList.Count == 0)
@@ -273,7 +266,7 @@ function __proxy__(getter) {
                 .Distinct();
             return $@"
 const csharp = (function () {{
-    let _g = this || global || globalThis;
+    let _g = global || globalThis || this;
     return _g['CS'] || _g['csharp'] || require('csharp');
 }})();
 
@@ -302,7 +295,7 @@ export {{
 
             return $@"
 const csharp = (function () {{
-    let _g = this || global || globalThis;
+    let _g = global || globalThis || this;
     return _g['CS'] || _g['csharp'] || require('csharp');
 }})();
 
@@ -310,7 +303,7 @@ module.exports = {firstName};
 module.exports.default = {firstName};
 ";
         }
-        static string GenerateTemplatePuertsCode()
+        static string GenerateTemplatePuertsESMCode()
         {
             string[] members;
             using (var env = new JsEnv())
@@ -318,11 +311,11 @@ module.exports.default = {firstName};
                 members = env.Eval<string[]>(@"
 (function () {
     const csharp = (function () {
-        let _g = this || global || globalThis;
+        let _g = global || globalThis || this;
         return _g['CS'] || _g['csharp'] || require('csharp');
     })();
     const puerts = (function () {
-        let _g = this || global || globalThis;
+        let _g = global || globalThis || this;
         return _g['puerts'] || require('puerts');
     })();
 
@@ -337,7 +330,7 @@ module.exports.default = {firstName};
 
             return $@"
 const puerts = (function () {{
-    let _g = this || global || globalThis;
+    let _g = global || globalThis || this;
     return _g['puerts'] || require('puerts');
 }})();
 
@@ -347,6 +340,19 @@ export default puerts;
 export const {name} = puerts.{name};"))}
 ";
         }
+        static string GenerateTemplatePuertsCommonjsCode()
+        {
+            return $@"
+const puerts = (function () {{
+    let _g = global || globalThis || this;
+    return _g['puerts'] || require('puerts');
+}})();
+
+module.exports = puerts;
+module.exports.default = puerts;
+";
+        }
+
         static string GenerateTemplateDTS(IEnumerable<string> namespaceNames)
         {
             return $@"
