@@ -118,11 +118,11 @@ namespace XOR
                     string editorProjectOutput = Path.Combine(Path.GetDirectoryName(UnityEngine.Application.dataPath), "TsEditorProject/output");
                     var loader = new FileLoader(editorProjectOutput, Path.GetDirectoryName(editorProjectOutput));
                     app.Loader.AddLoader(loader);
-                    app.Env.Load("webpack/main");
+                    app.Env.Load("webpack-editor/main");
 
                     var init = GetGlobal<Func<CSharpInterfaces, ILoader, TSInterfaces>>(app.Env, "init");
                     app.SetInterfaces(init(ci, loader));
-                    app.Interfaces.Start(projectConfig, "webpack/child");
+                    app.Interfaces.Start(projectConfig, "webpack-editor/child");
                 }
                 else
                 {

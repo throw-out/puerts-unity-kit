@@ -9,8 +9,8 @@ module.exports = {
     devtool: "inline-source-map",
     target: "node",
     entry: {
-        main: path.resolve(__dirname, "./src/main/main.ts"),
-        child: path.resolve(__dirname, "./src/child/main.ts"),
+        main: path.resolve(__dirname, "./src/editor/main/main.ts"),
+        child: path.resolve(__dirname, "./src/editor/child/main.ts"),
     },
     module: {
         rules: [{
@@ -24,7 +24,7 @@ module.exports = {
     },
     output: {
         filename: "[name].js",
-        path: path.resolve(__dirname, "./output/webpack")
+        path: path.resolve(__dirname, "./output/webpack-editor")
     },
     /** 忽略编辑的第三方库 */
     externals: {
