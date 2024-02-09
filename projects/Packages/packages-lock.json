@@ -23,6 +23,12 @@
       },
       "url": "https://package.openupm.cn"
     },
+    "com.tencent.puerts.webgl.jsbuild": {
+      "version": "file:../localUPM/webgl-jsbuild/upm",
+      "depth": 0,
+      "source": "local",
+      "dependencies": {}
+    },
     "com.unity.collab-proxy": {
       "version": "1.14.18",
       "depth": 0,

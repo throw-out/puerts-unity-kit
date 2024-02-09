@@ -23,3 +23,6 @@ projects/Assets/Gen/AutoStaticCodeRegister.cs
 projects/Assets/Gen/AutoStaticCodeRegister.cs.meta
 projects/Assets/Gen/*_Wrap.cs
 projects/Assets/Gen/*_Wrap.cs.meta
+projects/localUPM/**/node_modules
+projects/localUPM/**/package-lock.json
+projects/localUPM/**/yarn.lock
