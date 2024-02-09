@@ -11,9 +11,9 @@
 >ThreadWorker本身是线程安全的, 目前只有AppDomain Unload的情况是例外, 它只会在Editor环境下出现.
 
 ## 定义
-> [`C#`]继承: [XOR.ThreadWorker](../projects/Assets/XOR/Runtime/Src/Thread/ThreadWorker.cs) → 无  
+> [`C#`]继承: [XOR.ThreadWorker](../../projects/Assets/XOR/Runtime/Src/Thread/ThreadWorker.cs) → 无  
 
-> [`ts`]继承: [xor.ThreadWorker](../projects/TsEditorProject/src/xor/worker.ts) → 无
+> [`ts`]继承: [xor.ThreadWorker](../../projects/TsEditorProject/src/xor/worker.ts) → 无
 
 <details>
 <summary>接口详情</summary>
@@ -42,8 +42,8 @@
 </details>
 
 ## 示例演示
-> 示例场景:[projects/Assets/Samples/04_ThreadWorker](../projects/Assets/Samples/04_ThreadWorker)  
-> 示例typescript代码: [projects/TsProject/src/samples/04_ThreadWorker](../projects/TsProject/src/samples/04_ThreadWorker)  
+> 示例场景:[projects/Assets/Samples/04_ThreadWorker](../../projects/Assets/Samples/04_ThreadWorker)  
+> 示例typescript代码: [projects/TsProject/src/samples/04_ThreadWorker](../../projects/TsProject/src/samples/04_ThreadWorker)  
 
 - 主线程代码
 ```typescript

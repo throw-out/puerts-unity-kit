@@ -20,8 +20,8 @@
 ![image](https://user-images.githubusercontent.com/45587825/227753269-bf4222fc-4e08-4385-b50e-973b4b173d1d.png)
 
 ## 演示
-> 示例场景:[projects/Assets/Samples/06_UGUIEvents](../projects/Assets/Samples/06_UGUIEvents/)  
-> 示例typescript代码: [projects/TsProject/src/samples/06_UGUIEvents.ts](../projects/TsProject/src/samples/06_UGUIEvents.ts)  
+> 示例场景:[projects/Assets/Samples/06_UGUIEvents](../../projects/Assets/Samples/06_UGUIEvents/)  
+> 示例typescript代码: [projects/TsProject/src/samples/06_UGUIEvents.ts](../../projects/TsProject/src/samples/06_UGUIEvents.ts)  
 
 - 事件绑定  
 ![image](https://user-images.githubusercontent.com/45587825/227753354-fcaab716-9c26-4ad3-a20d-0fb3215f612f.png)
