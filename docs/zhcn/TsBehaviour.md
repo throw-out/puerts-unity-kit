@@ -1,12 +1,12 @@
 ## 介绍
-> 只需要继承[xor.TsBehaviour](../projects/TsEditorProject/src/xor/components/behaviour.ts)就可以使用Unity的[生命周期](https://docs.unity3d.com/2021.3/Documentation/Manual/ExecutionOrder.html)方法, 需要在调用构造函数时传参[UnityEngine.GameObject](https://docs.unity3d.com/ScriptReference/GameObject.html)对象;  
+> 只需要继承[xor.TsBehaviour](../../projects/TsEditorProject/src/xor/components/behaviour.ts)就可以使用Unity的[生命周期](https://docs.unity3d.com/2021.3/Documentation/Manual/ExecutionOrder.html)方法, 需要在调用构造函数时传参[UnityEngine.GameObject](https://docs.unity3d.com/ScriptReference/GameObject.html)对象;  
 > 
 > 如果你需要挂载ts脚本并序列化其成员, 请查看[[TsComponent]](./TsComponent.md)模块.
 
 ## 定义
-> [`C#`]继承: [XOR.TsBehaviour](../projects/Assets/XOR/Runtime/Src/Components/TsBehaviour/TsBehaviour.cs) → [UnityEngine.MonoBehaviour](https://docs.unity3d.com/ScriptReference/MonoBehaviour.html)  
+> [`C#`]继承: [XOR.TsBehaviour](../../projects/Assets/XOR/Runtime/Src/Components/TsBehaviour/TsBehaviour.cs) → [UnityEngine.MonoBehaviour](https://docs.unity3d.com/ScriptReference/MonoBehaviour.html)  
 
-> [`ts`]继承: [xor.TsBehaviour](../projects/TsEditorProject/src/xor/components/behaviour.ts) → 无
+> [`ts`]继承: [xor.TsBehaviour](../../projects/TsEditorProject/src/xor/components/behaviour.ts) → 无
 <details>
 <summary>接口详情</summary>
 
@@ -37,11 +37,11 @@
 </details>
 
 ## 执行顺序
-![image](../images/execution_order.png)
+![image](../../images/execution_order.png)
 
 ## 简单演示
-> 示例场景:[projects/Assets/Samples/03_TsBehaviour](../projects/Assets/Samples/03_TsBehaviour)  
-> 示例typescript代码: [projects/TsProject/src/samples/03_Behaviour.ts](../projects/TsProject/src/samples/03_TsBehaviour.ts)  
+> 示例场景:[projects/Assets/Samples/03_TsBehaviour](../../projects/Assets/Samples/03_TsBehaviour)  
+> 示例typescript代码: [projects/TsProject/src/samples/03_Behaviour.ts](../../projects/TsProject/src/samples/03_TsBehaviour.ts)  
 ``` typescript
 import GameObject = CS.UnityEngine.GameObject;
 import Time = CS.UnityEngine.Time;

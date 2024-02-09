@@ -1,9 +1,9 @@
 ## 介绍
 > 提供脚本打包功能包(含压缩丶加密丶验签等);  
-> 建议此工具只在发布后使用, Editor环境下可使用[FileLoader](../projects/Assets/XOR/Runtime/Src/Loader.cs), 请查看使用[示例](../projects/Assets/Samples/Starter.cs).
+> 建议此工具只在发布后使用, Editor环境下可使用[FileLoader](../../projects/Assets/XOR/Runtime/Src/Loader.cs), 请查看使用[示例](../../projects/Assets/Samples/Starter.cs).
 
 ## 定义
-> [`C#`]继承 [XOR.ScriptPacker](../projects/Assets/XOR/Runtime/Src/ScriptPacker/ScriptPacker.cs) → 无  
+> [`C#`]继承 [XOR.ScriptPacker](../../projects/Assets/XOR/Runtime/Src/ScriptPacker/ScriptPacker.cs) → 无  
 <details>
 <summary>接口详情</summary>
 
