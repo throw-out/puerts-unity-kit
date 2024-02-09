@@ -3,24 +3,14 @@
     "version": "1.0.0",
     "description": "ts project assets",
     "scripts": {
-        "editor:compile:dev": "webpack --config webpack.config.dev.js --watch",
-        "editor:compile": "webpack --config webpack.config.js",
-        "editor:rm": "node ./xor-workflow.mjs rmdir --target=../Assets/XOR/Editor/Resources/puerts/xor-editor",
-        "editor:copy": "node ./xor-workflow.mjs copydir --filter=.js/.mjs/.cjs --extname=.cjs --source=./output/webpack-editor --target=../Assets/XOR/Editor/Resources/puerts/xor-editor",
-        "editor:copy-license": "node ./xor-workflow.mjs copydir --filter=.txt --source=./output/webpack-editor --target=../Assets/XOR/Editor/Resources/puerts/xor-editor",
-        "editor:publish": 
-            "npm run editor:compile && npm run editor:rm && npm run editor:copy && npm run editor:copy-license",
-        
-        "runtime:compile": "tsc -p tsconfig.json",
-        "runtime:compile-esm": "tsc -p tsconfig.json --module ES6",
-        "runtime:rm-js": "node ./xor-workflow.mjs rmdir --target=../Assets/XOR/Runtime/Resources/puerts/xor",
-        "runtime:copy-cjs": "node ./xor-workflow.mjs copydir --filter=.js/.mjs/.cjs --extname=.cjs --source=./output/xor --target=../Assets/XOR/Runtime/Resources/puerts/xor",
-        "runtime:copy-mjs": "node ./xor-workflow.mjs copydir --filter=.js/.mjs/.cjs --extname=.mjs --source=./output/xor --target=../Assets/XOR/Runtime/Resources/puerts/xor",
-        "runtime:copy-dts": "node ./xor-workflow.mjs copydir --filter=.ts --source=./output/xor --target=../Assets/XOR/Typing/puerts/xor",
-        "runtime:publish": 
-            "npm run runtime:compile && npm run runtime:rm-js && npm run runtime:copy-cjs && npm run runtime:copy-dts",
-        "runtime:publish-esm": 
-            "npm run runtime:compile-esm && npm run runtime:rm-js && npm run runtime:copy-mjs && npm run runtime:copy-dts && npm run runtime:compile"
+        "---------------EDITOR---------------": "",
+        "editor:compile:dev": "node ./scripts/editor.mjs --dev --watch",
+        "editor:compile": "node ./scripts/editor.mjs --dev",
+        "editor:publish": "node ./scripts/editor.mjs --publish",
+        "---------------RUNTIME--------------": "",
+        "runtime:compile": "node ./scripts/runtime.mjs",
+        "runtime:publish": "node ./scripts/runtime.mjs --publish",
+        "runtime:publish-esm": "node ./scripts/runtime.mjs --esm --publish"
     },
     "dependencies": {},
     "devDependencies": {
