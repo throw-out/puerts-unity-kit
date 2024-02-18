@@ -1,5 +1,6 @@
 import fs from "fs";
 import path from "path";
+import * as url from "url";
 import webpack from "webpack";
 
 /**默认webpack编译配置
@@ -101,6 +102,12 @@ export function copySync(sourcePath, targetPath, options) {
             copySync(_sourcePath, _targetPath, options);
         }
     }
+}
+
+const rootPath = path.resolve(path.dirname(url.fileURLToPath(import.meta.url)), "../");
+/**获取typescript项目根路径 */
+export function getRootPath() {
+    return rootPath;
 }
 
 

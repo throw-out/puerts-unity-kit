@@ -1,15 +1,13 @@
 import * as fs from "fs";
 import minimist from "minimist";
 import * as path from "path";
-import * as url from "url";
-import { copySync, webpackCompile, webpackConfigure } from "./_common.mjs";
+import { copySync, getRootPath, webpackCompile, webpackConfigure } from "./_common.mjs";
 
-//获取typescript项目根路径
-const rootPath = path.resolve(path.dirname(url.fileURLToPath(import.meta.url)), "../");
-//脚本发布路径
-const publishPath = path.resolve(rootPath, "../Assets/XOR/Editor/Resources/puerts/xor-editor");
+const rootPath = getRootPath();
 //编译输出目录
 const outputPath = path.resolve(rootPath, "./output/webpack-editor");
+//脚本发布路径
+const publishPath = path.resolve(rootPath, "../Assets/XOR/Editor/Resources/puerts/xor-editor");
 
 (async () => {
     //读取命令行配置

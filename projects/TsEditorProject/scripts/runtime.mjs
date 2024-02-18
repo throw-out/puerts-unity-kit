@@ -2,11 +2,12 @@ import child_process from "child_process";
 import * as fs from "fs";
 import minimist from "minimist";
 import * as path from "path";
-import * as url from "url";
-import { copySync } from "./_common.mjs";
+import { copySync, getRootPath } from "./_common.mjs";
 
 //获取typescript项目根路径
-const rootPath = path.resolve(path.dirname(url.fileURLToPath(import.meta.url)), "../");
+const rootPath = getRootPath();
+//编译输出目录
+const outputPath = path.resolve(rootPath, "./output/xor");
 //脚本发布路径
 const publishPaths = {
     //运行时路径
@@ -14,8 +15,6 @@ const publishPaths = {
     //声明文件路径
     declaration: path.resolve(rootPath, "../Assets/XOR/Typing/puerts/xor"),
 };
-//编译输出目录
-const outputPath = path.resolve(rootPath, "./output/xor");
 
 (async () => {
     //读取命令行配置
