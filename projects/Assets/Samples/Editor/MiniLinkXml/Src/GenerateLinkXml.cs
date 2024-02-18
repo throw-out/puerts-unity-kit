@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using Puerts;
 using UnityEditor;
@@ -21,8 +22,9 @@ namespace MiniLinkXml
                 return;
 
             string[] typeNames = ResolveReferencesTypes(filePath);
-            var assemblies = typeNames
+            Dictionary<string, string[]> assemblies = typeNames
                 .Select(tn => GetType(tn))
+                .Concat(GetCustomTypes())
                 .Where(t => t != null)
                 .Distinct()
                 .GroupBy(t => t.Assembly.GetName().Name)
@@ -104,6 +106,35 @@ require('puerts/xor-tools/link.xml');
                 }
             }
             return result;
+        }
+        static IEnumerable<Type> GetCustomTypes()
+        {
+            List<Type> results = new List<Type>();
+            foreach (var assembly in AppDomain.CurrentDomain.GetAssemblies())
+            {
+                foreach (var type in assembly.GetExportedTypes())
+                {
+                    var fields = type
+                        .GetFields(BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic)
+                        .Where(f => typeof(IEnumerable<Type>).IsAssignableFrom(f.FieldType))
+                        .Where(f => f.GetCustomAttribute<LinkAttribute>() != null || f.GetCustomAttribute<LinkXmlAttribute>() != null);
+                    foreach (var field in fields)
+                    {
+                        var _c = field.GetValue(null) as IEnumerable<Type>;
+                        if (_c != null) results.AddRange(_c);
+                    }
+                    var properties = type
+                        .GetProperties(BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic)
+                        .Where(p => p.CanRead && typeof(IEnumerable<Type>).IsAssignableFrom(p.PropertyType))
+                        .Where(p => p.GetCustomAttribute<LinkAttribute>() != null || p.GetCustomAttribute<LinkXmlAttribute>() != null);
+                    foreach (var property in properties)
+                    {
+                        var _c = property.GetValue(null) as IEnumerable<Type>;
+                        if (_c != null) results.AddRange(_c);
+                    }
+                }
+            }
+            return results;
         }
         static string GenerateTemplateXML(Dictionary<string, string[]> assemblies)
         {
