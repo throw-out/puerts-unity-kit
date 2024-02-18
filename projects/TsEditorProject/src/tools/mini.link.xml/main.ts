@@ -9,6 +9,38 @@ class CSharpReferencesReolsver {
     private readonly types: Set<string>;
     private readonly underlyingTypes: Set<string>;
 
+    //不需要额外处理的"节点"
+    private readonly unresolveKinds = [
+        tsm.SyntaxKind.ImportDeclaration,
+        tsm.SyntaxKind.ExportDeclaration,
+        tsm.SyntaxKind.ExportAssignment,
+        tsm.SyntaxKind.EnumDeclaration,
+        tsm.SyntaxKind.InterfaceDeclaration,
+        tsm.SyntaxKind.EmptyStatement,
+        tsm.SyntaxKind.BreakStatement,
+        tsm.SyntaxKind.ContinueStatement,
+        tsm.SyntaxKind.Identifier,
+        tsm.SyntaxKind.StringLiteral,
+        tsm.SyntaxKind.NumericLiteral,
+        tsm.SyntaxKind.BigIntLiteral,
+        tsm.SyntaxKind.BooleanKeyword,
+        tsm.SyntaxKind.FalseKeyword,
+        tsm.SyntaxKind.TrueKeyword,
+        tsm.SyntaxKind.NumberKeyword,
+        tsm.SyntaxKind.NullKeyword,
+        tsm.SyntaxKind.ThisKeyword,
+        tsm.SyntaxKind.VoidExpression,
+        tsm.SyntaxKind.NoSubstitutionTemplateLiteral,
+        tsm.SyntaxKind.RegularExpressionLiteral,
+        tsm.SyntaxKind.TemplateExpression,
+        tsm.SyntaxKind.TypeOfExpression,
+        tsm.SyntaxKind.TypeAliasDeclaration,
+        tsm.SyntaxKind.ImportEqualsDeclaration,
+        //-------------------------------------------
+        //should be retained?
+        tsm.SyntaxKind.ElementAccessExpression,     //ClassA['a']['b']
+    ];
+
     constructor(tsConfigFile: string) {
         let { config, error } = tsm.ts.readConfigFile(tsConfigFile, (path) => fs.readFileSync(path, 'utf8'));
         if (error) {
@@ -38,6 +70,9 @@ class CSharpReferencesReolsver {
         for (let sourceFile of this.project.getSourceFiles()) {
             if (sourceFile.isDeclarationFile() || sourceFile.isInNodeModules())
                 continue;
+            //TODO: test
+            /* if (!sourceFile.getBaseName().includes('test'))
+                continue; */
             for (let statement of sourceFile.getStatements()) {
                 this.resolveStatement(statement);
             }
@@ -50,7 +85,7 @@ class CSharpReferencesReolsver {
         }
     }
 
-    private resolveClass(cls: tsm.ClassDeclaration) {
+    private resolveClass(cls: tsm.ClassDeclaration | tsm.ClassExpression) {
         //分析字段
         let properties = cls.getProperties();
         properties?.forEach(property => {
@@ -62,7 +97,7 @@ class CSharpReferencesReolsver {
             this.resolveMethod(method);
         });
     }
-    private resolveMethod(method: tsm.MethodDeclaration | tsm.FunctionDeclaration) {
+    private resolveMethod(method: tsm.MethodDeclaration | tsm.FunctionDeclaration | tsm.ArrowFunction | tsm.FunctionExpression) {
         //分析参数
         let argsTypes = [...method.getParameters().map(p => p.getTypeNode()), method.getReturnTypeNode()];
         argsTypes?.forEach(node => {
@@ -75,7 +110,9 @@ class CSharpReferencesReolsver {
         }
     }
 
-    private resolveStatement(statement: tsm.Statement) {
+    private resolveStatement(statement: tsm.Node) {
+        if (!statement)
+            return;
         if (tsm.Node.isClassDeclaration(statement)) {
             this.resolveClass(statement);
         }
@@ -83,24 +120,31 @@ class CSharpReferencesReolsver {
             tsm.Node.isFunctionDeclaration(statement)) {
             this.resolveMethod(statement);
         }
-        else if (tsm.Node.isModuleBlock(statement)) {
+        else if (tsm.Node.isModuleDeclaration(statement) ||
+            tsm.Node.isModuleBlock(statement)) {
             for (let _statement of statement.getStatements()) {
                 this.resolveStatement(_statement);
             }
         }
         else if (tsm.Node.isBlock(statement)) {
             for (let child of statement.forEachChildAsArray()) {
-                this.resolveBodyStatement(child);
+                this.resolveStatement(child);
             }
         }
-        else {
-            this.resolveBodyStatement(statement);
-        }
-    }
-    private resolveBodyStatement(statement: tsm.Node) {
         //<expression>
-        if (tsm.Node.isExpressionStatement(statement)) {
+        else if (tsm.Node.isExpressionStatement(statement)) {
             this.resolveExpression(statement.getExpression());
+        }
+        //let a=xxx, var b=xxxx, const c=xxx
+        else if (tsm.Node.isVariableStatement(statement)) {
+            for (let declaration of statement.getDeclarations()) {
+                this.loadType(declaration.getTypeNode());   //不支持类型推断???
+
+                let initValue = declaration.getInitializer();
+                if (initValue) {
+                    this.resolveExpression(initValue);
+                }
+            }
         }
         //if (xxxx)
         else if (tsm.Node.isIfStatement(statement)) {
@@ -154,7 +198,9 @@ class CSharpReferencesReolsver {
                 } else {
                     for (let declaration of initializer.getDeclarations()) {
                         let initValue = declaration.getInitializer();
-                        if (initValue) this.resolveExpression(initValue);
+                        if (initValue) {
+                            this.resolveExpression(initValue);
+                        }
                     }
                 }
             }
@@ -175,7 +221,9 @@ class CSharpReferencesReolsver {
                 } else {
                     for (let declaration of initializer.getDeclarations()) {
                         let initValue = declaration.getInitializer();
-                        if (initValue) this.resolveExpression(initValue);
+                        if (initValue) {
+                            this.resolveExpression(initValue);
+                        }
                     }
                 }
             }
@@ -206,13 +254,42 @@ class CSharpReferencesReolsver {
             //condition
             this.resolveExpression(statement.getExpression());
         }
+        else if (this.unresolveKinds.findIndex(k => statement.isKind(k)) < 0) {
+            console.log('==============unknown statement================');
+            console.log(statement.getKindName(), statement.getKind());
+            console.log(statement.getText());
+            console.log('===============================================');
+        }
     }
+
+
     private resolveExpression(expression: tsm.Expression) {
+        if (!expression)
+            return;
+        //obj.methodA(xxx);
         if (tsm.Node.isCallExpression(expression)) {
             this.resolveExpression(expression.getExpression());
+            for (let arg of expression.getArguments()) {
+                if (tsm.Node.isExpression(arg)) {
+                    this.resolveExpression(arg);
+                }
+            }
         }
-        else if (tsm.Node.isNewExpression(expression) ||
-            tsm.Node.isPropertyAccessExpression(expression)) {
+        //class A { ... }
+        else if (tsm.Node.isClassExpression(expression)) {
+            this.resolveClass(expression);
+        }
+        //new ClassA(xxx)
+        else if (tsm.Node.isNewExpression(expression)) {
+            this.loadType(expression.getExpression());
+            for (let arg of expression.getArguments()) {
+                if (tsm.Node.isExpression(arg)) {
+                    this.resolveExpression(arg);
+                }
+            }
+        }
+        //ClassA.a;
+        else if (tsm.Node.isPropertyAccessExpression(expression)) {
             this.loadType(expression.getExpression());
         }
         else if (tsm.Node.isArrayLiteralExpression(expression)) {
@@ -220,9 +297,73 @@ class CSharpReferencesReolsver {
                 this.resolveExpression(e);
             });
         }
+        //let a= xxx;
         else if (tsm.Node.isBinaryExpression(expression)) {
             this.resolveExpression(expression.getLeft());
             this.resolveExpression(expression.getRight());
+        }
+        //()=>{ xxx }
+        else if (tsm.Node.isArrowFunction(expression) ||
+            tsm.Node.isFunctionExpression(expression)) {
+            this.resolveMethod(expression);
+        }
+        //await xxx
+        else if (tsm.Node.isAwaitExpression(expression)) {
+            this.resolveExpression(expression.getExpression());
+        }
+        //yield xxx
+        else if (tsm.Node.isYieldExpression(expression)) {
+            this.resolveExpression(expression.getExpression());
+        }
+        //(xxx)
+        else if (tsm.Node.isParenthesizedExpression(expression)) {
+            this.resolveExpression(expression.getExpression());
+        }
+        //i++, !!a;
+        else if (tsm.Node.isPrefixUnaryExpression(expression) ||
+            tsm.Node.isPostfixUnaryExpression(expression)) {
+            this.resolveExpression(expression.getOperand());
+        }
+        //objA as ClassB
+        else if (tsm.Node.isAsExpression(expression)) {
+            this.loadType(expression.getTypeNode());
+            this.resolveExpression(expression.getExpression());
+        }
+        //<ClassB>objA
+        else if (tsm.Node.isTypeAssertion(expression)) {
+            this.loadType(expression.getTypeNode());
+            this.resolveExpression(expression.getExpression());
+        }
+        //delete objA.a
+        else if (tsm.Node.isDeleteExpression(expression)) {
+            this.resolveExpression(expression.getExpression());
+        }
+        //[...array];
+        else if (tsm.Node.isSpreadElement(expression)) {
+            this.resolveExpression(expression.getExpression());
+        }
+        //a ? b : c
+        else if (tsm.Node.isConditionalExpression(expression)) {
+            this.resolveExpression(expression.getCondition());
+            this.resolveExpression(expression.getWhenTrue());
+            this.resolveExpression(expression.getWhenFalse());
+        }
+        //let objA={a:xxx, b:xxx, ...};
+        else if (tsm.Node.isObjectLiteralExpression(expression)) {
+            for (let property of expression.getProperties()) {
+                if (!property.isKind(tsm.SyntaxKind.PropertyAssignment))
+                    continue;
+                let initValue = property.getInitializer();
+                if (initValue) {
+                    this.resolveExpression(initValue);
+                }
+            }
+        }
+        else if (this.unresolveKinds.findIndex(k => expression.isKind(k)) < 0) {
+            console.log('==============unknown expression===============');
+            console.log(expression.getKindName(), expression.getKind());
+            console.log(expression.getText());
+            console.log('===============================================');
         }
     }
 

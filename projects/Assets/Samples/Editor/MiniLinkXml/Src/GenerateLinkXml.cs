@@ -75,17 +75,21 @@ require('puerts/xor-tools/link.xml');
         return _g.generate;
     })();
 
+    function toStringArray(arr) {
+        let results = CS.System.Array.CreateInstance(puerts.$typeof(CS.System.String), arr.length);
+        for (let i = 0; i < arr.length; i++) {
+            results.set_Item(i, arr[i]);
+        }
+        return results;
+    }
+
     return function (tsconfigFile) {
         const { types, underlyingTypes } = generate(tsconfigFile);
         if (!types && !underlyingTypes) {
             throw new Error(`generate failure!`);
         }
 
-        let results = CS.System.Array.CreateInstance(puerts.$typeof(CS.System.String), types.length);
-        for (let i = 0; i < types.length; i++) {
-            results.set_Item(i, types[i]);
-        }
-        return results;
+        return toStringArray(underlyingTypes);
     }
 })();
 ");
@@ -148,8 +152,7 @@ require('puerts/xor-tools/link.xml');
     {string.Join("", assemblies.Keys.Select(assemblyName => $@"
     <assembly fullname=""{assemblyName}"">
         {string.Join("", assemblies[assemblyName].Select(typeName => $@"
-        <type fullname=""{typeName}"" preserve=""all""/>
-        "))}
+        <type fullname=""{typeName}"" preserve=""all""/> "))}
     </assembly>
 "))}
 </linker>
