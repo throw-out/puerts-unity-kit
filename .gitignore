@@ -26,3 +26,5 @@ projects/Assets/Gen/*_Wrap.cs.meta
 projects/localUPM/**/node_modules
 projects/localUPM/**/package-lock.json
 projects/localUPM/**/yarn.lock
+projects/Assets/link.xml
+projects/Assets/link.xml.meta
