@@ -190,11 +190,15 @@ export class Program {
         if (!options) {
             options = util.readTsconfig(tsConfigFile)?.compilerOptions || {};
         }
+        //@ts-ignore
+        const moduleResolution = options.moduleResolution == "node" ? tsm.ModuleResolutionKind.NodeJs :
+            tsm.ModuleResolutionKind.Classic;
 
         this.project = new tsm.Project({
             tsConfigFilePath: tsConfigFile,
             compilerOptions: {
                 ...options,
+                moduleResolution: moduleResolution,
                 incremental: true,
                 noEmit: true,
             },
