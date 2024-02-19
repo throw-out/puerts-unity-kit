@@ -8,6 +8,7 @@ class CSharpReferencesReolsver {
     private readonly project: tsm.Project;
     private readonly types: Set<string>;
     private readonly underlyingTypes: Set<string>;
+    private readonly callMethods: Map<string, Set<string>>;
 
     //不需要额外处理的"节点"
     private readonly unresolveKinds = [
@@ -64,13 +65,14 @@ class CSharpReferencesReolsver {
         this.project = project;
         this.types = new Set();
         this.underlyingTypes = new Set();
+        this.callMethods = new Map();
     }
 
     public process() {
         for (let sourceFile of this.project.getSourceFiles()) {
             if (sourceFile.isDeclarationFile() || sourceFile.isInNodeModules())
                 continue;
-            //TODO: test
+            //TODO: test code
             /* if (!sourceFile.getBaseName().includes('test'))
                 continue; */
             for (let statement of sourceFile.getStatements()) {
@@ -79,9 +81,14 @@ class CSharpReferencesReolsver {
         }
     }
     public getResults() {
+        let callMethods = new Map<string, string[]>();
+        for (let [typeName, methodNames] of this.callMethods) {
+            callMethods.set(typeName, [...methodNames]);
+        }
         return {
             types: [...this.types],
             underlyingTypes: [...this.underlyingTypes],
+            callMethods: callMethods
         }
     }
 
@@ -261,8 +268,6 @@ class CSharpReferencesReolsver {
             console.log('===============================================');
         }
     }
-
-
     private resolveExpression(expression: tsm.Expression) {
         if (!expression)
             return;
@@ -274,6 +279,8 @@ class CSharpReferencesReolsver {
                     this.resolveExpression(arg);
                 }
             }
+            //callMethod
+            this.loadMethod(expression);
         }
         //class A { ... }
         else if (tsm.Node.isClassExpression(expression)) {
@@ -373,6 +380,23 @@ class CSharpReferencesReolsver {
             return;
         ut.types.forEach(t => this.underlyingTypes.add(t));
         this.types.add(ut.full);
+    }
+    private loadMethod(expression: tsm.CallExpression) {
+        //获取调用类名称和方法名称
+        let accessExpression = expression.getExpression();
+        if (!accessExpression || !tsm.Node.isPropertyAccessExpression(accessExpression))
+            return;
+        let clsName = utils.getUnderlyingType(accessExpression.getExpression())?.full,
+            methodName = accessExpression.getName();
+        if (!clsName || !methodName)
+            return;
+
+        let methods = this.callMethods.get(clsName);
+        if (!methods) {
+            methods = new Set();
+            this.callMethods.set(clsName, methods);
+        }
+        methods.add(methodName);
     }
 }
 

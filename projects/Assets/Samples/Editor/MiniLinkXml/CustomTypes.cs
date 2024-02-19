@@ -1,15 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
 using MiniLinkXml;
-using UnityEngine.SceneManagement;
 
 public class CustomTypes
 {
     /// <summary>
-    /// 直接配置需要保留的目标类型(必须是静态成员)
+    /// 直接配置需要保留的目标类型(必须是静态字段或属性)
     /// </summary>
     [Link]
-    readonly static List<Type> linkXmlCustomTypes = new List<Type>()
+    readonly static List<Type> customTypes = new List<Type>()
     {
         typeof(UnityEngine.GameObject),
         typeof(UnityEngine.Transform),
@@ -38,6 +37,10 @@ public class CustomTypes
     [Link]
     readonly static List<IEnumerable<string>> customConfigureXml = new List<IEnumerable<string>>()
     {
-        new List<string>(){"System.Core", "System.Linq.Expressions.Interpreter.LightLambda" }
+        new List<string>(){"System.Core", "System.Linq.Expressions.Interpreter.LightLambda" },
+        //保留程序集下所有类
+        new List<string>(){"com.tencent.puerts.core", "*" },
+        new List<string>(){"com.tencent.puerts.commonjs", "*" },
+        new List<string>(){"com.tencent.puerts.webgl", "*" },
     };
 }
