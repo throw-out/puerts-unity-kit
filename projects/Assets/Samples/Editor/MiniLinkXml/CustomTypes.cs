@@ -5,6 +5,9 @@ using UnityEngine.SceneManagement;
 
 public class CustomTypes
 {
+    /// <summary>
+    /// 直接配置需要保留的目标类型(必须是静态成员)
+    /// </summary>
     [Link]
     readonly static List<Type> linkXmlCustomTypes = new List<Type>()
     {
@@ -26,5 +29,15 @@ public class CustomTypes
         typeof(Single),
         typeof(Double),
         typeof(String),
+    };
+
+    /// <summary>
+    /// 自定义link.xml内容:
+    /// 第一个成员为程序集名称, 之后的视为类型名称
+    /// </summary>
+    [Link]
+    readonly static List<IEnumerable<string>> customConfigureXml = new List<IEnumerable<string>>()
+    {
+        new List<string>(){"System.Core", "System.Linq.Expressions.Interpreter.LightLambda" }
     };
 }
