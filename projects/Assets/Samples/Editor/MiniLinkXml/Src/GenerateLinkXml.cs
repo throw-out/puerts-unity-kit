@@ -369,6 +369,8 @@ public class LinkXmlReferences
                     return;
                 foreach (var assembly in AppDomain.CurrentDomain.GetAssemblies())
                 {
+                    if (assembly.IsDynamic)
+                        continue;
                     foreach (var type in assembly.GetExportedTypes())
                     {
                         var fields = type
@@ -395,6 +397,8 @@ public class LinkXmlReferences
                     return;
                 foreach (var assembly in AppDomain.CurrentDomain.GetAssemblies())
                 {
+                    if (assembly.IsDynamic)
+                        continue;
                     foreach (Type clsType in assembly.GetExportedTypes())
                     {
                         if (!clsType.IsAbstract || !clsType.IsSealed || !clsType.IsDefined(typeof(ExtensionAttribute), false))
