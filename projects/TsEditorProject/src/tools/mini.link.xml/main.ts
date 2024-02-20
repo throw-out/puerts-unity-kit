@@ -48,14 +48,13 @@ class CSharpReferencesReolsver {
             throw error;
         }
         const options: tsm.CompilerOptions = config?.compilerOptions || {};
-        //@ts-ignore
-        const moduleResolution = options.moduleResolution == "node" ? tsm.ModuleResolutionKind.NodeJs :
-            tsm.ModuleResolutionKind.Classic;
+        if (typeof (options.moduleResolution) === "string") {
+            options.moduleResolution = options.moduleResolution === "node" ? tsm.ModuleResolutionKind.NodeJs : tsm.ModuleResolutionKind.Classic;
+        }
         const project = new tsm.Project({
             tsConfigFilePath: tsConfigFile,
             compilerOptions: {
                 ...options,
-                moduleResolution: moduleResolution,
                 incremental: false,
                 noEmit: true,
             },
@@ -93,6 +92,8 @@ class CSharpReferencesReolsver {
     }
 
     private resolveClass(cls: tsm.ClassDeclaration | tsm.ClassExpression) {
+        if (!cls)
+            return;
         //分析字段
         let properties = cls.getProperties();
         properties?.forEach(property => {
@@ -105,6 +106,8 @@ class CSharpReferencesReolsver {
         });
     }
     private resolveMethod(method: tsm.MethodDeclaration | tsm.FunctionDeclaration | tsm.ArrowFunction | tsm.FunctionExpression) {
+        if (!method)
+            return;
         //分析参数
         let argsTypes = [...method.getParameters().map(p => p.getTypeNode()), method.getReturnTypeNode()];
         argsTypes?.forEach(node => {
@@ -112,11 +115,29 @@ class CSharpReferencesReolsver {
         });
         //分析方法主体
         let body = method.getBody();
-        if (body && tsm.Node.isBlock(body)) {
-            this.resolveStatement(body);
+        if (body) {
+            this.resolveAnyNode(body);
         }
     }
-
+    private resolveAnyNode(node: tsm.Node) {
+        if (!node)
+            return;
+        if (tsm.Node.isExpression(node)) {
+            this.resolveExpression(node);
+        }
+        else if (tsm.Node.isStatement(node)) {
+            this.resolveStatement(node);
+        }
+        else {
+            if (!this.unresolveKinds.includes(node.getKind())) {
+                console.log(`
+==============unknown node=====================
+${node.getKindName()}, ${node.getKind()}
+${node.getText()}
+===============================================`);
+            }
+        }
+    }
     private resolveStatement(statement: tsm.Node) {
         if (!statement)
             return;
@@ -146,11 +167,7 @@ class CSharpReferencesReolsver {
         else if (tsm.Node.isVariableStatement(statement)) {
             for (let declaration of statement.getDeclarations()) {
                 this.loadType(declaration.getTypeNode());   //不支持类型推断???
-
-                let initValue = declaration.getInitializer();
-                if (initValue) {
-                    this.resolveExpression(initValue);
-                }
+                this.resolveExpression(declaration.getInitializer());
             }
         }
         //if (xxxx)
@@ -204,15 +221,13 @@ class CSharpReferencesReolsver {
                     this.resolveExpression(initializer);
                 } else {
                     for (let declaration of initializer.getDeclarations()) {
-                        let initValue = declaration.getInitializer();
-                        if (initValue) {
-                            this.resolveExpression(initValue);
-                        }
+                        this.loadType(declaration.getTypeNode());
+                        this.resolveExpression(declaration.getInitializer());
                     }
                 }
             }
-            if (condition) this.resolveExpression(condition);
-            if (incrementor) this.resolveExpression(incrementor);
+            this.resolveExpression(condition);
+            this.resolveExpression(incrementor);
             //content
             this.resolveStatement(statement.getStatement());
         }
@@ -227,10 +242,8 @@ class CSharpReferencesReolsver {
                     this.resolveExpression(initializer);
                 } else {
                     for (let declaration of initializer.getDeclarations()) {
-                        let initValue = declaration.getInitializer();
-                        if (initValue) {
-                            this.resolveExpression(initValue);
-                        }
+                        this.loadType(declaration.getTypeNode());
+                        this.resolveExpression(declaration.getInitializer());
                     }
                 }
             }
@@ -238,7 +251,10 @@ class CSharpReferencesReolsver {
             //content
             this.resolveStatement(statement.getStatement());
         }
+        //with (xxxx) ...  --@deprecated
         else if (tsm.Node.isWithStatement(statement)) {
+            //condition
+            this.resolveExpression(statement.getExpression());
             //content
             this.resolveStatement(statement.getStatement());
         }
@@ -261,11 +277,14 @@ class CSharpReferencesReolsver {
             //condition
             this.resolveExpression(statement.getExpression());
         }
-        else if (this.unresolveKinds.findIndex(k => statement.isKind(k)) < 0) {
-            console.log('==============unknown statement================');
-            console.log(statement.getKindName(), statement.getKind());
-            console.log(statement.getText());
-            console.log('===============================================');
+        else {
+            if (!this.unresolveKinds.includes(statement.getKind())) {
+                console.log(`
+==============unknown statement================
+${statement.getKindName()}, ${statement.getKind()}
+${statement.getText()}
+===============================================`);
+            }
         }
     }
     private resolveExpression(expression: tsm.Expression) {
@@ -273,14 +292,12 @@ class CSharpReferencesReolsver {
             return;
         //obj.methodA(xxx);
         if (tsm.Node.isCallExpression(expression)) {
+            this.loadType(utils.getDeclaration(expression.getReturnType()));
+            this.loadMethod(expression);
             this.resolveExpression(expression.getExpression());
             for (let arg of expression.getArguments()) {
-                if (tsm.Node.isExpression(arg)) {
-                    this.resolveExpression(arg);
-                }
+                this.resolveAnyNode(arg);
             }
-            //callMethod
-            this.loadMethod(expression);
         }
         //class A { ... }
         else if (tsm.Node.isClassExpression(expression)) {
@@ -290,15 +307,14 @@ class CSharpReferencesReolsver {
         else if (tsm.Node.isNewExpression(expression)) {
             this.loadType(expression.getExpression());
             for (let arg of expression.getArguments()) {
-                if (tsm.Node.isExpression(arg)) {
-                    this.resolveExpression(arg);
-                }
+                this.resolveAnyNode(arg);
             }
         }
         //ClassA.a;
         else if (tsm.Node.isPropertyAccessExpression(expression)) {
             this.loadType(expression.getExpression());
         }
+        //[a, b, c,]
         else if (tsm.Node.isArrayLiteralExpression(expression)) {
             expression.getElements().forEach(e => {
                 this.resolveExpression(e);
@@ -309,7 +325,7 @@ class CSharpReferencesReolsver {
             this.resolveExpression(expression.getLeft());
             this.resolveExpression(expression.getRight());
         }
-        //()=>{ xxx }
+        //()=>{ xxx }, function(){ xxx }
         else if (tsm.Node.isArrowFunction(expression) ||
             tsm.Node.isFunctionExpression(expression)) {
             this.resolveMethod(expression);
@@ -326,7 +342,7 @@ class CSharpReferencesReolsver {
         else if (tsm.Node.isParenthesizedExpression(expression)) {
             this.resolveExpression(expression.getExpression());
         }
-        //i++, !!a;
+        //a++, ++b, !c;
         else if (tsm.Node.isPrefixUnaryExpression(expression) ||
             tsm.Node.isPostfixUnaryExpression(expression)) {
             this.resolveExpression(expression.getOperand());
@@ -358,23 +374,39 @@ class CSharpReferencesReolsver {
         //let objA={a:xxx, b:xxx, ...};
         else if (tsm.Node.isObjectLiteralExpression(expression)) {
             for (let property of expression.getProperties()) {
-                if (!property.isKind(tsm.SyntaxKind.PropertyAssignment))
-                    continue;
-                let initValue = property.getInitializer();
-                if (initValue) {
-                    this.resolveExpression(initValue);
+                if (tsm.Node.isPropertyAssignment(property)) {
+                    this.resolveExpression(property.getInitializer());
+                }
+                else if (tsm.Node.isShorthandPropertyAssignment(property)) {
+                    this.resolveExpression(property.getInitializer());
+                    this.resolveExpression(property.getObjectAssignmentInitializer());
+                }
+                else if (tsm.Node.isSpreadAssignment(property)) {
+                    this.resolveExpression(property.getExpression());
+                }
+                else if (tsm.Node.isMethodDeclaration(property)) {
+                    this.resolveMethod(property);
+                }
+                else /* if (tsm.Node.isGetAccessorDeclaration(property) ||
+                    tsm.Node.isSetAccessorDeclaration(property))  */ {
+                    this.resolveAnyNode(property.getBody());
                 }
             }
         }
-        else if (this.unresolveKinds.findIndex(k => expression.isKind(k)) < 0) {
-            console.log('==============unknown expression===============');
-            console.log(expression.getKindName(), expression.getKind());
-            console.log(expression.getText());
-            console.log('===============================================');
+        else {
+            if (!this.unresolveKinds.includes(expression.getKind())) {
+                console.log(`
+==============unknown expression================
+${expression.getKindName()}, ${expression.getKind()}
+${expression.getText()}
+===============================================`);
+            }
         }
     }
 
     private loadType(node: tsm.Node) {
+        if (!node)
+            return;
         let ut = utils.getUnderlyingType(node);
         if (!ut || ut.types.length === 0)
             return;
@@ -382,7 +414,9 @@ class CSharpReferencesReolsver {
         this.types.add(ut.full);
     }
     private loadMethod(expression: tsm.CallExpression) {
-        //获取调用类名称和方法名称
+        if (!expression)
+            return;
+        //获取类型名称和方法名称
         let accessExpression = expression.getExpression();
         if (!accessExpression || !tsm.Node.isPropertyAccessExpression(accessExpression))
             return;
@@ -446,9 +480,9 @@ namespace utils {
         let declaration: Declaration;
 
         if (node instanceof tsm.Node && (
-            node.isKind(tsm.SyntaxKind.EnumDeclaration) ||
-            node.isKind(tsm.SyntaxKind.ClassDeclaration) ||
-            node.isKind(tsm.SyntaxKind.InterfaceDeclaration)
+            tsm.Node.isEnumDeclaration(node) ||
+            tsm.Node.isClassDeclaration(node) ||
+            tsm.Node.isInterfaceDeclaration(node)
         )) {
             declaration = node;
         }
@@ -460,8 +494,8 @@ namespace utils {
             let declarations = symbol?.getDeclarations();
             if (declarations && declarations.length > 0) {
                 declaration = (declarations.find(d =>
-                    d.isKind(tsm.SyntaxKind.EnumDeclaration) ||
-                    d.isKind(tsm.SyntaxKind.ClassDeclaration)
+                    tsm.Node.isEnumDeclaration(d) ||
+                    tsm.Node.isClassDeclaration(d)
                 ) || declarations[0]) as typeof declaration;
             }
         }
@@ -524,24 +558,37 @@ namespace utils {
             return null;
 
         let types = new Set<string>(), full: string;
-        if (node.isKind(tsm.SyntaxKind.ParenthesizedType)) {
+        if (tsm.Node.isParenthesizedTypeNode(node)) {
             return getUnderlyingType(node.getTypeNode(), depth + 1);
         }
-        else if (node.isKind(tsm.SyntaxKind.ArrayType)) {
+        else if (tsm.Node.isArrayTypeNode(node)) {
             let _ts = getUnderlyingType(node.getElementTypeNode(), depth + 1);
             if (_ts && _ts.types.length > 0) {
                 _ts.types.forEach(_t => types.add(_t));
                 full = `${_ts.types[0]}[]`;
             }
         }
-        else if (node.isKind(tsm.SyntaxKind.MappedType)) {
-
+        else if (tsm.Node.isMappedTypeNode(node)) {
+            let _ts: ReturnType<typeof getUnderlyingType>, key: string, value: string;
+            _ts = getUnderlyingType(node.getNameTypeNode(), depth + 1);
+            if (_ts && _ts.types.length > 0) {
+                _ts.types.forEach(_t => types.add(_t));
+                key = _ts.full;
+            }
+            _ts = getUnderlyingType(node.getTypeNode(), depth + 1);
+            if (_ts && _ts.types.length > 0) {
+                _ts.types.forEach(_t => types.add(_t));
+                value = _ts.full;
+            }
+            if (key && value) {
+                full = `Map<${key},${value}>`;
+            }
         }
-        else if (node.isKind(tsm.SyntaxKind.UnionType)) {
+        else if (tsm.Node.isUnionTypeNode(node)) {
             let typeNodes = node.getTypeNodes(), fullList: string[] = [];;
             typeNodes.forEach(n => {
                 let _node = getDeclaration(n);
-                if (!_node || !_node.isKind(tsm.SyntaxKind.ClassDeclaration))
+                if (!_node || !tsm.Node.isClassDeclaration(_node))
                     return;
                 let _ts = getUnderlyingType(_node, depth + 1);
                 if (_ts && _ts.types.length > 0) {
@@ -559,7 +606,7 @@ namespace utils {
                 full = getCSharpTypeName(moduleName, className);
                 types.add(full);
             }
-            else if (node.isKind(tsm.SyntaxKind.TypeReference)) {
+            else if (tsm.Node.isTypeReference(node)) {
                 if (node.getTypeName().getText() === "Array" && node.getTypeArguments().length === 1) {
                     let _ts = getUnderlyingType(node.getTypeArguments().at(0), depth + 1);
                     if (_ts && _ts.types.length > 0) {

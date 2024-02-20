@@ -47,7 +47,7 @@ namespace MiniLinkXml
                 bool _continue = EditorUtility.DisplayDialog(
                     "Tip",
                     "The file you selected is not tsconfig.json. Do you want to continue?",
-                    "Confirm",
+                    "Continue",
                     "Cancel"
                 );
                 if (!_continue)
@@ -64,7 +64,7 @@ namespace MiniLinkXml
                 bool _continue = EditorUtility.DisplayDialog(
                     "Tip",
                     "The file link.xml already exists. Do you want to overwrite it?",
-                    "Confirm",
+                    "Overwrite",
                     "Cancel"
                 );
                 if (!_continue)
