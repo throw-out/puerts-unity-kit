@@ -33,7 +33,6 @@ class CSharpReferencesReolsver {
         tsm.SyntaxKind.VoidExpression,
         tsm.SyntaxKind.NoSubstitutionTemplateLiteral,
         tsm.SyntaxKind.RegularExpressionLiteral,
-        tsm.SyntaxKind.TemplateExpression,
         tsm.SyntaxKind.TypeOfExpression,
         tsm.SyntaxKind.TypeAliasDeclaration,
         tsm.SyntaxKind.ImportEqualsDeclaration,
@@ -391,6 +390,12 @@ ${statement.getText()}
                     tsm.Node.isSetAccessorDeclaration(property))  */ {
                     this.resolveAnyNode(property.getBody());
                 }
+            }
+        }
+        //`${a}xxx`     模板字符串
+        else if (tsm.Node.isTemplateExpression(expression)) {
+            for (let templateSpan of expression.getTemplateSpans()) {
+                this.resolveExpression(templateSpan.getExpression());
             }
         }
         else {
