@@ -43,4 +43,24 @@ public class CustomTypes
         new List<string>(){"com.tencent.puerts.commonjs", "*" },
         new List<string>(){"com.tencent.puerts.webgl", "*" },
     };
+
+    /// <summary>
+    /// 自定义过滤Type列表
+    /// </summary>
+    /// <param name="type"></param>
+    /// <param name="isLinkXml"></param>
+    /// <returns>返回false表示不生成对应的Type</returns>
+    [Filter]
+    static bool FilterType(Type type, bool isLinkXml)
+    {
+        if (isLinkXml)
+            return true;
+        if (type.FullName == "Unity.VisualScripting.TypeUtility" ||
+            type.FullName == "Unity.VisualScripting.ComponentHolderProtocol")
+        {
+            return false;
+        }
+
+        return true;
+    }
 }

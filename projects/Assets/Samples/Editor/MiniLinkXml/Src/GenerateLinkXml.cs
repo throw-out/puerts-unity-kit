@@ -2,8 +2,6 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Reflection;
-using System.Runtime.CompilerServices;
 using System.Text;
 using Puerts;
 using UnityEditor;
@@ -72,8 +70,8 @@ namespace MiniLinkXml
             }
 
             ResolveResults results = ResolveReferencesTypes(filePath);
-            IEnumerable<Type> underlyingTypes = results.underlyingTypes
-                .Select(tn => Utils.GetType(tn))
+            IEnumerable<Type> baseTypes = results.underlyingTypes
+                .SelectMany(tn => Utils.GetTypes(tn))
                 .Concat(GetCustomTypes())
                 .Concat(GetExtensionMethodsCallTypes(results.callMethods))
                 .Where(t => t != null)
@@ -82,10 +80,13 @@ namespace MiniLinkXml
             //写入link.xml文件
             if (writeXml)
             {
+                IEnumerable<Type> types = baseTypes
+                    .Where(t => t != null && !IsExcludeType(t, true));
+
                 Directory.CreateDirectory(Path.GetDirectoryName(saveAsXml));
                 using (StreamWriter textWriter = new StreamWriter(saveAsXml, false, Encoding.UTF8))
                 {
-                    textWriter.Write(GenerateTemplateXml(underlyingTypes, GetCustomConfigure()));
+                    textWriter.Write(GenerateTemplateXml(types, GetCustomConfigure()));
                     textWriter.Flush();
                 }
             }
@@ -93,9 +94,9 @@ namespace MiniLinkXml
             //写入link.cs文件
             if (writeScript)
             {
-                IEnumerable<Type> types = underlyingTypes
-                    .Concat(results.types.Select(tn => Utils.GetType(tn)))
-                    .Where(t => t != null)
+                IEnumerable<Type> types = baseTypes
+                    .Concat(results.types.SelectMany(tn => Utils.GetTypes(tn)))
+                    .Where(t => t != null && !IsExcludeType(t, false))
                     .Distinct();
 
                 Directory.CreateDirectory(Path.GetDirectoryName(saveAsScript));
@@ -163,7 +164,7 @@ require('puerts/xor-tools/link.xml');
         static IEnumerable<Type> GetCustomTypes()
         {
             List<Type> results = new List<Type>();
-            Utils.ResolveLinkConfigure((type, getValue) =>
+            Utils.ForEachLinkConfigure((type, getValue) =>
             {
                 if (!typeof(IEnumerable<Type>).IsAssignableFrom(type))
                     return;
@@ -188,7 +189,7 @@ require('puerts/xor-tools/link.xml');
                 }
                 Array.ForEach(cfg.Skip(1).ToArray(), typeName => types.Add(typeName));
             }
-            Utils.ResolveLinkConfigure((type, getValue) =>
+            Utils.ForEachLinkConfigure((type, getValue) =>
             {
                 if (typeof(List<List<string>>).IsAssignableFrom(type))
                 {
@@ -217,13 +218,13 @@ require('puerts/xor-tools/link.xml');
             }
 
             List<Type> results = new List<Type>();
-            Utils.ResolveExtensionMethodDeclaration((clsType, methodName, thisArg) =>
+            Utils.ForEachExtensionMethodDeclaration((clsType, methodName, thisArgType) =>
             {
                 foreach (var t in _callMethods)
                 {
                     if (!t.Value.Contains(methodName))
                         continue;
-                    if (!thisArg.IsAssignableFrom(t.Key))
+                    if (!thisArgType.IsAssignableFrom(t.Key))
                         continue;
                     results.Add(clsType);
                     break;
@@ -231,6 +232,33 @@ require('puerts/xor-tools/link.xml');
             });
             return results;
         }
+
+        static List<Func<Type, bool, bool>> excludeFuncs;
+        static bool IsExcludeType(Type type, bool isLinkXml)
+        {
+            if (excludeFuncs == null)
+            {
+                excludeFuncs = new List<Func<Type, bool, bool>>();
+                Utils.ForEachFilterFunction((methodInfo) =>
+                {
+                    if (methodInfo.ReturnType != typeof(bool))
+                        return;
+                    var parameters = methodInfo.GetParameters();
+                    if (parameters.Length == 1 && parameters[0].ParameterType == typeof(Type))
+                    {
+                        excludeFuncs.Add((type, isLinkXml) => (bool)methodInfo.Invoke(null, new object[] { type }));
+                    }
+                    if (parameters.Length == 2 &&
+                        parameters[0].ParameterType == typeof(Type) &&
+                        parameters[1].ParameterType == typeof(bool))
+                    {
+                        excludeFuncs.Add((type, isLinkXml) => (bool)methodInfo.Invoke(null, new object[] { type, isLinkXml }));
+                    }
+                });
+            }
+            return excludeFuncs.Any(filter => !filter(type, isLinkXml));
+        }
+
         static string GenerateTemplateXml(IEnumerable<Type> types, Dictionary<string, IEnumerable<string>> customConfigure = null)
         {
             if (types == null)
@@ -329,92 +357,6 @@ public class LinkXmlReferences
                     callMethods = new Dictionary<string, string[]>();
                 }
                 callMethods[typeName] = methods;
-            }
-        }
-
-        static class Utils
-        {
-            public static Type GetType(string typeName)
-            {
-                Type result = Type.GetType(typeName, false);
-                if (result == null)
-                {
-                    foreach (var assembly in AppDomain.CurrentDomain.GetAssemblies())
-                    {
-                        result = assembly.GetType(typeName, false);
-                        if (result != null)
-                            break;
-                    }
-                }
-                return result;
-            }
-            public static string GetFullname(Type type)
-            {
-                if (type.IsGenericType)
-                {
-                    var fullName = string.IsNullOrEmpty(type.FullName) ? type.ToString() : type.FullName;
-                    var parts = fullName.Replace('+', '.').Split('`');
-                    var argTypenames = type.GetGenericArguments()
-                        .Select(x => GetFullname(x)).ToArray();
-                    return parts[0] + "<" + string.Join(", ", argTypenames) + ">";
-                }
-                if (!string.IsNullOrEmpty(type.FullName))
-                    return type.FullName.Replace('+', '.');
-                return type.ToString();
-            }
-
-            public static void ResolveLinkConfigure(Action<Type, Func<object>> resolveCallback)
-            {
-                if (resolveCallback == null)
-                    return;
-                foreach (var assembly in AppDomain.CurrentDomain.GetAssemblies())
-                {
-                    if (assembly.IsDynamic)
-                        continue;
-                    foreach (var type in assembly.GetExportedTypes())
-                    {
-                        var fields = type
-                            .GetFields(BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic)
-                            .Where(f => f.IsDefined(typeof(LinkAttribute)) || f.IsDefined(typeof(LinkXmlAttribute)));
-                        foreach (var field in fields)
-                        {
-                            resolveCallback(field.FieldType, () => field.GetValue(null));
-                        }
-                        var properties = type
-                            .GetProperties(BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic)
-                            .Where(p => p.CanRead)
-                            .Where(p => p.IsDefined(typeof(LinkAttribute)) || p.IsDefined(typeof(LinkXmlAttribute)));
-                        foreach (var property in properties)
-                        {
-                            resolveCallback(property.PropertyType, () => property.GetValue(null));
-                        }
-                    }
-                }
-            }
-            public static void ResolveExtensionMethodDeclaration(Action<Type, string, Type> resolveCallback)
-            {
-                if (resolveCallback == null)
-                    return;
-                foreach (var assembly in AppDomain.CurrentDomain.GetAssemblies())
-                {
-                    if (assembly.IsDynamic)
-                        continue;
-                    foreach (Type clsType in assembly.GetExportedTypes())
-                    {
-                        if (!clsType.IsAbstract || !clsType.IsSealed || !clsType.IsDefined(typeof(ExtensionAttribute), false))
-                            continue;
-                        var methods = clsType
-                            .GetMethods(BindingFlags.Static | BindingFlags.Public)
-                            .Where(m => m.IsDefined(typeof(ExtensionAttribute)));
-                        foreach (var method in methods)
-                        {
-                            var parameters = method.GetParameters();
-                            if (parameters.Length < 1)
-                                continue;
-                            resolveCallback(clsType, method.Name, parameters[0].ParameterType);
-                        }
-                    }
-                }
             }
         }
     }
