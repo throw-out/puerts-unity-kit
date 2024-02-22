@@ -11,7 +11,7 @@ class CSharpReferencesReolsver {
     private readonly callMethods: Map<string, Set<string>>;
 
     //不需要额外处理的"节点"
-    private readonly unresolveKinds = [
+    private readonly unresolveNodes = [
         tsm.SyntaxKind.ImportDeclaration,
         tsm.SyntaxKind.ExportDeclaration,
         tsm.SyntaxKind.ExportAssignment,
@@ -93,31 +93,51 @@ class CSharpReferencesReolsver {
     private resolveClass(cls: tsm.ClassDeclaration | tsm.ClassExpression) {
         if (!cls)
             return;
+        //分析类装饰器
+        cls.getDecorators()?.forEach(decorator => {
+            this.resolveDecorator(decorator);
+        });
         //分析字段
         let properties = cls.getProperties();
         properties?.forEach(property => {
             this.loadType(property.getTypeNode());
+            property.getDecorators()?.forEach(decorator => {
+                this.resolveDecorator(decorator);
+            });
         });
         //分析方法
         let methods = cls.getMethods();
         methods?.forEach(method => {
             this.resolveMethod(method);
+            method.getDecorators()?.forEach(decorator => {
+                this.resolveDecorator(decorator);
+            });
         });
     }
     private resolveMethod(method: tsm.MethodDeclaration | tsm.FunctionDeclaration | tsm.ArrowFunction | tsm.FunctionExpression) {
         if (!method)
             return;
         //分析参数
-        let argsTypes = [...method.getParameters().map(p => p.getTypeNode()), method.getReturnTypeNode()];
-        argsTypes?.forEach(node => {
-            this.loadType(node);
+        method.getParameters()?.forEach(arg => {
+            this.loadType(arg.getTypeNode());
+            this.resolveExpression(arg.getInitializer());
         });
+        this.loadType(method.getReturnTypeNode());
         //分析方法主体
         let body = method.getBody();
         if (body) {
             this.resolveAnyNode(body);
         }
     }
+    private resolveDecorator(decorator: tsm.Decorator) {
+        if (!decorator)
+            return;
+        this.resolveExpression(decorator.getCallExpression());
+        decorator.getArguments()?.forEach(arg => {
+            this.resolveAnyNode(arg);
+        });
+    }
+
     private resolveAnyNode(node: tsm.Node) {
         if (!node)
             return;
@@ -128,13 +148,7 @@ class CSharpReferencesReolsver {
             this.resolveStatement(node);
         }
         else {
-            if (!this.unresolveKinds.includes(node.getKind())) {
-                console.log(`
-==============unknown node=====================
-${node.getKindName()}, ${node.getKind()}
-${node.getText()}
-===============================================`);
-            }
+            this.printNode(node, 'unknown node');
         }
     }
     private resolveStatement(statement: tsm.Node) {
@@ -164,9 +178,9 @@ ${node.getText()}
         }
         //let a=xxx, var b=xxxx, const c=xxx
         else if (tsm.Node.isVariableStatement(statement)) {
-            for (let declaration of statement.getDeclarations()) {
-                this.loadType(declaration.getTypeNode());   //不支持类型推断???
-                this.resolveExpression(declaration.getInitializer());
+            for (let variable of statement.getDeclarations()) {
+                this.loadType(variable.getTypeNode());   //不支持类型推断???
+                this.resolveExpression(variable.getInitializer());
             }
         }
         //if (xxxx)
@@ -174,11 +188,7 @@ ${node.getText()}
             //condition
             this.resolveExpression(statement.getExpression());
             //content
-            let children = [
-                statement.getThenStatement(),
-                statement.getElseStatement()
-            ];
-            for (let child of children) {
+            for (let child of [statement.getThenStatement(), statement.getElseStatement()]) {
                 if (!child)
                     continue;
                 this.resolveStatement(child);
@@ -186,12 +196,14 @@ ${node.getText()}
         }
         //try { xxx } ...
         else if (tsm.Node.isTryStatement(statement)) {
-            let children = [
-                statement.getTryBlock(),
-                statement.getCatchClause()?.getBlock(),
-                statement.getFinallyBlock(),
-            ];
-            for (let child of children) {
+            let catchClause = statement.getCatchClause(),
+                variable = catchClause?.getVariableDeclaration();
+            if (variable) {
+                this.loadType(variable.getTypeNode());
+                this.resolveExpression(variable.getInitializer());
+            }
+            //content
+            for (let child of [statement.getTryBlock(), catchClause?.getBlock(), statement.getFinallyBlock(),]) {
                 if (!child)
                     continue;
                 this.resolveStatement(child);
@@ -219,9 +231,9 @@ ${node.getText()}
                 if (tsm.Node.isExpression(initializer)) {
                     this.resolveExpression(initializer);
                 } else {
-                    for (let declaration of initializer.getDeclarations()) {
-                        this.loadType(declaration.getTypeNode());
-                        this.resolveExpression(declaration.getInitializer());
+                    for (let variable of initializer.getDeclarations()) {
+                        this.loadType(variable.getTypeNode());
+                        this.resolveExpression(variable.getInitializer());
                     }
                 }
             }
@@ -240,9 +252,9 @@ ${node.getText()}
                 if (tsm.Node.isExpression(initializer)) {
                     this.resolveExpression(initializer);
                 } else {
-                    for (let declaration of initializer.getDeclarations()) {
-                        this.loadType(declaration.getTypeNode());
-                        this.resolveExpression(declaration.getInitializer());
+                    for (let variable of initializer.getDeclarations()) {
+                        this.loadType(variable.getTypeNode());
+                        this.resolveExpression(variable.getInitializer());
                     }
                 }
             }
@@ -277,13 +289,7 @@ ${node.getText()}
             this.resolveExpression(statement.getExpression());
         }
         else {
-            if (!this.unresolveKinds.includes(statement.getKind())) {
-                console.log(`
-==============unknown statement================
-${statement.getKindName()}, ${statement.getKind()}
-${statement.getText()}
-===============================================`);
-            }
+            this.printNode(statement, 'unknown statement');
         }
     }
     private resolveExpression(expression: tsm.Expression) {
@@ -292,7 +298,7 @@ ${statement.getText()}
         //obj.methodA(xxx);
         if (tsm.Node.isCallExpression(expression)) {
             this.loadType(utils.getDeclaration(expression.getReturnType()));
-            this.loadMethod(expression);
+            this.loadCallMethod(expression);
             this.resolveExpression(expression.getExpression());
             for (let arg of expression.getArguments()) {
                 this.resolveAnyNode(arg);
@@ -399,13 +405,7 @@ ${statement.getText()}
             }
         }
         else {
-            if (!this.unresolveKinds.includes(expression.getKind())) {
-                console.log(`
-==============unknown expression================
-${expression.getKindName()}, ${expression.getKind()}
-${expression.getText()}
-===============================================`);
-            }
+            this.printNode(expression, 'unknown expression');
         }
     }
 
@@ -418,7 +418,7 @@ ${expression.getText()}
         ut.types.forEach(t => this.underlyingTypes.add(t));
         this.types.add(ut.full);
     }
-    private loadMethod(expression: tsm.CallExpression) {
+    private loadCallMethod(expression: tsm.CallExpression) {
         if (!expression)
             return;
         //获取类型名称和方法名称
@@ -436,6 +436,19 @@ ${expression.getText()}
             this.callMethods.set(clsName, methods);
         }
         methods.add(methodName);
+    }
+
+    private printNode(node: tsm.Node, title?: string) {
+        if (this.unresolveNodes.includes(node.getKind()))
+            return;
+        if (!title) title = `unknown node`;
+        let head = `==============${title}==========================================`,
+            tail = `===============================================`;
+        console.log(`
+${head.slice(0, tail.length)}
+${node.getKindName()}, ${node.getKind()}
+${node.getText()}
+${tail}`);
     }
 }
 

@@ -220,6 +220,8 @@ require('puerts/xor-tools/link.xml');
             List<Type> results = new List<Type>();
             Utils.ForEachExtensionMethodDeclaration((clsType, methodName, thisArgType) =>
             {
+                if (results.Contains(clsType))
+                    return;
                 foreach (var t in _callMethods)
                 {
                     if (!t.Value.Contains(methodName))
@@ -246,13 +248,13 @@ require('puerts/xor-tools/link.xml');
                     var parameters = methodInfo.GetParameters();
                     if (parameters.Length == 1 && parameters[0].ParameterType == typeof(Type))
                     {
-                        excludeFuncs.Add((type, isLinkXml) => (bool)methodInfo.Invoke(null, new object[] { type }));
+                        excludeFuncs.Add((_type, _isLinkXml) => (bool)methodInfo.Invoke(null, new object[] { _type }));
                     }
                     if (parameters.Length == 2 &&
                         parameters[0].ParameterType == typeof(Type) &&
                         parameters[1].ParameterType == typeof(bool))
                     {
-                        excludeFuncs.Add((type, isLinkXml) => (bool)methodInfo.Invoke(null, new object[] { type, isLinkXml }));
+                        excludeFuncs.Add((_type, _isLinkXml) => (bool)methodInfo.Invoke(null, new object[] { _type, _isLinkXml }));
                     }
                 });
             }
@@ -269,7 +271,7 @@ require('puerts/xor-tools/link.xml');
             var preserveAll = new HashSet<string>();
             var preserveTypes = types
                 .GroupBy(t => t.Assembly.GetName().Name)
-                .ToDictionary(group => group.Key, group => group.Cast<Type>().Select(t => t.FullName).ToList());
+                .ToDictionary(group => group.Key, group => group.Cast<Type>().Select(t => t.FullName));
             if (customConfigure != null)
             {
                 foreach (var assemblyName in customConfigure.Keys)
@@ -284,13 +286,15 @@ require('puerts/xor-tools/link.xml');
                     }
                     else
                     {
-                        List<string> _types;
-                        if (!preserveTypes.TryGetValue(assemblyName, out _types))
+                        IEnumerable<string> _types;
+                        if (preserveTypes.TryGetValue(assemblyName, out _types))
                         {
-                            _types = new List<string>();
-                            preserveTypes.Add(assemblyName, _types);
+                            preserveTypes[assemblyName] = _types.Concat(customConfigure[assemblyName]).Distinct();
                         }
-                        preserveTypes[assemblyName] = _types.Concat(customConfigure[assemblyName]).Distinct().ToList();
+                        else
+                        {
+                            preserveTypes.Add(assemblyName, preserveTypes[assemblyName]);
+                        }
                     }
                 }
             }
