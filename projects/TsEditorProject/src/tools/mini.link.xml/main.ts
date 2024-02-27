@@ -404,6 +404,10 @@ class CSharpReferencesReolsver {
                 this.resolveExpression(templateSpan.getExpression());
             }
         }
+        //a!            断言表达式
+        else if (tsm.Node.isNonNullExpression(expression)) {
+            this.resolveExpression(expression.getExpression());
+        }
         else {
             this.printNode(expression, 'unknown expression');
         }

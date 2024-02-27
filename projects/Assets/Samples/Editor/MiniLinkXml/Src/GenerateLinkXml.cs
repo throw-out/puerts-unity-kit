@@ -293,7 +293,7 @@ require('puerts/xor-tools/link.xml');
                         }
                         else
                         {
-                            preserveTypes.Add(assemblyName, preserveTypes[assemblyName]);
+                            preserveTypes.Add(assemblyName, customConfigure[assemblyName]);
                         }
                     }
                 }
