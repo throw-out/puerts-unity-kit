@@ -297,7 +297,10 @@ class CSharpReferencesReolsver {
             return;
         //obj.methodA(xxx);
         if (tsm.Node.isCallExpression(expression)) {
-            this.loadType(utils.getDeclaration(expression.getReturnType()));
+            let resultType = utils.getDeclaration(expression.getReturnType());
+            if (resultType && !tsm.Node.isSourceFile(resultType)) {     //require(xxx) 函数
+                this.loadType(utils.getDeclaration(expression.getReturnType()));
+            }
             this.loadCallMethod(expression);
             this.resolveExpression(expression.getExpression());
             for (let arg of expression.getArguments()) {
@@ -416,30 +419,40 @@ class CSharpReferencesReolsver {
     private loadType(node: tsm.Node) {
         if (!node)
             return;
-        let ut = utils.getUnderlyingType(node);
-        if (!ut || ut.types.length === 0)
-            return;
-        ut.types.forEach(t => this.underlyingTypes.add(t));
-        this.types.add(ut.full);
+        try {
+            let ut = utils.getUnderlyingType(node);
+            if (!ut || ut.types.length === 0)
+                return;
+            ut.types.forEach(t => this.underlyingTypes.add(t));
+            this.types.add(ut.full);
+        } catch (e) {
+            this.printNode(node, 'exception');
+            console.error(e);
+        }
     }
     private loadCallMethod(expression: tsm.CallExpression) {
         if (!expression)
             return;
-        //获取类型名称和方法名称
-        let accessExpression = expression.getExpression();
-        if (!accessExpression || !tsm.Node.isPropertyAccessExpression(accessExpression))
-            return;
-        let clsName = utils.getUnderlyingType(accessExpression.getExpression())?.full,
-            methodName = accessExpression.getName();
-        if (!clsName || !methodName)
-            return;
+        try {
+            //获取类型名称和方法名称
+            let accessExpression = expression.getExpression();
+            if (!accessExpression || !tsm.Node.isPropertyAccessExpression(accessExpression))
+                return;
+            let clsName = utils.getUnderlyingType(accessExpression.getExpression())?.full,
+                methodName = accessExpression.getName();
+            if (!clsName || !methodName)
+                return;
 
-        let methods = this.callMethods.get(clsName);
-        if (!methods) {
-            methods = new Set();
-            this.callMethods.set(clsName, methods);
+            let methods = this.callMethods.get(clsName);
+            if (!methods) {
+                methods = new Set();
+                this.callMethods.set(clsName, methods);
+            }
+            methods.add(methodName);
+        } catch (e) {
+            this.printNode(expression, 'exception');
+            console.error(e);
         }
-        methods.add(methodName);
     }
 
     private printNode(node: tsm.Node, title?: string) {
