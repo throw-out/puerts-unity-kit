@@ -58,6 +58,7 @@ class CSharpReferencesReolsver {
                 noEmit: true,
             },
         });
+        //project.resolveSourceFileDependencies();
 
         this.tsConfigFile = tsConfigFile;
         this.project = project;
@@ -161,8 +162,13 @@ class CSharpReferencesReolsver {
             tsm.Node.isFunctionDeclaration(statement)) {
             this.resolveMethod(statement);
         }
-        else if (tsm.Node.isModuleDeclaration(statement) ||
-            tsm.Node.isModuleBlock(statement)) {
+        else if (tsm.Node.isModuleDeclaration(statement)) {
+            for (let _statement of statement.getStatements()) {
+                this.resolveStatement(_statement);
+            }
+            this.resolveAnyNode(statement.getBody());
+        }
+        else if (tsm.Node.isModuleBlock(statement)) {
             for (let _statement of statement.getStatements()) {
                 this.resolveStatement(_statement);
             }
@@ -550,6 +556,9 @@ namespace utils {
         if (fullName.includes("import(")) {
             let startIndex = fullName.indexOf("("), endIndex = fullName.lastIndexOf(")");
             className = fullName.substring(endIndex + 2);
+        }
+        else if (fullName.startsWith('typeof ')) {  //静态方法调用
+            className = fullName.substring(7);
         }
         else {
             className = fullName;
