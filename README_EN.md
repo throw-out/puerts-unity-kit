@@ -60,5 +60,16 @@ Main features:
 3. Execute the `tsc` command to compile the TypeScript project.
 4. Done.
 
+## Tools
+- [ConsoleRedirect:](./projects/Assets/Samples/Editor/ConsoleRedirect)
+  > Implement direct jumping to ts scripts by clicking/double-clicking hyperlinks in the Unity Console.
+- [HotReload:](./projects/Assets/Samples/Editor/HotReload)
+  > C#-only js script hot update tool (requires `v8 + inspect` support), used for runtime modification of js logic for quick debugging.
+- [MiniLinkXml:](./projects/Assets/Samples/Editor/MiniLinkXml)
+  > Analyze the typescript project, obtain all used C# types (support additional custom types), and generate a minimal `link.xml` configuration file.
+- [ECMAScript:](./projects/Assets/Samples/Tools/ECMAScript)
+  > C# namespace generation tool, can `quick import` values and types (e.g., `import { GameObject} from 'csharp.UnityEngine'`). Make the project compatible with both commonjs and esm modules without additional code modifications.
+
+
 ## Roadmap
 - None

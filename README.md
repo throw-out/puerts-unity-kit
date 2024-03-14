@@ -54,5 +54,15 @@
 3. 执行`tsc`命令编译typescript项目;
 4. 完成.
 
+## 附加工具
+- [ConsoleRedirect:](./projects/Assets/Samples/Editor/ConsoleRedirect)
+  > 实现从Unity Console单击/双击超链接直接跳转ts脚本
+- [HotReload:](./projects/Assets/Samples/Editor/HotReload)
+  > 纯C#实现的js脚本热更新工具(需要`v8 + inspect`支持), 用于运行时即时修改js逻辑快速调试.
+- [MiniLinkXml:](./projects/Assets/Samples/Editor/MiniLinkXml)
+  > 分析typescript工程, 获取所有使用的C#类型的(支持额外的自定义类型), 生成最小化`link.xml`配置文件.
+- [ECMAScript:](./projects/Assets/Samples/Tools/ECMAScript)
+  > C#命名空间生成工具, 可`快速导入`值和类型(例: `import { GameObject} from 'csharp.UnityEngine'`). 使工程同时兼容commonjs和esm模块从而无需额外修改代码.
+
 ## 规划
 - 无
