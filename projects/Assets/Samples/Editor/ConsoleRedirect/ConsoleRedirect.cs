@@ -70,7 +70,7 @@ namespace UnityEditor.Console
                     string column = match.Groups[6].Value;
                     if (!string.IsNullOrEmpty(line) && File.Exists(filepath))
                     {
-                        return OpenFileInIDE(filepath, !string.IsNullOrEmpty(line) ? int.Parse(line) : 0, !string.IsNullOrEmpty(column) ? int.Parse(column) : 0);
+                        return ConsoleHyperlink.OpenFileInIDE(filepath, !string.IsNullOrEmpty(line) ? int.Parse(line) : 0, !string.IsNullOrEmpty(column) ? int.Parse(column) : 0);
                     }
                 }
                 catch (Exception) { return false; }
@@ -88,7 +88,7 @@ namespace UnityEditor.Console
                     string column = match.Groups[5].Value;
                     if (File.Exists(filepath))
                     {
-                        return OpenFileInIDE(filepath, !string.IsNullOrEmpty(line) ? int.Parse(line) : 0, !string.IsNullOrEmpty(column) ? int.Parse(column) : 0);
+                        return ConsoleHyperlink.OpenFileInIDE(filepath, !string.IsNullOrEmpty(line) ? int.Parse(line) : 0, !string.IsNullOrEmpty(column) ? int.Parse(column) : 0);
                     }
                 }
                 catch (Exception) { return false; }
@@ -98,11 +98,6 @@ namespace UnityEditor.Console
             return false;
         }
 
-
-        static bool OpenFileInIDE(string filepath, int line, int column)
-        {
-            return CodeEditor.CurrentEditor.OpenProject(filepath, line, column);
-        }
 
         public static string GetStackTrace()
         {
