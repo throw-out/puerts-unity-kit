@@ -315,20 +315,32 @@ namespace XOR
     {
         private readonly string outputRoot;
         private readonly string projectRoot;
-        public FileLoader(string outputRoot, string projectRoot = null)
+        private HashSet<string> files;
+        public FileLoader(string outputRoot) : this(outputRoot, null, false) { }
+        public FileLoader(string outputRoot, bool preread) : this(outputRoot, null, preread) { }
+        public FileLoader(string outputRoot, string projectRoot) : this(outputRoot, projectRoot, false) { }
+        public FileLoader(string outputRoot, string projectRoot, bool preread)
         {
             this.outputRoot = outputRoot;
             this.projectRoot = string.IsNullOrEmpty(projectRoot) ? outputRoot : projectRoot;
+            if (preread) ReadDirectory();
         }
+        /// <summary>预读取目录(不包含node_modules目录), 减少IO次数</summary>
+        public void ReadDirectory()
+        {
+            files = new HashSet<string>();
+            if (Directory.Exists(outputRoot)) ReadDirectory(outputRoot);
+        }
+
         public bool FileExists(string filepath)
         {
-            return File.Exists(GetFilePath(filepath));
+            return ReadFileExists(GetFilePath(filepath));
         }
 
         public string ReadFile(string filepath, out string debugpath)
         {
             var path = GetFilePath(filepath);
-            if (File.Exists(path))
+            if (ReadFileExists(path))
             {
                 debugpath = path;
                 return File.ReadAllText(path);
@@ -353,7 +365,7 @@ namespace XOR
                 path = Path.Combine(projectRoot, path);
             else
                 path = Path.Combine(outputRoot, path);
-            if (File.Exists(path))
+            if (ReadFileExists(path))
             {
 #if UNITY_STANDALONE_WIN
                 path = path.Replace("/", "\\");
@@ -364,6 +376,36 @@ namespace XOR
             }
 #endif
             return filepath;
+        }
+
+        bool ReadFileExists(string path)
+        {
+            if (files != null && 
+                !path.Contains("node_modules/") && 
+                !path.Contains("node_modules\\"))
+            {
+#if UNITY_STANDALONE_WIN
+                path = path.Replace("/", "\\").ToLower();
+#endif
+                return files.Contains(path);
+            }
+            return File.Exists(path);
+        }
+        void ReadDirectory(string dirPath)
+        {
+            DirectoryInfo info = new DirectoryInfo(dirPath);
+            foreach (var subDirectory in info.GetDirectories())
+            {
+                ReadDirectory(subDirectory.FullName);
+            }
+            foreach (var subFile in info.GetFiles())
+            {
+                string path = subFile.FullName;
+#if UNITY_STANDALONE_WIN
+                path = path.Replace("/", "\\").ToLower();
+#endif
+                files.Add(path);
+            }
         }
     }
 
@@ -408,7 +450,7 @@ namespace XOR
             {
                 filepath = filepath.Substring(1);
             }
-            
+
             filepath = debugpath = CombinePath(filepath);
             if (ignoreCase)
             {
