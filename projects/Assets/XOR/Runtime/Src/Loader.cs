@@ -380,7 +380,7 @@ namespace XOR
                 path = Path.Combine(outputRoot, path);
             if (ReadFileExists(path))
             {
-#if UNITY_STANDALONE_WIN
+#if UNITY_EDITOR_WIN || UNITY_STANDALONE_WIN
                 path = path.Replace("/", "\\");
 #else
                 path = path.Replace("\\", "/");
@@ -399,7 +399,7 @@ namespace XOR
                 !path.Contains("node_modules\\")
             ))
             {
-#if UNITY_STANDALONE_WIN
+#if UNITY_EDITOR_WIN
                 path = path.Replace("/", "\\").ToLower();
 #endif
                 return prereadFiles.Contains(path);
@@ -416,7 +416,7 @@ namespace XOR
             foreach (var subFile in info.GetFiles())
             {
                 string path = subFile.FullName;
-#if UNITY_STANDALONE_WIN
+#if UNITY_EDITOR_WIN
                 path = path.Replace("/", "\\").ToLower();
 #endif
                 prereadFiles.Add(path);
