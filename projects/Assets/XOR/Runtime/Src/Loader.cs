@@ -315,21 +315,34 @@ namespace XOR
     {
         private readonly string outputRoot;
         private readonly string projectRoot;
-        private HashSet<string> files;
+        private HashSet<string> prereadFiles;
+        private bool prereadAll;        //预读取全部文件(包含node_modules)
+
         public FileLoader(string outputRoot) : this(outputRoot, null, false) { }
         public FileLoader(string outputRoot, bool preread) : this(outputRoot, null, preread) { }
         public FileLoader(string outputRoot, string projectRoot) : this(outputRoot, projectRoot, false) { }
+
         public FileLoader(string outputRoot, string projectRoot, bool preread)
         {
             this.outputRoot = outputRoot;
             this.projectRoot = string.IsNullOrEmpty(projectRoot) ? outputRoot : projectRoot;
-            if (preread) ReadDirectory();
+            if (preread) ReadDirectory(true);
         }
-        /// <summary>预读取目录(不包含node_modules目录), 减少IO次数</summary>
+        /// <summary>预读取目录(包含node_modules目录), 减少IO次数</summary>
         public void ReadDirectory()
         {
-            files = new HashSet<string>();
-            if (Directory.Exists(outputRoot)) ReadDirectory(outputRoot);
+            ReadDirectory(true);
+        }
+        public void ReadDirectory(bool prereadAll)
+        {
+            this.prereadAll = prereadAll;
+            this.prereadFiles = new HashSet<string>();
+
+            string dirPath = this.prereadAll ? projectRoot : outputRoot;
+            if (Directory.Exists(dirPath))
+            {
+                ReadDirectory(dirPath);
+            }
         }
 
         public bool FileExists(string filepath)
@@ -380,14 +393,16 @@ namespace XOR
 
         bool ReadFileExists(string path)
         {
-            if (files != null && 
-                !path.Contains("node_modules/") && 
-                !path.Contains("node_modules\\"))
+            if (prereadFiles != null && (
+                prereadAll ||
+                !path.Contains("node_modules/") &&
+                !path.Contains("node_modules\\")
+            ))
             {
 #if UNITY_STANDALONE_WIN
                 path = path.Replace("/", "\\").ToLower();
 #endif
-                return files.Contains(path);
+                return prereadFiles.Contains(path);
             }
             return File.Exists(path);
         }
@@ -404,7 +419,7 @@ namespace XOR
 #if UNITY_STANDALONE_WIN
                 path = path.Replace("/", "\\").ToLower();
 #endif
-                files.Add(path);
+                prereadFiles.Add(path);
             }
         }
     }
