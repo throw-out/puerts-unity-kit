@@ -4,6 +4,7 @@ using UnityEngine;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using XOR.Services;
 
 namespace XOR.UI
 {
@@ -375,7 +376,7 @@ namespace XOR.UI
             static UnityEditor.GenericMenu GenerateMethodsMenu(NodeWrap node, Action<UnityEngine.Object, XOR.Services.MethodDeclaration> callback)
             {
                 var program = EditorApplicationUtil.GetProgram();
-                if (program == null || program.state != XOR.Services.ProgramState.Completed)
+                if (program == null || program is Program program1 && program1.state != XOR.Services.ProgramState.Completed)
                 {
                     GUIUtil.RenderMustLaunchServices();
                     return null;

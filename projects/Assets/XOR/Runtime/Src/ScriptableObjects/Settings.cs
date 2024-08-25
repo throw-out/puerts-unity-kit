@@ -90,6 +90,9 @@ namespace XOR
         /// <summary>启用模块路径 </summary>
         public bool autoLoadScript = true;
 
+        /// <summary>使用metadata缓存 </summary>
+        public bool cached = true;
+
         /// <summary>Wacther类型 </summary>
         public WacthType watchType = WacthType.Nodejs;
         public enum WacthType

@@ -13,11 +13,11 @@ namespace XOR
         const int IconWidth = 14;
         const int HeaderHeight = 20;
 
-        internal static void Show(Program program, Action<string> callback)
+        internal static void Show(IProgram program, Action<string> callback)
         {
             Show(program, callback, GUILayoutUtility.GetLastRect());
         }
-        internal static void Show(Program program, Action<string> callback, Rect activatorRect)
+        internal static void Show(IProgram program, Action<string> callback, Rect activatorRect)
         {
             ModuleSelector selector = new ModuleSelector();
             selector.SetCallback(callback);
@@ -134,7 +134,7 @@ namespace XOR
         {
             this.callback = callback;
         }
-        void SetProgram(Program program)
+        void SetProgram(IProgram program)
         {
             if (program != null)
             {
@@ -144,7 +144,7 @@ namespace XOR
                     string path = statement.Value.module;
                     if (path.Contains("/") || path.Contains("\\"))
                     {
-                        path = PathUtil.GetLocalPath(path, program.root);
+                        path = program.GetLocalPath(path);
                     }
                     this.root.AddStatement(path.Replace("\\", "/"), statement.Value);
                 }

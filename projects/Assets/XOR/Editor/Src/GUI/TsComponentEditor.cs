@@ -21,7 +21,7 @@ namespace XOR
         private static bool memberFoldout = true;
 
         private TsComponent component;
-        private Program program;
+        private IProgram program;
         private Statement statement;
 
         private Rect moduleSelectorRect;
@@ -457,8 +457,8 @@ namespace XOR
                 );
                 return;
             }
-            XOR.Services.Program program = EditorApplicationUtil.GetProgram();
-            if (program == null || program.state != XOR.Services.ProgramState.Completed)
+            IProgram program = EditorApplicationUtil.GetProgram();
+            if (program == null || program is Program program1 && program1.state != XOR.Services.ProgramState.Completed)
             {
                 GUIUtil.RenderMustLaunchServices();
                 return;
@@ -528,7 +528,7 @@ namespace XOR
                 Debug.Log(builder.ToString());
             }
         }
-        static bool SyncGameObjectComponents(XOR.Services.Program program, GameObject gameObject, HashSet<string> unknwonGuids, bool isForce)
+        static bool SyncGameObjectComponents(IProgram program, GameObject gameObject, HashSet<string> unknwonGuids, bool isForce)
         {
             var dirty = false;
             var components = gameObject.GetComponentsInChildren<XOR.TsComponent>();
@@ -558,7 +558,7 @@ namespace XOR
             }
             return dirty;
         }
-        static bool SyncSceneComponents(XOR.Services.Program program, UnityEngine.SceneManagement.Scene sceen, HashSet<string> unknwonGuids, bool isForce)
+        static bool SyncSceneComponents(IProgram program, UnityEngine.SceneManagement.Scene sceen, HashSet<string> unknwonGuids, bool isForce)
         {
             var dirty = false;
             foreach (GameObject gameObject in sceen.GetRootGameObjects())

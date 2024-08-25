@@ -3,6 +3,7 @@ using System.IO;
 using System.Reflection;
 using UnityEditor;
 using UnityEngine;
+using XOR.Services;
 
 namespace XOR
 {
@@ -124,6 +125,20 @@ namespace XOR
             }
 
             _RenderTooptip(Skin.infoIcon, Language.Default.Get("script_path_tip"));
+
+            GUILayout.BeginHorizontal();
+            GUILayout.Label("Cache metadata", GUILayout.Width(HeaderWidth));
+            bool cached = GUILayout.Toggle(settings.cached, string.Empty);
+            GUILayout.EndHorizontal();
+            if (cached != settings.cached)
+            {
+                settings.cached = cached;
+                if (!cached)
+                {
+                    TsServicesCached.DeleteRoot();
+                    EditorApplicationUtil.DeleteCached();
+                }
+            }
         }
         void RenderWatchType(Settings settings)
         {
