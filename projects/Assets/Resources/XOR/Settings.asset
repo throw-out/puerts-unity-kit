@@ -15,5 +15,6 @@ MonoBehaviour:
   project: ../TsProject/tsconfig.json
   isESM: 0
   autoLoadScript: 1
+  cached: 1
   watchType: 2
   logger: 14

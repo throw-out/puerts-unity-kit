@@ -5,10 +5,10 @@ using System.Linq;
 
 namespace XOR.Services
 {
-    public class TsServicesCached : IProgram
+    public class ProgramCached : IProgram
     {
         public Dictionary<string, Statement> Statements { get; private set; }
-        public TsServicesCached()
+        public ProgramCached()
         {
             Statements = new Dictionary<string, Statement>();
         }
@@ -19,16 +19,6 @@ namespace XOR.Services
             Statement statement;
             this.Statements.TryGetValue(guid, out statement);
             return statement;
-        }
-        public void AddStatement(Statement statement, bool copy)
-        {
-            if (copy)
-            {
-                var copySelf = statement.Copy();
-                copySelf.parent = this;
-                statement = copySelf;
-            }
-            AddStatement(statement);
         }
         public void AddStatement(Statement statement)
         {
@@ -43,8 +33,11 @@ namespace XOR.Services
 
             this.RemoveStatement(copySelf.guid);
             this.Statements.Add(copySelf.guid, copySelf);
-            //写入缓存数据
-            WriteCacheToRoot(copySelf);
+            //写入缓存
+            if (!WriteCacheToRoot(copySelf))
+            {
+                this.RemoveStatement(copySelf.guid);
+            }
         }
         public void RemoveStatement(string guid)
         {
@@ -97,9 +90,9 @@ namespace XOR.Services
         /// 从缓存中创建实例对象
         /// </summary>
         /// <returns></returns>
-        public static TsServicesCached CreateProgramFormRoot()
+        public static ProgramCached CreateProgramFormRoot()
         {
-            TsServicesCached result = new TsServicesCached();
+            ProgramCached result = new ProgramCached();
             if (!Directory.Exists(CacheRoot))
                 return result;
 
@@ -113,13 +106,22 @@ namespace XOR.Services
             }
             return result;
         }
-        private static void WriteCacheToRoot(Statement statement)
+        private static bool WriteCacheToRoot(Statement statement)
         {
             CreateRoot();
-            File.WriteAllBytes(
-                Path.Combine(CacheRoot, statement.guid),
-                FromStatement(statement)
-            );
+            try
+            {
+                File.WriteAllBytes(
+                    Path.Combine(CacheRoot, statement.guid),
+                    FromStatement(statement)
+                );
+                return true;
+            }
+            catch (Exception e)
+            {
+                Logger.LogError(e);
+            }
+            return false;
         }
         private static byte[] FromStatement(Statement statement)
         {
@@ -146,8 +148,8 @@ namespace XOR.Services
                     string json = reader.ReadString();
                     if (type == 1)
                     {
-                        var cached = Newtonsoft.Json.JsonConvert.DeserializeObject<TypeDeclarationCache>(json);
-                        statement = cached != null ? TypeDeclarationCache.From(cached) : null;
+                        var cached = Newtonsoft.Json.JsonConvert.DeserializeObject<TypeDeclarationCached>(json);
+                        statement = cached != null ? TypeDeclarationCached.From(cached) : null;
                     }
                     else
                     {
@@ -162,7 +164,7 @@ namespace XOR.Services
         }
     }
 
-    public class TypeDeclarationCache
+    public class TypeDeclarationCached
     {
         public string guid;
         public string source;
@@ -172,17 +174,17 @@ namespace XOR.Services
         public string path;
         public int line;
         public string route;
-        public Dictionary<string, PropertyDeclarationCache> Properties { get; private set; }
-        public Dictionary<string, List<MethodDeclarationCache>> Methods { get; private set; }
-        public TypeDeclarationCache()
+        public Dictionary<string, PropertyDeclarationCached> Properties { get; private set; }
+        public Dictionary<string, List<MethodDeclarationCached>> Methods { get; private set; }
+        public TypeDeclarationCached()
         {
-            this.Properties = new Dictionary<string, PropertyDeclarationCache>();
-            this.Methods = new Dictionary<string, List<MethodDeclarationCache>>();
+            this.Properties = new Dictionary<string, PropertyDeclarationCached>();
+            this.Methods = new Dictionary<string, List<MethodDeclarationCached>>();
         }
 
-        public static TypeDeclarationCache From(TypeDeclaration declaration)
+        public static TypeDeclarationCached From(TypeDeclaration declaration)
         {
-            var result = new TypeDeclarationCache()
+            var result = new TypeDeclarationCached()
             {
                 guid = declaration.guid,
                 source = declaration.source,
@@ -197,19 +199,19 @@ namespace XOR.Services
             {
                 foreach (var property in declaration.Properties)
                 {
-                    result.Properties[property.Key] = PropertyDeclarationCache.From(property.Value);
+                    result.Properties[property.Key] = PropertyDeclarationCached.From(property.Value);
                 }
             }
             if (declaration.Methods != null)
             {
                 foreach (var method in declaration.Methods)
                 {
-                    result.Methods[method.Key] = method.Value.Select(m => MethodDeclarationCache.From(m)).ToList();
+                    result.Methods[method.Key] = method.Value.Select(m => MethodDeclarationCached.From(m)).ToList();
                 }
             }
             return result;
         }
-        public static TypeDeclaration From(TypeDeclarationCache cached)
+        public static TypeDeclaration From(TypeDeclarationCached cached)
         {
             var result = new TypeDeclaration()
             {
@@ -226,7 +228,7 @@ namespace XOR.Services
             {
                 foreach (var property in cached.Properties)
                 {
-                    var declaration = PropertyDeclarationCache.From(property.Value);
+                    var declaration = PropertyDeclarationCached.From(property.Value);
                     if (declaration != null)
                     {
                         result.Properties[property.Key] = declaration;
@@ -237,7 +239,7 @@ namespace XOR.Services
             {
                 foreach (var method in cached.Methods)
                 {
-                    var list = method.Value.Select(m => MethodDeclarationCache.From(m)).Where(d => d != null).ToList();
+                    var list = method.Value.Select(m => MethodDeclarationCached.From(m)).Where(d => d != null).ToList();
                     if (list.Count > 0)
                     {
                         result.Methods[method.Key] = list;
@@ -247,7 +249,7 @@ namespace XOR.Services
             return result;
         }
     }
-    public class PropertyDeclarationCache
+    public class PropertyDeclarationCached
     {
         public string name;
         public string valueType;
@@ -255,9 +257,9 @@ namespace XOR.Services
         public Tuple<float, float> valueRange;
         public Dictionary<string, object> valueEnum;
         public Dictionary<string, string> valueReferences;
-        public static PropertyDeclarationCache From(PropertyDeclaration declaration)
+        public static PropertyDeclarationCached From(PropertyDeclaration declaration)
         {
-            return new PropertyDeclarationCache()
+            return new PropertyDeclarationCached()
             {
                 name = declaration.name,
                 valueType = declaration.valueType.FullName,
@@ -266,7 +268,7 @@ namespace XOR.Services
                 valueReferences = declaration.valueReferences,
             };
         }
-        public static PropertyDeclaration From(PropertyDeclarationCache cached)
+        public static PropertyDeclaration From(PropertyDeclarationCached cached)
         {
             Type valueType = Type.GetType(cached.valueType, false);
             if (valueType == null)
@@ -281,22 +283,22 @@ namespace XOR.Services
             };
         }
     }
-    public class MethodDeclarationCache
+    public class MethodDeclarationCached
     {
         public string name;
         public string returnType;
         public string[] parameterTypes;
 
-        public static MethodDeclarationCache From(MethodDeclaration declaration)
+        public static MethodDeclarationCached From(MethodDeclaration declaration)
         {
-            return new MethodDeclarationCache()
+            return new MethodDeclarationCached()
             {
                 name = declaration.name,
                 returnType = declaration.returnType.FullName,
                 parameterTypes = declaration.parameterTypes.Select(t => t.FullName).ToArray()
             };
         }
-        public static MethodDeclaration From(MethodDeclarationCache cached)
+        public static MethodDeclaration From(MethodDeclarationCached cached)
         {
             Type returnType = Type.GetType(cached.returnType, false);
             if (returnType == null)

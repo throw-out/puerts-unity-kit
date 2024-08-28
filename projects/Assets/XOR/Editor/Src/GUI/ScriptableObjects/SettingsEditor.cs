@@ -44,6 +44,8 @@ namespace XOR
                 GUILayout.Space(HeightSpace);
                 GUIUtil.RenderGroup(RenderWatchType, Settings.Load(true, true));
                 GUILayout.Space(HeightSpace);
+                GUIUtil.RenderGroup(RenderMetadataCached, Settings.Load(true, true));
+                GUILayout.Space(HeightSpace);
                 GUIUtil.RenderGroup(RenderScriptingDefine);
                 GUILayout.Space(HeightSpace);
             }
@@ -125,20 +127,6 @@ namespace XOR
             }
 
             _RenderTooptip(Skin.infoIcon, Language.Default.Get("script_path_tip"));
-
-            GUILayout.BeginHorizontal();
-            GUILayout.Label("Cache metadata", GUILayout.Width(HeaderWidth));
-            bool cached = GUILayout.Toggle(settings.cached, string.Empty);
-            GUILayout.EndHorizontal();
-            if (cached != settings.cached)
-            {
-                settings.cached = cached;
-                if (!cached)
-                {
-                    TsServicesCached.DeleteRoot();
-                    EditorApplicationUtil.DeleteCached();
-                }
-            }
         }
         void RenderWatchType(Settings settings)
         {
@@ -161,6 +149,53 @@ namespace XOR
             {
                 _RenderTooptip(Skin.warnIcon, Language.Default.Get("nodejs_unsupport"));
             }
+        }
+        void RenderMetadataCached(Settings settings)
+        {
+            GUILayout.Label("Metadata Cached");
+
+            GUILayout.BeginHorizontal();
+            GUILayout.Label("Enabled", GUILayout.Width(HeaderWidth));
+            bool enabled = GUILayout.Toggle(settings.cached, string.Empty);
+            GUILayout.EndHorizontal();
+            if (enabled != settings.cached)
+            {
+                settings.cached = enabled;
+                if (!enabled)
+                {
+                    ProgramCached.DeleteRoot();
+                    EditorApplicationUtil.DeleteCached();
+                }
+            }
+            GUILayout.BeginHorizontal();
+            using (new EditorGUI.DisabledScope(!settings.cached))
+            {
+                if (GUILayout.Button(Language.Default.Get("delete_metadata_cahce")))
+                {
+                    ProgramCached.DeleteRoot();
+                    EditorApplicationUtil.DeleteCached();
+                }
+            }
+            /* using (new EditorGUI.DisabledScope(!settings.cached || !EditorApplicationUtil.IsRunning()))
+            {
+                if (GUILayout.Button(Language.Default.Get("generate_metadata_cahce")))
+                {
+                    ProgramCached.DeleteRoot();
+                    EditorApplicationUtil.DeleteCached();
+
+                    var cached = EditorApplicationUtil.GetCached();
+                    var program = EditorApplicationUtil.GetProgram() as Program;
+                    if (cached != null && program != null)
+                    {
+                        foreach (var statement in program.Statements)
+                        {
+                            cached.AddStatement(statement.Value);
+                        }
+                        program.SetCahced(cached);
+                    }
+                }
+            } */
+            GUILayout.EndHorizontal();
         }
         void RenderScriptingDefine()
         {

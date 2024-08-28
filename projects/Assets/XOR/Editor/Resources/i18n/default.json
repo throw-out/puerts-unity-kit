@@ -106,5 +106,13 @@
     "dependents_uninstall": {
         "zh_cn": "以下模块尚未安装, 请在目标路径中执行<npm install>或<yarn install>命令:\n{0}",
         "en_us": "The modules have not been installed. Please execute <npm install>or<yarn install>command:\n{0}"
+    },
+    "generate_metadata_cahce": {
+        "zh_cn": "生成缓存",
+        "en_us": "Generate Cached"
+    },
+    "delete_metadata_cahce": {
+        "zh_cn": "删除缓存",
+        "en_us": "Delete Cached"
     }
 }
