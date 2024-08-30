@@ -35,7 +35,7 @@ namespace XOR
         {
             if (!IsRunning())
             {
-                return GetProgramCached() != null ? "Cached" : "UNKNOWN";
+                return GetProgramCached() != null ? "-" : "UNKNOWN";
             }
             Program program = EditorApplication.Instance.Program;
             if (program == null || string.IsNullOrEmpty(program.compile))
@@ -44,6 +44,10 @@ namespace XOR
         }
         public static string GetScripts()
         {
+            if (!IsRunning())
+            {
+                return GetProgramCached() != null ? "-" : "UNKNOWN";
+            }
             EditorApplication app = EditorApplication.Instance;
             if (app == null || app.Program == null)
                 return "UNKNOWN";
@@ -51,17 +55,14 @@ namespace XOR
         }
         public static string GetErrors()
         {
+            if (!IsRunning())
+            {
+                return GetProgramCached() != null ? "-" : "UNKNOWN";
+            }
             EditorApplication app = EditorApplication.Instance;
             if (app == null || app.Program == null)
                 return "UNKNOWN";
             return $"{app.Program.errors}";
-        }
-        public static int GetErrorsCount()
-        {
-            EditorApplication app = EditorApplication.Instance;
-            if (app == null || app.Program == null)
-                return 0;
-            return app.Program.errors;
         }
         public static string GetTypeCount()
         {

@@ -172,9 +172,25 @@ namespace XOR
                     root.Update();
                     TsComponentHelper.RebuildNodes(root, nodes, statement);
                 }
-                if (GUILayout.Button(Language.Default.Get("edit")) && File.Exists(statement.path))
+                if (GUILayout.Button(Language.Default.Get("edit")))
                 {
-                    FileUtil.OpenFileInIDE(statement.path, statement.line);
+                    string path = statement.path;
+                    if (!EditorApplicationUtil.IsRunning())
+                    {
+                        string tsProjectRoot = Path.GetFullPath(Path.GetDirectoryName(Path.Combine(UnityEngine.Application.dataPath, Settings.Load().project)));
+                        if (Directory.Exists(tsProjectRoot))
+                        {
+                            path = Path.Combine(tsProjectRoot, path);
+                        }
+                    }
+                    if (File.Exists(path))
+                    {
+                        FileUtil.OpenFileInIDE(path, statement.line);
+                    }
+                    else
+                    {
+                        Logger.LogWarning("Unable to open path: {0}", path);
+                    }
                 }
             }
             GUILayout.EndHorizontal();

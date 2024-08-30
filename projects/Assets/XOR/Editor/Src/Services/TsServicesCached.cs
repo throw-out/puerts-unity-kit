@@ -27,7 +27,7 @@ namespace XOR.Services
         {
             if (Statements.TryGetValue(statement.guid, out var old) && statement.version == old.version)
             {
-                //return;
+                return;
             }
             var copySelf = statement.Copy();
             copySelf.path = copySelf.GetLocalPath();
@@ -109,6 +109,7 @@ namespace XOR.Services
             }
             return result;
         }
+
         private static bool WriteCacheToRoot(Statement statement)
         {
             CreateRoot();
