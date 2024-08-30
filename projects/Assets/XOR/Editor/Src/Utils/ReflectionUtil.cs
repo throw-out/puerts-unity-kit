@@ -10,16 +10,17 @@ namespace XOR
         private static Dictionary<string, Type> types = new Dictionary<string, Type>();
         public static Type GetType(string fullName)
         {
-            Type type;
-            if (!types.TryGetValue(fullName, out type))
+            if (string.IsNullOrEmpty(fullName))
+                return null;
+            if (types.TryGetValue(fullName, out var type))
+                return type;
+            foreach (Assembly assembly in AppDomain.CurrentDomain.GetAssemblies())
             {
-                foreach (Assembly assembly in AppDomain.CurrentDomain.GetAssemblies())
-                {
-                    type = assembly.GetType(fullName, false);
-                    if (type != null) break;
-                }
-                types.Add(fullName, type);
+                type = assembly.GetType(fullName, false);
+                if (type != null)
+                    break;
             }
+            types.Add(fullName, type);
             return type;
         }
     }

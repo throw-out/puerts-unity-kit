@@ -128,19 +128,20 @@ namespace XOR.Services
         }
         private static byte[] FromStatement(Statement statement)
         {
+            byte type = 0;
+            object obj = statement;
+            if (statement is TypeDeclaration td)
+            {
+                type = 1;
+                obj = TypeDeclarationCached.From(td);
+            }
+
             using (var stream = new MemoryStream())
             {
                 var writer = new BinaryWriter(stream);
-                if (statement is TypeDeclaration td)
-                {
-                    writer.Write((byte)1);
-                    writer.Write(JSON.SerializeObject(TypeDeclarationCached.From(td)));
-                }
-                else
-                {
-                    writer.Write((byte)0);
-                    writer.Write(JSON.SerializeObject(statement));
-                }
+                writer.Write(type);
+                writer.Write(JSON.SerializeObject(obj, JSONSettings.format));
+
                 return stream.ToArray();
             }
         }
@@ -149,19 +150,18 @@ namespace XOR.Services
             using (var stream = new MemoryStream(data))
             {
                 var reader = new BinaryReader(stream);
-
                 try
                 {
                     byte type = reader.ReadByte();
                     string json = reader.ReadString();
                     if (type == 1)
                     {
-                        var cached = JSON.DeserializeObject<TypeDeclarationCached>(json);
+                        var cached = JSON.DeserializeObject<TypeDeclarationCached>(json, JSONSettings.format);
                         statement = cached != null ? TypeDeclarationCached.From(cached) : null;
                     }
                     else
                     {
-                        statement = JSON.DeserializeObject<EnumDeclaration>(json);
+                        statement = JSON.DeserializeObject<EnumDeclaration>(json, JSONSettings.format);
                     }
                     return true;
                 }
@@ -264,20 +264,20 @@ namespace XOR.Services
     {
         public string name;
         public string valueType;
-        public ObjectSerialize defaultValue;
+        public ObjectSerializer defaultValue;
         public Tuple<float, float> valueRange;
-        public Dictionary<string, ObjectSerialize> valueEnum;
+        public Dictionary<string, ObjectSerializer> valueEnum;
         public Dictionary<string, string> valueReferences;
         public static PropertyDeclarationCached From(PropertyDeclaration declaration)
         {
-            var defaultValue = ObjectSerialize.FromObject(declaration.defaultValue);
-            Dictionary<string, ObjectSerialize> valueEnum = null;
+            var defaultValue = ObjectSerializer.FromObject(declaration.defaultValue);
+            Dictionary<string, ObjectSerializer> valueEnum = null;
             if (declaration.valueEnum != null)
             {
-                valueEnum = new Dictionary<string, ObjectSerialize>();
+                valueEnum = new Dictionary<string, ObjectSerializer>();
                 foreach (var pair in declaration.valueEnum)
                 {
-                    valueEnum[pair.Key] = ObjectSerialize.FromObject(pair.Value);
+                    valueEnum[pair.Key] = ObjectSerializer.FromObject(pair.Value);
                 }
             }
             return new PropertyDeclarationCached()
@@ -292,7 +292,7 @@ namespace XOR.Services
         }
         public static PropertyDeclaration From(PropertyDeclarationCached cached)
         {
-            Type valueType = Type.GetType(cached.valueType, false);
+            Type valueType = ReflectionUtil.GetType(cached.valueType);
             if (valueType == null)
                 return null;
             var defaultValue = cached.defaultValue?.ToObject();
@@ -334,8 +334,8 @@ namespace XOR.Services
         }
         public static MethodDeclaration From(MethodDeclarationCached cached)
         {
-            Type returnType = !string.IsNullOrEmpty(cached.returnType) ? Type.GetType(cached.returnType, false) : null;
-            IEnumerable<Type> parameterTypes = cached.parameterTypes?.Select(n => Type.GetType(n, false));
+            Type returnType = ReflectionUtil.GetType(cached.returnType);
+            IEnumerable<Type> parameterTypes = cached.parameterTypes?.Select(n => ReflectionUtil.GetType(n));
             if (parameterTypes != null && parameterTypes.Any(t => t == null))
                 return null;
             return new MethodDeclaration()
@@ -347,119 +347,235 @@ namespace XOR.Services
         }
     }
 
-    public enum ObjectType
+    public class ObjectSerializer
     {
-        Default,
-        Vector2,
-        Vector3,
-        Color,
-        Color32,
-        Array,
-    }
-
-    public class ObjectSerialize
-    {
-        public ObjectType type;
-        public string valueType;
+        public string type;
         public string value;
 
         public object ToObject()
         {
             if (string.IsNullOrEmpty(value))
                 return null;
-            object result = null;
-            switch (type)
+            Type explicitType = ReflectionUtil.GetType(type);
+            if (explicitType != null)
             {
-                case ObjectType.Vector2:
-                    result = Serializer.ToData<Vector2>(value);
-                    break;
-                case ObjectType.Vector3:
-                    result = Serializer.ToData<Vector3>(value);
-                    break;
-                case ObjectType.Color:
-                    result = Serializer.ToData<Color>(value);
-                    break;
-                case ObjectType.Color32:
-                    result = Serializer.ToData<Color32>(value);
-                    break;
-                case ObjectType.Array:
-                    {
-                        var list = JSON.DeserializeObject<List<ObjectSerialize>>(value);
-                        var firstValue = list.FirstOrDefault(v => v != null)?.ToObject();
-                        if (firstValue != null)
-                        {
-                            Array array = Array.CreateInstance(firstValue.GetType(), list.Count);
-                            for (int i = 0; i < array.Length; i++)
-                            {
-                                array.SetValue(list[i]?.ToObject(), i);
-                            }
-                        }
-                    }
-                    break;
-                default:
-                    Type _t = !string.IsNullOrEmpty(valueType) ? Type.GetType(valueType, false) : null;
-                    if (_t != null)
-                    {
-                        result = JSON.DeserializeObject(value, _t);
-                    }
-                    else
-                    {
-                        result = JSON.DeserializeObject<object>(value);
-                    }
-                    break;
+                return JSON.DeserializeObject(value, explicitType, JSONSettings.converters);
             }
-            return result;
+            return JSON.DeserializeObject<object>(value, JSONSettings.converters);
         }
-        public static ObjectSerialize FromObject(object obj)
+        public static ObjectSerializer FromObject(object obj)
         {
             if (obj == null)
                 return null;
-            ObjectType type = ObjectType.Default;
-            string value = null;
-            string valueType = null;
-            if (obj is Vector2 vec2)
+            return new ObjectSerializer()
             {
-                type = ObjectType.Vector2;
-                value = Serializer.ToString(vec2);
-            }
-            else if (obj is Vector3 vec3)
-            {
-                type = ObjectType.Vector3;
-                value = Serializer.ToString(vec3);
-            }
-            else if (obj is Color color)
-            {
-                type = ObjectType.Color;
-                value = Serializer.ToString(color);
-            }
-            else if (obj is Color32 color32)
-            {
-                type = ObjectType.Color32;
-                value = Serializer.ToString(color32);
-            }
-            else if (obj is Array array)
-            {
-                List<ObjectSerialize> list = new List<ObjectSerialize>();
-                for (int i = 0; i < array.Length; i++)
-                {
-                    list.Add(ObjectSerialize.FromObject(array.GetValue(i)));
-                }
-                type = ObjectType.Array;
-                value = JSON.SerializeObject(list);
-            }
-            else
-            {
-                valueType = obj?.GetType().FullName;
-                value = JSON.SerializeObject(obj);
-            }
-            if (string.IsNullOrEmpty(value))
-                return null;
-            return new ObjectSerialize()
-            {
-                type = type,
-                value = value,
-                valueType = valueType,
+                value = JSON.SerializeObject(obj, JSONSettings.converters),
+                type = obj?.GetType().FullName,
             };
+        }
+    }
+
+    internal static class JSONSettings
+    {
+        public static readonly JsonSerializerSettings format = new JsonSerializerSettings()
+        {
+            NullValueHandling = NullValueHandling.Ignore,
+            Formatting = Formatting.Indented,
+        };
+        public static readonly JsonSerializerSettings converters = new JsonSerializerSettings()
+        {
+            NullValueHandling = NullValueHandling.Ignore,
+            //MetadataPropertyHandling = MetadataPropertyHandling.Ignore,
+            //Formatting = Formatting.Indented,
+            Converters = new List<JsonConverter>
+            {
+                new VectorConverter(),
+                new ColorConverter(),
+                new RectConverter(),
+            },
+        };
+
+        abstract class BaseConverter : JsonConverter
+        {
+            public override bool CanConvert(Type objectType)
+            {
+                return WriterMethods.ContainsKey(objectType);
+            }
+
+            public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer)
+            {
+                if (objectType == null || !ReaderMethods.TryGetValue(objectType, out var read))
+                {
+                    throw new Exception("Unexpected Error Occurred");
+                }
+                return read(reader, serializer);
+            }
+
+            public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer)
+            {
+                if (value == null || !WriterMethods.TryGetValue(value.GetType(), out var write))
+                {
+                    throw new Exception("Unexpected Error Occurred");
+                }
+                writer.WriteStartObject();
+                write(writer, serializer, value);
+                writer.WriteEndObject();
+            }
+            protected abstract Dictionary<Type, Action<JsonWriter, JsonSerializer, object>> WriterMethods { get; }
+            protected abstract Dictionary<Type, Func<JsonReader, JsonSerializer, object>> ReaderMethods { get; }
+        }
+
+        class VectorConverter : BaseConverter
+        {
+            protected override Dictionary<Type, Func<JsonReader, JsonSerializer, object>> ReaderMethods { get; } = new Dictionary<Type, Func<JsonReader, JsonSerializer, object>>()
+            {
+                {typeof(Vector2), (reader, serializer) => JSON.DeserializeObject<Vector2>(serializer.Deserialize(reader).ToString())},
+                {typeof(Vector3), (reader, serializer) => JSON.DeserializeObject<Vector3>(serializer.Deserialize(reader).ToString())},
+                {typeof(Vector4), (reader, serializer) => JSON.DeserializeObject<Vector4>(serializer.Deserialize(reader).ToString())},
+                {typeof(Vector2Int), (reader, serializer) => JSON.DeserializeObject<Vector2Int>(serializer.Deserialize(reader).ToString())},
+                {typeof(Vector3Int), (reader, serializer) => JSON.DeserializeObject<Vector3Int>(serializer.Deserialize(reader).ToString())},
+            };
+            protected override Dictionary<Type, Action<JsonWriter, JsonSerializer, object>> WriterMethods { get; } = new Dictionary<Type, Action<JsonWriter, JsonSerializer, object>>()
+            {
+                { typeof(Vector2), (writer, serializer, value) => WriteProperties(writer, (Vector2)value)},
+                { typeof(Vector3), (writer, serializer, value) => WriteProperties(writer, (Vector3)value)},
+                { typeof(Vector4), (writer, serializer, value) => WriteProperties(writer, (Vector4)value)},
+                { typeof(Vector2Int), (writer, serializer, value) => WriteProperties(writer, (Vector2Int)value)},
+                { typeof(Vector3Int), (writer, serializer, value) => WriteProperties(writer, (Vector3Int)value)},
+            };
+
+            static void WriteProperties(JsonWriter writer, Vector2 value)
+            {
+                writer.WritePropertyName("x");
+                writer.WriteValue(value.x);
+                writer.WritePropertyName("y");
+                writer.WriteValue(value.y);
+            }
+            static void WriteProperties(JsonWriter writer, Vector3 value)
+            {
+                writer.WritePropertyName("x");
+                writer.WriteValue(value.x);
+                writer.WritePropertyName("y");
+                writer.WriteValue(value.y);
+                writer.WritePropertyName("z");
+                writer.WriteValue(value.z);
+            }
+            static void WriteProperties(JsonWriter writer, Vector4 value)
+            {
+                writer.WritePropertyName("x");
+                writer.WriteValue(value.x);
+                writer.WritePropertyName("y");
+                writer.WriteValue(value.y);
+                writer.WritePropertyName("z");
+                writer.WriteValue(value.z);
+                writer.WritePropertyName("w");
+                writer.WriteValue(value.w);
+            }
+            static void WriteProperties(JsonWriter writer, Vector2Int value)
+            {
+                writer.WritePropertyName("x");
+                writer.WriteValue(value.x);
+                writer.WritePropertyName("y");
+                writer.WriteValue(value.y);
+            }
+            static void WriteProperties(JsonWriter writer, Vector3Int value)
+            {
+                writer.WritePropertyName("x");
+                writer.WriteValue(value.x);
+                writer.WritePropertyName("y");
+                writer.WriteValue(value.y);
+                writer.WritePropertyName("z");
+                writer.WriteValue(value.z);
+            }
+        }
+        class ColorConverter : BaseConverter
+        {
+            protected override Dictionary<Type, Func<JsonReader, JsonSerializer, object>> ReaderMethods { get; } = new Dictionary<Type, Func<JsonReader, JsonSerializer, object>>()
+            {
+                {typeof(Color), (reader, serializer) => JSON.DeserializeObject<Color>(serializer.Deserialize(reader).ToString())},
+                {typeof(Color32), (reader, serializer) => JSON.DeserializeObject<Color32>(serializer.Deserialize(reader).ToString())},
+            };
+            protected override Dictionary<Type, Action<JsonWriter, JsonSerializer, object>> WriterMethods { get; } = new Dictionary<Type, Action<JsonWriter, JsonSerializer, object>>()
+            {
+                { typeof(Color), (writer, serializer, value) => WriteProperties(writer, (Color)value)},
+                { typeof(Color32), (writer, serializer, value) => WriteProperties(writer, (Color32)value)},
+            };
+
+            static void WriteProperties(JsonWriter writer, Color value)
+            {
+                writer.WritePropertyName("r");
+                writer.WriteValue(value.r);
+                writer.WritePropertyName("g");
+                writer.WriteValue(value.g);
+                writer.WritePropertyName("b");
+                writer.WriteValue(value.b);
+                writer.WritePropertyName("a");
+                writer.WriteValue(value.a);
+            }
+            static void WriteProperties(JsonWriter writer, Color32 value)
+            {
+                writer.WritePropertyName("r");
+                writer.WriteValue(value.r);
+                writer.WritePropertyName("g");
+                writer.WriteValue(value.g);
+                writer.WritePropertyName("b");
+                writer.WriteValue(value.b);
+                writer.WritePropertyName("a");
+                writer.WriteValue(value.a);
+            }
+        }
+        class RectConverter : BaseConverter
+        {
+            protected override Dictionary<Type, Func<JsonReader, JsonSerializer, object>> ReaderMethods { get; } = new Dictionary<Type, Func<JsonReader, JsonSerializer, object>>()
+            {
+                {typeof(Rect), (reader, serializer) => JSON.DeserializeObject<Rect>(serializer.Deserialize(reader).ToString())},
+                {typeof(RectInt), (reader, serializer) => JSON.DeserializeObject<RectInt>(serializer.Deserialize(reader).ToString())},
+                {typeof(RectOffset), (reader, serializer) => JSON.DeserializeObject<RectOffset>(serializer.Deserialize(reader).ToString())},
+            };
+            protected override Dictionary<Type, Action<JsonWriter, JsonSerializer, object>> WriterMethods { get; } = new Dictionary<Type, Action<JsonWriter, JsonSerializer, object>>()
+            {
+                { typeof(Rect), (writer, serializer, value) => WriteProperties(writer, (Rect)value)},
+                { typeof(RectInt), (writer, serializer, value) => WriteProperties(writer, (RectInt)value)},
+                { typeof(RectOffset), (writer, serializer, value) => WriteProperties(writer, (RectOffset)value)},
+            };
+
+            static void WriteProperties(JsonWriter writer, Rect value)
+            {
+                writer.WritePropertyName("x");
+                writer.WriteValue(value.x);
+                writer.WritePropertyName("y");
+                writer.WriteValue(value.y);
+                writer.WritePropertyName("width");
+                writer.WriteValue(value.width);
+                writer.WritePropertyName("height");
+                writer.WriteValue(value.height);
+            }
+            static void WriteProperties(JsonWriter writer, RectInt value)
+            {
+                writer.WritePropertyName("x");
+                writer.WriteValue(value.x);
+                writer.WritePropertyName("y");
+                writer.WriteValue(value.y);
+                writer.WritePropertyName("width");
+                writer.WriteValue(value.width);
+                writer.WritePropertyName("height");
+                writer.WriteValue(value.height);
+            }
+            static void WriteProperties(JsonWriter writer, RectOffset value)
+            {
+                writer.WritePropertyName("left");
+                writer.WriteValue(value.left);
+                writer.WritePropertyName("right");
+                writer.WriteValue(value.right);
+                writer.WritePropertyName("top");
+                writer.WriteValue(value.top);
+                writer.WritePropertyName("bottom");
+                writer.WriteValue(value.bottom);
+                writer.WritePropertyName("horizontal");
+                writer.WriteValue(value.horizontal);
+                writer.WritePropertyName("vertical");
+                writer.WriteValue(value.vertical);
+            }
         }
     }
 }
