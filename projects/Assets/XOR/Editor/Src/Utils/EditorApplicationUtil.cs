@@ -8,18 +8,25 @@ namespace XOR
 {
     internal static class EditorApplicationUtil
     {
+        public static IProgram _cached;
         public static bool IsRunning() => EditorApplication.Instance != null;
         public static bool IsInitializing() => IsRunning() && EditorApplication.Instance.IsInitializing();
         public static bool IsWorkerRunning() => IsRunning() && EditorApplication.Instance.IsWorkerRunning();
         public static bool IsAvailable()
         {
-            return IsRunning() && EditorApplication.Instance.IsWorkerRunning() && !EditorApplication.Instance.IsInitializing();
+            if (IsRunning())
+            {
+                return EditorApplication.Instance.IsWorkerRunning() && !EditorApplication.Instance.IsInitializing();
+            }
+            return GetProgramCached() != null;
         }
         public static string GetStatus()
         {
             if (!IsRunning())
-                return "UNKNOWN";
-            Program program = EditorApplication.Instance?.Program;
+            {
+                return GetProgramCached() != null ? "Cached" : "UNKNOWN";
+            }
+            Program program = EditorApplication.Instance.Program;
             if (program == null)
                 return "Initializing";
             return Enum.GetName(typeof(ProgramState), program.state);
@@ -27,14 +34,20 @@ namespace XOR
         public static string GetCompileStatus()
         {
             if (!IsRunning())
-                return "UNKNOWN";
-            Program program = EditorApplication.Instance?.Program;
+            {
+                return GetProgramCached() != null ? "-" : "UNKNOWN";
+            }
+            Program program = EditorApplication.Instance.Program;
             if (program == null || string.IsNullOrEmpty(program.compile))
                 return "-";
             return program.compile;
         }
         public static string GetScripts()
         {
+            if (!IsRunning())
+            {
+                return GetProgramCached() != null ? "-" : "UNKNOWN";
+            }
             EditorApplication app = EditorApplication.Instance;
             if (app == null || app.Program == null)
                 return "UNKNOWN";
@@ -42,43 +55,50 @@ namespace XOR
         }
         public static string GetErrors()
         {
+            if (!IsRunning())
+            {
+                return GetProgramCached() != null ? "-" : "UNKNOWN";
+            }
             EditorApplication app = EditorApplication.Instance;
             if (app == null || app.Program == null)
                 return "UNKNOWN";
             return $"{app.Program.errors}";
         }
-        public static int GetErrorsCount()
-        {
-            EditorApplication app = EditorApplication.Instance;
-            if (app == null || app.Program == null)
-                return 0;
-            return app.Program.errors;
-        }
         public static string GetTypeCount()
         {
-            EditorApplication app = EditorApplication.Instance;
-            if (app == null || app.Program == null)
+            IProgram program = GetProgram();
+            if (program == null)
                 return "UNKNOWN";
-            return $"{app.Program.Statements.Count}";
+            return $"{program.Statements.Count}";
         }
-        public static Program GetProgram()
+        public static IProgram GetProgram()
         {
             EditorApplication app = EditorApplication.Instance;
-            if (app == null || app.Program == null)
-                return null;
+            if (app == null)
+                return GetProgramCached();
             return app.Program;
         }
         public static Statement GetStatement(string guid)
         {
-            EditorApplication app = EditorApplication.Instance;
-            if (app == null || app.Program == null)
+            if (guid == null)
                 return null;
-            Statement statement = null;
-            if (guid != null)
-            {
-                app.Program.Statements.TryGetValue(guid, out statement);
-            }
+            IProgram program = GetProgram();
+            if (program == null)
+                return null;
+            program.Statements.TryGetValue(guid, out Statement statement);
             return statement;
+        }
+        public static IProgram GetProgramCached()
+        {
+            if (_cached == null && Settings.Load().cached)
+            {
+                _cached = ProgramCached.CreateProgramFormRoot();
+            }
+            return _cached;
+        }
+        public static void DeleteCached()
+        {
+            _cached = null;
         }
 
         public static void Start()
@@ -110,7 +130,20 @@ namespace XOR
                 CSharpInterfaces ci = new CSharpInterfaces
                 {
                     SetWorker = app.SetWorker,
-                    SetProgram = app.SetProgram
+                    SetProgram = (program) =>
+                    {
+                        var cached = GetProgramCached();
+                        if (cached != null)
+                        {
+                            foreach (var statement in program.Statements)
+                            {
+                                cached.AddStatement(statement.Value);
+                            }
+                            program.SetCahced(cached);
+                        }
+
+                        app.SetProgram(program);
+                    }
                 };
                 //init application
                 if (Prefs.DeveloperMode)

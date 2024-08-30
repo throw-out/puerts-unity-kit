@@ -3,6 +3,7 @@ using System.IO;
 using System.Reflection;
 using UnityEditor;
 using UnityEngine;
+using XOR.Services;
 
 namespace XOR
 {
@@ -42,6 +43,8 @@ namespace XOR
                 GUIUtil.RenderGroup(RenderOther, Settings.Load(true, true));
                 GUILayout.Space(HeightSpace);
                 GUIUtil.RenderGroup(RenderWatchType, Settings.Load(true, true));
+                GUILayout.Space(HeightSpace);
+                GUIUtil.RenderGroup(RenderMetadataCached, Settings.Load(true, true));
                 GUILayout.Space(HeightSpace);
                 GUIUtil.RenderGroup(RenderScriptingDefine);
                 GUILayout.Space(HeightSpace);
@@ -146,6 +149,44 @@ namespace XOR
             {
                 _RenderTooptip(Skin.warnIcon, Language.Default.Get("nodejs_unsupport"));
             }
+        }
+        void RenderMetadataCached(Settings settings)
+        {
+            GUILayout.Label("Metadata Cached");
+
+            GUILayout.BeginHorizontal();
+            GUILayout.Label("Enabled", GUILayout.Width(HeaderWidth));
+            bool enabled = GUILayout.Toggle(settings.cached, string.Empty);
+            GUILayout.EndHorizontal();
+            if (enabled != settings.cached)
+            {
+                settings.cached = enabled;
+                if (!enabled)
+                {
+                    ProgramCached.DeleteRoot();
+                    EditorApplicationUtil.DeleteCached();
+                }
+            }
+            GUILayout.BeginHorizontal();
+            using (new EditorGUI.DisabledScope(!settings.cached))
+            {
+                if (GUILayout.Button(Language.Default.Get("delete_metadata_cached")))
+                {
+                    ProgramCached.DeleteRoot();
+                    EditorApplicationUtil.DeleteCached();
+                }
+                if (GUILayout.Button(Language.Default.Get("reload_metadata_cached")))
+                {
+                    EditorApplicationUtil.DeleteCached();
+                    var cached = EditorApplicationUtil.GetProgramCached();
+                    var appProgram = EditorApplication.Instance?.Program;
+                    if (appProgram != null)
+                    {
+                        appProgram.SetCahced(cached);
+                    }
+                }
+            }
+            GUILayout.EndHorizontal();
         }
         void RenderScriptingDefine()
         {

@@ -4,6 +4,8 @@ using UnityEngine;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using XOR;
+using XOR.Services;
 
 namespace XOR.UI
 {
@@ -83,38 +85,38 @@ namespace XOR.UI
         }
         public double DoubleValue
         {
-            get { return XOR.Events.Serializer.ToData<double>(this.StringValueNode.stringValue); }
-            set { this.StringValueNode.stringValue = XOR.Events.Serializer.ToString(value); }
+            get { return Serializer.ToData<double>(this.StringValueNode.stringValue); }
+            set { this.StringValueNode.stringValue = Serializer.ToString(value); }
         }
         public bool BoolValue
         {
-            get { return XOR.Events.Serializer.ToData<bool>(this.StringValueNode.stringValue); }
-            set { this.StringValueNode.stringValue = XOR.Events.Serializer.ToString(value); }
+            get { return Serializer.ToData<bool>(this.StringValueNode.stringValue); }
+            set { this.StringValueNode.stringValue = Serializer.ToString(value); }
         }
         public long LongValue
         {
-            get { return XOR.Events.Serializer.ToData<long>(this.StringValueNode.stringValue); }
-            set { this.StringValueNode.stringValue = XOR.Events.Serializer.ToString(value); }
+            get { return Serializer.ToData<long>(this.StringValueNode.stringValue); }
+            set { this.StringValueNode.stringValue = Serializer.ToString(value); }
         }
         public Vector2 Vector2Value
         {
-            get { return XOR.Events.Serializer.ToData<Vector2>(this.StringValueNode.stringValue); }
-            set { this.StringValueNode.stringValue = XOR.Events.Serializer.ToString(value); }
+            get { return Serializer.ToData<Vector2>(this.StringValueNode.stringValue); }
+            set { this.StringValueNode.stringValue = Serializer.ToString(value); }
         }
         public Vector3 Vector3Value
         {
-            get { return XOR.Events.Serializer.ToData<Vector3>(this.StringValueNode.stringValue); }
-            set { this.StringValueNode.stringValue = XOR.Events.Serializer.ToString(value); }
+            get { return Serializer.ToData<Vector3>(this.StringValueNode.stringValue); }
+            set { this.StringValueNode.stringValue = Serializer.ToString(value); }
         }
         public Color ColorValue
         {
-            get { return XOR.Events.Serializer.ToData<Color>(this.StringValueNode.stringValue); }
-            set { this.StringValueNode.stringValue = XOR.Events.Serializer.ToString(value); }
+            get { return Serializer.ToData<Color>(this.StringValueNode.stringValue); }
+            set { this.StringValueNode.stringValue = Serializer.ToString(value); }
         }
         public Color32 Color32Value
         {
-            get { return XOR.Events.Serializer.ToData<Color32>(this.StringValueNode.stringValue); }
-            set { this.StringValueNode.stringValue = XOR.Events.Serializer.ToString(value); }
+            get { return Serializer.ToData<Color32>(this.StringValueNode.stringValue); }
+            set { this.StringValueNode.stringValue = Serializer.ToString(value); }
         }
         public UnityEngine.Object ObjectValue
         {
@@ -375,7 +377,7 @@ namespace XOR.UI
             static UnityEditor.GenericMenu GenerateMethodsMenu(NodeWrap node, Action<UnityEngine.Object, XOR.Services.MethodDeclaration> callback)
             {
                 var program = EditorApplicationUtil.GetProgram();
-                if (program == null || program.state != XOR.Services.ProgramState.Completed)
+                if (program == null || program is Program program1 && program1.state != XOR.Services.ProgramState.Completed)
                 {
                     GUIUtil.RenderMustLaunchServices();
                     return null;

@@ -23,7 +23,7 @@ namespace XOR.Services
         public Action<string> FileChanged;
     }
 
-    public class Program
+    public class Program : IProgram
     {
         /// <summary>编译错误数量 </summary>
         public int errors;
@@ -37,12 +37,17 @@ namespace XOR.Services
         public string root;
         public Dictionary<string, Statement> Statements { get; private set; }
 
+        private IProgram cached;
         public Program()
         {
             this.Statements = new Dictionary<string, Statement>();
         }
+        public Program(IProgram cached) : this()
+        {
+            this.cached = cached;
+        }
 
-        public Statement GetStatement(string guid, bool create = true)
+        public Statement GetStatement(string guid)
         {
             if (guid == null)
                 return null;
@@ -55,11 +60,23 @@ namespace XOR.Services
             statement.parent = this;
             this.RemoveStatement(statement);
             this.Statements.Add(statement.guid, statement);
+            if (cached != null)
+            {
+                cached.AddStatement(statement);
+            }
         }
         public void RemoveStatement(Statement statement) => RemoveStatement(statement.guid);
         public void RemoveStatement(string guid)
         {
             this.Statements.Remove(guid);
+            if (cached != null)
+            {
+                cached.RemoveStatement(guid);
+            }
+        }
+        public void SetCahced(IProgram cached)
+        {
+            this.cached = cached;
         }
 
         public void Reset()
@@ -68,6 +85,11 @@ namespace XOR.Services
             this.state = ProgramState.Pending;
             this.compile = string.Empty;
             this.Statements.Clear();
+        }
+
+        public string GetLocalPath(string path)
+        {
+            return PathUtil.GetLocalPath(path, root);
         }
     }
 
@@ -84,7 +106,7 @@ namespace XOR.Services
 
     public abstract class Statement
     {
-        internal Program parent;
+        internal IProgram parent;
         /// <summary>类Id(全局唯一标识符) </summary>
         public string guid;
         /// <summary>源文件路径 </summary>
@@ -102,12 +124,29 @@ namespace XOR.Services
         {
             if (string.IsNullOrEmpty(path))
                 return string.Empty;
-            return PathUtil.GetLocalPath(path, parent.root);
+            return parent.GetLocalPath(path);
         }
         public string GetLocalModule()
         {
-            return module.Contains("\\") || module.Contains("/") ? PathUtil.GetLocalPath(module, parent.root) : module;
+            return module.Contains("\\") || module.Contains("/") ? parent.GetLocalPath(module) : module;
         }
+
+        protected virtual T CreateInstance<T>()
+            where T : Statement, new()
+        {
+            return new T
+            {
+                parent = parent,
+                guid = guid,
+                source = source,
+                version = version,
+                name = name,
+                module = module,
+                path = path,
+                line = line
+            };
+        }
+        public abstract Statement Copy();
     }
 
     public class EnumDeclaration : Statement
@@ -142,6 +181,13 @@ namespace XOR.Services
         public void RemoveProperty(string propertyName)
         {
             this.Properties.Remove(propertyName);
+        }
+
+        public override Statement Copy()
+        {
+            var result = CreateInstance<EnumDeclaration>();
+            result.Properties = Properties;
+            return result;
         }
     }
     public class EnumPropertyDeclaration
@@ -245,6 +291,15 @@ namespace XOR.Services
         public void RemoveMethods(string methodName)
         {
             this.Methods.Remove(methodName);
+        }
+
+        public override Statement Copy()
+        {
+            var result = CreateInstance<TypeDeclaration>();
+            result.route = route;
+            result.Properties = Properties;
+            result.Methods = Methods;
+            return result;
         }
     }
     public class PropertyDeclaration

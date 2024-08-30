@@ -3,7 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-namespace XOR.Events
+namespace XOR
 {
     public static class Serializer
     {
