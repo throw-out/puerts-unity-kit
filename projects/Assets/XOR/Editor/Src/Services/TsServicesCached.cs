@@ -2,6 +2,9 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using Newtonsoft.Json;
+using UnityEngine;
+using JSON = Newtonsoft.Json.JsonConvert;
 
 namespace XOR.Services
 {
@@ -24,7 +27,7 @@ namespace XOR.Services
         {
             if (Statements.TryGetValue(statement.guid, out var old) && statement.version == old.version)
             {
-                return;
+                //return;
             }
             var copySelf = statement.Copy();
             copySelf.path = copySelf.GetLocalPath();
@@ -119,7 +122,7 @@ namespace XOR.Services
             }
             catch (Exception e)
             {
-                Logger.LogError(e);
+                Logger.LogError("{0}:{1}", statement.guid, e);
             }
             return false;
         }
@@ -128,11 +131,16 @@ namespace XOR.Services
             using (var stream = new MemoryStream())
             {
                 var writer = new BinaryWriter(stream);
-
-                int type = statement is TypeDeclaration ? 1 : 0;
-                writer.Write((byte)type);
-                writer.Write(Newtonsoft.Json.JsonConvert.SerializeObject(statement));
-
+                if (statement is TypeDeclaration td)
+                {
+                    writer.Write((byte)1);
+                    writer.Write(JSON.SerializeObject(TypeDeclarationCached.From(td)));
+                }
+                else
+                {
+                    writer.Write((byte)0);
+                    writer.Write(JSON.SerializeObject(statement));
+                }
                 return stream.ToArray();
             }
         }
@@ -148,16 +156,19 @@ namespace XOR.Services
                     string json = reader.ReadString();
                     if (type == 1)
                     {
-                        var cached = Newtonsoft.Json.JsonConvert.DeserializeObject<TypeDeclarationCached>(json);
+                        var cached = JSON.DeserializeObject<TypeDeclarationCached>(json);
                         statement = cached != null ? TypeDeclarationCached.From(cached) : null;
                     }
                     else
                     {
-                        statement = Newtonsoft.Json.JsonConvert.DeserializeObject<EnumDeclaration>(json);
+                        statement = JSON.DeserializeObject<EnumDeclaration>(json);
                     }
                     return true;
                 }
-                catch (Exception) { }
+                catch (Exception e)
+                {
+                    Logger.LogError(e);
+                }
                 statement = null;
                 return false;
             }
@@ -253,18 +264,29 @@ namespace XOR.Services
     {
         public string name;
         public string valueType;
-        public object defaultValue;
+        public ObjectSerialize defaultValue;
         public Tuple<float, float> valueRange;
-        public Dictionary<string, object> valueEnum;
+        public Dictionary<string, ObjectSerialize> valueEnum;
         public Dictionary<string, string> valueReferences;
         public static PropertyDeclarationCached From(PropertyDeclaration declaration)
         {
+            var defaultValue = ObjectSerialize.FromObject(declaration.defaultValue);
+            Dictionary<string, ObjectSerialize> valueEnum = null;
+            if (declaration.valueEnum != null)
+            {
+                valueEnum = new Dictionary<string, ObjectSerialize>();
+                foreach (var pair in declaration.valueEnum)
+                {
+                    valueEnum[pair.Key] = ObjectSerialize.FromObject(pair.Value);
+                }
+            }
             return new PropertyDeclarationCached()
             {
                 name = declaration.name,
                 valueType = declaration.valueType.FullName,
+                defaultValue = defaultValue,
                 valueRange = declaration.valueRange,
-                valueEnum = declaration.valueEnum,
+                valueEnum = valueEnum,
                 valueReferences = declaration.valueReferences,
             };
         }
@@ -273,12 +295,24 @@ namespace XOR.Services
             Type valueType = Type.GetType(cached.valueType, false);
             if (valueType == null)
                 return null;
+            var defaultValue = cached.defaultValue?.ToObject();
+            Dictionary<string, object> valueEnum = null;
+            if (cached.valueEnum != null)
+            {
+                valueEnum = new Dictionary<string, object>();
+                foreach (var pair in cached.valueEnum)
+                {
+                    valueEnum[pair.Key] = pair.Value?.ToObject();
+                }
+            }
+
             return new PropertyDeclaration()
             {
                 name = cached.name,
                 valueType = valueType,
+                defaultValue = defaultValue,
                 valueRange = cached.valueRange,
-                valueEnum = cached.valueEnum,
+                valueEnum = valueEnum,
                 valueReferences = cached.valueReferences,
             };
         }
@@ -294,23 +328,137 @@ namespace XOR.Services
             return new MethodDeclarationCached()
             {
                 name = declaration.name,
-                returnType = declaration.returnType.FullName,
-                parameterTypes = declaration.parameterTypes.Select(t => t.FullName).ToArray()
+                returnType = declaration.returnType?.FullName,
+                parameterTypes = declaration.parameterTypes?.Select(t => t.FullName)?.ToArray(),
             };
         }
         public static MethodDeclaration From(MethodDeclarationCached cached)
         {
-            Type returnType = Type.GetType(cached.returnType, false);
-            if (returnType == null)
-                return null;
-            IEnumerable<Type> parameterTypes = cached.parameterTypes.Select(n => Type.GetType(n, false));
-            if (parameterTypes.Any(t => t == null))
+            Type returnType = !string.IsNullOrEmpty(cached.returnType) ? Type.GetType(cached.returnType, false) : null;
+            IEnumerable<Type> parameterTypes = cached.parameterTypes?.Select(n => Type.GetType(n, false));
+            if (parameterTypes != null && parameterTypes.Any(t => t == null))
                 return null;
             return new MethodDeclaration()
             {
                 name = cached.name,
                 returnType = returnType,
-                parameterTypes = parameterTypes.ToArray(),
+                parameterTypes = parameterTypes?.ToArray(),
+            };
+        }
+    }
+
+    public enum ObjectType
+    {
+        Default,
+        Vector2,
+        Vector3,
+        Color,
+        Color32,
+        Array,
+    }
+
+    public class ObjectSerialize
+    {
+        public ObjectType type;
+        public string valueType;
+        public string value;
+
+        public object ToObject()
+        {
+            if (string.IsNullOrEmpty(value))
+                return null;
+            object result = null;
+            switch (type)
+            {
+                case ObjectType.Vector2:
+                    result = Serializer.ToData<Vector2>(value);
+                    break;
+                case ObjectType.Vector3:
+                    result = Serializer.ToData<Vector3>(value);
+                    break;
+                case ObjectType.Color:
+                    result = Serializer.ToData<Color>(value);
+                    break;
+                case ObjectType.Color32:
+                    result = Serializer.ToData<Color32>(value);
+                    break;
+                case ObjectType.Array:
+                    {
+                        var list = JSON.DeserializeObject<List<ObjectSerialize>>(value);
+                        var firstValue = list.FirstOrDefault(v => v != null)?.ToObject();
+                        if (firstValue != null)
+                        {
+                            Array array = Array.CreateInstance(firstValue.GetType(), list.Count);
+                            for (int i = 0; i < array.Length; i++)
+                            {
+                                array.SetValue(list[i]?.ToObject(), i);
+                            }
+                        }
+                    }
+                    break;
+                default:
+                    Type _t = !string.IsNullOrEmpty(valueType) ? Type.GetType(valueType, false) : null;
+                    if (_t != null)
+                    {
+                        result = JSON.DeserializeObject(value, _t);
+                    }
+                    else
+                    {
+                        result = JSON.DeserializeObject<object>(value);
+                    }
+                    break;
+            }
+            return result;
+        }
+        public static ObjectSerialize FromObject(object obj)
+        {
+            if (obj == null)
+                return null;
+            ObjectType type = ObjectType.Default;
+            string value = null;
+            string valueType = null;
+            if (obj is Vector2 vec2)
+            {
+                type = ObjectType.Vector2;
+                value = Serializer.ToString(vec2);
+            }
+            else if (obj is Vector3 vec3)
+            {
+                type = ObjectType.Vector3;
+                value = Serializer.ToString(vec3);
+            }
+            else if (obj is Color color)
+            {
+                type = ObjectType.Color;
+                value = Serializer.ToString(color);
+            }
+            else if (obj is Color32 color32)
+            {
+                type = ObjectType.Color32;
+                value = Serializer.ToString(color32);
+            }
+            else if (obj is Array array)
+            {
+                List<ObjectSerialize> list = new List<ObjectSerialize>();
+                for (int i = 0; i < array.Length; i++)
+                {
+                    list.Add(ObjectSerialize.FromObject(array.GetValue(i)));
+                }
+                type = ObjectType.Array;
+                value = JSON.SerializeObject(list);
+            }
+            else
+            {
+                valueType = obj?.GetType().FullName;
+                value = JSON.SerializeObject(obj);
+            }
+            if (string.IsNullOrEmpty(value))
+                return null;
+            return new ObjectSerialize()
+            {
+                type = type,
+                value = value,
+                valueType = valueType,
             };
         }
     }

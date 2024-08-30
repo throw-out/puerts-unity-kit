@@ -170,31 +170,22 @@ namespace XOR
             GUILayout.BeginHorizontal();
             using (new EditorGUI.DisabledScope(!settings.cached))
             {
-                if (GUILayout.Button(Language.Default.Get("delete_metadata_cahce")))
+                if (GUILayout.Button(Language.Default.Get("delete_metadata_cached")))
                 {
                     ProgramCached.DeleteRoot();
                     EditorApplicationUtil.DeleteCached();
                 }
-            }
-            /* using (new EditorGUI.DisabledScope(!settings.cached || !EditorApplicationUtil.IsRunning()))
-            {
-                if (GUILayout.Button(Language.Default.Get("generate_metadata_cahce")))
+                if (GUILayout.Button(Language.Default.Get("reload_metadata_cached")))
                 {
-                    ProgramCached.DeleteRoot();
                     EditorApplicationUtil.DeleteCached();
-
-                    var cached = EditorApplicationUtil.GetCached();
-                    var program = EditorApplicationUtil.GetProgram() as Program;
-                    if (cached != null && program != null)
+                    var cached = EditorApplicationUtil.GetProgramCached();
+                    var appProgram = EditorApplication.Instance?.Program;
+                    if (appProgram != null)
                     {
-                        foreach (var statement in program.Statements)
-                        {
-                            cached.AddStatement(statement.Value);
-                        }
-                        program.SetCahced(cached);
+                        appProgram.SetCahced(cached);
                     }
                 }
-            } */
+            }
             GUILayout.EndHorizontal();
         }
         void RenderScriptingDefine()
