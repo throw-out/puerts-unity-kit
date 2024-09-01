@@ -177,7 +177,7 @@ namespace XOR
                     string path = statement.path;
                     if (!EditorApplicationUtil.IsRunning())
                     {
-                        string tsProjectRoot = Path.GetFullPath(Path.GetDirectoryName(Path.Combine(UnityEngine.Application.dataPath, Settings.Load().project)));
+                        string tsProjectRoot = Path.GetFullPath(Path.GetDirectoryName(Path.Combine(UnityEngine.Application.dataPath, Settings.GetInstance().project)));
                         if (Directory.Exists(tsProjectRoot))
                         {
                             path = Path.Combine(tsProjectRoot, path);
@@ -258,7 +258,7 @@ namespace XOR
         }
         public static string GetComponentPath(Statement statement)
         {
-            if (!Settings.Load().autoLoadScript)
+            if (!Settings.GetInstance().autoLoadScript)
             {
                 return string.Empty;
             }

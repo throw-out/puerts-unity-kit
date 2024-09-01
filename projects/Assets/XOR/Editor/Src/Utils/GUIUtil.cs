@@ -98,6 +98,18 @@ namespace XOR
             action(args);
             GUILayout.EndVertical();
         }
+        public static void RenderGroup<T1, T2>(Action<T1, T2> action, T1 arg1, T2 arg2)
+        {
+            GUILayout.BeginVertical(Skin.groupBox);
+            action(arg1, arg2);
+            GUILayout.EndVertical();
+        }
+        public static void RenderGroup<T1, T2, T3>(Action<T1, T2, T3> action, T1 arg1, T2 arg2, T3 arg3)
+        {
+            GUILayout.BeginVertical(Skin.groupBox);
+            action(arg1, arg2, arg3);
+            GUILayout.EndVertical();
+        }
         public static void RenderGroup(Action firstAction, params Action[] actions)
         {
             GUILayout.BeginVertical(Skin.groupBox);

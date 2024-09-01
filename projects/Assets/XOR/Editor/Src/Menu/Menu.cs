@@ -42,10 +42,15 @@ namespace XOR
         }
 
 
-        [MenuItem("Tools/XOR/Settings", false, 0)]
+        [MenuItem("Tools/XOR/Configure/Settings", false, 0)]
         static void OpenSettings()
         {
             Selection.activeObject = XOR.Settings.Load(true, true);
+        }
+        [MenuItem("Tools/XOR/Configure/BehaviourSettings", false, 0)]
+        static void OpenBehaviourSettings()
+        {
+            Selection.activeObject = XOR.BehaviourSettings.Load(true, true);
         }
 
 
