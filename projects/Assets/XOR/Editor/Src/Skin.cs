@@ -43,6 +43,12 @@ namespace XOR
             style.fontStyle = FontStyle.Bold;
             return style;
         });
+        public static readonly Accessor<GUIStyle> labelCenter = new Accessor<GUIStyle>(() =>
+        {
+            GUIStyle style = new GUIStyle(GUI.skin.label);
+            style.alignment = TextAnchor.MiddleCenter;
+            return style;
+        });
         public static readonly Accessor<GUIStyle> labelClear = new Accessor<GUIStyle>(() =>
         {
             GUIStyle style = new GUIStyle(GUI.skin.label);

@@ -199,5 +199,68 @@ namespace XOR
             if (startup && !EditorApplicationUtil.IsRunning())
                 EditorApplicationUtil.Start();
         }
+
+        /// <summary>
+        /// 弹窗询问生成类型
+        /// </summary>
+        public static void RenderGenerateClass(Action confirm, int count = -1)
+        {
+            string message = Language.Default.Get("generate_class_confirm");
+            if (count > 0)
+            {
+                message = string.Format(message, count);
+            }
+            bool ok = EditorUtility.DisplayDialog(
+                Language.Default.Get("tip"),
+                message,
+                Language.Default.Get("confirm"),
+                Language.Default.Get("cancel")
+            );
+            if (ok && confirm != null)
+                confirm();
+        }
+
+        /// <summary>
+        /// 弹窗确认窗口
+        /// </summary>
+        public static void RenderConfirm(string messageKey, Action confirm)
+        {
+            bool ok = EditorUtility.DisplayDialog(
+                Language.Default.Get("tip"),
+                Language.Default.Get(messageKey),
+                Language.Default.Get("confirm"),
+                Language.Default.Get("cancel")
+            );
+            if (ok && confirm != null)
+                confirm();
+        }
+        /// <summary>
+        /// 弹窗确认窗口
+        /// </summary>
+        public static void RenderConfirm<T1>(string messageKey, Action<T1> confirm, T1 arg1)
+        {
+            bool ok = EditorUtility.DisplayDialog(
+                Language.Default.Get("tip"),
+                Language.Default.Get(messageKey),
+                Language.Default.Get("confirm"),
+                Language.Default.Get("cancel")
+            );
+            if (ok && confirm != null)
+                confirm(arg1);
+        }
+        /// <summary>
+        /// 弹窗确认窗口
+        /// </summary>
+        public static void RenderConfirm<T1, T2>(string messageKey, Action<T1, T2> confirm, T1 arg1, T2 arg2)
+        {
+            bool ok = EditorUtility.DisplayDialog(
+                Language.Default.Get("tip"),
+                Language.Default.Get(messageKey),
+                Language.Default.Get("confirm"),
+                Language.Default.Get("cancel")
+            );
+            if (ok && confirm != null)
+                confirm(arg1, arg2);
+        }
     }
 }

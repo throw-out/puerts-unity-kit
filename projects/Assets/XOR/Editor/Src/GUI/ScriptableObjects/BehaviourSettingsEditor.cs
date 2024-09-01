@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
 using System.Text.RegularExpressions;
 using UnityEditor;
@@ -13,18 +14,12 @@ namespace XOR
     //[CanEditMultipleObjects]
     internal class BehaviourSettingsEditor : Editor
     {
+        private const float Space = 5f;
+        private const float TypeWidth = 80f;
+        private const float ClassWidth = 50f;
+        private const float ButtonWidth = 20f;
+        private const int ClassWarning = 32;
         private static Dictionary<Type, bool> foldoutDict;
-        private Dictionary<BehaviourSettings.Category, ReorderableList> reorderableListDict;
-
-        void OnEnable()
-        {
-            reorderableListDict = new Dictionary<BehaviourSettings.Category, ReorderableList>();
-        }
-        void OnDisable()
-        {
-            reorderableListDict = null;
-        }
-
 
         public override void OnInspectorGUI()
         {
@@ -37,26 +32,35 @@ namespace XOR
                 categories = new List<BehaviourSettings.Category>();
                 settings.categories = categories;
             }
-            GUILayout.BeginVertical();
 
-            RenderCategories(categories);
+            if (categories == null || categories.Count == 0)
+            {
+                GUILayout.Label("Empty Configure");
+            }
+            else
+            {
+                RenderCategories(categories);
+            }
+            GUILayout.Space(20f);
             RenderMenu(settings);
-
-            GUILayout.EndVertical();
         }
-        void ClearReorderableList()
-        {
-            if (reorderableListDict == null)
-                return;
-            reorderableListDict.Clear();
-        }
-        ReorderableList GetReorderableList(BehaviourSettings.Category category, bool create = true)
-        {
-            if (reorderableListDict == null)
-                return null;
-            if (reorderableListDict.TryGetValue(category, out var reorderableList) || !create)
-                return reorderableList;
 
+        void RenderCategories(List<BehaviourSettings.Category> categories)
+        {
+            foreach (var category in categories)
+            {
+                GUILayout.Space(Space);
+                if (GUIUtil.RenderHeader(Helper.GetTitle(category.Type)))
+                {
+                    SetFoldout(category.Type, !GetFoldout(category.Type, true));
+                }
+                if (!GetFoldout(category.Type, true))
+                    continue;
+                GUIUtil.RenderGroup(RenderCategory, category);
+            }
+        }
+        void RenderCategory(BehaviourSettings.Category category)
+        {
             var groups = category.groups;
             if (groups == null)
             {
@@ -64,51 +68,112 @@ namespace XOR
                 category.groups = groups;
             }
 
-            reorderableList = new ReorderableList(
-                groups,
-                typeof(BehaviourSettings.Group),
-                true, true, true, true
-            );
-            reorderableList.elementHeightCallback = (index) =>
+            BehaviourSettings.Group removeGroup = null;
+
+            int total = 0;
+            RenderCategoryTitle();
+            foreach (var group in groups)
             {
-                return EditorGUIUtility.singleLineHeight;
-            };
-            reorderableList.drawHeaderCallback = (rect) =>
-            {   //绘制表头
-                rect.height = EditorGUIUtility.singleLineHeight;
-                RenderTitle(rect);
-            };
-            reorderableList.drawElementCallback = (rect, index, selected, focused) =>
-            {   //绘制元素
-                if (groups == null || index < 0 || index >= groups.Count)
-                    return;
-                rect.height = EditorGUIUtility.singleLineHeight;
-                RenderGroup(rect, category, groups[index]);
-            };
-            reorderableList.onRemoveCallback = (list) =>
-            {
-                int index = list.index;
-                if (groups == null || index < 0 || index >= groups.Count)
-                    return;
-                groups.RemoveAt(list.index);
-            };
-            reorderableList.onAddCallback = (list) =>
-            {
-                if (groups == null)
-                    return;
-                groups.Add(new BehaviourSettings.Group()
+                var remove = RenderGroup(category, group, ref total);
+                if (remove)
                 {
-                    type = BehaviourSettings.GroupType.Single,
-                    value = BehaviourSettings.Category.GetEnumValue(category.Type)
-                });
-            };
-            reorderableList.onChangedCallback = (list) =>
+                    removeGroup = group;
+                }
+            }
+            RenderCategoryMenu(category, total);
+
+            if (removeGroup != null)
             {
-
-            };
-            return reorderableList;
+                category.groups.Remove(removeGroup);
+            }
         }
+        void RenderCategoryTitle()
+        {
+            GUILayout.BeginHorizontal();
+            GUILayout.Space(ButtonWidth);
+            GUILayout.Label(Language.Behaviour.Get("behaviour_arg_type"), GUILayout.Width(TypeWidth));
+            GUILayout.Label(Language.Behaviour.Get("behaviour_arg_value"), GUILayout.ExpandWidth(true));
+            GUILayout.Label(Language.Behaviour.Get("behaviour_arg_class"), Skin.labelCenter, GUILayout.Width(ClassWidth));
+            GUILayout.EndHorizontal();
+        }
+        void RenderCategoryMenu(BehaviourSettings.Category category, int total)
+        {
+            GUILayout.BeginHorizontal();
+            if (GUILayout.Button("+", GUILayout.Width(ButtonWidth)))
+            {
+                category.groups.Add(new BehaviourSettings.Group()
+                {
+                    type = BehaviourSettings.GroupType.Single
+                });
+            }
+            GUILayout.FlexibleSpace();
+            GUILayout.Label($"{total}", Skin.labelCenter, GUILayout.Width(ClassWidth));
 
+            GUILayout.EndHorizontal();
+        }
+        bool RenderGroup(BehaviourSettings.Category category, BehaviourSettings.Group group, ref int total)
+        {
+            bool ok = false;
+
+            GUILayout.BeginHorizontal();
+            //delete
+            if (GUILayout.Button("-", GUILayout.Width(ButtonWidth)))
+            {
+                ok = true;
+            }
+            //type
+            group.type = (BehaviourSettings.GroupType)EditorGUILayout.EnumPopup(group.type, GUILayout.Width(TypeWidth));
+            //value
+            Enum value = (Enum)Enum.ToObject(category.Type, group.value);
+            group.value = Convert.ToUInt32(EditorGUILayout.EnumFlagsField(value));
+            //count
+            var count = category.GetCombineCount(group);
+            GUILayout.Label($"{count}", count < ClassWarning ? Skin.labelCenter : Skin.labelYellow, GUILayout.Width(ClassWidth));
+            GUILayout.EndHorizontal();
+
+            total += count;
+
+            return ok;
+        }
+        void RenderMenu(BehaviourSettings settings)
+        {
+            if (GUILayout.Button(Language.Behaviour.Get("behaviour_arg_add")))
+            {
+                if (settings.categories == null)
+                {
+                    settings.categories = new List<BehaviourSettings.Category>();
+                }
+                Helper.PopupAddCategory(settings);
+            }
+            GUILayout.Space(10f);
+            if (GUILayout.Button(Language.Behaviour.Get("behaviour_arg_preference")))
+            {
+                if (settings.categories != null && settings.categories.Any(c => c.groups != null && c.groups.Count > 0))
+                {
+                    GUIUtil.RenderConfirm("override_current_data", settings.SetPreference);
+                }
+                else
+                {
+                    settings.SetPreference();
+                }
+            }
+            if (GUILayout.Button(Language.Behaviour.Get("behaviour_arg_default")))
+            {
+                if (settings.categories != null && settings.categories.Any(c => c.groups != null && c.groups.Count > 0))
+                {
+                    GUIUtil.RenderConfirm("override_current_data", settings.SetDefault);
+                }
+                else
+                {
+                    settings.SetDefault();
+                }
+            }
+            GUILayout.Space(10f);
+            if (GUILayout.Button(Language.Behaviour.Get("behaviour_arg_generate")))
+            {
+                Helper.GenerateCode(settings);
+            }
+        }
 
         static bool GetFoldout(Type type, bool defaultValue = false)
         {
@@ -123,61 +188,6 @@ namespace XOR
                 foldoutDict = new Dictionary<Type, bool>();
             }
             foldoutDict[type] = value;
-        }
-
-        void RenderCategories(List<BehaviourSettings.Category> categories)
-        {
-            for (int i = 0; i < categories.Count; i++)
-            {
-                /* if (GUIUtil.RenderHeader(Helper.GetTitle(categories[i].Type)))
-                {
-                    SetFoldout(categories[i].Type, !GetFoldout(categories[i].Type, true));
-                } */
-                if (GetFoldout(categories[i].Type, true))
-                {
-                    GetReorderableList(categories[i])?.DoLayoutList();
-                }
-                GUILayout.Space(100f);
-                break;
-            }
-        }
-        void RenderMenu(BehaviourSettings settings)
-        {
-            if (GUILayout.Button(Language.Behaviour.Get("reset")))
-            {
-                settings.SetDefault();
-                ClearReorderableList();
-            }
-            if (GUILayout.Button(Language.Behaviour.Get("start_services")))
-            {
-                if (settings.categories == null)
-                    return;
-                settings.categories.Add(BehaviourSettings.Category.CreateDefaultSingle<BehaviourArg0>());
-            }
-            if (GUILayout.Button(Language.Behaviour.Get("start_services")))
-            {
-
-            }
-        }
-        void RenderTitle(Rect rect)
-        {
-            GetRenderPositions(rect, new Vector2(20, 0), out var pos1, out var pos2, out var pos3);
-            EditorGUI.LabelField(pos1, "type", string.Empty);
-            EditorGUI.LabelField(pos2, "value", string.Empty);
-            EditorGUI.LabelField(pos3, "count", string.Empty);
-        }
-        void RenderGroup(Rect rect, BehaviourSettings.Category category, BehaviourSettings.Group group)
-        {
-            GetRenderPositions(rect, out var pos1, out var pos2, out var pos3);
-
-            //type
-            group.type = (BehaviourSettings.GroupType)EditorGUI.EnumPopup(pos1, group.type);
-            //value
-            Enum value = (Enum)Enum.ToObject(category.Type, group.value);
-            group.value = Convert.ToUInt32(EditorGUI.EnumFlagsField(pos2, value));
-
-            //count
-            EditorGUI.LabelField(pos3, "-", string.Empty);
         }
 
         static void GetRenderPositions(Rect rect, out Rect pos1, out Rect pos2, out Rect pos3)
@@ -200,7 +210,7 @@ namespace XOR
 
     public static class Helper
     {
-        public static void CombineNext<T>(List<T> source, int num, int index, List<T> temp, List<List<T>> results)
+        static void Combine<T>(List<T> source, int num, int index, List<T> temp, List<List<T>> results)
         {
             if (temp == null)
                 return;
@@ -214,46 +224,36 @@ namespace XOR
             {
                 var newTemp = new List<T>(temp);
                 newTemp.Add(source[i]);
-                CombineNext(source, num - 1, i + 1, newTemp, results);
+                Combine(source, num - 1, i + 1, newTemp, results);
             }
         }
-        /// <summary>
-        /// 获取n个元素中取m个元素的组合数量数量(m大于0且m小于等于n): 公式 n! / (m! * (n - m)!)
-        /// </summary>
-        /// <param name="n"></param>
-        /// <param name="m"></param>
-        /// <returns></returns> 
-        public static int GetCombineCountOfNM(int n, int m)
-        {
-            if (m <= 0 || m > n)
-                return 0;
-            return n.Factorial() / (m.Factorial() * (n - m).Factorial());
-        }
-        /// <summary>
-        /// 获取n个元素取任意个元素的组合数量(长度大于0且小于等于n): 公式 2^n - 1
-        /// </summary>
-        /// <param name="n"></param>
-        /// <returns></returns>
-        public static int GetCombineCountOfAny(int n)
-        {
-            if (n < 0 || n >= 32)
-                return 0;
-            return 2 ^ n - 1;
-        }
 
-        /// <summary>
-        /// 获取value的阶乘值
-        /// </summary>
-        /// <param name="value"></param>
-        /// <returns></returns>
-        static int Factorial(this int value)
+        public static void PopupAddCategory(BehaviourSettings settings)
         {
-            if (value <= 0)
-                return 1;
-            return value * Factorial(value - 1);
+            if (settings.categories == null)
+                return;
+            var @namespace = "XOR.Behaviour.Args";
+            var types = AppDomain.CurrentDomain.GetAssemblies()
+                .SelectMany(assembly => assembly.GetExportedTypes())
+                .Where(t => t.FullName != null && t.FullName.StartsWith(@namespace) && t.IsEnum)
+                .OrderBy(t => t.FullName)
+                .ToList();
+            var options = types.Select(t => t.Name).ToArray();
+            var disabled = settings.categories?.Select(o => o.Type != null ? types.IndexOf(o.Type) : -1)
+                .Where(index => index >= 0)
+                .ToArray();
+            XOR.Serializables.TsProperties.Utility.CustomMenu(options, null, disabled, disabled, (index) =>
+            {
+                var newCategory = new BehaviourSettings.Category();
+                newCategory.Type = types[index];
+                settings.categories.Add(newCategory);
+            });
         }
 
-
+        public static void GenerateCode(BehaviourSettings settings)
+        {
+            GUIUtil.RenderGenerateClass(() => { }, 100);
+        }
         public static string GetTitle(Type type)
         {
             if (type == null)

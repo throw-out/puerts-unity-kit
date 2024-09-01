@@ -23,6 +23,10 @@ namespace XOR
 
         public void SetDefault()
         {
+            categories = new List<Category>();
+        }
+        public void SetPreference()
+        {
             categories = new List<Category>()
             {
                 Category.CreateDefaultSingle<BehaviourArg0>(),
@@ -30,10 +34,10 @@ namespace XOR
                 Category.CreateDefaultSingle<GizmosArg0>(),
                 Category.CreateDefaultSingle<MouseArg0>(),
                 Category.CreateDefaultSingle<EventSystemsPointerEventData>(),
-                Category.CreateDefaultSingle<PhysicsCollider>(),
-                Category.CreateDefaultSingle<PhysicsCollider2D>(),
-                Category.CreateDefaultSingle<PhysicsCollision>(),
-                Category.CreateDefaultSingle<PhysicsCollision2D>(),
+                Category.CreateDefaultUnion<PhysicsCollider>(),
+                Category.CreateDefaultUnion<PhysicsCollider2D>(),
+                Category.CreateDefaultUnion<PhysicsCollision>(),
+                Category.CreateDefaultUnion<PhysicsCollision2D>(),
             };
         }
 
@@ -51,7 +55,9 @@ namespace XOR
         {
             public GroupType type;
             public uint value;
-            /// <summary>辅助参数, 对于GroupType.Combine类型需要以多少个方法组合生成脚本</summary>
+            /// <summary>
+            /// 辅助参数, 对于GroupType.Combine类型生效, 指定m参数(0表示任意组合)
+            /// </summary>
             public uint param;
         }
         [System.Serializable]
@@ -77,15 +83,43 @@ namespace XOR
                 }
             }
 
+            /// <summary>
+            /// 获取组合数量
+            /// </summary>
+            /// <returns></returns>
+            public int GetCombineCount(Group group)
+            {
+                var n = Helper.GetEnumCountByFlags(Type, group.value);
+                if (n <= 0)
+                    return 0;
+                int count = 0;
+                switch (group.type)
+                {
+                    case GroupType.Single:
+                        count = n;
+                        break;
+                    case GroupType.Union:
+                        count = 1;
+                        break;
+                    case GroupType.Combine:
+                        if (group.param > 0)
+                            count = Helper.GetCombineCountOfNM(n, group.param > n ? n : (int)group.param);
+                        else
+                            count = Helper.GetCombineCountOfAny(n);
+                        break;
+                }
+                return count;
+            }
+
             public static Category CreateDefaultSingle<TEnum>()
                 where TEnum : Enum
             {
-                return CreateDefault<TEnum>(GroupType.Single, GetEnumValue<TEnum>());
+                return CreateDefault<TEnum>(GroupType.Single, Helper.GetEnumEverything<TEnum>());
             }
             public static Category CreateDefaultUnion<TEnum>()
                 where TEnum : Enum
             {
-                return CreateDefault<TEnum>(GroupType.Union, GetEnumValue<TEnum>());
+                return CreateDefault<TEnum>(GroupType.Union, Helper.GetEnumEverything<TEnum>());
             }
             public static Category CreateDefault<TEnum>(GroupType type, uint value)
                 where TEnum : Enum
@@ -104,26 +138,75 @@ namespace XOR
                     }
                 };
             }
-            public static uint GetEnumValue<TEnum>()
-               where TEnum : Enum
+        }
+
+        public class Helper
+        {
+            /// <summary>
+            /// 获取n个元素中取m个元素的组合数量数量(m大于0且m小于等于n): 公式 n! / (m! * (n - m)!)
+            /// </summary>
+            /// <param name="n"></param>
+            /// <param name="m"></param>
+            /// <returns></returns> 
+            public static int GetCombineCountOfNM(int n, int m)
             {
-                return GetEnumValue(typeof(TEnum));
+                if (m <= 0 || m > n)
+                    return 0;
+                return Factorial(n) / (Factorial(m) * Factorial(n - m));
             }
-            public static uint GetEnumValue(Type enumType)
+            /// <summary>
+            /// 获取n个元素取任意个元素的组合数量(长度大于0且小于等于n): 公式 2^n - 1
+            /// </summary>
+            /// <param name="n"></param>
+            /// <returns></returns>
+            public static int GetCombineCountOfAny(int n)
+            {
+                if (n <= 0 || n >= 32)
+                    return 0;
+                return (2 << (n - 1)) - 1;
+            }
+
+            /// <summary>
+            /// 获取value的阶乘值
+            /// </summary>
+            /// <param name="value"></param>
+            /// <returns></returns>
+            static int Factorial(int value)
+            {
+                if (value <= 0)
+                    return 1;
+                return value * Factorial(value - 1);
+            }
+
+            public static uint GetEnumEverything<TEnum>()
+                        where TEnum : Enum
+            {
+                return GetEnumEverything(typeof(TEnum));
+            }
+            public static uint GetEnumEverything(Type enumType)
             {
                 uint value = 0;
                 foreach (var define in Enum.GetValues(enumType))
                 {
-                    if (define is int i1)
-                    {
-                        value |= (uint)i1;
-                    }
-                    else if (define is uint i2)
-                    {
-                        value |= i2;
-                    }
+                    value |= Convert.ToUInt32(define);
                 }
                 return value;
+            }
+
+            public static int GetEnumCountByFlags(Type enumType, uint value)
+            {
+                if (value <= 0)
+                    return 0;
+                int count = 0;
+                foreach (var define in Enum.GetValues(enumType))
+                {
+                    uint dv = Convert.ToUInt32(define);
+                    if ((value & dv) == dv)
+                    {
+                        count++;
+                    }
+                }
+                return count;
             }
         }
     }
