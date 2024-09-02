@@ -5,14 +5,14 @@
       "depth": 0,
       "source": "registry",
       "dependencies": {},
-      "url": "https://package.openupm.cn"
+      "url": "https://package.openupm.com"
     },
     "com.tencent.puerts.core": {
       "version": "2.0.4",
       "depth": 0,
       "source": "registry",
       "dependencies": {},
-      "url": "https://package.openupm.cn"
+      "url": "https://package.openupm.com"
     },
     "com.tencent.puerts.webgl": {
       "version": "2.0.2",
@@ -21,7 +21,7 @@
       "dependencies": {
         "com.tencent.puerts.core": "2.0.2"
       },
-      "url": "https://package.openupm.cn"
+      "url": "https://package.openupm.com"
     },
     "com.tencent.puerts.webgl.jsbuild": {
       "version": "file:../localUPM/webgl-jsbuild/upm",
