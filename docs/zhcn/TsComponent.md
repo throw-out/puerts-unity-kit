@@ -81,7 +81,7 @@
 ![image](https://user-images.githubusercontent.com/45587825/216808157-d8eaeee8-bcf9-410f-895f-c20ecf04901d.png)
 
 ## 自定义扩展类型演示
-> 相关代码请查看[示例](../../projects/Assets/Samples/01_TsComponent/CustomTypes)中的[TsComponent](../../projects/Assets/Samples/01_TsComponent/CustomTypes/Runtime/TsComponent.cs)和[SerializablesEditor](../../projects/Assets/Samples/01_TsComponent/CustomTypes/Editor/SerializablesEditor.cs)
+> 相关代码请查看[示例](../../projects/Assets/Samples/01_TsComponent/CustomTypes)中的[TsComponent.partial](../../projects/Assets/Samples/01_TsComponent/CustomTypes/Runtime/TsComponent.partial.cs)和[SerializablesEditor](../../projects/Assets/Samples/01_TsComponent/CustomTypes/Editor/SerializablesEditor.cs)
 
 ![image](https://user-images.githubusercontent.com/45587825/216751394-12e34267-cee4-40ed-9269-8efa5e10320a.png)
 

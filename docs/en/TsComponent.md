@@ -82,7 +82,7 @@
 ![image](https://user-images.githubusercontent.com/45587825/216808157-d8eaeee8-bcf9-410f-895f-c20ecf04901d.png)
 
 ## Custom Extension Type Demo
-> Check the code in [Samples](../../projects/Assets/Samples/01_TsComponent/CustomTypes) for [TsComponent](../../projects/Assets/Samples/01_TsComponent/CustomTypes/Runtime/TsComponent.cs) and [SerializablesEditor](../../projects/Assets/Samples/01_TsComponent/CustomTypes/Editor/SerializablesEditor.cs)
+> Check the code in [Samples](../../projects/Assets/Samples/01_TsComponent/CustomTypes) for [TsComponent.partial](../../projects/Assets/Samples/01_TsComponent/CustomTypes/Runtime/TsComponent.partial.cs) and [SerializablesEditor](../../projects/Assets/Samples/01_TsComponent/CustomTypes/Editor/SerializablesEditor.cs)
 
 ![image](https://user-images.githubusercontent.com/45587825/216751394-12e34267-cee4-40ed-9269-8efa5e10320a.png)
 
