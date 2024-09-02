@@ -10,7 +10,7 @@
 - **Note: The `TsComponent` and `ThreadWorker` modules in the current project have not been widely verified, and their functionality may have defects. If you encounter any issues during use, please provide feedback through [[ISSUES]](https://github.com/throw-out/puerts-unity-kit/issues).**
 
 ## Introduction
-> - This project is a Unity template project developed based on [puerts](https://github.com/Tencent/puerts), using [OpenUPM](https://openupm.cn/) as the default Unity package manager source.
+> - This project is a Unity template project developed based on [puerts](https://github.com/Tencent/puerts), using [OpenUPM](https://openupm.com/) as the default Unity package manager source.
 > - This project is developed using TypeScript scripts, with runtime support for both `commonjs` and `ESM` modules (check [MixerLoader.Mode](./projects/Assets/XOR/Runtime/Src/Loader.cs) for matching rules).
 > - This project supports webgl build (`ESM`). If using webgl build, be sure to first read the article ["How to Migrate from the Original PuerTS Project?"](https://github.com/zombieyang/puerts_unity_webgl_demo/wiki/%E5%A6%82%E4%BD%95%E4%BB%8E%E5%8E%9F%E6%9C%89%E7%9A%84PuerTS%E9%A1%B9%E7%9B%AE%E4%B8%AD%E8%BF%81%E7%A7%BB%E8%BF%87%E6%9D%A5%EF%BC%9F) in the [source repository](https://github.com/zombieyang/puerts_unity_webgl_demo).
 > - Integrates common configurations or tools (optional), such as [ScriptPacker](./docs/en/ScriptPacker.md) (`script packaging`/`compression`/`encryption`/`verification`) and [source-map-support](https://www.npmjs.com/package/source-map-support), [javascript-obfuscator](https://www.npmjs.com/package/javascript-obfuscator), etc.
