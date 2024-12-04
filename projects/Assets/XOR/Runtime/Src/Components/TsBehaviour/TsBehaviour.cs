@@ -2,6 +2,8 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.EventSystems;
+using XOR.Behaviour;
+
 #if UNITY_EDITOR
 using UnityEditor;
 #endif
@@ -21,6 +23,7 @@ namespace XOR
 
         //Unity 接口组件
         private Dictionary<string, Proxy> proxies;
+        private Dictionary<Enum, MonoBehaviour> behaviours;
         private Action awakeCallback;       //Awake回调
         private Action startCallback;       //Start回调
         private Action destroyCallback;     //OnDestroy回调
@@ -353,6 +356,18 @@ namespace XOR
             return proxy;
         }
 
+        public void Create1(Behaviour.Args.Behaviour methods, Action<Behaviour.Args.Behaviour> callback)
+        {
+            if (Factory.HasRegister(methods))
+            {
+                Factory.Create(gameObject, methods, callback, Invoker.Default);
+                return;
+            }
+            if ((methods & Behaviour.Args.Behaviour.Update) > 0)
+            {
+                Factory.Create(gameObject, Behaviour.Args.Behaviour.Update, callback, Invoker.Default);
+            }
+        }
 
         public virtual void Dispose()
         {

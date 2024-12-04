@@ -1,8 +1,11 @@
 ﻿
+using System;
+using System.Collections.Generic;
+
 namespace XOR.Behaviour.Args
 {
     [Title("Behaviour")]
-    public enum BehaviourArg0 : uint
+    public enum Behaviour : uint
     {
         Update = 1 << 0,
         FixedUpdate = 1 << 1,
@@ -16,23 +19,23 @@ namespace XOR.Behaviour.Args
         OnBecameInvisible = 1 << 9,
     }
 
-    [Title("Behaviour(bool)")]
+    [Title("Behaviour - bool")]
     [Args(typeof(bool))]
-    public enum BehaviourBoolena : uint
+    public enum BehaviourBoolean : uint
     {
         OnApplicationFocus = 1 << 0,
         OnApplicationPause = 1 << 1,
     }
 
     [Title("Gizmos")]
-    public enum GizmosArg0 : uint
+    public enum Gizmos : uint
     {
         OnDrawGizmosSelected = 1 << 0,
         OnSceneGUI = 1 << 1,
     }
 
     [Title("MouseEvents")]
-    public enum MouseArg0 : uint
+    public enum Mouse : uint
     {
         OnMouseDown = 1 << 0,
         OnMouseDrag = 1 << 1,
@@ -92,4 +95,21 @@ namespace XOR.Behaviour.Args
         OnCollisionStay2D = 1 << 1,
         OnCollisionExit2D = 1 << 2,
     }
+
+    internal static class Extensions
+    {
+        static Dictionary<Type, object> valuesDict = new Dictionary<Type, object>();
+        public static T[] Everything<T>()
+            where T : Enum
+        {
+            if (valuesDict.TryGetValue(typeof(T), out var values))
+            {
+                return (T[])values;
+            }
+
+            
+            return null;
+        }
+    }
+
 }

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 using XOR.Behaviour.Args;
 
@@ -29,16 +30,99 @@ namespace XOR
         {
             categories = new List<Category>()
             {
-                Category.CreateDefaultSingle<BehaviourArg0>(),
-                Category.CreateDefaultSingle<BehaviourBoolena>(),
-                Category.CreateDefaultSingle<GizmosArg0>(),
-                Category.CreateDefaultSingle<MouseArg0>(),
-                Category.CreateDefaultSingle<EventSystemsPointerEventData>(),
-                Category.CreateDefaultUnion<PhysicsCollider>(),
-                Category.CreateDefaultUnion<PhysicsCollider2D>(),
-                Category.CreateDefaultUnion<PhysicsCollision>(),
-                Category.CreateDefaultUnion<PhysicsCollision2D>(),
+                Category.CreateDefaultEverything<Behaviour.Args.Behaviour>(GroupType.Single),
+                Category.CreateDefaultEverything<Behaviour.Args.BehaviourBoolean>(GroupType.Single),
+                Category.CreateDefaultEverything<Behaviour.Args.Gizmos>(GroupType.Single),
+                Category.CreateDefaultEverything<Behaviour.Args.Mouse>(GroupType.Single, GroupType.Union),
+                Category.CreateDefaultEverything<Behaviour.Args.EventSystemsPointerEventData>(GroupType.Single),
+                Category.CreateDefaultEverything<Behaviour.Args.PhysicsCollider>(GroupType.Single, GroupType.Union),
+                Category.CreateDefaultEverything<Behaviour.Args.PhysicsCollider2D>(GroupType.Single, GroupType.Union),
+                Category.CreateDefaultEverything<Behaviour.Args.PhysicsCollision>(GroupType.Single, GroupType.Union),
+                Category.CreateDefaultEverything<Behaviour.Args.PhysicsCollision2D>(GroupType.Single, GroupType.Union),
             };
+        }
+
+        public HashSet<Enum> GenerateTypes()
+        {
+            if (categories == null || categories.Count <= 0)
+                return null;
+            HashSet<Enum> enums = new HashSet<Enum>();
+
+            void GenerateCombinations(uint[] array, int index, List<uint> current, List<List<uint>> results)
+            {
+                results.Add(new List<uint>(current));
+
+                for (int i = index; i < array.Length; i++)
+                {
+                    current.Add(array[i]);
+                    GenerateCombinations(array, i + 1, current, results);
+                    current.RemoveAt(current.Count - 1);
+                }
+            }
+
+            categories.ForEach(category =>
+            {
+                if (category.Type == null)
+                    return;
+                var defines = Helper.GetEnumValues(category.Type);
+                category.groups?.ForEach(group =>
+                {
+                    switch (group.type)
+                    {
+                        case GroupType.Single:
+                            for (int i = 0; i < defines.Length; i++)
+                            {
+                                uint dv = defines[i];
+                                if ((group.value & dv) == dv)
+                                {
+                                    enums.Add((Enum)Enum.ToObject(category.Type, dv));
+                                }
+                            }
+                            break;
+                        case GroupType.Union:
+                            uint value1 = 0;
+                            for (int i = 0; i < defines.Length; i++)
+                            {
+                                uint dv = defines[i];
+                                if ((group.value & dv) == dv)
+                                {
+                                    value1 |= dv;
+                                }
+                            }
+                            if (value1 > 0)
+                            {
+                                enums.Add((Enum)Enum.ToObject(category.Type, value1));
+                            }
+                            break;
+                        case GroupType.Combine:
+                            uint[] array = defines
+                                .Where(dv => (group.value & dv) == dv)
+                                .ToArray();
+                            uint n = (uint)array.Length;
+                            uint m = group.param > n ? n : group.param;
+
+                            List<List<uint>> results = new List<List<uint>>();
+                            List<uint> current = new List<uint>();
+                            GenerateCombinations(array, 0, current, results);
+                            foreach (var result in results)
+                            {
+                                if (m > 0 && result.Count != m)
+                                    continue;
+                                uint value2 = 0;
+                                for (int i = 0; i < result.Count; i++)
+                                {
+                                    value2 |= result[i];
+                                }
+                                if (value2 > 0)
+                                {
+                                    enums.Add((Enum)Enum.ToObject(category.Type, value2));
+                                }
+                            }
+                            break;
+                    }
+                });
+            });
+            return enums;
         }
 
         public enum GroupType
@@ -111,15 +195,17 @@ namespace XOR
                 return count;
             }
 
-            public static Category CreateDefaultSingle<TEnum>()
+            public static Category CreateDefaultEverything<TEnum>(GroupType frist, params GroupType[] types)
                 where TEnum : Enum
             {
-                return CreateDefault<TEnum>(GroupType.Single, Helper.GetEnumEverything<TEnum>());
-            }
-            public static Category CreateDefaultUnion<TEnum>()
-                where TEnum : Enum
-            {
-                return CreateDefault<TEnum>(GroupType.Union, Helper.GetEnumEverything<TEnum>());
+                var value = Helper.GetEnumEverything<TEnum>();
+                var category = CreateDefault<TEnum>(frist, value);
+                category.groups.AddRange(types.Select(t => new Group()
+                {
+                    type = t,
+                    value = value
+                }));
+                return category;
             }
             public static Category CreateDefault<TEnum>(GroupType type, uint value)
                 where TEnum : Enum
@@ -207,6 +293,19 @@ namespace XOR
                     }
                 }
                 return count;
+            }
+            public static uint[] GetEnumValues(Type enumType)
+            {
+                List<uint> values = new List<uint>();
+                foreach (var define in Enum.GetValues(enumType))
+                {
+                    uint dv = Convert.ToUInt32(define);
+                    if (dv > 0)
+                    {
+                        values.Add(dv);
+                    }
+                }
+                return values.ToArray();
             }
         }
     }

@@ -1,7 +1,9 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Text;
 using System.Text.RegularExpressions;
 using UnityEditor;
 using UnityEditorInternal;
@@ -31,6 +33,7 @@ namespace XOR
             {
                 categories = new List<BehaviourSettings.Category>();
                 settings.categories = categories;
+                EditorUtility.SetDirty(settings);
             }
 
             if (categories == null || categories.Count == 0)
@@ -43,6 +46,8 @@ namespace XOR
             }
             GUILayout.Space(20f);
             RenderMenu(settings);
+
+            AssetDatabase.SaveAssets();
         }
 
         void RenderCategories(List<BehaviourSettings.Category> categories)
@@ -93,6 +98,7 @@ namespace XOR
             GUILayout.Space(ButtonWidth);
             GUILayout.Label(Language.Behaviour.Get("behaviour_arg_type"), GUILayout.Width(TypeWidth));
             GUILayout.Label(Language.Behaviour.Get("behaviour_arg_value"), GUILayout.ExpandWidth(true));
+            GUILayout.Label(Language.Behaviour.Get("behaviour_arg_param"), Skin.labelCenter, GUILayout.Width(ClassWidth));
             GUILayout.Label(Language.Behaviour.Get("behaviour_arg_class"), Skin.labelCenter, GUILayout.Width(ClassWidth));
             GUILayout.EndHorizontal();
         }
@@ -126,6 +132,18 @@ namespace XOR
             //value
             Enum value = (Enum)Enum.ToObject(category.Type, group.value);
             group.value = Convert.ToUInt32(EditorGUILayout.EnumFlagsField(value));
+            //param
+            if (group.type == BehaviourSettings.GroupType.Combine)
+            {
+                group.param = Math.Min(
+                    (uint)EditorGUILayout.IntField((int)group.param, GUILayout.Width(ClassWidth)),
+                    (uint)BehaviourSettings.Helper.GetEnumCountByFlags(category.Type, group.value)
+                );
+            }
+            else
+            {
+                GUILayout.Space(ClassWidth);
+            }
             //count
             var count = category.GetCombineCount(group);
             GUILayout.Label($"{count}", count < ClassWarning ? Skin.labelCenter : Skin.labelYellow, GUILayout.Width(ClassWidth));
@@ -155,6 +173,7 @@ namespace XOR
                 else
                 {
                     settings.SetPreference();
+                    EditorUtility.SetDirty(settings);
                 }
             }
             if (GUILayout.Button(Language.Behaviour.Get("behaviour_arg_default")))
@@ -166,12 +185,17 @@ namespace XOR
                 else
                 {
                     settings.SetDefault();
+                    EditorUtility.SetDirty(settings);
                 }
             }
             GUILayout.Space(10f);
             if (GUILayout.Button(Language.Behaviour.Get("behaviour_arg_generate")))
             {
                 Helper.GenerateCode(settings);
+            }
+            if (GUILayout.Button(Language.Behaviour.Get("behaviour_arg_generate_clear")))
+            {
+                Helper.ClearGenerateCode();
             }
         }
 
@@ -188,23 +212,6 @@ namespace XOR
                 foldoutDict = new Dictionary<Type, bool>();
             }
             foldoutDict[type] = value;
-        }
-
-        static void GetRenderPositions(Rect rect, out Rect pos1, out Rect pos2, out Rect pos3)
-        {
-            GetRenderPositions(rect, Vector2.zero, out pos1, out pos2, out pos3);
-        }
-        static void GetRenderPositions(Rect rect, Vector2 offset, out Rect pos1, out Rect pos2, out Rect pos3)
-        {
-            float x = rect.x,
-                y = rect.y,
-                width = rect.width,
-                height = rect.width;
-            x += offset.x;
-            y += offset.y;
-            pos1 = new Rect(x, y, width * 0.3f, height);
-            pos2 = new Rect(pos1.x + pos1.width, y, width * 0.5f, height);
-            pos3 = new Rect(pos2.x + pos2.width, y, width * 0.2f, height);
         }
     }
 
@@ -247,21 +254,127 @@ namespace XOR
                 var newCategory = new BehaviourSettings.Category();
                 newCategory.Type = types[index];
                 settings.categories.Add(newCategory);
+                EditorUtility.SetDirty(settings);
             });
         }
 
         public static void GenerateCode(BehaviourSettings settings)
         {
-            GUIUtil.RenderGenerateClass(() => { }, 100);
+            Behaviour.Factory.ClearRegister();
+            Behaviour.Default.Register();
+            var enums = settings.GenerateTypes()
+                ?.Where(e => !Behaviour.Factory.HasRegister(e))
+                .ToList();
+            if (enums == null || enums.Count <= 0)
+            {
+                GUIUtil.RenderGenerateClassEmpty();
+                return;
+            }
+            GUIUtil.RenderGenerateClass(() =>
+            {
+                ClearGenerateCode();
+                GenerateCode(enums);
+            }, enums.Count);
+        }
+        public static void ClearGenerateCode()
+        {
+            var saveTo = Puerts.Configure.GetCodeOutputDirectory() + "BehaviourGenerateCode.cs";
+            if (File.Exists(saveTo))
+            {
+                File.Delete(saveTo);
+                AssetDatabase.Refresh();
+            }
+        }
+        public static void GenerateCode(IEnumerable<Enum> enums)
+        {
+            List<Tuple<string, string>> classes = new List<Tuple<string, string>>();
+
+            StringBuilder sb = new StringBuilder();
+            sb.AppendLine($@"
+namespace XOR.Behaviour
+{{
+    public static class StaticWrap
+    {{
+");
+            foreach (var @enum in enums)
+            {
+                var dv = Convert.ToUInt32(@enum);
+                var type = @enum.GetType();
+                var defines = BehaviourSettings.Helper.GetEnumValues(type);
+                if (defines == null || defines.Length == 0)
+                    continue;
+
+                var methodNames = defines
+                    .Where(v => (dv & v) == v)
+                    .Select(v => Enum.GetName(type, v))
+                    .ToArray();
+                if (methodNames == null || methodNames.Length == 0)
+                    continue;
+                var className = methodNames.Length == 1 ?
+                    $"{methodNames[0]}Behaviour" :
+                    $"{type.Name}Behaviour{dv}";
+
+                classes.Add(new Tuple<string, string>(className, string.Join(" | ", methodNames.Select(mn => $"{type.FullName}.{mn}"))));
+                GetArgs(type, out string declaration, out string @params);
+                if (!string.IsNullOrEmpty(@params))
+                {
+                    @params = ", " + @params;
+                }
+                sb.AppendLine(@$"
+        protected class {className} : XOR.Behaviour.{type.Name}
+        {{
+            {string.Join("", methodNames.Select(methodName => $@"
+            private void {methodName}({declaration})
+            {{
+                Invoke(XOR.Behaviour.Args.{type.Name}.{methodName}{@params});
+            }}"))}
+        }}");
+            }
+            sb.AppendLine(@$"
+        public static void Register()
+        {{
+            {string.Join("", classes.Select(a => @$"
+            XOR.Behaviour.Factory.Register<{a.Item1}>({a.Item2});"))}
+        }}
+    }}
+}}");
+
+            var saveTo = Puerts.Configure.GetCodeOutputDirectory() + "BehaviourGenerateCode.cs";
+            File.WriteAllText(saveTo, sb.ToString());
+            AssetDatabase.Refresh();
         }
         public static string GetTitle(Type type)
         {
             if (type == null)
                 return string.Empty;
-            var title = type.GetCustomAttribute<XOR.Behaviour.TitleAttribute>();
-            if (title != null)
-                return title.Name;
+            var attribute = type.GetCustomAttribute<XOR.Behaviour.TitleAttribute>();
+            if (attribute != null && !string.IsNullOrEmpty(attribute.Name))
+                return attribute.Name;
             return type.Name;
+        }
+        public static string GetArgs(Type type)
+        {
+            if (type == null)
+                return string.Empty;
+            var attribute = type.GetCustomAttribute<XOR.Behaviour.ArgsAttribute>();
+            if (attribute != null && attribute.Args != null)
+                return string.Join(", ", attribute.Args.Select(t => t.FullName));
+            return string.Empty;
+        }
+        public static bool GetArgs(Type type, out string declaration, out string @params)
+        {
+            declaration = string.Empty;
+            @params = string.Empty;
+            if (type == null)
+                return false;
+            var attribute = type.GetCustomAttribute<XOR.Behaviour.ArgsAttribute>();
+            if (attribute != null && attribute.Args != null)
+            {
+                declaration = string.Join(", ", attribute.Args.Select((t, index) => t.FullName + $" arg{index}"));
+                @params = string.Join(", ", attribute.Args.Select((t, index) => $"arg{index}"));
+                return true;
+            }
+            return false;
         }
     }
 }

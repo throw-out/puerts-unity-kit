@@ -115,6 +115,10 @@
         "zh_cn": "本次会生成{0}个类型, 是否继续?",
         "en_us": "This time {0} types are generated. Do you want to continue?"
     },
+    "generate_class_empty": {
+        "zh_cn": "无法生成任何类型, 没有配置或对应类型已存在.",
+        "en_us": "No type can be generated, no type is configured, or the corresponding type already exists."
+    },
     "reload_metadata_cached": {
         "zh_cn": "重新加载",
         "en_us": "Reload Cached"

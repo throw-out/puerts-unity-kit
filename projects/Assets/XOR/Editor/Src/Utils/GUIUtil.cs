@@ -219,6 +219,18 @@ namespace XOR
             if (ok && confirm != null)
                 confirm();
         }
+        /// <summary>
+        /// 弹窗提示生成类型为空
+        /// </summary>
+        public static void RenderGenerateClassEmpty()
+        {
+            string message = Language.Default.Get("generate_class_empty");
+            EditorUtility.DisplayDialog(
+                Language.Default.Get("tip"),
+                message,
+                Language.Default.Get("confirm")
+            );
+        }
 
         /// <summary>
         /// 弹窗确认窗口

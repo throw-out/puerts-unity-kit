@@ -47,6 +47,10 @@
         "zh_cn": "value",
         "en_us": "value"
     },
+    "behaviour_arg_param": {
+        "zh_cn": "param",
+        "en_us": "param"
+    },
     "behaviour_arg_class": {
         "zh_cn": "class",
         "en_us": "class"
@@ -66,5 +70,9 @@
     "behaviour_arg_generate": {
         "zh_cn": "生成代码",
         "en_us": "Generate Code"
+    },
+    "behaviour_arg_generate_clear": {
+        "zh_cn": "清除代码",
+        "en_us": "Clear Code"
     }
 }
