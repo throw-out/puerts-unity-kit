@@ -30,7 +30,7 @@ public class PuertsConfig
                 typeof(Dictionary<int,int>),
                 new Dictionary<int,int>().Keys.GetType(),
                 //Custom
-                typeof(ProxyAction<bool>),
+                typeof(XOR.Behaviour.Behaviour<Action>),
                 typeof(Singleton<SingletonExportDeclare>),
                 typeof(SingletonMonoBehaviour<SingletonMonoExportDeclare>),
                 //System.Action

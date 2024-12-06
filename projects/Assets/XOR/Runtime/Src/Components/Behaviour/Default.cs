@@ -2,7 +2,7 @@ namespace XOR.Behaviour
 {
     public static class Default
     {
-        protected class AwakeBehaviour : XOR.Behaviour.Mono
+        public class AwakeBehaviour : XOR.Behaviour.Mono
         {
 
             private void Awake()
@@ -11,7 +11,7 @@ namespace XOR.Behaviour
             }
         }
 
-        protected class StartBehaviour : XOR.Behaviour.Mono
+        public class StartBehaviour : XOR.Behaviour.Mono
         {
 
             private void Start()
@@ -20,7 +20,7 @@ namespace XOR.Behaviour
             }
         }
 
-        protected class UpdateBehaviour : XOR.Behaviour.Mono
+        public class UpdateBehaviour : XOR.Behaviour.Mono
         {
 
             private void Update()
@@ -29,7 +29,7 @@ namespace XOR.Behaviour
             }
         }
 
-        protected class FixedUpdateBehaviour : XOR.Behaviour.Mono
+        public class FixedUpdateBehaviour : XOR.Behaviour.Mono
         {
 
             private void FixedUpdate()
@@ -38,7 +38,7 @@ namespace XOR.Behaviour
             }
         }
 
-        protected class LateUpdateBehaviour : XOR.Behaviour.Mono
+        public class LateUpdateBehaviour : XOR.Behaviour.Mono
         {
 
             private void LateUpdate()
@@ -47,7 +47,7 @@ namespace XOR.Behaviour
             }
         }
 
-        protected class OnEnableBehaviour : XOR.Behaviour.Mono
+        public class OnEnableBehaviour : XOR.Behaviour.Mono
         {
 
             private void OnEnable()
@@ -56,7 +56,7 @@ namespace XOR.Behaviour
             }
         }
 
-        protected class OnDisableBehaviour : XOR.Behaviour.Mono
+        public class OnDisableBehaviour : XOR.Behaviour.Mono
         {
 
             private void OnDisable()
@@ -65,7 +65,7 @@ namespace XOR.Behaviour
             }
         }
 
-        protected class OnDestroyBehaviour : XOR.Behaviour.Mono
+        public class OnDestroyBehaviour : XOR.Behaviour.Mono
         {
 
             private void OnDestroy()
@@ -74,7 +74,7 @@ namespace XOR.Behaviour
             }
         }
 
-        protected class OnGUIBehaviour : XOR.Behaviour.Mono
+        public class OnGUIBehaviour : XOR.Behaviour.Mono
         {
 
             private void OnGUI()
@@ -83,7 +83,7 @@ namespace XOR.Behaviour
             }
         }
 
-        protected class OnApplicationQuitBehaviour : XOR.Behaviour.Mono
+        public class OnApplicationQuitBehaviour : XOR.Behaviour.Mono
         {
 
             private void OnApplicationQuit()
@@ -92,7 +92,7 @@ namespace XOR.Behaviour
             }
         }
 
-        protected class OnBecameVisibleBehaviour : XOR.Behaviour.Mono
+        public class OnBecameVisibleBehaviour : XOR.Behaviour.Mono
         {
 
             private void OnBecameVisible()
@@ -101,7 +101,7 @@ namespace XOR.Behaviour
             }
         }
 
-        protected class OnBecameInvisibleBehaviour : XOR.Behaviour.Mono
+        public class OnBecameInvisibleBehaviour : XOR.Behaviour.Mono
         {
 
             private void OnBecameInvisible()
@@ -110,7 +110,7 @@ namespace XOR.Behaviour
             }
         }
 
-        protected class OnApplicationFocusBehaviour : XOR.Behaviour.MonoBoolean
+        public class OnApplicationFocusBehaviour : XOR.Behaviour.MonoBoolean
         {
 
             private void OnApplicationFocus(System.Boolean arg0)
@@ -119,7 +119,7 @@ namespace XOR.Behaviour
             }
         }
 
-        protected class OnApplicationPauseBehaviour : XOR.Behaviour.MonoBoolean
+        public class OnApplicationPauseBehaviour : XOR.Behaviour.MonoBoolean
         {
 
             private void OnApplicationPause(System.Boolean arg0)
@@ -128,7 +128,7 @@ namespace XOR.Behaviour
             }
         }
 
-        protected class OnDrawGizmosSelectedBehaviour : XOR.Behaviour.Gizmos
+        public class OnDrawGizmosSelectedBehaviour : XOR.Behaviour.Gizmos
         {
 
             private void OnDrawGizmosSelected()
@@ -137,7 +137,7 @@ namespace XOR.Behaviour
             }
         }
 
-        protected class OnSceneGUIBehaviour : XOR.Behaviour.Gizmos
+        public class OnSceneGUIBehaviour : XOR.Behaviour.Gizmos
         {
 
             private void OnSceneGUI()
@@ -146,7 +146,7 @@ namespace XOR.Behaviour
             }
         }
 
-        protected class MouseBehaviour127 : XOR.Behaviour.Mouse
+        public class MouseBehaviour127 : XOR.Behaviour.Mouse
         {
 
             private void OnMouseDown()
@@ -179,7 +179,7 @@ namespace XOR.Behaviour
             }
         }
 
-        protected class OnMouseDownBehaviour : XOR.Behaviour.Mouse
+        public class OnMouseDownBehaviour : XOR.Behaviour.Mouse
         {
 
             private void OnMouseDown()
@@ -188,7 +188,7 @@ namespace XOR.Behaviour
             }
         }
 
-        protected class OnMouseDragBehaviour : XOR.Behaviour.Mouse
+        public class OnMouseDragBehaviour : XOR.Behaviour.Mouse
         {
 
             private void OnMouseDrag()
@@ -197,7 +197,7 @@ namespace XOR.Behaviour
             }
         }
 
-        protected class OnMouseEnterBehaviour : XOR.Behaviour.Mouse
+        public class OnMouseEnterBehaviour : XOR.Behaviour.Mouse
         {
 
             private void OnMouseEnter()
@@ -206,7 +206,7 @@ namespace XOR.Behaviour
             }
         }
 
-        protected class OnMouseExitBehaviour : XOR.Behaviour.Mouse
+        public class OnMouseExitBehaviour : XOR.Behaviour.Mouse
         {
 
             private void OnMouseExit()
@@ -215,7 +215,7 @@ namespace XOR.Behaviour
             }
         }
 
-        protected class OnMouseOverBehaviour : XOR.Behaviour.Mouse
+        public class OnMouseOverBehaviour : XOR.Behaviour.Mouse
         {
 
             private void OnMouseOver()
@@ -224,7 +224,7 @@ namespace XOR.Behaviour
             }
         }
 
-        protected class OnMouseUpAsButtonBehaviour : XOR.Behaviour.Mouse
+        public class OnMouseUpAsButtonBehaviour : XOR.Behaviour.Mouse
         {
 
             private void OnMouseUpAsButton()
@@ -233,7 +233,7 @@ namespace XOR.Behaviour
             }
         }
 
-        protected class OnMouseUpBehaviour : XOR.Behaviour.Mouse
+        public class OnMouseUpBehaviour : XOR.Behaviour.Mouse
         {
 
             private void OnMouseUp()
@@ -242,7 +242,7 @@ namespace XOR.Behaviour
             }
         }
 
-        protected class OnBeginDragBehaviour : XOR.Behaviour.EventSystems
+        public class OnBeginDragBehaviour : XOR.Behaviour.EventSystems
         {
 
             private void OnBeginDrag(UnityEngine.EventSystems.PointerEventData arg0)
@@ -251,7 +251,7 @@ namespace XOR.Behaviour
             }
         }
 
-        protected class OnDragBehaviour : XOR.Behaviour.EventSystems
+        public class OnDragBehaviour : XOR.Behaviour.EventSystems
         {
 
             private void OnDrag(UnityEngine.EventSystems.PointerEventData arg0)
@@ -260,7 +260,7 @@ namespace XOR.Behaviour
             }
         }
 
-        protected class OnEndDragBehaviour : XOR.Behaviour.EventSystems
+        public class OnEndDragBehaviour : XOR.Behaviour.EventSystems
         {
 
             private void OnEndDrag(UnityEngine.EventSystems.PointerEventData arg0)
@@ -269,7 +269,7 @@ namespace XOR.Behaviour
             }
         }
 
-        protected class OnPointerClickBehaviour : XOR.Behaviour.EventSystems
+        public class OnPointerClickBehaviour : XOR.Behaviour.EventSystems
         {
 
             private void OnPointerClick(UnityEngine.EventSystems.PointerEventData arg0)
@@ -278,7 +278,7 @@ namespace XOR.Behaviour
             }
         }
 
-        protected class OnPointerDownBehaviour : XOR.Behaviour.EventSystems
+        public class OnPointerDownBehaviour : XOR.Behaviour.EventSystems
         {
 
             private void OnPointerDown(UnityEngine.EventSystems.PointerEventData arg0)
@@ -287,7 +287,7 @@ namespace XOR.Behaviour
             }
         }
 
-        protected class OnPointerEnterBehaviour : XOR.Behaviour.EventSystems
+        public class OnPointerEnterBehaviour : XOR.Behaviour.EventSystems
         {
 
             private void OnPointerEnter(UnityEngine.EventSystems.PointerEventData arg0)
@@ -296,7 +296,7 @@ namespace XOR.Behaviour
             }
         }
 
-        protected class OnPointerExitBehaviour : XOR.Behaviour.EventSystems
+        public class OnPointerExitBehaviour : XOR.Behaviour.EventSystems
         {
 
             private void OnPointerExit(UnityEngine.EventSystems.PointerEventData arg0)
@@ -305,7 +305,7 @@ namespace XOR.Behaviour
             }
         }
 
-        protected class OnPointerUpBehaviour : XOR.Behaviour.EventSystems
+        public class OnPointerUpBehaviour : XOR.Behaviour.EventSystems
         {
 
             private void OnPointerUp(UnityEngine.EventSystems.PointerEventData arg0)
@@ -314,7 +314,7 @@ namespace XOR.Behaviour
             }
         }
 
-        protected class PhysicsColliderBehaviour7 : XOR.Behaviour.PhysicsCollider
+        public class PhysicsColliderBehaviour7 : XOR.Behaviour.PhysicsCollider
         {
 
             private void OnTriggerEnter(UnityEngine.Collider arg0)
@@ -331,7 +331,7 @@ namespace XOR.Behaviour
             }
         }
 
-        protected class OnTriggerEnterBehaviour : XOR.Behaviour.PhysicsCollider
+        public class OnTriggerEnterBehaviour : XOR.Behaviour.PhysicsCollider
         {
 
             private void OnTriggerEnter(UnityEngine.Collider arg0)
@@ -340,7 +340,7 @@ namespace XOR.Behaviour
             }
         }
 
-        protected class OnTriggerStayBehaviour : XOR.Behaviour.PhysicsCollider
+        public class OnTriggerStayBehaviour : XOR.Behaviour.PhysicsCollider
         {
 
             private void OnTriggerStay(UnityEngine.Collider arg0)
@@ -349,7 +349,7 @@ namespace XOR.Behaviour
             }
         }
 
-        protected class OnTriggerExitBehaviour : XOR.Behaviour.PhysicsCollider
+        public class OnTriggerExitBehaviour : XOR.Behaviour.PhysicsCollider
         {
 
             private void OnTriggerExit(UnityEngine.Collider arg0)
@@ -358,7 +358,7 @@ namespace XOR.Behaviour
             }
         }
 
-        protected class PhysicsCollider2DBehaviour7 : XOR.Behaviour.PhysicsCollider2D
+        public class PhysicsCollider2DBehaviour7 : XOR.Behaviour.PhysicsCollider2D
         {
 
             private void OnTriggerEnter2D(UnityEngine.Collider2D arg0)
@@ -375,7 +375,7 @@ namespace XOR.Behaviour
             }
         }
 
-        protected class OnTriggerEnter2DBehaviour : XOR.Behaviour.PhysicsCollider2D
+        public class OnTriggerEnter2DBehaviour : XOR.Behaviour.PhysicsCollider2D
         {
 
             private void OnTriggerEnter2D(UnityEngine.Collider2D arg0)
@@ -384,7 +384,7 @@ namespace XOR.Behaviour
             }
         }
 
-        protected class OnTriggerStay2DBehaviour : XOR.Behaviour.PhysicsCollider2D
+        public class OnTriggerStay2DBehaviour : XOR.Behaviour.PhysicsCollider2D
         {
 
             private void OnTriggerStay2D(UnityEngine.Collider2D arg0)
@@ -393,7 +393,7 @@ namespace XOR.Behaviour
             }
         }
 
-        protected class OnTriggerExit2DBehaviour : XOR.Behaviour.PhysicsCollider2D
+        public class OnTriggerExit2DBehaviour : XOR.Behaviour.PhysicsCollider2D
         {
 
             private void OnTriggerExit2D(UnityEngine.Collider2D arg0)
@@ -402,7 +402,7 @@ namespace XOR.Behaviour
             }
         }
 
-        protected class PhysicsCollisionBehaviour7 : XOR.Behaviour.PhysicsCollision
+        public class PhysicsCollisionBehaviour7 : XOR.Behaviour.PhysicsCollision
         {
 
             private void OnCollisionEnter(UnityEngine.Collision arg0)
@@ -419,7 +419,7 @@ namespace XOR.Behaviour
             }
         }
 
-        protected class OnCollisionEnterBehaviour : XOR.Behaviour.PhysicsCollision
+        public class OnCollisionEnterBehaviour : XOR.Behaviour.PhysicsCollision
         {
 
             private void OnCollisionEnter(UnityEngine.Collision arg0)
@@ -428,7 +428,7 @@ namespace XOR.Behaviour
             }
         }
 
-        protected class OnCollisionStayBehaviour : XOR.Behaviour.PhysicsCollision
+        public class OnCollisionStayBehaviour : XOR.Behaviour.PhysicsCollision
         {
 
             private void OnCollisionStay(UnityEngine.Collision arg0)
@@ -437,7 +437,7 @@ namespace XOR.Behaviour
             }
         }
 
-        protected class OnCollisionExitBehaviour : XOR.Behaviour.PhysicsCollision
+        public class OnCollisionExitBehaviour : XOR.Behaviour.PhysicsCollision
         {
 
             private void OnCollisionExit(UnityEngine.Collision arg0)
@@ -446,7 +446,7 @@ namespace XOR.Behaviour
             }
         }
 
-        protected class PhysicsCollision2DBehaviour7 : XOR.Behaviour.PhysicsCollision2D
+        public class PhysicsCollision2DBehaviour7 : XOR.Behaviour.PhysicsCollision2D
         {
 
             private void OnCollisionEnter2D(UnityEngine.Collision2D arg0)
@@ -463,7 +463,7 @@ namespace XOR.Behaviour
             }
         }
 
-        protected class OnCollisionEnter2DBehaviour : XOR.Behaviour.PhysicsCollision2D
+        public class OnCollisionEnter2DBehaviour : XOR.Behaviour.PhysicsCollision2D
         {
 
             private void OnCollisionEnter2D(UnityEngine.Collision2D arg0)
@@ -472,7 +472,7 @@ namespace XOR.Behaviour
             }
         }
 
-        protected class OnCollisionStay2DBehaviour : XOR.Behaviour.PhysicsCollision2D
+        public class OnCollisionStay2DBehaviour : XOR.Behaviour.PhysicsCollision2D
         {
 
             private void OnCollisionStay2D(UnityEngine.Collision2D arg0)
@@ -481,7 +481,7 @@ namespace XOR.Behaviour
             }
         }
 
-        protected class OnCollisionExit2DBehaviour : XOR.Behaviour.PhysicsCollision2D
+        public class OnCollisionExit2DBehaviour : XOR.Behaviour.PhysicsCollision2D
         {
 
             private void OnCollisionExit2D(UnityEngine.Collision2D arg0)

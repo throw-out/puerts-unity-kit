@@ -389,68 +389,89 @@ abstract class BehaviourConstructor {
     }
     //绑定Proxy方法
     protected bindProxies() {
-        ["Awake", "Start", "OnDestroy"].forEach(name => {
-            let func = bind(this, name);
-            if (func) {
+        let proto = Object.getPrototypeOf(this);
+
+        //注册Mono事件
+        let methodFlags = 0
+        let specificFlags = CS.XOR.Behaviour.Args.Mono.Awake |
+            CS.XOR.Behaviour.Args.Mono.Start |
+            CS.XOR.Behaviour.Args.Mono.OnDestroy |
+            CS.XOR.Behaviour.Args.Mono.OnEnable |
+            CS.XOR.Behaviour.Args.Mono.OnDisable
+        let updateFlags = CS.XOR.Behaviour.Args.Mono.Update |
+            CS.XOR.Behaviour.Args.Mono.FixedUpdate |
+            CS.XOR.Behaviour.Args.Mono.LateUpdate
+        for (let method in CS.XOR.Behaviour.Args.Mono) {
+            if (typeof (method) != "string")
+                continue;
+            let v = <number><unknown>CS.XOR.Behaviour.Args.Mono[method]
+            if ((specificFlags & v) == v) {
+                if (typeof (this[method]) == "function")
+                    continue;
+                specificFlags ^= v;
+            }
+            else if ((updateFlags & v) == v) {
+                if (typeof (this[method]) != "function" || !metadata.isDefine(proto, method, utils.standalone))
+                    continue;
+                methodFlags |= v
+            }
+            else {
+                if (typeof (this[method]) != "function")
+                    continue;
+                methodFlags |= v
+            }
+        }
+        if (specificFlags > 0) {  //注册Awake丶Start丶OnDestroy事件
+            this.component.CreateMono(specificFlags, (method) => {
                 try {
-                    this.component.CreateProxy(name, func);
-                }
-                catch (e) {
+                    this[CS.XOR.Behaviour.Args.Mono[method]]();
+                } catch (e) {
                     console.error(e.message + "\n" + e.stack);
                 }
-            }
-        });
-        ["OnApplicationQuit", "OnDisable", "OnEnable", "OnGUI"].forEach(name => {
-            let func = bind(this, name);
-            if (func) {
-                this.component.CreateProxy(name, func);
-            }
-        });
-        if (isEditor) {
-            ["OnDrawGizmosSelected", "OnSceneGUI"].forEach(name => {
-                let func = bind(this, name);
-                if (func) {
-                    this.component.CreateProxy(name, func);
-                }
-            });
+            })
         }
-        ["OnMouseDown", "OnMouseDrag", "OnMouseEnter", "OnMouseExit", "OnMouseOver", "OnMouseUp", "OnMouseUpAsButton"].forEach(name => {
-            let func = bind(this, name);
-            if (func) {
-                this.component.CreateProxy(name, func);
+        if (methodFlags > 0) {  //注册剩余Mono事件
+            this.component.CreateMono(methodFlags, (method) => this[CS.XOR.Behaviour.Args.Mono[method]]())
+        }
+        //注册Gizmos事件
+        if (isEditor) {
+            methodFlags = this.getFunctionFlags(CS.XOR.Behaviour.Args.Gizmos)
+            if (methodFlags > 0) {
+                this.component.CreateGizmos(methodFlags, (method) => this[CS.XOR.Behaviour.Args.Gizmos[method]]())
             }
-        });
-        //Action<bool>
-        ["OnApplicationFocus", "OnApplicationPause", "OnBecameVisible"].forEach(name => {
-            let func = bind(this, name);
-            if (func) {
-                this.component.CreateProxyForBool(name, func);
-            }
-        });
-        //Action<PointerEventData>
-        ["OnPointerClick", "OnPointerDown", "OnPointerEnter", "OnPointerExit", "OnPointerUp"].forEach(name => {
-            let func = bind(this, name);
-            if (func) {
-                this.component.CreateProxyForEventData(name, func);
-            }
-        });
-        //触发器方法 Collision Trigger
-        const proxyCfg: [string, string, string, string][] = [
-            ["CreateProxyForDrag", "OnBeginDrag", "OnDrag", "OnEndDrag"],
-
-            ["CreateProxyForCollision", "OnCollisionEnter", "OnCollisionStay", "OnCollisionExit"],
-            ["CreateProxyForCollision2D", "OnCollisionEnter2D", "OnCollisionStay2D", "OnCollisionExit2D"],
-            ["CreateProxyForTrigger", "OnTriggerEnter", "OnTriggerStay", "OnTriggerExit"],
-            ["CreateProxyForTrigger2D", "OnTriggerEnter2D", "OnTriggerStay2D", "OnTriggerExit2D"],
-        ]
-        proxyCfg.forEach(cfg => {
-            let [funcname, funcEnter, funcStay, funcExit] = cfg;
-            let enter: Function = bind(this, funcEnter),
-                stay: Function = bind(this, funcStay),
-                exit: Function = bind(this, funcExit);
-            if (enter || stay || exit)
-                this.component[funcname](enter, stay, exit);
-        });
+        }
+        //注册Mouse事件
+        methodFlags = this.getFunctionFlags(CS.XOR.Behaviour.Args.Mouse)
+        if (methodFlags > 0) {
+            this.component.CreateMouse(methodFlags, (method) => this[CS.XOR.Behaviour.Args.Mouse[method]]())
+        }
+        //注册MonoBoolean事件
+        methodFlags = this.getFunctionFlags(CS.XOR.Behaviour.Args.MonoBoolean)
+        if (methodFlags > 0) {
+            this.component.CreateMonoBoolean(methodFlags, (method, data) => this[CS.XOR.Behaviour.Args.MonoBoolean[method]](data))
+        }
+        //注册EventSystems事件
+        methodFlags = this.getFunctionFlags(CS.XOR.Behaviour.Args.EventSystems)
+        if (methodFlags > 0) {
+            this.component.CreateEventSystems(methodFlags, (method, data) => this[CS.XOR.Behaviour.Args.EventSystems[method]](data))
+        }
+        //注册Physics事件
+        methodFlags = this.getFunctionFlags(CS.XOR.Behaviour.Args.PhysicsCollider)
+        if (methodFlags > 0) {
+            this.component.CreatePhysicsCollider(methodFlags, (method, data) => this[CS.XOR.Behaviour.Args.PhysicsCollider[method]](data))
+        }
+        methodFlags = this.getFunctionFlags(CS.XOR.Behaviour.Args.PhysicsCollider2D)
+        if (methodFlags > 0) {
+            this.component.CreatePhysicsCollider2D(methodFlags, (method, data) => this[CS.XOR.Behaviour.Args.PhysicsCollider2D[method]](data))
+        }
+        methodFlags = this.getFunctionFlags(CS.XOR.Behaviour.Args.PhysicsCollision)
+        if (methodFlags > 0) {
+            this.component.CreatePhysicsCollision(methodFlags, (method, data) => this[CS.XOR.Behaviour.Args.PhysicsCollision[method]](data))
+        }
+        methodFlags = this.getFunctionFlags(CS.XOR.Behaviour.Args.PhysicsCollision2D)
+        if (methodFlags > 0) {
+            this.component.CreatePhysicsCollision2D(methodFlags, (method, data) => this[CS.XOR.Behaviour.Args.PhysicsCollision2D[method]](data))
+        }
     }
     protected bindUpdateProxies() {
 
@@ -463,50 +484,32 @@ abstract class BehaviourConstructor {
         ]).map(([funcname, proxy]) => {
             let waitAsyncComplete = metadata.getDefineData(proto, funcname, utils.throttle, false);
             let func: Function = bind(this, funcname, waitAsyncComplete);
-            if (!func) {
+            if (!func || metadata.isDefine(proto, funcname, utils.standalone)) {
                 return null;
-            }
-            if (metadata.isDefine(proto, funcname, utils.standalone)) {
-                this.component.CreateProxy(funcname, func as CS.System.Action);
-                return undefined
             }
             let frameskip = metadata.getDefineData(proto, funcname, utils.frameskip, 0);
             return <[Function, BatchProxy, number]>[func, proxy, frameskip];
         }).filter(o => !!o);
 
-        if (proxies.length > 0) {
-            let enabled = false;
-            let enable = function () {
-                if (enabled) return;
-                enabled = true;
-                proxies.forEach(([func, batch, frameskip]) => batch.addListener(func, frameskip));
-            };
-            let disable = function () {
-                if (!enabled) return;
-                enabled = false;
-                proxies.forEach(([func, batch, frameskip]) => batch.removeListener(func, frameskip));
-            };
-            //生命周期管理
-            let proxy = this.component.GetProxy("OnEnable") as CS.XOR.ProxyAction;
-            if (!proxy || proxy.Equals(null))
-                this.component.CreateProxy("OnEnable", enable);
-            else {
-                proxy.callback = CS.System.Delegate.Combine(proxy.callback, new CS.System.Action(enable)) as CS.System.Action;
+        if (proxies.length <= 0)
+            return;
+        let enabled = false;
+        //生命周期管理
+        this.component.CreateMono(CS.XOR.Behaviour.Args.Mono.OnEnable | CS.XOR.Behaviour.Args.Mono.OnDisable | CS.XOR.Behaviour.Args.Mono.OnDestroy, (method) => {
+            switch (method) {
+                case CS.XOR.Behaviour.Args.Mono.OnEnable:
+                    if (enabled) return;
+                    enabled = true;
+                    proxies.forEach(([func, batch, frameskip]) => batch.addListener(func, frameskip));
+                    break;
+                case CS.XOR.Behaviour.Args.Mono.OnDisable:
+                case CS.XOR.Behaviour.Args.Mono.OnDestroy:
+                    if (!enabled) return;
+                    enabled = false;
+                    proxies.forEach(([func, batch, frameskip]) => batch.removeListener(func, frameskip));
+                    break;
             }
-            proxy = this.component.GetProxy("OnDisable") as CS.XOR.ProxyAction;
-            if (!proxy || proxy.Equals(null))
-                this.component.CreateProxy("OnDisable", disable);
-            else {
-                proxy.callback = CS.System.Delegate.Combine(proxy.callback, new CS.System.Action(disable)) as CS.System.Action;
-            }
-
-            proxy = this.component.GetProxy("OnDestroy") as CS.XOR.ProxyAction;
-            if (!proxy || proxy.Equals(null))
-                this.component.CreateProxy("OnDestroy", disable);
-            else {
-                proxy.callback = CS.System.Delegate.Combine(proxy.callback, new CS.System.Action(disable)) as CS.System.Action;
-            }
-        };
+        })
     }
     protected bindListeners() {
         let proto = Object.getPrototypeOf(this);
@@ -588,6 +591,17 @@ abstract class BehaviourConstructor {
             console.warn(`Unresolved Module: ${className}\n${stack}`);
         }
         this.component["Module"] = module;
+    }
+    private getFunctionFlags(types: object) {
+        let results = 0
+        for (let method in types) {
+            if (typeof (method) != "string")
+                continue;
+            if (typeof (this[method]) != "function")
+                continue;
+            results |= types[method]
+        }
+        return results;
     }
 
     //Getter 丶 Setter
@@ -713,20 +727,20 @@ class TsBehaviourConstructor extends BehaviourConstructor {
 
 /**Update批量调用 */
 class BatchProxy {
-    private static deltaTime() { return Time.deltaTime; }
-    private static fixedDeltaTime() { return Time.fixedDeltaTime; }
 
     public static get Update() {
-        return this._getter("__Update", CS.XOR.UpdateProxy, this.deltaTime)
+        return this._getter("__Update", CS.XOR.Behaviour.Default.UpdateBehaviour, this.getDeltaTime)
     };
     public static get FixedUpdate() {
-        return this._getter("__FixedUpdate", CS.XOR.FixedUpdateProxy, this.fixedDeltaTime)
+        return this._getter("__FixedUpdate", CS.XOR.Behaviour.Default.FixedUpdateBehaviour, this.getFixedDeltaTime)
     };
     public static get LateUpdate() {
-        return this._getter("__LateUpdate", CS.XOR.LateUpdateProxy, this.deltaTime)
+        return this._getter("__LateUpdate", CS.XOR.Behaviour.Default.LateUpdateBehaviour, this.getDeltaTime)
     };
+    private static getDeltaTime() { return Time.deltaTime; }
+    private static getFixedDeltaTime() { return Time.fixedDeltaTime; }
 
-    private static _getter(key: string, type: { new(...args: any[]): CS.XOR.ProxyAction }, timeGetter?: () => number) {
+    private static _getter(key: string, type: { new(...args: any[]): CS.XOR.Behaviour.Mono }, timeGetter?: () => number) {
         let proxy: BatchProxy = this[key];
         if (!proxy) {
             let gameObject: CS.UnityEngine.GameObject = this["_gameObject_"];
@@ -741,13 +755,13 @@ class BatchProxy {
         return proxy;
     }
 
-    private readonly caller: CS.XOR.ProxyAction;
+    private readonly invoker: CS.XOR.Behaviour.Mono;
     private readonly efHanlders: Function[] = [];
     private readonly sfHandlers: Map<number, { tick: number, dt: number, readonly methods: Function[], readonly frameskip: number }> = new Map();
 
-    private constructor(caller: CS.XOR.ProxyAction, timeGetter: () => number) {
-        this.caller = caller;
-        this.caller.callback = (...args: any[]) => {
+    private constructor(invoker: CS.XOR.Behaviour.Mono, timeGetter: () => number) {
+        this.invoker = invoker;
+        this.invoker.Callback = (...args: any[]) => {
             let dt = timeGetter ? timeGetter() : 0;
             //每帧调用
             if (this.efHanlders.length > 0) {

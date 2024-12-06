@@ -104,7 +104,7 @@ namespace XOR
                 if (IsActivated && !IsDestroyed)
                     Invoke(Behaviour.Args.Mono.Awake, callback);
                 else
-                    awakeCallback = callback;
+                    awakeCallback += callback;
             }
             if ((methods & Behaviour.Args.Mono.Start) > 0)
             {
@@ -112,7 +112,7 @@ namespace XOR
                 if (IsStarted && !IsDestroyed)
                     Invoke(Behaviour.Args.Mono.Start, callback);
                 else
-                    startCallback = callback;
+                    startCallback += callback;
             }
             if ((methods & Behaviour.Args.Mono.OnDestroy) > 0)
             {
@@ -120,7 +120,7 @@ namespace XOR
                 if (IsDestroyed)
                     Invoke(Behaviour.Args.Mono.OnDestroy, callback);
                 else
-                    destroyCallback = callback;
+                    destroyCallback += callback;
             }
             if ((methods & Behaviour.Args.Mono.OnEnable) > 0)
             {
@@ -128,7 +128,7 @@ namespace XOR
                 if (IsEnable && !IsDestroyed)
                     Invoke(Behaviour.Args.Mono.OnEnable, callback);
                 else
-                    enableCallback = callback;
+                    enableCallback += callback;
             }
             if ((methods & Behaviour.Args.Mono.OnDisable) > 0)
             {
@@ -136,7 +136,7 @@ namespace XOR
                 if (IsActivated && !IsEnable && !IsDestroyed)
                     Invoke(Behaviour.Args.Mono.OnDisable, callback);
                 else
-                    disableCallback = callback;
+                    disableCallback += callback;
             }
             if (methods <= 0)
                 return;
