@@ -30,19 +30,19 @@ namespace XOR
         {
             categories = new List<Category>()
             {
-                Category.CreateDefaultEverything<Behaviour.Args.Behaviour>(GroupType.Single),
-                Category.CreateDefaultEverything<Behaviour.Args.BehaviourBoolean>(GroupType.Single),
+                Category.CreateDefaultEverything<Behaviour.Args.Mono>(GroupType.Single),
+                Category.CreateDefaultEverything<Behaviour.Args.MonoBoolean>(GroupType.Single),
                 Category.CreateDefaultEverything<Behaviour.Args.Gizmos>(GroupType.Single),
-                Category.CreateDefaultEverything<Behaviour.Args.Mouse>(GroupType.Single, GroupType.Union),
-                Category.CreateDefaultEverything<Behaviour.Args.EventSystemsPointerEventData>(GroupType.Single),
-                Category.CreateDefaultEverything<Behaviour.Args.PhysicsCollider>(GroupType.Single, GroupType.Union),
-                Category.CreateDefaultEverything<Behaviour.Args.PhysicsCollider2D>(GroupType.Single, GroupType.Union),
-                Category.CreateDefaultEverything<Behaviour.Args.PhysicsCollision>(GroupType.Single, GroupType.Union),
-                Category.CreateDefaultEverything<Behaviour.Args.PhysicsCollision2D>(GroupType.Single, GroupType.Union),
+                Category.CreateDefaultEverything<Behaviour.Args.Mouse>(GroupType.Union, GroupType.Single),
+                Category.CreateDefaultEverything<Behaviour.Args.EventSystems>(GroupType.Single),
+                Category.CreateDefaultEverything<Behaviour.Args.PhysicsCollider>(GroupType.Union, GroupType.Single),
+                Category.CreateDefaultEverything<Behaviour.Args.PhysicsCollider2D>(GroupType.Union, GroupType.Single),
+                Category.CreateDefaultEverything<Behaviour.Args.PhysicsCollision>(GroupType.Union, GroupType.Single),
+                Category.CreateDefaultEverything<Behaviour.Args.PhysicsCollision2D>(GroupType.Union, GroupType.Single),
             };
         }
 
-        public HashSet<Enum> GenerateTypes()
+        public HashSet<Enum> GetExportEnums()
         {
             if (categories == null || categories.Count <= 0)
                 return null;

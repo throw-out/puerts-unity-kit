@@ -203,12 +203,12 @@ namespace XOR
         /// <summary>
         /// 弹窗询问生成类型
         /// </summary>
-        public static void RenderGenerateClass(Action confirm, int count = -1)
+        public static void RenderGenerateClass(Action confirm, int total = -1, int count = -1)
         {
             string message = Language.Default.Get("generate_class_confirm");
-            if (count > 0)
+            if (total > 0)
             {
-                message = string.Format(message, count);
+                message = string.Format(message, total, count);
             }
             bool ok = EditorUtility.DisplayDialog(
                 Language.Default.Get("tip"),

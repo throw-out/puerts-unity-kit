@@ -4,24 +4,26 @@ using System.Collections.Generic;
 
 namespace XOR.Behaviour.Args
 {
-    [Title("Behaviour")]
-    public enum Behaviour : uint
+    [Title("Mono")]
+    public enum Mono : uint
     {
-        Update = 1 << 0,
-        FixedUpdate = 1 << 1,
-        LateUpdate = 1 << 2,
-        OnEnable = 1 << 3,
-        OnDisable = 1 << 4,
-        OnDestroy = 1 << 5,
-        OnGUI = 1 << 6,
-        OnApplicationQuit = 1 << 7,
-        OnBecameVisible = 1 << 8,
-        OnBecameInvisible = 1 << 9,
+        Awake = 1 << 0,
+        Start = 1 << 1,
+        Update = 1 << 2,
+        FixedUpdate = 1 << 3,
+        LateUpdate = 1 << 4,
+        OnEnable = 1 << 5,
+        OnDisable = 1 << 6,
+        OnDestroy = 1 << 7,
+        OnGUI = 1 << 8,
+        OnApplicationQuit = 1 << 9,
+        OnBecameVisible = 1 << 10,
+        OnBecameInvisible = 1 << 11,
     }
 
-    [Title("Behaviour - bool")]
+    [Title("Mono - bool")]
     [Args(typeof(bool))]
-    public enum BehaviourBoolean : uint
+    public enum MonoBoolean : uint
     {
         OnApplicationFocus = 1 << 0,
         OnApplicationPause = 1 << 1,
@@ -48,7 +50,7 @@ namespace XOR.Behaviour.Args
 
     [Title("EventSystems")]
     [Args(typeof(UnityEngine.EventSystems.PointerEventData))]
-    public enum EventSystemsPointerEventData : uint
+    public enum EventSystems : uint
     {
         OnBeginDrag = 1 << 0,
         OnDrag = 1 << 1,
@@ -95,21 +97,4 @@ namespace XOR.Behaviour.Args
         OnCollisionStay2D = 1 << 1,
         OnCollisionExit2D = 1 << 2,
     }
-
-    internal static class Extensions
-    {
-        static Dictionary<Type, object> valuesDict = new Dictionary<Type, object>();
-        public static T[] Everything<T>()
-            where T : Enum
-        {
-            if (valuesDict.TryGetValue(typeof(T), out var values))
-            {
-                return (T[])values;
-            }
-
-            
-            return null;
-        }
-    }
-
 }

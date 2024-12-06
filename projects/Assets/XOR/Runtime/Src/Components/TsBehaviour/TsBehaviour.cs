@@ -4,6 +4,7 @@ using UnityEngine;
 using UnityEngine.EventSystems;
 using XOR.Behaviour;
 
+
 #if UNITY_EDITOR
 using UnityEditor;
 #endif
@@ -22,13 +23,13 @@ namespace XOR
         #endregion
 
         //Unity 接口组件
-        private Dictionary<string, Proxy> proxies;
-        private Dictionary<Enum, MonoBehaviour> behaviours;
-        private Action awakeCallback;       //Awake回调
-        private Action startCallback;       //Start回调
-        private Action destroyCallback;     //OnDestroy回调
-        private Action enableCallback;      //OnEnable回调
-        private Action disableCallback;     //OnDisable回调
+        private int instanceID;
+        private List<Behaviour.Behaviour> behaviours;
+        private Action<Behaviour.Args.Mono> awakeCallback;       //Awake回调
+        private Action<Behaviour.Args.Mono> startCallback;       //Start回调
+        private Action<Behaviour.Args.Mono> destroyCallback;     //OnDestroy回调
+        private Action<Behaviour.Args.Mono> enableCallback;      //OnEnable回调
+        private Action<Behaviour.Args.Mono> disableCallback;     //OnDisable回调
         public bool IsActivated { get; private set; } = false;      //是否已执行Awake回调
         public bool IsStarted { get; private set; } = false;        //是否已执行Start回调
         public bool IsDestroyed { get; private set; } = false;      //是否已执行OnDestroy回调
@@ -52,322 +53,162 @@ namespace XOR
         }
         protected virtual void Awake()
         {
+            instanceID = gameObject.GetInstanceID();
             IsActivated = true;
-            awakeCallback?.Invoke();
+            awakeCallback?.Invoke(Behaviour.Args.Mono.Awake);
             awakeCallback = null;
         }
         protected virtual void Start()
         {
             IsStarted = true;
-            startCallback?.Invoke();
+            startCallback?.Invoke(Behaviour.Args.Mono.Start);
             startCallback = null;
         }
         protected virtual void OnEnable()
         {
             IsEnable = true;
-            enableCallback?.Invoke();
-            if (proxies != null)
+            enableCallback?.Invoke(Behaviour.Args.Mono.OnEnable);
+            if (behaviours != null)
             {
-                foreach (var proxy in proxies)
+                foreach (var behaviour in behaviours)
                 {
-                    proxy.Value.enabled = true;
+                    behaviour.enabled = true;
                 }
             }
         }
         protected virtual void OnDisable()
         {
             IsEnable = false;
-            disableCallback?.Invoke();
-            if (proxies != null)
+            disableCallback?.Invoke(Behaviour.Args.Mono.OnDisable);
+            if (behaviours != null)
             {
-                foreach (var proxy in proxies)
+                foreach (var behaviour in behaviours)
                 {
-                    proxy.Value.enabled = false;
+                    behaviour.enabled = false;
                 }
             }
         }
         protected virtual void OnDestroy()
         {
             IsDestroyed = true;
-            destroyCallback?.Invoke();
+            destroyCallback?.Invoke(Behaviour.Args.Mono.OnDestroy);
             destroyCallback = null;
             Dispose(true);
         }
 
-        public bool RemoveProxy(string name)
+        public void CreateMono(Behaviour.Args.Mono methods, Action<Behaviour.Args.Mono> callback)
         {
-            Proxy proxy = null;
-            if (proxies != null && proxies.TryGetValue(name, out proxy))
+            if ((methods & Behaviour.Args.Mono.Awake) > 0)
             {
-                proxies.Remove(name);
-                proxy.Release();
-                Destroy(proxy);
+                methods ^= Behaviour.Args.Mono.Awake;
+                if (IsActivated && !IsDestroyed)
+                    Invoke(Behaviour.Args.Mono.Awake, callback);
+                else
+                    awakeCallback = callback;
             }
-            return proxy != null;
+            if ((methods & Behaviour.Args.Mono.Start) > 0)
+            {
+                methods ^= Behaviour.Args.Mono.Start;
+                if (IsStarted && !IsDestroyed)
+                    Invoke(Behaviour.Args.Mono.Start, callback);
+                else
+                    startCallback = callback;
+            }
+            if ((methods & Behaviour.Args.Mono.OnDestroy) > 0)
+            {
+                methods ^= Behaviour.Args.Mono.OnDestroy;
+                if (IsDestroyed)
+                    Invoke(Behaviour.Args.Mono.OnDestroy, callback);
+                else
+                    destroyCallback = callback;
+            }
+            if ((methods & Behaviour.Args.Mono.OnEnable) > 0)
+            {
+                methods ^= Behaviour.Args.Mono.OnEnable;
+                if (IsEnable && !IsDestroyed)
+                    Invoke(Behaviour.Args.Mono.OnEnable, callback);
+                else
+                    enableCallback = callback;
+            }
+            if ((methods & Behaviour.Args.Mono.OnDisable) > 0)
+            {
+                methods ^= Behaviour.Args.Mono.OnDisable;
+                if (IsActivated && !IsEnable && !IsDestroyed)
+                    Invoke(Behaviour.Args.Mono.OnDisable, callback);
+                else
+                    disableCallback = callback;
+            }
+            if (methods <= 0)
+                return;
+            Create(Factory.Mono, methods, callback);
         }
-        public void AddProxy(string name, Proxy proxy)
+        public void CreateMonoBoolean(Behaviour.Args.MonoBoolean methods, Action<Behaviour.Args.MonoBoolean, bool> callback)
         {
-            if (RemoveProxy(name))
-                Debug.LogWarning(string.Format("Repeat add proxy: ", this.name, name));
-            if (proxies == null)
-            {
-                proxies = new Dictionary<string, Proxy>();
-            }
-            proxies.Add(name, proxy);
+            Create(Factory.MonoBoolean, methods, callback);
         }
-        public Proxy GetProxy(string name)
+        public void CreateMouse(Behaviour.Args.Mouse methods, Action<Behaviour.Args.Mouse> callback)
         {
-            Proxy proxy = null;
-            if (this.proxies != null)
-                this.proxies.TryGetValue(name, out proxy);
-            return proxy;
+            Create(Factory.Mouse, methods, callback);
         }
-
-        public ProxyAction CreateProxy(string name, Action callback)
+        public void CreateGizmos(Behaviour.Args.Gizmos methods, Action<Behaviour.Args.Gizmos> callback)
         {
-            ProxyAction proxy = this.GetProxy(name) as ProxyAction;
-            if (proxy != null)
-            {
-                proxy.callback += callback;
-                return proxy;
-            }
-            switch (name)
-            {
-                case "Awake":
-                    if (this.IsActivated)
-                        callback?.Invoke();
-                    else
-                        this.awakeCallback += callback;
-                    break;
-                case "Start":
-                    if (this.IsStarted)
-                        callback?.Invoke();
-                    else
-                        this.startCallback += callback;
-                    break;
-                case "OnDestroy":
-                    if (this.IsDestroyed)
-                        callback?.Invoke();
-                    else
-                        this.destroyCallback += callback;
-                    break;
-                case "OnEnable":
-                    //proxy = gameObject.AddComponent<OnEnableProxy>();
-                    this.enableCallback += callback;
-                    if (this.IsEnable && !this.IsDestroyed)
-                        callback?.Invoke();
-                    break;
-                case "OnDisable":
-                    //proxy = gameObject.AddComponent<OnDisableProxy>();
-                    this.disableCallback += callback;
-                    if (!this.IsEnable && !this.IsDestroyed)
-                        callback?.Invoke();
-                    break;
-                case "Update":
-                    proxy = gameObject.AddComponent<UpdateProxy>();
-                    break;
-                case "FixedUpdate":
-                    proxy = gameObject.AddComponent<FixedUpdateProxy>();
-                    break;
-                case "LateUpdate":
-                    proxy = gameObject.AddComponent<LateUpdateProxy>();
-                    break;
-                case "OnApplicationQuit":
-                    proxy = gameObject.AddComponent<OnApplicationQuitProxy>();
-                    break;
-                case "OnGUI":
-                    proxy = gameObject.AddComponent<OnGUIProxy>();
-                    break;
-
-                case "OnDrawGizmosSelected":
-                    proxy = gameObject.AddComponent<OnDrawGizmosSelectedProxy>();
-                    break;
-                case "OnSceneGUI":
-                    proxy = gameObject.AddComponent<OnSceneGUIProxy>();
-                    break;
-
-                case "OnMouseDown":
-                    proxy = gameObject.AddComponent<OnMouseDownProxy>();
-                    break;
-                case "OnMouseDrag":
-                    proxy = gameObject.AddComponent<OnMouseDragProxy>();
-                    break;
-                case "OnMouseEnter":
-                    proxy = gameObject.AddComponent<OnMouseEnterProxy>();
-                    break;
-                case "OnMouseExit":
-                    proxy = gameObject.AddComponent<OnMouseExitProxy>();
-                    break;
-                case "OnMouseOver":
-                    proxy = gameObject.AddComponent<OnMouseOverProxy>();
-                    break;
-                case "OnMouseUp":
-                    proxy = gameObject.AddComponent<OnMouseUpProxy>();
-                    break;
-                case "OnMouseUpAsButton":
-                    proxy = gameObject.AddComponent<OnMouseUpAsButtonProxy>();
-                    break;
-            }
-            if (proxy != null)
-            {
-                proxy.callback = callback;
-                AddProxy(name, proxy);
-            }
-            return proxy;
+            Create(Factory.Gizmos, methods, callback);
         }
-        public ProxyAction<bool> CreateProxyForBool(string name, Action<bool> callback)
+        public void CreateEventSystems(Behaviour.Args.EventSystems methods, Action<Behaviour.Args.EventSystems, PointerEventData> callback)
         {
-            ProxyAction<bool> proxy = this.GetProxy(name) as ProxyAction<bool>;
-            if (proxy != null)
-            {
-                proxy.callback += callback;
-                return proxy;
-            }
-            switch (name)
-            {
-                case "OnApplicationFocus":
-                    proxy = gameObject.AddComponent<OnApplicationFocusProxy>();
-                    break;
-                case "OnApplicationPause":
-                    proxy = gameObject.AddComponent<OnApplicationPauseProxy>();
-                    break;
-                case "OnBecameVisible":
-                    proxy = gameObject.AddComponent<OnBecameVisibleProxy>();
-                    break;
-            }
-            if (proxy != null)
-            {
-                proxy.callback = callback;
-                AddProxy(name, proxy);
-            }
-            return proxy;
+            Create(Factory.EventSystems, methods, callback);
         }
-        public ProxyAction<PointerEventData> CreateProxyForEventData(string name, Action<PointerEventData> callback)
+        public void CreatePhysicsCollider(Behaviour.Args.PhysicsCollider methods, Action<Behaviour.Args.PhysicsCollider, Collider> callback)
         {
-            ProxyAction<PointerEventData> proxy = this.GetProxy(name) as ProxyAction<PointerEventData>;
-            if (proxy != null)
-            {
-                proxy.callback += callback;
-                return proxy;
-            }
-            switch (name)
-            {
-                case "OnPointerClick":
-                    proxy = gameObject.AddComponent<OnPointerClickProxy>();
-                    break;
-                case "OnPointerDown":
-                    proxy = gameObject.AddComponent<OnPointerDownProxy>();
-                    break;
-                case "OnPointerEnter":
-                    proxy = gameObject.AddComponent<OnPointerEnterProxy>();
-                    break;
-                case "OnPointerExit":
-                    proxy = gameObject.AddComponent<OnPointerExitProxy>();
-                    break;
-                case "OnPointerUp":
-                    proxy = gameObject.AddComponent<OnPointerUpProxy>();
-                    break;
-            }
-            if (proxy != null)
-            {
-                proxy.callback = callback;
-                AddProxy(name, proxy);
-            }
-            return proxy;
+            Create(Factory.PhysicsCollider, methods, callback);
         }
-        public OnDragProxy CreateProxyForDrag(Action<PointerEventData> enter, Action<PointerEventData> stay, Action<PointerEventData> exit, bool stayFrame = false)
+        public void CreatePhysicsCollider2D(Behaviour.Args.PhysicsCollider2D methods, Action<Behaviour.Args.PhysicsCollider2D, Collider2D> callback)
         {
-            const string name = "OnDrag";
-            OnDragProxy proxy = this.GetProxy(name) as OnDragProxy;
-            if (proxy == null)
-            {
-                proxy = gameObject.AddComponent<OnDragProxy>();
-                AddProxy(name, proxy);
-            }
-            proxy.enter += enter;
-            proxy.stay += stay;
-            proxy.exit += exit;
-            proxy.stayFrame = stayFrame;
-
-            return proxy;
+            Create(Factory.PhysicsCollider2D, methods, callback);
         }
-        public OnCollisionProxy CreateProxyForCollision(Action<Collision> enter, Action<Collision> stay, Action<Collision> exit, bool stayFrame = false)
+        public void CreatePhysicsCollision(Behaviour.Args.PhysicsCollision methods, Action<Behaviour.Args.PhysicsCollision, Collision> callback)
         {
-            const string name = "OnCollision";
-            OnCollisionProxy proxy = this.GetProxy(name) as OnCollisionProxy;
-            if (proxy == null)
-            {
-                proxy = gameObject.AddComponent<OnCollisionProxy>();
-                AddProxy(name, proxy);
-            }
-            proxy.enter += enter;
-            proxy.stay += stay;
-            proxy.exit += exit;
-            proxy.stayFrame = stayFrame;
-
-            return proxy;
+            Create(Factory.PhysicsCollision, methods, callback);
         }
-        public OnCollision2DProxy CreateProxyForCollision2D(Action<Collision2D> enter, Action<Collision2D> stay, Action<Collision2D> exit, bool stayFrame = false)
+        public void CreatePhysicsCollision2D(Behaviour.Args.PhysicsCollision2D methods, Action<Behaviour.Args.PhysicsCollision2D, Collision2D> callback)
         {
-            const string name = "OnCollision2D";
-            OnCollision2DProxy proxy = this.GetProxy(name) as OnCollision2DProxy;
-            if (proxy == null)
-            {
-                proxy = gameObject.AddComponent<OnCollision2DProxy>();
-                AddProxy(name, proxy);
-            }
-            proxy.enter += enter;
-            proxy.stay += stay;
-            proxy.exit += exit;
-            proxy.stayFrame = stayFrame;
-
-            return proxy;
-        }
-        public OnTriggerProxy CreateProxyForTrigger(Action<Collider> enter, Action<Collider> stay, Action<Collider> exit, bool stayFrame = false)
-        {
-            const string name = "OnTrigger";
-            OnTriggerProxy proxy = this.GetProxy(name) as OnTriggerProxy;
-            if (proxy == null)
-            {
-                proxy = gameObject.AddComponent<OnTriggerProxy>();
-                AddProxy(name, proxy);
-            }
-            proxy.enter += enter;
-            proxy.stay += stay;
-            proxy.exit += exit;
-            proxy.stayFrame = stayFrame;
-
-            return proxy;
-        }
-        public OnTrigger2DProxy CreateProxyForTrigger2D(Action<Collider2D> enter, Action<Collider2D> stay, Action<Collider2D> exit, bool stayFrame = false)
-        {
-            const string name = "OnTrigger2D";
-            OnTrigger2DProxy proxy = this.GetProxy(name) as OnTrigger2DProxy;
-            if (proxy == null)
-            {
-                proxy = gameObject.AddComponent<OnTrigger2DProxy>();
-                AddProxy(name, proxy);
-            }
-            proxy.enter += enter;
-            proxy.stay += stay;
-            proxy.exit += exit;
-            proxy.stayFrame = stayFrame;
-
-            return proxy;
+            Create(Factory.PhysicsCollision2D, methods, callback);
         }
 
-        public void Create1(Behaviour.Args.Behaviour methods, Action<Behaviour.Args.Behaviour> callback)
+        private void Create<T, TDelegate, TComponent>(Factory.Behaviours<T, TDelegate, TComponent> behaviours, T methods, TDelegate callback)
+            where T : Enum
+            where TDelegate : Delegate
+            where TComponent : Behaviour<TDelegate>
         {
-            if (Factory.HasRegister(methods))
+            if (behaviours.Contains(methods))
             {
-                Factory.Create(gameObject, methods, callback, Invoker.Default);
+                var component = behaviours.Create(gameObject, methods, callback, Invoker.Default);
+                this.behaviours.Add(component);
                 return;
             }
-            if ((methods & Behaviour.Args.Behaviour.Update) > 0)
+            var value = behaviours.GetEnumUInt32(methods);
+            foreach (var method in behaviours.Methods)
             {
-                Factory.Create(gameObject, Behaviour.Args.Behaviour.Update, callback, Invoker.Default);
+                if (value <= 0)
+                    break;
+                if ((value & method) <= 0)
+                    continue;
+                behaviours.Create(gameObject, method, callback, Invoker.Default);
+                value ^= method;
             }
         }
+        private void Invoke(Behaviour.Args.Mono method, Action<Behaviour.Args.Mono> callback)
+        {
+            if (callback != null)
+            {
+                callback(Behaviour.Args.Mono.Awake);
+            }
+            else if (Invoker.Default != null && IsActivated)
+            {
+                Invoker.Default.Invoke(instanceID, Behaviour.Args.Mono.Awake);
+            }
+        }
+
 
         public virtual void Dispose()
         {
@@ -380,16 +221,18 @@ namespace XOR
             this.destroyCallback = null;
             this.enableCallback = null;
             this.disableCallback = null;
-            if (proxies != null)
+
+            if (behaviours != null)
             {
-                foreach (var proxy in proxies.Values)
+                foreach (var behaviour in behaviours)
                 {
-                    proxy.Release();
-                    if (destroy) Destroy(proxy);
+                    behaviour.Release();
+                    if (destroy) Destroy(behaviour);
                 }
-                proxies.Clear();
+                behaviours.Clear();
             }
-            proxies = null;
+            behaviours = null;
+
             GC.SuppressFinalize(this);
         }
 

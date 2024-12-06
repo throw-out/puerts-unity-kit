@@ -1,4 +1,5 @@
 using System;
+using System.Reflection;
 using UnityEngine;
 using UnityEngine.EventSystems;
 
@@ -6,11 +7,11 @@ namespace XOR.Behaviour
 {
     public interface IInvoker
     {
-        void Invoke(int instanceID, Args.Behaviour method);
-        void Invoke(int instanceID, Args.BehaviourBoolean method, bool data);
+        void Invoke(int instanceID, Args.Mono method);
+        void Invoke(int instanceID, Args.MonoBoolean method, bool data);
         void Invoke(int instanceID, Args.Gizmos method);
         void Invoke(int instanceID, Args.Mouse method);
-        void Invoke(int instanceID, Args.EventSystemsPointerEventData method, UnityEngine.EventSystems.PointerEventData data);
+        void Invoke(int instanceID, Args.EventSystems method, UnityEngine.EventSystems.PointerEventData data);
         void Invoke(int instanceID, Args.PhysicsCollider method, UnityEngine.Collider data);
         void Invoke(int instanceID, Args.PhysicsCollider2D method, UnityEngine.Collider2D data);
         void Invoke(int instanceID, Args.PhysicsCollision method, UnityEngine.Collision data);
@@ -18,70 +19,127 @@ namespace XOR.Behaviour
     }
     public class Invoker : IInvoker
     {
-        public Action<int, Args.Behaviour> callback1;
-        public Action<int, Args.BehaviourBoolean, bool> callback2;
-        public Action<int, Args.Gizmos> callback3;
-        public Action<int, Args.Mouse> callback4;
-        public Action<int, Args.EventSystemsPointerEventData, PointerEventData> callback5;
-        public Action<int, Args.PhysicsCollider, Collider> callback6;
-        public Action<int, Args.PhysicsCollider2D, Collider2D> callback7;
-        public Action<int, Args.PhysicsCollision, Collision> callback8;
-        public Action<int, Args.PhysicsCollision2D, Collision2D> callback9;
+        public Action<int, Args.Mono> mono;
+        public Action<int, Args.MonoBoolean, bool> monoBoolean;
+        public Action<int, Args.Gizmos> gizmos;
+        public Action<int, Args.Mouse> mouse;
+        public Action<int, Args.EventSystems, PointerEventData> eventSystems;
+        public Action<int, Args.PhysicsCollider, Collider> collider;
+        public Action<int, Args.PhysicsCollider2D, Collider2D> collider2D;
+        public Action<int, Args.PhysicsCollision, Collision> collision;
+        public Action<int, Args.PhysicsCollision2D, Collision2D> collision2D;
 
-        public void Invoke(int instanceID, Args.Behaviour method)
+        public void Invoke(int instanceID, Args.Mono method)
         {
-            callback1?.Invoke(instanceID, method);
+            mono?.Invoke(instanceID, method);
         }
 
-        public void Invoke(int instanceID, Args.BehaviourBoolean method, bool data)
+        public void Invoke(int instanceID, Args.MonoBoolean method, bool data)
         {
-            callback2?.Invoke(instanceID, method, data);
+            monoBoolean?.Invoke(instanceID, method, data);
         }
 
         public void Invoke(int instanceID, Args.Gizmos method)
         {
-            callback3?.Invoke(instanceID, method);
+            gizmos?.Invoke(instanceID, method);
         }
 
         public void Invoke(int instanceID, Args.Mouse method)
         {
-            callback4?.Invoke(instanceID, method);
+            mouse?.Invoke(instanceID, method);
         }
 
-        public void Invoke(int instanceID, Args.EventSystemsPointerEventData method, PointerEventData data)
+        public void Invoke(int instanceID, Args.EventSystems method, PointerEventData data)
         {
-            callback5?.Invoke(instanceID, method, data);
+            eventSystems?.Invoke(instanceID, method, data);
         }
 
         public void Invoke(int instanceID, Args.PhysicsCollider method, Collider data)
         {
-            callback6?.Invoke(instanceID, method, data);
+            collider?.Invoke(instanceID, method, data);
         }
 
         public void Invoke(int instanceID, Args.PhysicsCollider2D method, Collider2D data)
         {
-            callback7?.Invoke(instanceID, method, data);
+            collider2D?.Invoke(instanceID, method, data);
         }
 
         public void Invoke(int instanceID, Args.PhysicsCollision method, Collision data)
         {
-            callback8?.Invoke(instanceID, method, data);
+            collision?.Invoke(instanceID, method, data);
         }
 
         public void Invoke(int instanceID, Args.PhysicsCollision2D method, Collision2D data)
         {
-            callback9?.Invoke(instanceID, method, data);
+            collision2D?.Invoke(instanceID, method, data);
         }
 
-        public static Invoker Default { get; set; }
-    }
 
-    [Args(typeof(Args.Behaviour))]
+
+        private static Invoker @default;
+        public static Invoker Default
+        {
+            get => @default;
+            set
+            {
+                @default = value;
+                Register();
+            }
+        }
+        private static void Register()
+        {
+            XOR.Behaviour.Factory.Clear();
+
+            XOR.Behaviour.Default.Register();
+            //注册自定义Invoker
+            var generteType = Type.GetType("XOR.Behaviour.BehaviourInvokerStaticWrap", false);
+            if (generteType == null)
+                return;
+            var registerMethod = generteType.GetMethod("Register", BindingFlags.Static | BindingFlags.Public);
+            if (registerMethod == null)
+                return;
+            try
+            {
+                registerMethod.Invoke(null, null);
+            }
+            catch (Exception e)
+            {
+                XOR.Logger.LogError(e);
+            }
+        }
+    }
     public abstract class Behaviour : MonoBehaviour
     {
-        public virtual Action<Args.Behaviour> Callback { get; set; }
-        public IInvoker Invoker { get; set; }
-        protected void Invoke(Args.Behaviour method)
+        public Behaviour()
+        {
+            this.Init();
+        }
+        ~Behaviour()
+        {
+            Release();
+        }
+        public virtual void Init()
+        {
+        }
+        public virtual void Release()
+        {
+        }
+        public void Dispose()
+        {
+            Release();
+        }
+    }
+    public abstract class Behaviour<TDelegate> : Behaviour
+        where TDelegate : Delegate
+    {
+        public virtual TDelegate Callback { get; set; }
+        public virtual IInvoker Invoker { get; set; }
+    }
+
+    [Args(typeof(Args.Mono))]
+    public abstract class Mono : Behaviour<Action<Args.Mono>>
+    {
+        protected void Invoke(Args.Mono method)
         {
             if (Callback != null)
                 Callback(method);
@@ -90,12 +148,10 @@ namespace XOR.Behaviour
         }
     }
 
-    [Args(typeof(Args.BehaviourBoolean))]
-    public abstract class BehaviourBoolean : MonoBehaviour
+    [Args(typeof(Args.MonoBoolean))]
+    public abstract class MonoBoolean : Behaviour<Action<Args.MonoBoolean, bool>>
     {
-        public virtual Action<Args.BehaviourBoolean, bool> Callback { get; set; }
-        public IInvoker Invoker { get; set; }
-        protected void Invoke(Args.BehaviourBoolean method, bool data)
+        protected void Invoke(Args.MonoBoolean method, bool data)
         {
             if (Callback != null)
                 Callback(method, data);
@@ -105,10 +161,8 @@ namespace XOR.Behaviour
     }
 
     [Args(typeof(Args.Gizmos))]
-    public abstract class Gizmos : MonoBehaviour
+    public abstract class Gizmos : Behaviour<Action<Args.Gizmos>>
     {
-        public virtual Action<Args.Gizmos> Callback { get; set; }
-        public IInvoker Invoker { get; set; }
         protected void Invoke(Args.Gizmos method)
         {
             if (Callback != null)
@@ -119,10 +173,8 @@ namespace XOR.Behaviour
     }
 
     [Args(typeof(Args.Mouse))]
-    public abstract class Mouse : MonoBehaviour
+    public abstract class Mouse : Behaviour<Action<Args.Mouse>>
     {
-        public virtual Action<Args.Mouse> Callback { get; set; }
-        public IInvoker Invoker { get; set; }
         protected void Invoke(Args.Mouse method)
         {
             if (Callback != null)
@@ -132,12 +184,10 @@ namespace XOR.Behaviour
         }
     }
 
-    [Args(typeof(Args.EventSystemsPointerEventData))]
-    public abstract class EventSystemsPointerEventData : MonoBehaviour
+    [Args(typeof(Args.EventSystems))]
+    public abstract class EventSystems : Behaviour<Action<Args.EventSystems, UnityEngine.EventSystems.PointerEventData>>
     {
-        public virtual Action<Args.EventSystemsPointerEventData, UnityEngine.EventSystems.PointerEventData> Callback { get; set; }
-        public IInvoker Invoker { get; set; }
-        protected void Invoke(Args.EventSystemsPointerEventData method, UnityEngine.EventSystems.PointerEventData data)
+        protected void Invoke(Args.EventSystems method, UnityEngine.EventSystems.PointerEventData data)
         {
             if (Callback != null)
                 Callback(method, data);
@@ -147,10 +197,8 @@ namespace XOR.Behaviour
     }
 
     [Args(typeof(Args.PhysicsCollider))]
-    public abstract class PhysicsCollider : MonoBehaviour
+    public abstract class PhysicsCollider : Behaviour<Action<Args.PhysicsCollider, UnityEngine.Collider>>
     {
-        public virtual Action<Args.PhysicsCollider, UnityEngine.Collider> Callback { get; set; }
-        public IInvoker Invoker { get; set; }
         protected void Invoke(Args.PhysicsCollider method, UnityEngine.Collider data)
         {
             if (Callback != null)
@@ -161,10 +209,8 @@ namespace XOR.Behaviour
     }
 
     [Args(typeof(Args.PhysicsCollider2D))]
-    public abstract class PhysicsCollider2D : MonoBehaviour
+    public abstract class PhysicsCollider2D : Behaviour<Action<Args.PhysicsCollider2D, UnityEngine.Collider2D>>
     {
-        public virtual Action<Args.PhysicsCollider2D, UnityEngine.Collider2D> Callback { get; set; }
-        public IInvoker Invoker { get; set; }
         protected void Invoke(Args.PhysicsCollider2D method, UnityEngine.Collider2D data)
         {
             if (Callback != null)
@@ -175,10 +221,8 @@ namespace XOR.Behaviour
     }
 
     [Args(typeof(Args.PhysicsCollision))]
-    public abstract class PhysicsCollision : MonoBehaviour
+    public abstract class PhysicsCollision : Behaviour<Action<Args.PhysicsCollision, UnityEngine.Collision>>
     {
-        public virtual Action<Args.PhysicsCollision, UnityEngine.Collision> Callback { get; set; }
-        public IInvoker Invoker { get; set; }
         protected void Invoke(Args.PhysicsCollision method, UnityEngine.Collision data)
         {
             if (Callback != null)
@@ -189,10 +233,8 @@ namespace XOR.Behaviour
     }
 
     [Args(typeof(Args.PhysicsCollision2D))]
-    public abstract class PhysicsCollision2D : MonoBehaviour
+    public abstract class PhysicsCollision2D : Behaviour<Action<Args.PhysicsCollision2D, UnityEngine.Collision2D>>
     {
-        public virtual Action<Args.PhysicsCollision2D, UnityEngine.Collision2D> Callback { get; set; }
-        public IInvoker Invoker { get; set; }
         protected void Invoke(Args.PhysicsCollision2D method, UnityEngine.Collision2D data)
         {
             if (Callback != null)

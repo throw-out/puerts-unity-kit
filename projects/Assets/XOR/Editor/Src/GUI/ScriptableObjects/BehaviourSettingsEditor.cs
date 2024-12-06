@@ -25,35 +25,36 @@ namespace XOR
 
         public override void OnInspectorGUI()
         {
-            var settings = BehaviourSettings.Load(true, true);
-            if (settings == null)
+            var root = BehaviourSettings.Load(true, true);
+            if (root == null)
                 return;
-            var categories = settings.categories;
-            if (categories == null)
+            if (root.categories == null)
             {
-                categories = new List<BehaviourSettings.Category>();
-                settings.categories = categories;
-                EditorUtility.SetDirty(settings);
+                root.categories = new List<BehaviourSettings.Category>();
+                EditorUtility.SetDirty(root);
             }
-
-            if (categories == null || categories.Count == 0)
+            if (root.categories.Count == 0)
             {
                 GUILayout.Label("Empty Configure");
             }
             else
             {
-                RenderCategories(categories);
+                RenderCategories(root);
             }
             GUILayout.Space(20f);
-            RenderMenu(settings);
+            RenderMenu(root);
 
             AssetDatabase.SaveAssets();
         }
 
-        void RenderCategories(List<BehaviourSettings.Category> categories)
+        void RenderCategories(BehaviourSettings root)
         {
-            foreach (var category in categories)
+            foreach (var category in root.categories)
             {
+                if (category.Type == null)
+                {
+                    continue;
+                }
                 GUILayout.Space(Space);
                 if (GUIUtil.RenderHeader(Helper.GetTitle(category.Type)))
                 {
@@ -61,10 +62,10 @@ namespace XOR
                 }
                 if (!GetFoldout(category.Type, true))
                     continue;
-                GUIUtil.RenderGroup(RenderCategory, category);
+                GUIUtil.RenderGroup(RenderCategory, root, category);
             }
         }
-        void RenderCategory(BehaviourSettings.Category category)
+        void RenderCategory(BehaviourSettings root, BehaviourSettings.Category category)
         {
             var groups = category.groups;
             if (groups == null)
@@ -79,17 +80,18 @@ namespace XOR
             RenderCategoryTitle();
             foreach (var group in groups)
             {
-                var remove = RenderGroup(category, group, ref total);
+                var remove = RenderGroup(root, category, group, ref total);
                 if (remove)
                 {
                     removeGroup = group;
                 }
             }
-            RenderCategoryMenu(category, total);
+            RenderCategoryMenu(root, category, total);
 
             if (removeGroup != null)
             {
                 category.groups.Remove(removeGroup);
+                EditorUtility.SetDirty(root);
             }
         }
         void RenderCategoryTitle()
@@ -102,7 +104,7 @@ namespace XOR
             GUILayout.Label(Language.Behaviour.Get("behaviour_arg_class"), Skin.labelCenter, GUILayout.Width(ClassWidth));
             GUILayout.EndHorizontal();
         }
-        void RenderCategoryMenu(BehaviourSettings.Category category, int total)
+        void RenderCategoryMenu(BehaviourSettings root, BehaviourSettings.Category category, int total)
         {
             GUILayout.BeginHorizontal();
             if (GUILayout.Button("+", GUILayout.Width(ButtonWidth)))
@@ -111,13 +113,14 @@ namespace XOR
                 {
                     type = BehaviourSettings.GroupType.Single
                 });
+                EditorUtility.SetDirty(root);
             }
             GUILayout.FlexibleSpace();
             GUILayout.Label($"{total}", Skin.labelCenter, GUILayout.Width(ClassWidth));
 
             GUILayout.EndHorizontal();
         }
-        bool RenderGroup(BehaviourSettings.Category category, BehaviourSettings.Group group, ref int total)
+        bool RenderGroup(BehaviourSettings root, BehaviourSettings.Category category, BehaviourSettings.Group group, ref int total)
         {
             bool ok = false;
 
@@ -128,17 +131,31 @@ namespace XOR
                 ok = true;
             }
             //type
-            group.type = (BehaviourSettings.GroupType)EditorGUILayout.EnumPopup(group.type, GUILayout.Width(TypeWidth));
+            var newType = (BehaviourSettings.GroupType)EditorGUILayout.EnumPopup(group.type, GUILayout.Width(TypeWidth));
+            if (newType != group.type)
+            {
+                group.type = newType;
+                EditorUtility.SetDirty(root);
+            }
             //value
-            Enum value = (Enum)Enum.ToObject(category.Type, group.value);
-            group.value = Convert.ToUInt32(EditorGUILayout.EnumFlagsField(value));
+            var newValue = Convert.ToUInt32(EditorGUILayout.EnumFlagsField((Enum)Enum.ToObject(category.Type, group.value)));
+            if (newValue != group.value)
+            {
+                group.value = newValue;
+                EditorUtility.SetDirty(root);
+            }
             //param
             if (group.type == BehaviourSettings.GroupType.Combine)
             {
-                group.param = Math.Min(
+                var newParam = Math.Min(
                     (uint)EditorGUILayout.IntField((int)group.param, GUILayout.Width(ClassWidth)),
                     (uint)BehaviourSettings.Helper.GetEnumCountByFlags(category.Type, group.value)
                 );
+                if (newParam != group.param)
+                {
+                    group.param = newParam;
+                    EditorUtility.SetDirty(root);
+                }
             }
             else
             {
@@ -153,45 +170,45 @@ namespace XOR
 
             return ok;
         }
-        void RenderMenu(BehaviourSettings settings)
+        void RenderMenu(BehaviourSettings root)
         {
             if (GUILayout.Button(Language.Behaviour.Get("behaviour_arg_add")))
             {
-                if (settings.categories == null)
+                if (root.categories == null)
                 {
-                    settings.categories = new List<BehaviourSettings.Category>();
+                    root.categories = new List<BehaviourSettings.Category>();
                 }
-                Helper.PopupAddCategory(settings);
+                Helper.PopupAddCategory(root);
             }
             GUILayout.Space(10f);
             if (GUILayout.Button(Language.Behaviour.Get("behaviour_arg_preference")))
             {
-                if (settings.categories != null && settings.categories.Any(c => c.groups != null && c.groups.Count > 0))
+                if (root.categories != null && root.categories.Any(c => c.groups != null && c.groups.Count > 0))
                 {
-                    GUIUtil.RenderConfirm("override_current_data", settings.SetPreference);
+                    GUIUtil.RenderConfirm("override_current_data", root.SetPreference);
                 }
                 else
                 {
-                    settings.SetPreference();
-                    EditorUtility.SetDirty(settings);
+                    root.SetPreference();
+                    EditorUtility.SetDirty(root);
                 }
             }
             if (GUILayout.Button(Language.Behaviour.Get("behaviour_arg_default")))
             {
-                if (settings.categories != null && settings.categories.Any(c => c.groups != null && c.groups.Count > 0))
+                if (root.categories != null && root.categories.Any(c => c.groups != null && c.groups.Count > 0))
                 {
-                    GUIUtil.RenderConfirm("override_current_data", settings.SetDefault);
+                    GUIUtil.RenderConfirm("override_current_data", root.SetDefault);
                 }
                 else
                 {
-                    settings.SetDefault();
-                    EditorUtility.SetDirty(settings);
+                    root.SetDefault();
+                    EditorUtility.SetDirty(root);
                 }
             }
             GUILayout.Space(10f);
             if (GUILayout.Button(Language.Behaviour.Get("behaviour_arg_generate")))
             {
-                Helper.GenerateCode(settings);
+                Helper.GenerateCode(root);
             }
             if (GUILayout.Button(Language.Behaviour.Get("behaviour_arg_generate_clear")))
             {
@@ -239,7 +256,7 @@ namespace XOR
         {
             if (settings.categories == null)
                 return;
-            var @namespace = "XOR.Behaviour.Args";
+            var @namespace = nameof(XOR.Behaviour.Args);
             var types = AppDomain.CurrentDomain.GetAssemblies()
                 .SelectMany(assembly => assembly.GetExportedTypes())
                 .Where(t => t.FullName != null && t.FullName.StartsWith(@namespace) && t.IsEnum)
@@ -260,46 +277,57 @@ namespace XOR
 
         public static void GenerateCode(BehaviourSettings settings)
         {
-            Behaviour.Factory.ClearRegister();
-            Behaviour.Default.Register();
-            var enums = settings.GenerateTypes()
-                ?.Where(e => !Behaviour.Factory.HasRegister(e))
-                .ToList();
-            if (enums == null || enums.Count <= 0)
+            var exportEnums = settings.GetExportEnums();
+            if (exportEnums == null || exportEnums.Count <= 0)
             {
                 GUIUtil.RenderGenerateClassEmpty();
                 return;
             }
+            //过滤Default配置类型
+            Behaviour.Factory.Clear();
+            Behaviour.Default.Register();
+            var generteEnums = exportEnums
+                .Where(e => !Behaviour.Factory.Contains(e))
+                .ToList();
+            //弹窗询问生成
             GUIUtil.RenderGenerateClass(() =>
             {
                 ClearGenerateCode();
-                GenerateCode(enums);
-            }, enums.Count);
+                GenerateCode(generteEnums);
+            }, exportEnums.Count, generteEnums.Count);
         }
         public static void ClearGenerateCode()
         {
-            var saveTo = Puerts.Configure.GetCodeOutputDirectory() + "BehaviourGenerateCode.cs";
+            var saveTo = Puerts.Configure.GetCodeOutputDirectory() + "BehaviourInvokerStaticWrap.cs";
             if (File.Exists(saveTo))
             {
                 File.Delete(saveTo);
                 AssetDatabase.Refresh();
             }
         }
-        public static void GenerateCode(IEnumerable<Enum> enums)
+        public static void GenerateCode(IEnumerable<Enum> exportEnums)
         {
+            var saveTo = Puerts.Configure.GetCodeOutputDirectory() + "BehaviourInvokerStaticWrap.cs";
+
             List<Tuple<string, string>> classes = new List<Tuple<string, string>>();
 
             StringBuilder sb = new StringBuilder();
             sb.AppendLine($@"
 namespace XOR.Behaviour
 {{
-    public static class StaticWrap
+    public static class BehaviourInvokerStaticWrap
     {{
 ");
-            foreach (var @enum in enums)
+            foreach (var @enum in exportEnums)
             {
-                var dv = Convert.ToUInt32(@enum);
                 var type = @enum.GetType();
+                var invokerImpl = GetInvokerImplement(type);
+                if (invokerImpl == null)
+                {
+                    Debug.LogError($"No Invoker implementation class found: {type.FullName}");
+                    continue;
+                }
+                var dv = Convert.ToUInt32(@enum);
                 var defines = BehaviourSettings.Helper.GetEnumValues(type);
                 if (defines == null || defines.Length == 0)
                     continue;
@@ -315,34 +343,34 @@ namespace XOR.Behaviour
                     $"{type.Name}Behaviour{dv}";
 
                 classes.Add(new Tuple<string, string>(className, string.Join(" | ", methodNames.Select(mn => $"{type.FullName}.{mn}"))));
-                GetArgs(type, out string declaration, out string @params);
-                if (!string.IsNullOrEmpty(@params))
+                GetArgsDeclaration(type, out string argsDeclaration, out string args);
+                if (!string.IsNullOrEmpty(args))
                 {
-                    @params = ", " + @params;
+                    args = ", " + args;
                 }
                 sb.AppendLine(@$"
-        protected class {className} : XOR.Behaviour.{type.Name}
+        protected class {className} : {invokerImpl.FullName.Replace("+", ".")}
         {{
             {string.Join("", methodNames.Select(methodName => $@"
-            private void {methodName}({declaration})
+            private void {methodName}({argsDeclaration})
             {{
-                Invoke(XOR.Behaviour.Args.{type.Name}.{methodName}{@params});
+                Invoke(XOR.Behaviour.Args.{type.Name}.{methodName}{args});
             }}"))}
         }}");
             }
             sb.AppendLine(@$"
         public static void Register()
         {{
-            {string.Join("", classes.Select(a => @$"
-            XOR.Behaviour.Factory.Register<{a.Item1}>({a.Item2});"))}
+            {string.Join("", classes.Select(c => @$"
+            XOR.Behaviour.Factory.Register<{c.Item1}>({c.Item2});"))}
         }}
     }}
 }}");
 
-            var saveTo = Puerts.Configure.GetCodeOutputDirectory() + "BehaviourGenerateCode.cs";
             File.WriteAllText(saveTo, sb.ToString());
             AssetDatabase.Refresh();
         }
+
         public static string GetTitle(Type type)
         {
             if (type == null)
@@ -352,29 +380,47 @@ namespace XOR.Behaviour
                 return attribute.Name;
             return type.Name;
         }
-        public static string GetArgs(Type type)
+        static bool GetArgsDeclaration(Type type, out string argsDeclaration, out string args)
         {
-            if (type == null)
-                return string.Empty;
-            var attribute = type.GetCustomAttribute<XOR.Behaviour.ArgsAttribute>();
-            if (attribute != null && attribute.Args != null)
-                return string.Join(", ", attribute.Args.Select(t => t.FullName));
-            return string.Empty;
-        }
-        public static bool GetArgs(Type type, out string declaration, out string @params)
-        {
-            declaration = string.Empty;
-            @params = string.Empty;
+            argsDeclaration = string.Empty;
+            args = string.Empty;
             if (type == null)
                 return false;
             var attribute = type.GetCustomAttribute<XOR.Behaviour.ArgsAttribute>();
             if (attribute != null && attribute.Args != null)
             {
-                declaration = string.Join(", ", attribute.Args.Select((t, index) => t.FullName + $" arg{index}"));
-                @params = string.Join(", ", attribute.Args.Select((t, index) => $"arg{index}"));
+                argsDeclaration = string.Join(", ", attribute.Args.Select((t, index) => t.FullName + $" arg{index}"));
+                args = string.Join(", ", attribute.Args.Select((t, index) => $"arg{index}"));
                 return true;
             }
             return false;
+        }
+        static Dictionary<Type, Type> invokerImplements;
+        static Type GetInvokerImplement(Type type)
+        {
+            if (invokerImplements == null)
+            {
+                invokerImplements = new Dictionary<Type, Type>();
+            }
+            if (invokerImplements.TryGetValue(type, out var impl))
+            {
+                return impl;
+            }
+
+            impl = AppDomain.CurrentDomain.GetAssemblies()
+                .SelectMany(assembly => assembly.GetExportedTypes())
+                .Where(t => t.IsClass && !t.IsGenericType && !t.IsSealed)
+                .Where(t => typeof(Behaviour.Behaviour).IsAssignableFrom(t) && t.IsDefined(typeof(XOR.Behaviour.ArgsAttribute)))
+                .OrderBy(t => t.FullName)
+                .FirstOrDefault(t =>
+                {
+                    var attribute = t.GetCustomAttribute<XOR.Behaviour.ArgsAttribute>();
+                    if (attribute == null || attribute.Args == null || attribute.Args.Length != 1)
+                        return false;
+                    return attribute.Args[0] == type;
+                });
+            invokerImplements.Add(type, impl);
+            return impl;
         }
     }
 }
