@@ -283,11 +283,13 @@ abstract class IOnMouse {
 abstract class BehaviourConstructor {
     private __listeners__: Map<string, Function[]>;
     private __listenerProxy__: CS.XOR.TsMessages;
+    private __updateElement__: UpdateManager.Element;
+    private __componentID__: number;
     //--------------------------------------------------------
     //协程
     public StartCoroutine(routine: ((...args: any[]) => Generator) | Generator, ...args: any[]): CS.UnityEngine.Coroutine {
         //传入了js Generator方法, 转为C#迭代器对象
-        var iterator = cs_generator(routine, ...args);
+        var iterator = inner.cs_generator(routine, ...args);
         return this.component.StartCoroutine(iterator);
     }
     public StopCoroutine(routine: CS.UnityEngine.Coroutine) {
@@ -386,10 +388,21 @@ abstract class BehaviourConstructor {
 
     //protected
     protected disponse() {
+        if (this.__componentID__) {
+            GlobalManager.unregister(this.__componentID__)
+        }
+        if (this.__updateElement__) {
+            UpdateManager.unregister(this.__updateElement__)
+        }
     }
-    //绑定Proxy方法
-    protected bindProxies() {
-        let proto = Object.getPrototypeOf(this);
+    //绑定生命周期方法
+    protected bindLifecycle() {
+        const proto = Object.getPrototypeOf(this);
+        const isGlobalInvoker = !!CS.XOR.Behaviour.Invoker.Default;
+        if (isGlobalInvoker) {
+            this.__componentID__ = this.component.GetObjectID()
+            GlobalManager.register(this.__componentID__, this)
+        }
 
         //注册Mono事件
         let methodFlags = 0
@@ -401,124 +414,124 @@ abstract class BehaviourConstructor {
         let updateFlags = CS.XOR.Behaviour.Args.Mono.Update |
             CS.XOR.Behaviour.Args.Mono.FixedUpdate |
             CS.XOR.Behaviour.Args.Mono.LateUpdate
-        for (let method in CS.XOR.Behaviour.Args.Mono) {
-            if (typeof (method) != "string")
+        for (let funcname in CS.XOR.Behaviour.Args.Mono) {
+            let v = CS.XOR.Behaviour.Args.Mono[funcname]
+            if (typeof (v) != "number")
                 continue;
-            let v = <number><unknown>CS.XOR.Behaviour.Args.Mono[method]
-            if ((specificFlags & v) == v) {
-                if (typeof (this[method]) == "function")
+            let hasFunc = typeof (this[funcname]) == "function"
+            if ((specificFlags & v) > 0) {
+                if (hasFunc)
                     continue;
-                specificFlags ^= v;
+                specificFlags ^= v
             }
-            else if ((updateFlags & v) == v) {
-                if (typeof (this[method]) != "function" || !metadata.isDefine(proto, method, utils.standalone))
+            else if ((updateFlags & v) > 0) {
+                if (!hasFunc) {
+                    updateFlags ^= v
                     continue;
-                methodFlags |= v
+                }
+                if (metadata.isDefine(proto, funcname, utils.standalone)) {
+                    updateFlags ^= v
+                    methodFlags |= v
+                }
             }
             else {
-                if (typeof (this[method]) != "function")
+                if (!hasFunc)
                     continue;
                 methodFlags |= v
             }
         }
         if (specificFlags > 0) {  //注册Awake丶Start丶OnDestroy事件
-            this.component.CreateMono(specificFlags, (method) => {
-                try {
-                    this[CS.XOR.Behaviour.Args.Mono[method]]();
-                } catch (e) {
-                    console.error(e.message + "\n" + e.stack);
+            this.component.CreateMono(specificFlags, isGlobalInvoker ? undefined : (method) => {
+                let funcname = CS.XOR.Behaviour.Args.Mono[method]
+                switch (method) {
+                    case CS.XOR.Behaviour.Args.Mono.Awake:
+                    case CS.XOR.Behaviour.Args.Mono.Start:
+                    case CS.XOR.Behaviour.Args.Mono.OnDestroy:
+                        inner.invoke(this, funcname, true)
+                        break;
+                    default:
+                        inner.invoke(this, funcname, false)
+                        break;
                 }
             })
         }
         if (methodFlags > 0) {  //注册剩余Mono事件
-            this.component.CreateMono(methodFlags, (method) => this[CS.XOR.Behaviour.Args.Mono[method]]())
+            this.component.CreateMono(methodFlags, isGlobalInvoker ? undefined : (method) => this[CS.XOR.Behaviour.Args.Mono[method]]())
         }
+        if (updateFlags > 0) {
+            let element = new UpdateManager.Element(updateFlags, this);
+            this.__updateElement__ = element;
+            UpdateManager.register(element)
+            if (isGlobalInvoker) {
+                element.enabled = !this.component.IsDestroyed && this.component.IsEnable;
+            }
+            else {
+                //生命周期管理
+                this.component.CreateMono(CS.XOR.Behaviour.Args.Mono.OnEnable | CS.XOR.Behaviour.Args.Mono.OnDisable | CS.XOR.Behaviour.Args.Mono.OnDestroy, (method) => {
+                    switch (method) {
+                        case CS.XOR.Behaviour.Args.Mono.OnEnable:
+                            element.enabled = true;
+                            break;
+                        case CS.XOR.Behaviour.Args.Mono.OnDisable:
+                            element.enabled = false;
+                            break;
+                        case CS.XOR.Behaviour.Args.Mono.OnDestroy:
+                            element.enabled = false;
+                            UpdateManager.unregister(element)
+                            break;
+                    }
+                })
+            }
+        }
+
         //注册Gizmos事件
         if (isEditor) {
-            methodFlags = this.getFunctionFlags(CS.XOR.Behaviour.Args.Gizmos)
+            methodFlags = inner.getFunctionFlags(this, CS.XOR.Behaviour.Args.Gizmos)
             if (methodFlags > 0) {
-                this.component.CreateGizmos(methodFlags, (method) => this[CS.XOR.Behaviour.Args.Gizmos[method]]())
+                this.component.CreateGizmos(methodFlags, isGlobalInvoker ? undefined : (method) => this[CS.XOR.Behaviour.Args.Gizmos[method]]())
             }
         }
         //注册Mouse事件
-        methodFlags = this.getFunctionFlags(CS.XOR.Behaviour.Args.Mouse)
+        methodFlags = inner.getFunctionFlags(this, CS.XOR.Behaviour.Args.Mouse)
         if (methodFlags > 0) {
-            this.component.CreateMouse(methodFlags, (method) => this[CS.XOR.Behaviour.Args.Mouse[method]]())
+            this.component.CreateMouse(methodFlags, isGlobalInvoker ? undefined : (method) => this[CS.XOR.Behaviour.Args.Mouse[method]]())
         }
         //注册MonoBoolean事件
-        methodFlags = this.getFunctionFlags(CS.XOR.Behaviour.Args.MonoBoolean)
+        methodFlags = inner.getFunctionFlags(this, CS.XOR.Behaviour.Args.MonoBoolean)
         if (methodFlags > 0) {
-            this.component.CreateMonoBoolean(methodFlags, (method, data) => this[CS.XOR.Behaviour.Args.MonoBoolean[method]](data))
+            this.component.CreateMonoBoolean(methodFlags, isGlobalInvoker ? undefined : (method, data) => this[CS.XOR.Behaviour.Args.MonoBoolean[method]](data))
         }
         //注册EventSystems事件
-        methodFlags = this.getFunctionFlags(CS.XOR.Behaviour.Args.EventSystems)
+        methodFlags = inner.getFunctionFlags(this, CS.XOR.Behaviour.Args.EventSystems)
         if (methodFlags > 0) {
-            this.component.CreateEventSystems(methodFlags, (method, data) => this[CS.XOR.Behaviour.Args.EventSystems[method]](data))
+            this.component.CreateEventSystems(methodFlags, isGlobalInvoker ? undefined : (method, data) => this[CS.XOR.Behaviour.Args.EventSystems[method]](data))
         }
         //注册Physics事件
-        methodFlags = this.getFunctionFlags(CS.XOR.Behaviour.Args.PhysicsCollider)
+        methodFlags = inner.getFunctionFlags(this, CS.XOR.Behaviour.Args.PhysicsCollider)
         if (methodFlags > 0) {
-            this.component.CreatePhysicsCollider(methodFlags, (method, data) => this[CS.XOR.Behaviour.Args.PhysicsCollider[method]](data))
+            this.component.CreatePhysicsCollider(methodFlags, isGlobalInvoker ? undefined : (method, data) => this[CS.XOR.Behaviour.Args.PhysicsCollider[method]](data))
         }
-        methodFlags = this.getFunctionFlags(CS.XOR.Behaviour.Args.PhysicsCollider2D)
+        methodFlags = inner.getFunctionFlags(this, CS.XOR.Behaviour.Args.PhysicsCollider2D)
         if (methodFlags > 0) {
-            this.component.CreatePhysicsCollider2D(methodFlags, (method, data) => this[CS.XOR.Behaviour.Args.PhysicsCollider2D[method]](data))
+            this.component.CreatePhysicsCollider2D(methodFlags, isGlobalInvoker ? undefined : (method, data) => this[CS.XOR.Behaviour.Args.PhysicsCollider2D[method]](data))
         }
-        methodFlags = this.getFunctionFlags(CS.XOR.Behaviour.Args.PhysicsCollision)
+        methodFlags = inner.getFunctionFlags(this, CS.XOR.Behaviour.Args.PhysicsCollision)
         if (methodFlags > 0) {
-            this.component.CreatePhysicsCollision(methodFlags, (method, data) => this[CS.XOR.Behaviour.Args.PhysicsCollision[method]](data))
+            this.component.CreatePhysicsCollision(methodFlags, isGlobalInvoker ? undefined : (method, data) => this[CS.XOR.Behaviour.Args.PhysicsCollision[method]](data))
         }
-        methodFlags = this.getFunctionFlags(CS.XOR.Behaviour.Args.PhysicsCollision2D)
+        methodFlags = inner.getFunctionFlags(this, CS.XOR.Behaviour.Args.PhysicsCollision2D)
         if (methodFlags > 0) {
-            this.component.CreatePhysicsCollision2D(methodFlags, (method, data) => this[CS.XOR.Behaviour.Args.PhysicsCollision2D[method]](data))
+            this.component.CreatePhysicsCollision2D(methodFlags, isGlobalInvoker ? undefined : (method, data) => this[CS.XOR.Behaviour.Args.PhysicsCollision2D[method]](data))
         }
-    }
-    protected bindUpdateProxies() {
-
-        let proto = Object.getPrototypeOf(this);
-        //Update方法
-        const proxies: [func: Function, proxy: BatchProxy, frameskip: number][] = (<[string, BatchProxy][]>[
-            ["Update", BatchProxy.Update],
-            ["LateUpdate", BatchProxy.LateUpdate],
-            ["FixedUpdate", BatchProxy.FixedUpdate],
-        ]).map(([funcname, proxy]) => {
-            let waitAsyncComplete = metadata.getDefineData(proto, funcname, utils.throttle, false);
-            let func: Function = bind(this, funcname, waitAsyncComplete);
-            if (!func || metadata.isDefine(proto, funcname, utils.standalone)) {
-                return null;
-            }
-            let frameskip = metadata.getDefineData(proto, funcname, utils.frameskip, 0);
-            return <[Function, BatchProxy, number]>[func, proxy, frameskip];
-        }).filter(o => !!o);
-
-        if (proxies.length <= 0)
-            return;
-        let enabled = false;
-        //生命周期管理
-        this.component.CreateMono(CS.XOR.Behaviour.Args.Mono.OnEnable | CS.XOR.Behaviour.Args.Mono.OnDisable | CS.XOR.Behaviour.Args.Mono.OnDestroy, (method) => {
-            switch (method) {
-                case CS.XOR.Behaviour.Args.Mono.OnEnable:
-                    if (enabled) return;
-                    enabled = true;
-                    proxies.forEach(([func, batch, frameskip]) => batch.addListener(func, frameskip));
-                    break;
-                case CS.XOR.Behaviour.Args.Mono.OnDisable:
-                case CS.XOR.Behaviour.Args.Mono.OnDestroy:
-                    if (!enabled) return;
-                    enabled = false;
-                    proxies.forEach(([func, batch, frameskip]) => batch.removeListener(func, frameskip));
-                    break;
-            }
-        })
     }
     protected bindListeners() {
-        let proto = Object.getPrototypeOf(this);
+        const proto = Object.getPrototypeOf(this);
         for (let funcname of metadata.getKeys(proto)) {
             let eventName = metadata.getDefineData(proto, funcname, utils.listener);
             if (!eventName)
                 continue;
             let waitAsyncComplete = metadata.getDefineData(proto, funcname, utils.throttle, false);
-            let func: CS.System.Action = bind(this, funcname, waitAsyncComplete);
+            let func: CS.System.Action = inner.bind(this, funcname, waitAsyncComplete);
             if (!func)
                 return undefined;
             this.addListener(eventName, func);
@@ -591,17 +604,6 @@ abstract class BehaviourConstructor {
             console.warn(`Unresolved Module: ${className}\n${stack}`);
         }
         this.component["Module"] = module;
-    }
-    private getFunctionFlags(types: object) {
-        let results = 0
-        for (let method in types) {
-            if (typeof (method) != "string")
-                continue;
-            if (typeof (this[method]) != "function")
-                continue;
-            results |= types[method]
-        }
-        return results;
     }
 
     //Getter 丶 Setter
@@ -690,7 +692,7 @@ class TsBehaviourConstructor extends BehaviourConstructor {
         this.__gameObject__ = gameObject;
         this.__transform__ = gameObject.transform;
         //call before callback
-        if (before) call(this, before);
+        if (before) inner.invoke(this, before, true);
 
         //bind properties
         if (accessor === undefined || accessor === true) {
@@ -706,16 +708,19 @@ class TsBehaviourConstructor extends BehaviourConstructor {
         //call constructor
         let onctor: Function = this["onConstructor"];
         if (onctor && typeof (onctor) === "function") {
-            call(this, onctor, args);
+            if (args && args.length > 0) {
+                inner.invoke(this, onctor, true, ...args);
+            } else {
+                inner.invoke(this, onctor, true);
+            }
         }
         //bind methods
-        this.bindProxies();
-        this.bindUpdateProxies();
+        this.bindLifecycle();
         this.bindListeners();
         this.bindModuleInEditor();
 
         //call after callback
-        if (after) call(this, after);
+        if (after) inner.invoke(this, after, true);
     }
 
     protected disponse() {
@@ -723,151 +728,345 @@ class TsBehaviourConstructor extends BehaviourConstructor {
         this.__transform__ = undefined;
         this.__component__ = undefined;
     }
+
+    /**注册全局生命周期回调, 每个TsBehaviour实例不再单独创建多个生命周期回调绑定 */
+    public static registerGlobalInvoker() {
+        GlobalManager.init();
+    }
 }
 
-/**Update批量调用 */
-class BatchProxy {
-
-    public static get Update() {
-        return this._getter("__Update", CS.XOR.Behaviour.Default.UpdateBehaviour, this.getDeltaTime)
-    };
-    public static get FixedUpdate() {
-        return this._getter("__FixedUpdate", CS.XOR.Behaviour.Default.FixedUpdateBehaviour, this.getFixedDeltaTime)
-    };
-    public static get LateUpdate() {
-        return this._getter("__LateUpdate", CS.XOR.Behaviour.Default.LateUpdateBehaviour, this.getDeltaTime)
-    };
-    private static getDeltaTime() { return Time.deltaTime; }
-    private static getFixedDeltaTime() { return Time.fixedDeltaTime; }
-
-    private static _getter(key: string, type: { new(...args: any[]): CS.XOR.Behaviour.Mono }, timeGetter?: () => number) {
-        let proxy: BatchProxy = this[key];
-        if (!proxy) {
-            let gameObject: CS.UnityEngine.GameObject = this["_gameObject_"];
-            if (!gameObject || gameObject.Equals(null)) {
-                gameObject = new CS.UnityEngine.GameObject("SingletonUpdater");
-                gameObject.transform.SetParent((CS.XOR.Application.GetInstance() as CS.XOR.Application).transform);
-                this["_gameObject_"] = gameObject;
+/**全局对象管理 */
+class GlobalManager {
+    private static readonly objects = new Map<number, BehaviourConstructor>();
+    public static register(objectID: number, obj: BehaviourConstructor) {
+        this.objects.set(objectID, obj);
+    }
+    public static unregister(objectID: number) {
+        this.objects.delete(objectID);
+    }
+    public static init() {
+        let invoker = new CS.XOR.Behaviour.Invoker();
+        invoker.mono = (objectID, method) => {
+            switch (method) {
+                case CS.XOR.Behaviour.Args.Mono.Awake:
+                case CS.XOR.Behaviour.Args.Mono.Start:
+                    this.invoke(objectID, CS.XOR.Behaviour.Args.Mono[method], true)
+                    break;
+                case CS.XOR.Behaviour.Args.Mono.OnDestroy:
+                    this.unregister(objectID)
+                    this.setUpdateElement(objectID, false)
+                    this.invoke(objectID, CS.XOR.Behaviour.Args.Mono[method], true)
+                    break;
+                case CS.XOR.Behaviour.Args.Mono.OnEnable:
+                    this.setUpdateElement(objectID, true)
+                    this.invoke(objectID, CS.XOR.Behaviour.Args.Mono[method], false)
+                    break;
+                case CS.XOR.Behaviour.Args.Mono.OnDisable:
+                    this.setUpdateElement(objectID, false)
+                    this.invoke(objectID, CS.XOR.Behaviour.Args.Mono[method], false)
+                    break;
+                default:
+                    this.invoke(objectID, CS.XOR.Behaviour.Args.Mono[method], false)
+                    break;
             }
-            proxy = new BatchProxy(gameObject.AddComponent(puerts.$typeof(type)) as any, timeGetter);
-            this[key] = proxy;
         }
-        return proxy;
+        invoker.monoBoolean = (objectID, method, data) => this.invoke(objectID, CS.XOR.Behaviour.Args.MonoBoolean[method], false, data)
+        invoker.gizmos = (objectID, method) => this.invoke(objectID, CS.XOR.Behaviour.Args.Gizmos[method], false)
+        invoker.mouse = (objectID, method) => this.invoke(objectID, CS.XOR.Behaviour.Args.Mouse[method], false)
+        invoker.eventSystems = (objectID, method, data) => this.invoke(objectID, CS.XOR.Behaviour.Args.EventSystems[method], false, data)
+        invoker.collision = (objectID, method, data) => this.invoke(objectID, CS.XOR.Behaviour.Args.PhysicsCollider[method], false, data)
+        invoker.collision2D = (objectID, method, data) => this.invoke(objectID, CS.XOR.Behaviour.Args.PhysicsCollider2D[method], false, data)
+        invoker.collision = (objectID, method, data) => this.invoke(objectID, CS.XOR.Behaviour.Args.PhysicsCollision[method], false, data)
+        invoker.collision2D = (objectID, method, data) => this.invoke(objectID, CS.XOR.Behaviour.Args.PhysicsCollision2D[method], false, data)
+        invoker.destroy = (objectID) => this.unregister(objectID)
+        CS.XOR.Behaviour.Invoker.Default = invoker
     }
 
-    private readonly invoker: CS.XOR.Behaviour.Mono;
-    private readonly efHanlders: Function[] = [];
-    private readonly sfHandlers: Map<number, { tick: number, dt: number, readonly methods: Function[], readonly frameskip: number }> = new Map();
+    private static invoke(objectID: number, funcname: string, catchExecption: boolean, ...args: any) {
+        let obj = this.objects.get(objectID);
+        if (!obj)
+            return;
+        inner.invoke(obj, funcname, catchExecption, ...args)
+    }
+    private static setUpdateElement(objectID: number, enabled: boolean) {
+        let obj = this.objects.get(objectID);
+        if (!obj || !obj["__updateElement__"])
+            return;
+        obj["__updateElement__"].enabled = enabled;
+    }
+}
+/**Update批量调用管理 */
+class UpdateManager {
+    private static Elements = class {
+        private readonly every: UpdateManager.Element[] = [];
+        private readonly frame: Map<number, {
+            tick: number,
+            dt: number,
+            elements: UpdateManager.Element[]
+        }> = new Map();
 
-    private constructor(invoker: CS.XOR.Behaviour.Mono, timeGetter: () => number) {
-        this.invoker = invoker;
-        this.invoker.Callback = (...args: any[]) => {
-            let dt = timeGetter ? timeGetter() : 0;
+        /**调用类型:
+         * 0: Update
+         * 1: LateUpdate
+         * 2: FixedUpdate
+         */
+        private readonly lifecycle: CS.XOR.Behaviour.Args.Mono;
+
+        constructor(lifecycle: CS.XOR.Behaviour.Args.Mono) {
+            this.lifecycle = lifecycle;
+        }
+
+        public add(element: UpdateManager.Element, skip: number) {
+            if (skip <= 0) {
+                this.every.push(element);
+                return;
+            }
+            let state = this.frame.get(skip)
+            if (!state) {
+                state = { tick: 0, dt: 0, elements: [] }
+                this.frame.set(skip, state)
+            }
+            state.elements.push(element);
+        }
+        public remove(element: UpdateManager.Element, skip: number) {
+            const units = skip > 0 ? this.frame.get(skip)?.elements : this.every;
+            if (!units || units.length <= 0)
+                return;
+            const index = units.indexOf(element);
+            if (index >= 0) {
+                units.splice(index, 1)
+            }
+        }
+        public tick(dt: number) {
             //每帧调用
-            if (this.efHanlders.length > 0) {
-                let _args = [...args, dt];
-                for (let method of this.efHanlders) {
-                    method.apply(undefined, _args);
+            if (this.every.length > 0) {
+                for (let element of this.every) {
+                    element.invoke(this.lifecycle, dt)
                 }
             }
             //跨帧调用
-            for (const state of this.sfHandlers.values()) {
+            for (const [t, state] of this.frame) {
                 state.dt += dt;
-                if ((--state.tick) > 0) continue;
-                if (state.methods.length > 0) {
-                    let _args = [...args, state.dt];
-                    for (let method of state.methods) {
-                        method.apply(undefined, _args);
+                if ((--state.tick) > 0)
+                    continue;
+                if (state.elements.length > 0) {
+                    for (let element of state.elements) {
+                        element.invoke(this.lifecycle, state.dt)
                     }
                 }
-                state.tick = state.frameskip;
+                state.tick = t;
                 state.dt = 0;
             }
-        };
-    }
-    public addListener(method: Function, frameskip: number = 0) {
-        if (frameskip > 1) {
-            let state = this.sfHandlers.get(frameskip);
-            if (!state) {
-                state = { tick: frameskip, dt: 0, methods: [], frameskip };
-                this.sfHandlers.set(frameskip, state);
-            }
-            state.methods.push(method);
-        } else {
-            this.efHanlders.push(method);
         }
     }
-    public removeListener(method: Function, frameskip: number = 0) {
-        const methods = frameskip > 1 ? this.sfHandlers.get(frameskip)?.methods : this.efHanlders;
-        const idx = methods ? methods.indexOf(method) : -1;
-        if (idx >= 0) {
-            this.efHanlders.splice(idx, 1);
+
+    private static _init: boolean;
+
+    private static readonly update = new UpdateManager.Elements(CS.XOR.Behaviour.Args.Mono.Update);
+    private static readonly lateUpdate = new UpdateManager.Elements(CS.XOR.Behaviour.Args.Mono.LateUpdate);
+    private static readonly fixedUpdate = new UpdateManager.Elements(CS.XOR.Behaviour.Args.Mono.FixedUpdate);
+    public static register(element: UpdateManager.Element) {
+        if (element.isUpdate) {
+            this.update.add(element, element.updateSkipFrame);
+        }
+        if (element.isLateUpdate) {
+            this.lateUpdate.add(element, element.lateUpdateSkipFrame);
+        }
+        if (element.isFixedUpdate) {
+            this.fixedUpdate.add(element, element.fixedUpdateSkipFrame);
+        }
+        if (!this._init) {
+            this._init = true;
+            this.init();
+        }
+    }
+    public static unregister(element: UpdateManager.Element) {
+        if (element.isUpdate) {
+            this.update.remove(element, element.updateSkipFrame);
+        }
+        if (element.isLateUpdate) {
+            this.lateUpdate.remove(element, element.lateUpdateSkipFrame);
+        }
+        if (element.isFixedUpdate) {
+            this.fixedUpdate.remove(element, element.fixedUpdateSkipFrame);
+        }
+    }
+    public static init() {
+        let go = new CS.UnityEngine.GameObject("[UpdateBatchManager]");
+        go.transform.SetParent((CS.XOR.Application.GetInstance() as CS.XOR.Application).transform);
+        (go.AddComponent(puerts.$typeof(CS.XOR.Behaviour.Default.UpdateBehaviour)) as CS.XOR.Behaviour.Default.UpdateBehaviour).Callback = () => {
+            this.update.tick(Time.deltaTime);
+        };
+        (go.AddComponent(puerts.$typeof(CS.XOR.Behaviour.Default.LateUpdateBehaviour)) as CS.XOR.Behaviour.Default.LateUpdateBehaviour).Callback = () => {
+            this.lateUpdate.tick(Time.deltaTime);
+        };
+        (go.AddComponent(puerts.$typeof(CS.XOR.Behaviour.Default.FixedUpdateBehaviour)) as CS.XOR.Behaviour.Default.FixedUpdateBehaviour).Callback = () => {
+            this.fixedUpdate.tick(Time.fixedDeltaTime);
+        };
+    }
+}
+namespace UpdateManager {
+    export class Element {
+        private target: BehaviourConstructor;
+        /**是否启用当前组件 */
+        public enabled: boolean;
+
+        public readonly isUpdate: boolean;
+        public readonly isLateUpdate: boolean;
+        public readonly isFixedUpdate: boolean;
+
+        public readonly updateSkipFrame: number;
+        public readonly lateUpdateSkipFrame: number;
+        public readonly fixedUpdateSkipFrame: number;
+
+        constructor(methods: CS.XOR.Behaviour.Args.Mono, target: BehaviourConstructor) {
+            this.target = target;
+            this.enabled = false;
+            this.isUpdate = (methods & CS.XOR.Behaviour.Args.Mono.Update) > 0;
+            this.isLateUpdate = (methods & CS.XOR.Behaviour.Args.Mono.LateUpdate) > 0;
+            this.isFixedUpdate = (methods & CS.XOR.Behaviour.Args.Mono.FixedUpdate) > 0;
+
+            const proto = Object.getPrototypeOf(this);
+            this.updateSkipFrame = this.isUpdate ? metadata.getDefineData(
+                proto,
+                CS.XOR.Behaviour.Args.Mono[CS.XOR.Behaviour.Args.Mono.Update],
+                utils.frameskip,
+                0
+            ) : 0
+            this.lateUpdateSkipFrame = this.isLateUpdate ? metadata.getDefineData(
+                proto,
+                CS.XOR.Behaviour.Args.Mono[CS.XOR.Behaviour.Args.Mono.LateUpdate],
+                utils.frameskip,
+                0
+            ) : 0
+            this.fixedUpdateSkipFrame = this.isFixedUpdate ? metadata.getDefineData(
+                proto,
+                CS.XOR.Behaviour.Args.Mono[CS.XOR.Behaviour.Args.Mono.FixedUpdate],
+                utils.frameskip,
+                0
+            ) : 0
+        }
+        public invoke(lifecycle: CS.XOR.Behaviour.Args.Mono, dt?: number) {
+            if (!this.enabled)
+                return;
+            inner.invoke(
+                this.target,
+                CS.XOR.Behaviour.Args.Mono[lifecycle],
+                false,
+                dt
+            )
         }
     }
 }
 
-/**
- * 将对象与方法绑定
- */
-function bind(thisArg: object, funcname: string | Function, waitAsyncComplete?: boolean): any {
-    const func = typeof (funcname) === "string" ? (thisArg[funcname] as Function) : funcname;
-    if (func !== undefined && typeof (func) === "function") {
-        //return (...args: any[]) => func.call(thisArg, ...srcArgs, ...args);
-        if (waitAsyncComplete) {
-            let executing = false;
+namespace inner {
+
+    /**将对象与方法绑定
+     * @param thisArg 
+     * @param funcname 
+     * @param waitAsyncComplete 
+     * @returns 
+     */
+    export function bind(thisArg: object, funcname: string | Function, waitAsyncComplete?: boolean): any {
+        const func = typeof (funcname) === "string" ? (thisArg[funcname] as Function) : funcname;
+        if (func !== undefined && typeof (func) === "function") {
+            //return (...args: any[]) => func.call(thisArg, ...srcArgs, ...args);
+            if (waitAsyncComplete) {
+                let executing = false;
+                return function (...args: any[]) {
+                    if (executing)
+                        return;
+                    let result = func.call(thisArg, ...args);
+                    if (result instanceof Promise) {
+                        executing = true;       //wait async function finish
+                        result.finally(() => executing = false);
+                    }
+                    return result;
+                };
+            }
             return function (...args: any[]) {
-                if (executing)
-                    return;
-                let result = func.call(thisArg, ...args);
-                if (result instanceof Promise) {
-                    executing = true;       //wait async function finish
-                    result.finally(() => executing = false);
-                }
-                return result;
+                return func.call(thisArg, ...args);
             };
         }
-        return function (...args: any[]) {
-            return func.call(thisArg, ...args);
-        };
+        return undefined;
     }
-    return undefined;
-}
-/**调用方法并catch error
- * @param func 
- * @param thisArg 
- * @param args 
- */
-function call(thisArg: any, func: Function, args?: any[]) {
-    try {
-        func.apply(thisArg, args);
-    }
-    catch (e) {
-        console.error(e.message + "\n" + e.stack);
-    }
-}
-/**创建C#迭代器 */
-function cs_generator(func: ((...args: any[]) => Generator) | Generator, ...args: any[]): CS.System.Collections.IEnumerator {
-    let generator: Generator = undefined;
-    if (typeof (func) === "function") {
-        generator = func(...args);
-        if (generator === null || generator === undefined || generator === void 0)
-            throw new Error("Function '" + func?.name + "' no return Generator");
-    }
-    else {
-        generator = func;
-    }
+    /**调用方法
+     * @param thisArg 
+     * @param funcname 
+     * @param catchException 是否捕获异常
+     * @param args 
+     */
+    export function invoke(thisArg: any, funcname: string | Function, catchException: boolean, ...args: any[]) {
+        const func = typeof (funcname) === "string" ? (thisArg[funcname] as Function) : funcname;
+        if (!catchException) {
+            return func.apply(thisArg, args);
+        }
 
-    return CS.XOR.IEnumeratorUtil.Generator(function () {
-        let tick: CS.XOR.IEnumeratorUtil.Tick;
+        //带try catch捕获异常的调用
         try {
-            let next = generator.next();
-            tick = new CS.XOR.IEnumeratorUtil.Tick(next.value, next.done);
-        } catch (e) {
-            tick = new CS.XOR.IEnumeratorUtil.Tick(null, true);
+            return func.apply(thisArg, args);
+        }
+        catch (e) {
             console.error(e.message + "\n" + e.stack);
         }
-        return tick;
-    });
+        return undefined;
+    }
+    /**创建C#迭代器
+     * @param func 
+     * @param args 
+     * @returns 
+     */
+    export function cs_generator(func: ((...args: any[]) => Generator) | Generator, ...args: any[]): CS.System.Collections.IEnumerator {
+        let generator: Generator = undefined;
+        if (typeof (func) === "function") {
+            generator = func(...args);
+            if (generator === null || generator === undefined || generator === void 0)
+                throw new Error("Function '" + func?.name + "' no return Generator");
+        }
+        else {
+            generator = func;
+        }
+
+        return CS.XOR.IEnumeratorUtil.Generator(function () {
+            let tick: CS.XOR.IEnumeratorUtil.Tick;
+            try {
+                let next = generator.next();
+                tick = new CS.XOR.IEnumeratorUtil.Tick(next.value, next.done);
+            } catch (e) {
+                tick = new CS.XOR.IEnumeratorUtil.Tick(null, true);
+                console.error(e.message + "\n" + e.stack);
+            }
+            return tick;
+        });
+    }
+
+    /**导出方法枚举映射值
+     * @param obj 
+     * @param types 
+     * @returns 
+     */
+    export function getFunctionFlags(obj: object, types:
+        typeof CS.XOR.Behaviour.Args.Mono |
+        typeof CS.XOR.Behaviour.Args.MonoBoolean |
+        typeof CS.XOR.Behaviour.Args.Gizmos |
+        typeof CS.XOR.Behaviour.Args.Mouse |
+        typeof CS.XOR.Behaviour.Args.EventSystems |
+        typeof CS.XOR.Behaviour.Args.PhysicsCollider |
+        typeof CS.XOR.Behaviour.Args.PhysicsCollider2D |
+        typeof CS.XOR.Behaviour.Args.PhysicsCollision |
+        typeof CS.XOR.Behaviour.Args.PhysicsCollision2D
+    ) {
+        let results = 0
+        for (let funcname in types) {
+            let v = types[funcname]
+            if (typeof (v) != "number")
+                continue;
+            if (typeof (obj[funcname]) != "function")
+                continue;
+            results |= v
+        }
+        return results;
+    }
 }
 
 namespace metadata {

@@ -1,8 +1,4 @@
-﻿
-using System;
-using System.Collections.Generic;
-
-namespace XOR.Behaviour.Args
+﻿namespace XOR.Behaviour.Args
 {
     [Title("Mono")]
     public enum Mono : uint
@@ -97,4 +93,21 @@ namespace XOR.Behaviour.Args
         OnCollisionStay2D = 1 << 1,
         OnCollisionExit2D = 1 << 2,
     }
+
+    public static class Extensions
+    {
+        static Mono[] monoBase;
+        public static Mono[] GetMonoBase()
+        {
+            if (monoBase == null) monoBase = new Mono[] {
+                Mono.Awake,
+                Mono.Start,
+                Mono.OnDestroy,
+                Mono.OnEnable,
+                Mono.OnDisable,
+            };
+            return monoBase;
+        }
+    }
+
 }

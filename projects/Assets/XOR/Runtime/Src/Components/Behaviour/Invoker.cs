@@ -16,6 +16,8 @@ namespace XOR.Behaviour
         void Invoke(int instanceID, Args.PhysicsCollider2D method, UnityEngine.Collider2D data);
         void Invoke(int instanceID, Args.PhysicsCollision method, UnityEngine.Collision data);
         void Invoke(int instanceID, Args.PhysicsCollision2D method, UnityEngine.Collision2D data);
+
+        void Destroy(int instanceID);
     }
     public class Invoker : IInvoker
     {
@@ -28,6 +30,7 @@ namespace XOR.Behaviour
         public Action<int, Args.PhysicsCollider2D, Collider2D> collider2D;
         public Action<int, Args.PhysicsCollision, Collision> collision;
         public Action<int, Args.PhysicsCollision2D, Collision2D> collision2D;
+        public Action<int> destroy;
 
         public void Invoke(int instanceID, Args.Mono method)
         {
@@ -74,22 +77,20 @@ namespace XOR.Behaviour
             collision2D?.Invoke(instanceID, method, data);
         }
 
-
-
-        private static Invoker @default;
-        public static Invoker Default
+        public void Destroy(int instanceID)
         {
-            get => @default;
-            set
-            {
-                @default = value;
-                Register();
-            }
+            destroy?.Invoke(instanceID);
         }
-        private static void Register()
+
+        public static Invoker Default { get; set; }
+
+        static Invoker()
+        {
+            Register();
+        }
+        public static void Register()
         {
             XOR.Behaviour.Factory.Clear();
-
             XOR.Behaviour.Default.Register();
             //注册自定义Invoker
             var generteType = Type.GetType("XOR.Behaviour.BehaviourInvokerStaticWrap", false);
@@ -133,7 +134,8 @@ namespace XOR.Behaviour
         where TDelegate : Delegate
     {
         public virtual TDelegate Callback { get; set; }
-        public virtual IInvoker Invoker { get; set; }
+        public virtual IInvoker Invoker { get; internal set; }
+        public int ObjectID { get; internal set; }
     }
 
     [Args(typeof(Args.Mono))]
@@ -144,7 +146,7 @@ namespace XOR.Behaviour
             if (Callback != null)
                 Callback(method);
             else if (Invoker != null)
-                Invoker.Invoke(gameObject.GetInstanceID(), method);
+                Invoker.Invoke(ObjectID, method);
         }
     }
 
@@ -156,7 +158,7 @@ namespace XOR.Behaviour
             if (Callback != null)
                 Callback(method, data);
             else if (Invoker != null)
-                Invoker.Invoke(gameObject.GetInstanceID(), method, data);
+                Invoker.Invoke(ObjectID, method, data);
         }
     }
 
@@ -168,7 +170,7 @@ namespace XOR.Behaviour
             if (Callback != null)
                 Callback(method);
             else if (Invoker != null)
-                Invoker.Invoke(gameObject.GetInstanceID(), method);
+                Invoker.Invoke(ObjectID, method);
         }
     }
 
@@ -180,7 +182,7 @@ namespace XOR.Behaviour
             if (Callback != null)
                 Callback(method);
             else if (Invoker != null)
-                Invoker.Invoke(gameObject.GetInstanceID(), method);
+                Invoker.Invoke(ObjectID, method);
         }
     }
 
@@ -192,7 +194,7 @@ namespace XOR.Behaviour
             if (Callback != null)
                 Callback(method, data);
             else if (Invoker != null)
-                Invoker.Invoke(gameObject.GetInstanceID(), method, data);
+                Invoker.Invoke(ObjectID, method, data);
         }
     }
 
@@ -204,7 +206,7 @@ namespace XOR.Behaviour
             if (Callback != null)
                 Callback(method, data);
             else if (Invoker != null)
-                Invoker.Invoke(gameObject.GetInstanceID(), method, data);
+                Invoker.Invoke(ObjectID, method, data);
         }
     }
 
@@ -216,7 +218,7 @@ namespace XOR.Behaviour
             if (Callback != null)
                 Callback(method, data);
             else if (Invoker != null)
-                Invoker.Invoke(gameObject.GetInstanceID(), method, data);
+                Invoker.Invoke(ObjectID, method, data);
         }
     }
 
@@ -228,7 +230,7 @@ namespace XOR.Behaviour
             if (Callback != null)
                 Callback(method, data);
             else if (Invoker != null)
-                Invoker.Invoke(gameObject.GetInstanceID(), method, data);
+                Invoker.Invoke(ObjectID, method, data);
         }
     }
 
@@ -240,7 +242,7 @@ namespace XOR.Behaviour
             if (Callback != null)
                 Callback(method, data);
             else if (Invoker != null)
-                Invoker.Invoke(gameObject.GetInstanceID(), method, data);
+                Invoker.Invoke(ObjectID, method, data);
         }
     }
 }

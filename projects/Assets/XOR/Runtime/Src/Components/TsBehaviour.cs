@@ -23,13 +23,11 @@ namespace XOR
         #endregion
 
         //Unity 接口组件
-        private int instanceID;
+        private int objectID;
+        public bool isObtainedObejctID;
         private List<Behaviour.Behaviour> behaviours;
-        private Action<Behaviour.Args.Mono> awakeCallback;       //Awake回调
-        private Action<Behaviour.Args.Mono> startCallback;       //Start回调
-        private Action<Behaviour.Args.Mono> destroyCallback;     //OnDestroy回调
-        private Action<Behaviour.Args.Mono> enableCallback;      //OnEnable回调
-        private Action<Behaviour.Args.Mono> disableCallback;     //OnDisable回调
+        private Behaviour.Args.Mono @base;
+        private Action<Behaviour.Args.Mono> lifecycle;
         public bool IsActivated { get; private set; } = false;      //是否已执行Awake回调
         public bool IsStarted { get; private set; } = false;        //是否已执行Start回调
         public bool IsDestroyed { get; private set; } = false;      //是否已执行OnDestroy回调
@@ -51,23 +49,43 @@ namespace XOR
             }
             this.Dispose(false);
         }
+
+        public int GetObjectID()
+        {
+            if (!isObtainedObejctID)
+            {
+                isObtainedObejctID = true;
+                objectID = this.GetInstanceID();
+            }
+            return objectID;
+        }
+
         protected virtual void Awake()
         {
-            instanceID = gameObject.GetInstanceID();
+            GetObjectID();
             IsActivated = true;
-            awakeCallback?.Invoke(Behaviour.Args.Mono.Awake);
-            awakeCallback = null;
+            if ((@base & Behaviour.Args.Mono.Awake) > 0)
+            {
+                @base ^= Behaviour.Args.Mono.Awake;
+                Invoke(Behaviour.Args.Mono.Awake, lifecycle);
+            }
         }
         protected virtual void Start()
         {
             IsStarted = true;
-            startCallback?.Invoke(Behaviour.Args.Mono.Start);
-            startCallback = null;
+            if ((@base & Behaviour.Args.Mono.Start) > 0)
+            {
+                @base ^= Behaviour.Args.Mono.Start;
+                Invoke(Behaviour.Args.Mono.Start, lifecycle);
+            }
         }
         protected virtual void OnEnable()
         {
             IsEnable = true;
-            enableCallback?.Invoke(Behaviour.Args.Mono.OnEnable);
+            if ((@base & Behaviour.Args.Mono.OnEnable) > 0)
+            {
+                Invoke(Behaviour.Args.Mono.OnEnable, lifecycle);
+            }
             if (behaviours != null)
             {
                 foreach (var behaviour in behaviours)
@@ -79,7 +97,10 @@ namespace XOR
         protected virtual void OnDisable()
         {
             IsEnable = false;
-            disableCallback?.Invoke(Behaviour.Args.Mono.OnDisable);
+            if ((@base & Behaviour.Args.Mono.OnDisable) > 0)
+            {
+                Invoke(Behaviour.Args.Mono.OnDisable, lifecycle);
+            }
             if (behaviours != null)
             {
                 foreach (var behaviour in behaviours)
@@ -91,52 +112,40 @@ namespace XOR
         protected virtual void OnDestroy()
         {
             IsDestroyed = true;
-            destroyCallback?.Invoke(Behaviour.Args.Mono.OnDestroy);
-            destroyCallback = null;
+            if ((@base & Behaviour.Args.Mono.OnDestroy) > 0)
+            {
+                @base ^= Behaviour.Args.Mono.OnDestroy;
+                Invoke(Behaviour.Args.Mono.OnDestroy, lifecycle);
+            }
             Dispose(true);
         }
 
         public void CreateMono(Behaviour.Args.Mono methods, Action<Behaviour.Args.Mono> callback)
         {
-            if ((methods & Behaviour.Args.Mono.Awake) > 0)
+            Behaviour.Args.Mono @base = default;
+            foreach (var v in Behaviour.Args.Extensions.GetMonoBase())
             {
-                methods ^= Behaviour.Args.Mono.Awake;
-                if (IsActivated && !IsDestroyed)
+                if ((methods & v) > 0)
+                {
+                    methods ^= v;
+                    @base |= v;
+                }
+            }
+            if (@base > 0)
+            {
+                this.@base |= @base;
+                if (callback != null)
+                    lifecycle += callback;
+                if ((@base & Behaviour.Args.Mono.Awake) > 0 && !IsDestroyed && IsActivated)
                     Invoke(Behaviour.Args.Mono.Awake, callback);
-                else
-                    awakeCallback += callback;
-            }
-            if ((methods & Behaviour.Args.Mono.Start) > 0)
-            {
-                methods ^= Behaviour.Args.Mono.Start;
-                if (IsStarted && !IsDestroyed)
+                if ((@base & Behaviour.Args.Mono.Start) > 0 && !IsDestroyed && IsStarted)
                     Invoke(Behaviour.Args.Mono.Start, callback);
-                else
-                    startCallback += callback;
-            }
-            if ((methods & Behaviour.Args.Mono.OnDestroy) > 0)
-            {
-                methods ^= Behaviour.Args.Mono.OnDestroy;
-                if (IsDestroyed)
+                if ((@base & Behaviour.Args.Mono.OnDestroy) > 0 && IsDestroyed)
                     Invoke(Behaviour.Args.Mono.OnDestroy, callback);
-                else
-                    destroyCallback += callback;
-            }
-            if ((methods & Behaviour.Args.Mono.OnEnable) > 0)
-            {
-                methods ^= Behaviour.Args.Mono.OnEnable;
-                if (IsEnable && !IsDestroyed)
+                if ((@base & Behaviour.Args.Mono.OnEnable) > 0 && !IsDestroyed && IsEnable)
                     Invoke(Behaviour.Args.Mono.OnEnable, callback);
-                else
-                    enableCallback += callback;
-            }
-            if ((methods & Behaviour.Args.Mono.OnDisable) > 0)
-            {
-                methods ^= Behaviour.Args.Mono.OnDisable;
-                if (IsActivated && !IsEnable && !IsDestroyed)
+                if ((@base & Behaviour.Args.Mono.OnDisable) > 0 && !IsDestroyed && IsActivated && !IsEnable)
                     Invoke(Behaviour.Args.Mono.OnDisable, callback);
-                else
-                    disableCallback += callback;
             }
             if (methods <= 0)
                 return;
@@ -180,10 +189,18 @@ namespace XOR
             where TDelegate : Delegate
             where TComponent : Behaviour<TDelegate>
         {
+            if (this.behaviours == null)
+            {
+                this.behaviours = new List<XOR.Behaviour.Behaviour>();
+            }
             if (behaviours.Contains(methods))
             {
                 var component = behaviours.Create(gameObject, methods, callback, Invoker.Default);
-                this.behaviours.Add(component);
+                if (component != null)
+                {
+                    component.ObjectID = objectID;
+                    this.behaviours.Add(component);
+                }
                 return;
             }
             var value = behaviours.GetEnumUInt32(methods);
@@ -193,7 +210,12 @@ namespace XOR
                     break;
                 if ((value & method) <= 0)
                     continue;
-                behaviours.Create(gameObject, method, callback, Invoker.Default);
+                var component = behaviours.Create(gameObject, method, callback, Invoker.Default);
+                if (component != null)
+                {
+                    component.ObjectID = objectID;
+                    this.behaviours.Add(component);
+                }
                 value ^= method;
             }
         }
@@ -201,14 +223,13 @@ namespace XOR
         {
             if (callback != null)
             {
-                callback(Behaviour.Args.Mono.Awake);
+                callback(method);
             }
-            else if (Invoker.Default != null && IsActivated)
+            else if (Invoker.Default != null && isObtainedObejctID)
             {
-                Invoker.Default.Invoke(instanceID, Behaviour.Args.Mono.Awake);
+                Invoker.Default.Invoke(objectID, method);
             }
         }
-
 
         public virtual void Dispose()
         {
@@ -216,11 +237,8 @@ namespace XOR
         }
         protected virtual void Dispose(bool destroy)
         {
-            this.awakeCallback = null;
-            this.startCallback = null;
-            this.destroyCallback = null;
-            this.enableCallback = null;
-            this.disableCallback = null;
+            this.@base = 0;
+            this.lifecycle = null;
 
             if (behaviours != null)
             {
@@ -232,6 +250,12 @@ namespace XOR
                 behaviours.Clear();
             }
             behaviours = null;
+            //如果全程gameObject.activeSelf=false或者DestroyImmediate, 则OnDestroy不会被调用
+            //此时需要额外通知ts层gameObject对象进行销毁
+            if (isObtainedObejctID && !IsDestroyed && Invoker.Default != null)
+            {
+                Invoker.Default.Destroy(objectID);
+            }
 
             GC.SuppressFinalize(this);
         }

@@ -82,8 +82,7 @@ class TsComponentConstructor extends xor.Behaviour {
         }
 
         //bind methods
-        this.bindProxies();
-        this.bindUpdateProxies();
+        this.bindLifecycle();
         this.bindListeners();
         this.bindModuleInEditor();
     }

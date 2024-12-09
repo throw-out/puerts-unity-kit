@@ -49,7 +49,7 @@ const publishPaths = {
             console.log(stdio);
         }
     } catch (e) {
-        throw new Error(`${e}`);
+        throw e;
     }
     if (!isPublish)
         return;

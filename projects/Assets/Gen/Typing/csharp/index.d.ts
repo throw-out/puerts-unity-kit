@@ -30171,7 +30171,7 @@
             public get Callback(): TDelegate;
             public set Callback(value: TDelegate);
             public get Invoker(): XOR.Behaviour.IInvoker;
-            public set Invoker(value: XOR.Behaviour.IInvoker);
+            public get ObjectID(): number;
         }
         interface IInvoker
         {
@@ -30184,6 +30184,7 @@
             Invoke ($instanceID: number, $method: XOR.Behaviour.Args.PhysicsCollider2D, $data: UnityEngine.Collider2D) : void
             Invoke ($instanceID: number, $method: XOR.Behaviour.Args.PhysicsCollision, $data: UnityEngine.Collision) : void
             Invoke ($instanceID: number, $method: XOR.Behaviour.Args.PhysicsCollision2D, $data: UnityEngine.Collision2D) : void
+            Destroy ($instanceID: number) : void
         }
         class ArgsAttribute extends System.Attribute implements System.Runtime.InteropServices._Attribute
         {
@@ -30267,6 +30268,7 @@
             public collider2D : System.Action$3<number, XOR.Behaviour.Args.PhysicsCollider2D, UnityEngine.Collider2D>
             public collision : System.Action$3<number, XOR.Behaviour.Args.PhysicsCollision, UnityEngine.Collision>
             public collision2D : System.Action$3<number, XOR.Behaviour.Args.PhysicsCollision2D, UnityEngine.Collision2D>
+            public destroy : System.Action$1<number>
             public static get Default(): XOR.Behaviour.Invoker;
             public static set Default(value: XOR.Behaviour.Invoker);
             public Invoke ($instanceID: number, $method: XOR.Behaviour.Args.Mono) : void
@@ -30278,6 +30280,7 @@
             public Invoke ($instanceID: number, $method: XOR.Behaviour.Args.PhysicsCollider2D, $data: UnityEngine.Collider2D) : void
             public Invoke ($instanceID: number, $method: XOR.Behaviour.Args.PhysicsCollision, $data: UnityEngine.Collision) : void
             public Invoke ($instanceID: number, $method: XOR.Behaviour.Args.PhysicsCollision2D, $data: UnityEngine.Collision2D) : void
+            public Destroy ($instanceID: number) : void
             public constructor ()
         }
     }
@@ -30358,10 +30361,12 @@
         class TsBehaviour extends UnityEngine.MonoBehaviour implements System.IDisposable
         {
             protected [__keep_incompatibility]: never;
+            public isObtainedObejctID : boolean
             public get IsActivated(): boolean;
             public get IsStarted(): boolean;
             public get IsDestroyed(): boolean;
             public get IsEnable(): boolean;
+            public GetObjectID () : number
             public CreateMono ($methods: XOR.Behaviour.Args.Mono, $callback: System.Action$1<XOR.Behaviour.Args.Mono>) : void
             public CreateMonoBoolean ($methods: XOR.Behaviour.Args.MonoBoolean, $callback: System.Action$2<XOR.Behaviour.Args.MonoBoolean, boolean>) : void
             public CreateMouse ($methods: XOR.Behaviour.Args.Mouse, $callback: System.Action$1<XOR.Behaviour.Args.Mouse>) : void
@@ -31542,6 +31547,7 @@
             public get Parent(): System.IO.DirectoryInfo;
             public get Root(): System.IO.DirectoryInfo;
             public get Name(): string;
+            public get FullName(): string;
             public CreateSubdirectory ($path: string) : System.IO.DirectoryInfo
             public Create () : void
             public GetFiles () : System.Array$1<System.IO.FileInfo>
@@ -35819,6 +35825,11 @@
         { OnCollisionEnter = 1, OnCollisionStay = 2, OnCollisionExit = 4 }
         enum PhysicsCollision2D
         { OnCollisionEnter2D = 1, OnCollisionStay2D = 2, OnCollisionExit2D = 4 }
+        class Extensions extends System.Object
+        {
+            protected [__keep_incompatibility]: never;
+            public static GetMonoBase () : System.Array$1<XOR.Behaviour.Args.Mono>
+        }
     }
     namespace XOR.MixerLoader {
         enum RegexMode
