@@ -30,11 +30,7 @@
             jsEnv.UsingAction<System.String, System.Boolean, System.String>();
             jsEnv.UsingAction<System.String, System.String, UnityEngine.LogType>();
             jsEnv.UsingAction<UnityEngine.CullingGroupEvent>();
-            jsEnv.UsingAction<UnityEngine.CustomRenderTexture, System.Int32>();
-            jsEnv.UsingAction<UnityEngine.PhysicsScene, Unity.Collections.NativeArray<UnityEngine.ModifiableContactPair>>();
             jsEnv.UsingAction<UnityEngine.ReflectionProbe, UnityEngine.ReflectionProbe.ReflectionProbeEvent>();
-            jsEnv.UsingAction<UnityEngine.Terrain, System.String, UnityEngine.RectInt, System.Boolean>();
-            jsEnv.UsingAction<UnityEngine.Terrain, UnityEngine.RectInt, System.Boolean>();
             jsEnv.UsingAction<XOR.Behaviour.Args.EventSystems, UnityEngine.EventSystems.PointerEventData>();
             jsEnv.UsingAction<XOR.Behaviour.Args.Gizmos>();
             jsEnv.UsingAction<XOR.Behaviour.Args.Mono>();

@@ -348,7 +348,7 @@ namespace XOR.Behaviour
                 {
                     args = ", " + args;
                 }
-                sb.AppendLine(@$"
+                sb.AppendLine($@"
         protected class {className} : {invokerImpl.FullName.Replace("+", ".")}
         {{
             {string.Join("", methodNames.Select(methodName => $@"
@@ -358,10 +358,10 @@ namespace XOR.Behaviour
             }}"))}
         }}");
             }
-            sb.AppendLine(@$"
+            sb.AppendLine($@"
         public static void Register()
         {{
-            {string.Join("", classes.Select(c => @$"
+            {string.Join("", classes.Select(c => $@"
             XOR.Behaviour.Factory.Register<{c.Item1}>({c.Item2});"))}
         }}
     }}
