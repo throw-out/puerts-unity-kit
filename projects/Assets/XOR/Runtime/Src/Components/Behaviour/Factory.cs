@@ -6,16 +6,22 @@ namespace XOR.Behaviour
 {
     public static class Factory
     {
-        public static readonly Behaviours<Args.Mono, Action<Args.Mono>, Mono> Mono
-            = new Behaviours<Args.Mono, Action<Args.Mono>, Mono>(EnumConvert.MonoToUInt32);
-        public static readonly Behaviours<Args.MonoBoolean, Action<Args.MonoBoolean, bool>, MonoBoolean> MonoBoolean
-            = new Behaviours<Args.MonoBoolean, Action<Args.MonoBoolean, bool>, MonoBoolean>(EnumConvert.MonoBooleanToUInt32);
+        public static readonly Behaviours<Args.Logic, Action<Args.Logic>, Logic> Logic
+            = new Behaviours<Args.Logic, Action<Args.Logic>, Logic>(EnumConvert.LogicToUInt32);
+        public static readonly Behaviours<Args.Application, Action<Args.Application>, Application> Application
+            = new Behaviours<Args.Application, Action<Args.Application>, Application>(EnumConvert.ApplicationToUInt32);
+        public static readonly Behaviours<Args.ApplicationBoolean, Action<Args.ApplicationBoolean, bool>, ApplicationBoolean> ApplicationBoolean
+            = new Behaviours<Args.ApplicationBoolean, Action<Args.ApplicationBoolean, bool>, ApplicationBoolean>(EnumConvert.ApplicationBooleanToUInt32);
+        public static readonly Behaviours<Args.Renderer, Action<Args.Renderer>, Renderer> Renderer
+            = new Behaviours<Args.Renderer, Action<Args.Renderer>, Renderer>(EnumConvert.RendererToUInt32);
         public static readonly Behaviours<Args.Mouse, Action<Args.Mouse>, Mouse> Mouse
             = new Behaviours<Args.Mouse, Action<Args.Mouse>, Mouse>(EnumConvert.MouseToUInt32);
-        public static readonly Behaviours<Args.Gizmos, Action<Args.Gizmos>, Gizmos> Gizmos
-            = new Behaviours<Args.Gizmos, Action<Args.Gizmos>, Gizmos>(EnumConvert.GizmosToUInt32);
-        public static readonly Behaviours<Args.EventSystems, Action<Args.EventSystems, UnityEngine.EventSystems.PointerEventData>, EventSystems> EventSystems
-            = new Behaviours<Args.EventSystems, Action<Args.EventSystems, UnityEngine.EventSystems.PointerEventData>, EventSystems>(EnumConvert.EventSystemsToUInt32);
+        public static readonly Behaviours<Args.Edit, Action<Args.Edit>, Edit> Edit
+            = new Behaviours<Args.Edit, Action<Args.Edit>, Edit>(EnumConvert.EditToUInt32);
+        public static readonly Behaviours<Args.BaseEvents, Action<Args.BaseEvents, UnityEngine.EventSystems.BaseEventData>, BaseEvents> BaseEvents
+            = new Behaviours<Args.BaseEvents, Action<Args.BaseEvents, UnityEngine.EventSystems.BaseEventData>, BaseEvents>(EnumConvert.BaseEventsToUInt32);
+        public static readonly Behaviours<Args.PointerEvents, Action<Args.PointerEvents, UnityEngine.EventSystems.PointerEventData>, PointerEvents> PointerEvents
+            = new Behaviours<Args.PointerEvents, Action<Args.PointerEvents, UnityEngine.EventSystems.PointerEventData>, PointerEvents>(EnumConvert.PointerEventsToUInt32);
         public static readonly Behaviours<Args.PhysicsCollider, Action<Args.PhysicsCollider, Collider>, PhysicsCollider> PhysicsCollider
             = new Behaviours<Args.PhysicsCollider, Action<Args.PhysicsCollider, Collider>, PhysicsCollider>(EnumConvert.PhysicsColliderToUInt32);
         public static readonly Behaviours<Args.PhysicsCollider2D, Action<Args.PhysicsCollider2D, Collider2D>, PhysicsCollider2D> PhysicsCollider2D
@@ -26,30 +32,45 @@ namespace XOR.Behaviour
             = new Behaviours<Args.PhysicsCollision2D, Action<Args.PhysicsCollision2D, Collision2D>, PhysicsCollision2D>(EnumConvert.PhysicsCollision2DToUInt32);
 
 
-        public static void Register<T>(Args.Mono method)
-            where T : Mono
+        public static void Register<T>(Args.Logic method)
+            where T : Logic
         {
-            Mono.Add<T>(method);
+            Logic.Add<T>(method);
         }
-        public static void Register<T>(Args.MonoBoolean method)
-            where T : MonoBoolean
+        public static void Register<T>(Args.Application method)
+            where T : Application
         {
-            MonoBoolean.Add<T>(method);
+            Application.Add<T>(method);
         }
-        public static void Register<T>(Args.Gizmos method)
-            where T : Gizmos
+        public static void Register<T>(Args.ApplicationBoolean method)
+            where T : ApplicationBoolean
         {
-            Gizmos.Add<T>(method);
+            ApplicationBoolean.Add<T>(method);
+        }
+        public static void Register<T>(Args.Renderer method)
+            where T : Renderer
+        {
+            Renderer.Add<T>(method);
+        }
+        public static void Register<T>(Args.Edit method)
+            where T : Edit
+        {
+            Edit.Add<T>(method);
         }
         public static void Register<T>(Args.Mouse method)
             where T : Mouse
         {
             Mouse.Add<T>(method);
         }
-        public static void Register<T>(Args.EventSystems method)
-            where T : EventSystems
+        public static void Register<T>(Args.BaseEvents method)
+            where T : BaseEvents
         {
-            EventSystems.Add<T>(method);
+            BaseEvents.Add<T>(method);
+        }
+        public static void Register<T>(Args.PointerEvents method)
+            where T : PointerEvents
+        {
+            PointerEvents.Add<T>(method);
         }
         public static void Register<T>(Args.PhysicsCollider method)
             where T : PhysicsCollider
@@ -74,11 +95,14 @@ namespace XOR.Behaviour
 
         public static void Clear()
         {
-            Mono.Clear();
-            MonoBoolean.Clear();
+            Logic.Clear();
+            Application.Clear();
+            ApplicationBoolean.Clear();
+            Renderer.Clear();
             Mouse.Clear();
-            Gizmos.Clear();
-            EventSystems.Clear();
+            Edit.Clear();
+            BaseEvents.Clear();
+            PointerEvents.Clear();
             PhysicsCollider.Clear();
             PhysicsCollider2D.Clear();
             PhysicsCollision.Clear();
@@ -88,25 +112,25 @@ namespace XOR.Behaviour
         public static bool Contains<T>(T value)
             where T : Enum
         {
-            if (value is Args.Mono v1)
+            if (value is Args.Logic v1)
             {
-                return Mono.Contains(v1);
+                return Logic.Contains(v1);
             }
-            if (value is Args.MonoBoolean v2)
+            if (value is Args.ApplicationBoolean v2)
             {
-                return MonoBoolean.Contains(v2);
+                return ApplicationBoolean.Contains(v2);
             }
             if (value is Args.Mouse v3)
             {
                 return Mouse.Contains(v3);
             }
-            if (value is Args.Gizmos v4)
+            if (value is Args.Edit v4)
             {
-                return Gizmos.Contains(v4);
+                return Edit.Contains(v4);
             }
-            if (value is Args.EventSystems v5)
+            if (value is Args.PointerEvents v5)
             {
-                return EventSystems.Contains(v5);
+                return PointerEvents.Contains(v5);
             }
             if (value is Args.PhysicsCollider v6)
             {
@@ -123,6 +147,18 @@ namespace XOR.Behaviour
             if (value is Args.PhysicsCollision2D v9)
             {
                 return PhysicsCollision2D.Contains(v9);
+            }
+            if (value is Args.Application v10)
+            {
+                return Application.Contains(v10);
+            }
+            if (value is Args.Renderer v11)
+            {
+                return Renderer.Contains(v11);
+            }
+            if (value is Args.BaseEvents v12)
+            {
+                return BaseEvents.Contains(v12);
             }
             return false;
         }
@@ -180,13 +216,13 @@ namespace XOR.Behaviour
             }
         }
 
-        public delegate bool EnumUnderlyingGetter<T>(T @enum, out uint v) where T : Enum;
+        public delegate bool EnumUnderlyingGetter<T>(T flag, out uint v) where T : Enum;
         static class EnumConvert
         {
-            public static bool MonoToUInt32<T>(T @enum, out uint v)
+            public static bool LogicToUInt32<T>(T flag, out uint v)
                 where T : Enum
             {
-                if (@enum is Args.Mono v1)
+                if (flag is Args.Logic v1)
                 {
                     v = (uint)v1;
                     return true;
@@ -197,10 +233,10 @@ namespace XOR.Behaviour
                     return false;
                 }
             }
-            public static bool MonoBooleanToUInt32<T>(T @enum, out uint v)
+            public static bool ApplicationToUInt32<T>(T flag, out uint v)
                 where T : Enum
             {
-                if (@enum is Args.MonoBoolean v1)
+                if (flag is Args.Application v1)
                 {
                     v = (uint)v1;
                     return true;
@@ -211,10 +247,10 @@ namespace XOR.Behaviour
                     return false;
                 }
             }
-            public static bool MouseToUInt32<T>(T @enum, out uint v)
+            public static bool ApplicationBooleanToUInt32<T>(T flag, out uint v)
                 where T : Enum
             {
-                if (@enum is Args.Mouse v1)
+                if (flag is Args.ApplicationBoolean v1)
                 {
                     v = (uint)v1;
                     return true;
@@ -225,10 +261,10 @@ namespace XOR.Behaviour
                     return false;
                 }
             }
-            public static bool GizmosToUInt32<T>(T @enum, out uint v)
+            public static bool RendererToUInt32<T>(T flag, out uint v)
                 where T : Enum
             {
-                if (@enum is Args.Gizmos v1)
+                if (flag is Args.Renderer v1)
                 {
                     v = (uint)v1;
                     return true;
@@ -239,10 +275,10 @@ namespace XOR.Behaviour
                     return false;
                 }
             }
-            public static bool EventSystemsToUInt32<T>(T @enum, out uint v)
+            public static bool MouseToUInt32<T>(T flag, out uint v)
                 where T : Enum
             {
-                if (@enum is Args.EventSystems v1)
+                if (flag is Args.Mouse v1)
                 {
                     v = (uint)v1;
                     return true;
@@ -253,10 +289,10 @@ namespace XOR.Behaviour
                     return false;
                 }
             }
-            public static bool PhysicsColliderToUInt32<T>(T @enum, out uint v)
+            public static bool EditToUInt32<T>(T flag, out uint v)
                 where T : Enum
             {
-                if (@enum is Args.PhysicsCollider v1)
+                if (flag is Args.Edit v1)
                 {
                     v = (uint)v1;
                     return true;
@@ -267,10 +303,10 @@ namespace XOR.Behaviour
                     return false;
                 }
             }
-            public static bool PhysicsCollider2DToUInt32<T>(T @enum, out uint v)
+            public static bool BaseEventsToUInt32<T>(T flag, out uint v)
                 where T : Enum
             {
-                if (@enum is Args.PhysicsCollider2D v1)
+                if (flag is Args.BaseEvents v1)
                 {
                     v = (uint)v1;
                     return true;
@@ -281,10 +317,10 @@ namespace XOR.Behaviour
                     return false;
                 }
             }
-            public static bool PhysicsCollisionToUInt32<T>(T @enum, out uint v)
+            public static bool PointerEventsToUInt32<T>(T flag, out uint v)
                 where T : Enum
             {
-                if (@enum is Args.PhysicsCollision v1)
+                if (flag is Args.PointerEvents v1)
                 {
                     v = (uint)v1;
                     return true;
@@ -295,10 +331,52 @@ namespace XOR.Behaviour
                     return false;
                 }
             }
-            public static bool PhysicsCollision2DToUInt32<T>(T @enum, out uint v)
+            public static bool PhysicsColliderToUInt32<T>(T flag, out uint v)
                 where T : Enum
             {
-                if (@enum is Args.PhysicsCollision2D v1)
+                if (flag is Args.PhysicsCollider v1)
+                {
+                    v = (uint)v1;
+                    return true;
+                }
+                else
+                {
+                    v = default;
+                    return false;
+                }
+            }
+            public static bool PhysicsCollider2DToUInt32<T>(T flag, out uint v)
+                where T : Enum
+            {
+                if (flag is Args.PhysicsCollider2D v1)
+                {
+                    v = (uint)v1;
+                    return true;
+                }
+                else
+                {
+                    v = default;
+                    return false;
+                }
+            }
+            public static bool PhysicsCollisionToUInt32<T>(T flag, out uint v)
+                where T : Enum
+            {
+                if (flag is Args.PhysicsCollision v1)
+                {
+                    v = (uint)v1;
+                    return true;
+                }
+                else
+                {
+                    v = default;
+                    return false;
+                }
+            }
+            public static bool PhysicsCollision2DToUInt32<T>(T flag, out uint v)
+                where T : Enum
+            {
+                if (flag is Args.PhysicsCollision2D v1)
                 {
                     v = (uint)v1;
                     return true;
@@ -310,23 +388,26 @@ namespace XOR.Behaviour
                 }
             }
 
-            public static uint ToUInt32<T>(T @enum)
+            public static uint ToUInt32<T>(T flag)
                 where T : Enum
             {
                 uint value = default;
                 if (!(
-                    MonoToUInt32(@enum, out value) ||
-                    MonoBooleanToUInt32(@enum, out value) ||
-                    MouseToUInt32(@enum, out value) ||
-                    GizmosToUInt32(@enum, out value) ||
-                    EventSystemsToUInt32(@enum, out value) ||
-                    PhysicsColliderToUInt32(@enum, out value) ||
-                    PhysicsCollider2DToUInt32(@enum, out value) ||
-                    PhysicsCollisionToUInt32(@enum, out value) ||
-                    PhysicsCollision2DToUInt32(@enum, out value)
+                    LogicToUInt32(flag, out value) ||
+                    ApplicationToUInt32(flag, out value) ||
+                    ApplicationBooleanToUInt32(flag, out value) ||
+                    RendererToUInt32(flag, out value) ||
+                    MouseToUInt32(flag, out value) ||
+                    EditToUInt32(flag, out value) ||
+                    BaseEventsToUInt32(flag, out value) ||
+                    PointerEventsToUInt32(flag, out value) ||
+                    PhysicsColliderToUInt32(flag, out value) ||
+                    PhysicsCollider2DToUInt32(flag, out value) ||
+                    PhysicsCollisionToUInt32(flag, out value) ||
+                    PhysicsCollision2DToUInt32(flag, out value)
                 ))
                 {
-                    value = Convert.ToUInt32(@enum);
+                    value = Convert.ToUInt32(flag);
                 }
                 return value;
             }

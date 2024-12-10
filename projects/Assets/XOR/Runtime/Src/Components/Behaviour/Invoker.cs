@@ -7,11 +7,14 @@ namespace XOR.Behaviour
 {
     public interface IInvoker
     {
-        void Invoke(int instanceID, Args.Mono method);
-        void Invoke(int instanceID, Args.MonoBoolean method, bool data);
-        void Invoke(int instanceID, Args.Gizmos method);
+        void Invoke(int instanceID, Args.Logic method);
+        void Invoke(int instanceID, Args.Application method);
+        void Invoke(int instanceID, Args.ApplicationBoolean method, bool data);
+        void Invoke(int instanceID, Args.Renderer method);
         void Invoke(int instanceID, Args.Mouse method);
-        void Invoke(int instanceID, Args.EventSystems method, UnityEngine.EventSystems.PointerEventData data);
+        void Invoke(int instanceID, Args.Edit method);
+        void Invoke(int instanceID, Args.BaseEvents method, UnityEngine.EventSystems.BaseEventData data);
+        void Invoke(int instanceID, Args.PointerEvents method, UnityEngine.EventSystems.PointerEventData data);
         void Invoke(int instanceID, Args.PhysicsCollider method, UnityEngine.Collider data);
         void Invoke(int instanceID, Args.PhysicsCollider2D method, UnityEngine.Collider2D data);
         void Invoke(int instanceID, Args.PhysicsCollision method, UnityEngine.Collision data);
@@ -21,30 +24,42 @@ namespace XOR.Behaviour
     }
     public class Invoker : IInvoker
     {
-        public Action<int, Args.Mono> mono;
-        public Action<int, Args.MonoBoolean, bool> monoBoolean;
-        public Action<int, Args.Gizmos> gizmos;
+        public Action<int, Args.Logic> logic;
+        public Action<int, Args.Application> application;
+        public Action<int, Args.ApplicationBoolean, bool> application2;
+        public Action<int, Args.Renderer> renderer;
+        public Action<int, Args.Edit> edit;
         public Action<int, Args.Mouse> mouse;
-        public Action<int, Args.EventSystems, PointerEventData> eventSystems;
+        public Action<int, Args.BaseEvents, BaseEventData> baseEvents;
+        public Action<int, Args.PointerEvents, PointerEventData> pointerEvents;
         public Action<int, Args.PhysicsCollider, Collider> collider;
         public Action<int, Args.PhysicsCollider2D, Collider2D> collider2D;
         public Action<int, Args.PhysicsCollision, Collision> collision;
         public Action<int, Args.PhysicsCollision2D, Collision2D> collision2D;
         public Action<int> destroy;
 
-        public void Invoke(int instanceID, Args.Mono method)
+        public void Invoke(int instanceID, Args.Logic method)
         {
-            mono?.Invoke(instanceID, method);
+            logic?.Invoke(instanceID, method);
         }
 
-        public void Invoke(int instanceID, Args.MonoBoolean method, bool data)
+        public void Invoke(int instanceID, Args.Application method)
         {
-            monoBoolean?.Invoke(instanceID, method, data);
+            application?.Invoke(instanceID, method);
+        }
+        public void Invoke(int instanceID, Args.ApplicationBoolean method, bool data)
+        {
+            application2?.Invoke(instanceID, method, data);
         }
 
-        public void Invoke(int instanceID, Args.Gizmos method)
+        public void Invoke(int instanceID, Args.Edit method)
         {
-            gizmos?.Invoke(instanceID, method);
+            edit?.Invoke(instanceID, method);
+        }
+
+        public void Invoke(int instanceID, Args.Renderer method)
+        {
+            renderer?.Invoke(instanceID, method);
         }
 
         public void Invoke(int instanceID, Args.Mouse method)
@@ -52,9 +67,14 @@ namespace XOR.Behaviour
             mouse?.Invoke(instanceID, method);
         }
 
-        public void Invoke(int instanceID, Args.EventSystems method, PointerEventData data)
+        public void Invoke(int instanceID, Args.BaseEvents method, BaseEventData data)
         {
-            eventSystems?.Invoke(instanceID, method, data);
+            baseEvents?.Invoke(instanceID, method, data);
+        }
+
+        public void Invoke(int instanceID, Args.PointerEvents method, PointerEventData data)
+        {
+            pointerEvents?.Invoke(instanceID, method, data);
         }
 
         public void Invoke(int instanceID, Args.PhysicsCollider method, Collider data)
@@ -138,10 +158,11 @@ namespace XOR.Behaviour
         public int ObjectID { get; internal set; }
     }
 
-    [Args(typeof(Args.Mono))]
-    public abstract class Mono : Behaviour<Action<Args.Mono>>
+
+    [Args(typeof(Args.Logic))]
+    public abstract class Logic : Behaviour<Action<Args.Logic>>
     {
-        protected void Invoke(Args.Mono method)
+        protected void Invoke(Args.Logic method)
         {
             if (Callback != null)
                 Callback(method);
@@ -150,10 +171,22 @@ namespace XOR.Behaviour
         }
     }
 
-    [Args(typeof(Args.MonoBoolean))]
-    public abstract class MonoBoolean : Behaviour<Action<Args.MonoBoolean, bool>>
+    [Args(typeof(Args.Application))]
+    public abstract class Application : Behaviour<Action<Args.Application>>
     {
-        protected void Invoke(Args.MonoBoolean method, bool data)
+        protected void Invoke(Args.Application method)
+        {
+            if (Callback != null)
+                Callback(method);
+            else if (Invoker != null)
+                Invoker.Invoke(ObjectID, method);
+        }
+    }
+
+    [Args(typeof(Args.ApplicationBoolean))]
+    public abstract class ApplicationBoolean : Behaviour<Action<Args.ApplicationBoolean, bool>>
+    {
+        protected void Invoke(Args.ApplicationBoolean method, bool data)
         {
             if (Callback != null)
                 Callback(method, data);
@@ -162,10 +195,22 @@ namespace XOR.Behaviour
         }
     }
 
-    [Args(typeof(Args.Gizmos))]
-    public abstract class Gizmos : Behaviour<Action<Args.Gizmos>>
+    [Args(typeof(Args.Edit))]
+    public abstract class Edit : Behaviour<Action<Args.Edit>>
     {
-        protected void Invoke(Args.Gizmos method)
+        protected void Invoke(Args.Edit method)
+        {
+            if (Callback != null)
+                Callback(method);
+            else if (Invoker != null)
+                Invoker.Invoke(ObjectID, method);
+        }
+    }
+
+    [Args(typeof(Args.Renderer))]
+    public abstract class Renderer : Behaviour<Action<Args.Renderer>>
+    {
+        protected void Invoke(Args.Renderer method)
         {
             if (Callback != null)
                 Callback(method);
@@ -186,10 +231,22 @@ namespace XOR.Behaviour
         }
     }
 
-    [Args(typeof(Args.EventSystems))]
-    public abstract class EventSystems : Behaviour<Action<Args.EventSystems, UnityEngine.EventSystems.PointerEventData>>
+    [Args(typeof(Args.BaseEvents))]
+    public abstract class BaseEvents : Behaviour<Action<Args.BaseEvents, UnityEngine.EventSystems.BaseEventData>>
     {
-        protected void Invoke(Args.EventSystems method, UnityEngine.EventSystems.PointerEventData data)
+        protected void Invoke(Args.BaseEvents method, UnityEngine.EventSystems.BaseEventData data)
+        {
+            if (Callback != null)
+                Callback(method, data);
+            else if (Invoker != null)
+                Invoker.Invoke(ObjectID, method, data);
+        }
+    }
+
+    [Args(typeof(Args.PointerEvents))]
+    public abstract class PointerEvents : Behaviour<Action<Args.PointerEvents, UnityEngine.EventSystems.PointerEventData>>
+    {
+        protected void Invoke(Args.PointerEvents method, UnityEngine.EventSystems.PointerEventData data)
         {
             if (Callback != null)
                 Callback(method, data);

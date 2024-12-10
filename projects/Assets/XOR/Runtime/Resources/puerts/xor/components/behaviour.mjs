@@ -8,7 +8,9 @@ const isEditor = Application.isEditor;
 /**
  * 详情参阅: https://docs.unity3d.com/cn/current/ScriptReference/MonoBehaviour.html
  */
-class IBehaviour {
+class ILogic {
+}
+class IApplication {
 }
 class IGizmos {
 }
@@ -25,6 +27,8 @@ class IOnTrigger {
 class IOnTrigger2D {
 }
 class IOnMouse {
+}
+class IRenderer {
 }
 /**
  * 沿用C# MonoBehaviour习惯, 将OnEnable丶Update丶OnEnable等方法绑定到C#对象上, Unity将在生命周期内调用
@@ -149,16 +153,16 @@ class BehaviourConstructor {
         }
         //注册Mono事件
         let methodFlags = 0;
-        let specificFlags = CS.XOR.Behaviour.Args.Mono.Awake |
-            CS.XOR.Behaviour.Args.Mono.Start |
-            CS.XOR.Behaviour.Args.Mono.OnDestroy |
-            CS.XOR.Behaviour.Args.Mono.OnEnable |
-            CS.XOR.Behaviour.Args.Mono.OnDisable;
-        let updateFlags = CS.XOR.Behaviour.Args.Mono.Update |
-            CS.XOR.Behaviour.Args.Mono.FixedUpdate |
-            CS.XOR.Behaviour.Args.Mono.LateUpdate;
-        for (let funcname in CS.XOR.Behaviour.Args.Mono) {
-            let v = CS.XOR.Behaviour.Args.Mono[funcname];
+        let specificFlags = CS.XOR.Behaviour.Args.Logic.Awake |
+            CS.XOR.Behaviour.Args.Logic.Start |
+            CS.XOR.Behaviour.Args.Logic.OnDestroy |
+            CS.XOR.Behaviour.Args.Logic.OnEnable |
+            CS.XOR.Behaviour.Args.Logic.OnDisable;
+        let updateFlags = CS.XOR.Behaviour.Args.Logic.Update |
+            CS.XOR.Behaviour.Args.Logic.FixedUpdate |
+            CS.XOR.Behaviour.Args.Logic.LateUpdate;
+        for (let funcname in CS.XOR.Behaviour.Args.Logic) {
+            let v = CS.XOR.Behaviour.Args.Logic[funcname];
             if (typeof (v) != "number")
                 continue;
             let hasFunc = typeof (this[funcname]) == "function";
@@ -184,12 +188,12 @@ class BehaviourConstructor {
             }
         }
         if (specificFlags > 0) { //注册Awake丶Start丶OnDestroy事件
-            this.component.CreateMono(specificFlags, isGlobalInvoker ? undefined : (method) => {
-                let funcname = CS.XOR.Behaviour.Args.Mono[method];
+            this.component.CreateLogic(specificFlags, isGlobalInvoker ? undefined : (method) => {
+                let funcname = CS.XOR.Behaviour.Args.Logic[method];
                 switch (method) {
-                    case CS.XOR.Behaviour.Args.Mono.Awake:
-                    case CS.XOR.Behaviour.Args.Mono.Start:
-                    case CS.XOR.Behaviour.Args.Mono.OnDestroy:
+                    case CS.XOR.Behaviour.Args.Logic.Awake:
+                    case CS.XOR.Behaviour.Args.Logic.Start:
+                    case CS.XOR.Behaviour.Args.Logic.OnDestroy:
                         inner.invoke(this, funcname, true);
                         break;
                     default:
@@ -199,7 +203,7 @@ class BehaviourConstructor {
             });
         }
         if (methodFlags > 0) { //注册剩余Mono事件
-            this.component.CreateMono(methodFlags, isGlobalInvoker ? undefined : (method) => this[CS.XOR.Behaviour.Args.Mono[method]]());
+            this.component.CreateLogic(methodFlags, isGlobalInvoker ? undefined : (method) => this[CS.XOR.Behaviour.Args.Logic[method]]());
         }
         if (updateFlags > 0) {
             let element = new UpdateManager.Element(updateFlags, this);
@@ -210,15 +214,15 @@ class BehaviourConstructor {
             }
             else {
                 //生命周期管理
-                this.component.CreateMono(CS.XOR.Behaviour.Args.Mono.OnEnable | CS.XOR.Behaviour.Args.Mono.OnDisable | CS.XOR.Behaviour.Args.Mono.OnDestroy, (method) => {
+                this.component.CreateLogic(CS.XOR.Behaviour.Args.Logic.OnEnable | CS.XOR.Behaviour.Args.Logic.OnDisable | CS.XOR.Behaviour.Args.Logic.OnDestroy, (method) => {
                     switch (method) {
-                        case CS.XOR.Behaviour.Args.Mono.OnEnable:
+                        case CS.XOR.Behaviour.Args.Logic.OnEnable:
                             element.enabled = true;
                             break;
-                        case CS.XOR.Behaviour.Args.Mono.OnDisable:
+                        case CS.XOR.Behaviour.Args.Logic.OnDisable:
                             element.enabled = false;
                             break;
-                        case CS.XOR.Behaviour.Args.Mono.OnDestroy:
+                        case CS.XOR.Behaviour.Args.Logic.OnDestroy:
                             element.enabled = false;
                             UpdateManager.unregister(element);
                             break;
@@ -226,27 +230,40 @@ class BehaviourConstructor {
                 });
             }
         }
-        //注册Gizmos事件
+        //注册Editeor事件
         if (isEditor) {
-            methodFlags = inner.getFunctionFlags(this, CS.XOR.Behaviour.Args.Gizmos);
+            methodFlags = inner.getFunctionFlags(this, CS.XOR.Behaviour.Args.Edit);
             if (methodFlags > 0) {
-                this.component.CreateGizmos(methodFlags, isGlobalInvoker ? undefined : (method) => this[CS.XOR.Behaviour.Args.Gizmos[method]]());
+                this.component.CreateEdit(methodFlags, isGlobalInvoker ? undefined : (method) => this[CS.XOR.Behaviour.Args.Edit[method]]());
             }
+        }
+        //注册Renderer事件
+        methodFlags = inner.getFunctionFlags(this, CS.XOR.Behaviour.Args.Renderer);
+        if (methodFlags > 0) {
+            this.component.CreateRenderer(methodFlags, isGlobalInvoker ? undefined : (method) => this[CS.XOR.Behaviour.Args.Renderer[method]]());
         }
         //注册Mouse事件
         methodFlags = inner.getFunctionFlags(this, CS.XOR.Behaviour.Args.Mouse);
         if (methodFlags > 0) {
             this.component.CreateMouse(methodFlags, isGlobalInvoker ? undefined : (method) => this[CS.XOR.Behaviour.Args.Mouse[method]]());
         }
-        //注册MonoBoolean事件
-        methodFlags = inner.getFunctionFlags(this, CS.XOR.Behaviour.Args.MonoBoolean);
+        //注册Application事件
+        methodFlags = inner.getFunctionFlags(this, CS.XOR.Behaviour.Args.Application);
         if (methodFlags > 0) {
-            this.component.CreateMonoBoolean(methodFlags, isGlobalInvoker ? undefined : (method, data) => this[CS.XOR.Behaviour.Args.MonoBoolean[method]](data));
+            this.component.CreateApplication(methodFlags, isGlobalInvoker ? undefined : (method) => this[CS.XOR.Behaviour.Args.Application[method]]());
+        }
+        methodFlags = inner.getFunctionFlags(this, CS.XOR.Behaviour.Args.ApplicationBoolean);
+        if (methodFlags > 0) {
+            this.component.CreateApplicationBoolean(methodFlags, isGlobalInvoker ? undefined : (method, data) => this[CS.XOR.Behaviour.Args.ApplicationBoolean[method]](data));
         }
         //注册EventSystems事件
-        methodFlags = inner.getFunctionFlags(this, CS.XOR.Behaviour.Args.EventSystems);
+        methodFlags = inner.getFunctionFlags(this, CS.XOR.Behaviour.Args.BaseEvents);
         if (methodFlags > 0) {
-            this.component.CreateEventSystems(methodFlags, isGlobalInvoker ? undefined : (method, data) => this[CS.XOR.Behaviour.Args.EventSystems[method]](data));
+            this.component.CreateBaseEvents(methodFlags, isGlobalInvoker ? undefined : (method, data) => this[CS.XOR.Behaviour.Args.BaseEvents[method]](data));
+        }
+        methodFlags = inner.getFunctionFlags(this, CS.XOR.Behaviour.Args.PointerEvents);
+        if (methodFlags > 0) {
+            this.component.CreatePointerEvents(methodFlags, isGlobalInvoker ? undefined : (method, data) => this[CS.XOR.Behaviour.Args.PointerEvents[method]](data));
         }
         //注册Physics事件
         methodFlags = inner.getFunctionFlags(this, CS.XOR.Behaviour.Args.PhysicsCollider);
@@ -465,36 +482,39 @@ class GlobalManager {
     }
     static init() {
         let invoker = new CS.XOR.Behaviour.Invoker();
-        invoker.mono = (objectID, method) => {
+        invoker.logic = (objectID, method) => {
             switch (method) {
-                case CS.XOR.Behaviour.Args.Mono.Awake:
-                case CS.XOR.Behaviour.Args.Mono.Start:
-                    this.invoke(objectID, CS.XOR.Behaviour.Args.Mono[method], true);
+                case CS.XOR.Behaviour.Args.Logic.Awake:
+                case CS.XOR.Behaviour.Args.Logic.Start:
+                    this.invoke(objectID, CS.XOR.Behaviour.Args.Logic[method], true);
                     break;
-                case CS.XOR.Behaviour.Args.Mono.OnDestroy:
+                case CS.XOR.Behaviour.Args.Logic.OnDestroy:
+                    this.setUpdateElement(objectID, false);
+                    this.invoke(objectID, CS.XOR.Behaviour.Args.Logic[method], true);
                     this.unregister(objectID);
-                    this.setUpdateElement(objectID, false);
-                    this.invoke(objectID, CS.XOR.Behaviour.Args.Mono[method], true);
                     break;
-                case CS.XOR.Behaviour.Args.Mono.OnEnable:
+                case CS.XOR.Behaviour.Args.Logic.OnEnable:
                     this.setUpdateElement(objectID, true);
-                    this.invoke(objectID, CS.XOR.Behaviour.Args.Mono[method], false);
+                    this.invoke(objectID, CS.XOR.Behaviour.Args.Logic[method], false);
                     break;
-                case CS.XOR.Behaviour.Args.Mono.OnDisable:
+                case CS.XOR.Behaviour.Args.Logic.OnDisable:
                     this.setUpdateElement(objectID, false);
-                    this.invoke(objectID, CS.XOR.Behaviour.Args.Mono[method], false);
+                    this.invoke(objectID, CS.XOR.Behaviour.Args.Logic[method], false);
                     break;
                 default:
-                    this.invoke(objectID, CS.XOR.Behaviour.Args.Mono[method], false);
+                    this.invoke(objectID, CS.XOR.Behaviour.Args.Logic[method], false);
                     break;
             }
         };
-        invoker.monoBoolean = (objectID, method, data) => this.invoke(objectID, CS.XOR.Behaviour.Args.MonoBoolean[method], false, data);
-        invoker.gizmos = (objectID, method) => this.invoke(objectID, CS.XOR.Behaviour.Args.Gizmos[method], false);
+        invoker.application = (objectID, method) => this.invoke(objectID, CS.XOR.Behaviour.Args.ApplicationBoolean[method], false);
+        invoker.application2 = (objectID, method, data) => this.invoke(objectID, CS.XOR.Behaviour.Args.ApplicationBoolean[method], false, data);
+        invoker.edit = (objectID, method) => this.invoke(objectID, CS.XOR.Behaviour.Args.Edit[method], false);
+        invoker.renderer = (objectID, method) => this.invoke(objectID, CS.XOR.Behaviour.Args.Renderer[method], false);
         invoker.mouse = (objectID, method) => this.invoke(objectID, CS.XOR.Behaviour.Args.Mouse[method], false);
-        invoker.eventSystems = (objectID, method, data) => this.invoke(objectID, CS.XOR.Behaviour.Args.EventSystems[method], false, data);
-        invoker.collision = (objectID, method, data) => this.invoke(objectID, CS.XOR.Behaviour.Args.PhysicsCollider[method], false, data);
-        invoker.collision2D = (objectID, method, data) => this.invoke(objectID, CS.XOR.Behaviour.Args.PhysicsCollider2D[method], false, data);
+        invoker.baseEvents = (objectID, method, data) => this.invoke(objectID, CS.XOR.Behaviour.Args.BaseEvents[method], false, data);
+        invoker.pointerEvents = (objectID, method, data) => this.invoke(objectID, CS.XOR.Behaviour.Args.PointerEvents[method], false, data);
+        invoker.collider = (objectID, method, data) => this.invoke(objectID, CS.XOR.Behaviour.Args.PhysicsCollider[method], false, data);
+        invoker.collider2D = (objectID, method, data) => this.invoke(objectID, CS.XOR.Behaviour.Args.PhysicsCollider2D[method], false, data);
         invoker.collision = (objectID, method, data) => this.invoke(objectID, CS.XOR.Behaviour.Args.PhysicsCollision[method], false, data);
         invoker.collision2D = (objectID, method, data) => this.invoke(objectID, CS.XOR.Behaviour.Args.PhysicsCollision2D[method], false, data);
         invoker.destroy = (objectID) => this.unregister(objectID);
@@ -587,6 +607,8 @@ UpdateManager.Elements = class {
         //每帧调用
         if (this.every.length > 0) {
             for (let element of this.every) {
+                if (!element.enabled)
+                    continue;
                 element.invoke(this.lifecycle, dt);
             }
         }
@@ -597,6 +619,8 @@ UpdateManager.Elements = class {
                 continue;
             if (state.elements.length > 0) {
                 for (let element of state.elements) {
+                    if (!element.enabled)
+                        continue;
                     element.invoke(this.lifecycle, state.dt);
                 }
             }
@@ -605,26 +629,26 @@ UpdateManager.Elements = class {
         }
     }
 };
-UpdateManager.update = new UpdateManager.Elements(CS.XOR.Behaviour.Args.Mono.Update);
-UpdateManager.lateUpdate = new UpdateManager.Elements(CS.XOR.Behaviour.Args.Mono.LateUpdate);
-UpdateManager.fixedUpdate = new UpdateManager.Elements(CS.XOR.Behaviour.Args.Mono.FixedUpdate);
+UpdateManager.update = new UpdateManager.Elements(CS.XOR.Behaviour.Args.Logic.Update);
+UpdateManager.lateUpdate = new UpdateManager.Elements(CS.XOR.Behaviour.Args.Logic.LateUpdate);
+UpdateManager.fixedUpdate = new UpdateManager.Elements(CS.XOR.Behaviour.Args.Logic.FixedUpdate);
 (function (UpdateManager) {
     class Element {
         constructor(methods, target) {
             this.target = target;
             this.enabled = false;
-            this.isUpdate = (methods & CS.XOR.Behaviour.Args.Mono.Update) > 0;
-            this.isLateUpdate = (methods & CS.XOR.Behaviour.Args.Mono.LateUpdate) > 0;
-            this.isFixedUpdate = (methods & CS.XOR.Behaviour.Args.Mono.FixedUpdate) > 0;
+            this.isUpdate = (methods & CS.XOR.Behaviour.Args.Logic.Update) > 0;
+            this.isLateUpdate = (methods & CS.XOR.Behaviour.Args.Logic.LateUpdate) > 0;
+            this.isFixedUpdate = (methods & CS.XOR.Behaviour.Args.Logic.FixedUpdate) > 0;
             const proto = Object.getPrototypeOf(this);
-            this.updateSkipFrame = this.isUpdate ? metadata.getDefineData(proto, CS.XOR.Behaviour.Args.Mono[CS.XOR.Behaviour.Args.Mono.Update], utils.frameskip, 0) : 0;
-            this.lateUpdateSkipFrame = this.isLateUpdate ? metadata.getDefineData(proto, CS.XOR.Behaviour.Args.Mono[CS.XOR.Behaviour.Args.Mono.LateUpdate], utils.frameskip, 0) : 0;
-            this.fixedUpdateSkipFrame = this.isFixedUpdate ? metadata.getDefineData(proto, CS.XOR.Behaviour.Args.Mono[CS.XOR.Behaviour.Args.Mono.FixedUpdate], utils.frameskip, 0) : 0;
+            this.updateSkipFrame = this.isUpdate ? metadata.getDefineData(proto, CS.XOR.Behaviour.Args.Logic[CS.XOR.Behaviour.Args.Logic.Update], utils.frameskip, 0) : 0;
+            this.lateUpdateSkipFrame = this.isLateUpdate ? metadata.getDefineData(proto, CS.XOR.Behaviour.Args.Logic[CS.XOR.Behaviour.Args.Logic.LateUpdate], utils.frameskip, 0) : 0;
+            this.fixedUpdateSkipFrame = this.isFixedUpdate ? metadata.getDefineData(proto, CS.XOR.Behaviour.Args.Logic[CS.XOR.Behaviour.Args.Logic.FixedUpdate], utils.frameskip, 0) : 0;
         }
         invoke(lifecycle, dt) {
             if (!this.enabled)
                 return;
-            inner.invoke(this.target, CS.XOR.Behaviour.Args.Mono[lifecycle], false, dt);
+            inner.invoke(this.target, CS.XOR.Behaviour.Args.Logic[lifecycle], false, dt);
         }
     }
     UpdateManager.Element = Element;

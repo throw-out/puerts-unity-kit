@@ -26,8 +26,8 @@ namespace XOR
         private int objectID;
         public bool isObtainedObejctID;
         private List<Behaviour.Behaviour> behaviours;
-        private Behaviour.Args.Mono @base;
-        private Action<Behaviour.Args.Mono> lifecycle;
+        private Behaviour.Args.Logic @base;
+        private Action<Behaviour.Args.Logic> lifecycle;
         public bool IsActivated { get; private set; } = false;      //是否已执行Awake回调
         public bool IsStarted { get; private set; } = false;        //是否已执行Start回调
         public bool IsDestroyed { get; private set; } = false;      //是否已执行OnDestroy回调
@@ -64,27 +64,27 @@ namespace XOR
         {
             GetObjectID();
             IsActivated = true;
-            if ((@base & Behaviour.Args.Mono.Awake) > 0)
+            if ((@base & Behaviour.Args.Logic.Awake) > 0)
             {
-                @base ^= Behaviour.Args.Mono.Awake;
-                Invoke(Behaviour.Args.Mono.Awake, lifecycle);
+                @base ^= Behaviour.Args.Logic.Awake;
+                Invoke(Behaviour.Args.Logic.Awake, lifecycle);
             }
         }
         protected virtual void Start()
         {
             IsStarted = true;
-            if ((@base & Behaviour.Args.Mono.Start) > 0)
+            if ((@base & Behaviour.Args.Logic.Start) > 0)
             {
-                @base ^= Behaviour.Args.Mono.Start;
-                Invoke(Behaviour.Args.Mono.Start, lifecycle);
+                @base ^= Behaviour.Args.Logic.Start;
+                Invoke(Behaviour.Args.Logic.Start, lifecycle);
             }
         }
         protected virtual void OnEnable()
         {
             IsEnable = true;
-            if ((@base & Behaviour.Args.Mono.OnEnable) > 0)
+            if ((@base & Behaviour.Args.Logic.OnEnable) > 0)
             {
-                Invoke(Behaviour.Args.Mono.OnEnable, lifecycle);
+                Invoke(Behaviour.Args.Logic.OnEnable, lifecycle);
             }
             if (behaviours != null)
             {
@@ -97,9 +97,9 @@ namespace XOR
         protected virtual void OnDisable()
         {
             IsEnable = false;
-            if ((@base & Behaviour.Args.Mono.OnDisable) > 0)
+            if ((@base & Behaviour.Args.Logic.OnDisable) > 0)
             {
-                Invoke(Behaviour.Args.Mono.OnDisable, lifecycle);
+                Invoke(Behaviour.Args.Logic.OnDisable, lifecycle);
             }
             if (behaviours != null)
             {
@@ -112,18 +112,18 @@ namespace XOR
         protected virtual void OnDestroy()
         {
             IsDestroyed = true;
-            if ((@base & Behaviour.Args.Mono.OnDestroy) > 0)
+            if ((@base & Behaviour.Args.Logic.OnDestroy) > 0)
             {
-                @base ^= Behaviour.Args.Mono.OnDestroy;
-                Invoke(Behaviour.Args.Mono.OnDestroy, lifecycle);
+                @base ^= Behaviour.Args.Logic.OnDestroy;
+                Invoke(Behaviour.Args.Logic.OnDestroy, lifecycle);
             }
             Dispose(true);
         }
 
-        public void CreateMono(Behaviour.Args.Mono methods, Action<Behaviour.Args.Mono> callback)
+        public void CreateLogic(Behaviour.Args.Logic methods, Action<Behaviour.Args.Logic> callback)
         {
-            Behaviour.Args.Mono @base = default;
-            foreach (var v in Behaviour.Args.Extensions.GetMonoBase())
+            Behaviour.Args.Logic @base = default;
+            foreach (var v in Behaviour.Args.Extensions.GetLogicBase())
             {
                 if ((methods & v) > 0)
                 {
@@ -133,39 +133,52 @@ namespace XOR
             }
             if (@base > 0)
             {
+                GetObjectID();
                 this.@base |= @base;
                 if (callback != null)
                     lifecycle += callback;
-                if ((@base & Behaviour.Args.Mono.Awake) > 0 && !IsDestroyed && IsActivated)
-                    Invoke(Behaviour.Args.Mono.Awake, callback);
-                if ((@base & Behaviour.Args.Mono.Start) > 0 && !IsDestroyed && IsStarted)
-                    Invoke(Behaviour.Args.Mono.Start, callback);
-                if ((@base & Behaviour.Args.Mono.OnDestroy) > 0 && IsDestroyed)
-                    Invoke(Behaviour.Args.Mono.OnDestroy, callback);
-                if ((@base & Behaviour.Args.Mono.OnEnable) > 0 && !IsDestroyed && IsEnable)
-                    Invoke(Behaviour.Args.Mono.OnEnable, callback);
-                if ((@base & Behaviour.Args.Mono.OnDisable) > 0 && !IsDestroyed && IsActivated && !IsEnable)
-                    Invoke(Behaviour.Args.Mono.OnDisable, callback);
+                if ((@base & Behaviour.Args.Logic.Awake) > 0 && !IsDestroyed && IsActivated)
+                    Invoke(Behaviour.Args.Logic.Awake, callback);
+                if ((@base & Behaviour.Args.Logic.Start) > 0 && !IsDestroyed && IsStarted)
+                    Invoke(Behaviour.Args.Logic.Start, callback);
+                if ((@base & Behaviour.Args.Logic.OnDestroy) > 0 && IsDestroyed)
+                    Invoke(Behaviour.Args.Logic.OnDestroy, callback);
+                if ((@base & Behaviour.Args.Logic.OnEnable) > 0 && !IsDestroyed && IsEnable)
+                    Invoke(Behaviour.Args.Logic.OnEnable, callback);
+                if ((@base & Behaviour.Args.Logic.OnDisable) > 0 && !IsDestroyed && IsActivated && !IsEnable)
+                    Invoke(Behaviour.Args.Logic.OnDisable, callback);
             }
             if (methods <= 0)
                 return;
-            Create(Factory.Mono, methods, callback);
+            Create(Factory.Logic, methods, callback);
         }
-        public void CreateMonoBoolean(Behaviour.Args.MonoBoolean methods, Action<Behaviour.Args.MonoBoolean, bool> callback)
+        public void CreateApplication(Behaviour.Args.Application methods, Action<Behaviour.Args.Application> callback)
         {
-            Create(Factory.MonoBoolean, methods, callback);
+            Create(Factory.Application, methods, callback);
+        }
+        public void CreateApplicationBoolean(Behaviour.Args.ApplicationBoolean methods, Action<Behaviour.Args.ApplicationBoolean, bool> callback)
+        {
+            Create(Factory.ApplicationBoolean, methods, callback);
+        }
+        public void CreateRenderer(Behaviour.Args.Renderer methods, Action<Behaviour.Args.Renderer> callback)
+        {
+            Create(Factory.Renderer, methods, callback);
         }
         public void CreateMouse(Behaviour.Args.Mouse methods, Action<Behaviour.Args.Mouse> callback)
         {
             Create(Factory.Mouse, methods, callback);
         }
-        public void CreateGizmos(Behaviour.Args.Gizmos methods, Action<Behaviour.Args.Gizmos> callback)
+        public void CreateEdit(Behaviour.Args.Edit methods, Action<Behaviour.Args.Edit> callback)
         {
-            Create(Factory.Gizmos, methods, callback);
+            Create(Factory.Edit, methods, callback);
         }
-        public void CreateEventSystems(Behaviour.Args.EventSystems methods, Action<Behaviour.Args.EventSystems, PointerEventData> callback)
+        public void CreateBaseEvents(Behaviour.Args.BaseEvents methods, Action<Behaviour.Args.BaseEvents, BaseEventData> callback)
         {
-            Create(Factory.EventSystems, methods, callback);
+            Create(Factory.BaseEvents, methods, callback);
+        }
+        public void CreatePointerEvents(Behaviour.Args.PointerEvents methods, Action<Behaviour.Args.PointerEvents, PointerEventData> callback)
+        {
+            Create(Factory.PointerEvents, methods, callback);
         }
         public void CreatePhysicsCollider(Behaviour.Args.PhysicsCollider methods, Action<Behaviour.Args.PhysicsCollider, Collider> callback)
         {
@@ -219,7 +232,7 @@ namespace XOR
                 value ^= method;
             }
         }
-        private void Invoke(Behaviour.Args.Mono method, Action<Behaviour.Args.Mono> callback)
+        private void Invoke(Behaviour.Args.Logic method, Action<Behaviour.Args.Logic> callback)
         {
             if (callback != null)
             {
