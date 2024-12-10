@@ -48,13 +48,21 @@
     [Args(typeof(UnityEngine.EventSystems.PointerEventData))]
     public enum EventSystems : uint
     {
+        [Impl(typeof(UnityEngine.EventSystems.IBeginDragHandler))]
         OnBeginDrag = 1 << 0,
+        [Impl(typeof(UnityEngine.EventSystems.IDragHandler))]
         OnDrag = 1 << 1,
+        [Impl(typeof(UnityEngine.EventSystems.IEndDragHandler))]
         OnEndDrag = 1 << 2,
+        [Impl(typeof(UnityEngine.EventSystems.IPointerClickHandler))]
         OnPointerClick = 1 << 3,
+        [Impl(typeof(UnityEngine.EventSystems.IPointerDownHandler))]
         OnPointerDown = 1 << 4,
+        [Impl(typeof(UnityEngine.EventSystems.IPointerEnterHandler))]
         OnPointerEnter = 1 << 5,
+        [Impl(typeof(UnityEngine.EventSystems.IPointerExitHandler))]
         OnPointerExit = 1 << 6,
+        [Impl(typeof(UnityEngine.EventSystems.IPointerUpHandler))]
         OnPointerUp = 1 << 7,
     }
 

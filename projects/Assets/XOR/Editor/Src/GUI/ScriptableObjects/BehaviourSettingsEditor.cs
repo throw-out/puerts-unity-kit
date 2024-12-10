@@ -185,7 +185,11 @@ namespace XOR
             {
                 if (root.categories != null && root.categories.Any(c => c.groups != null && c.groups.Count > 0))
                 {
-                    GUIUtil.RenderConfirm("override_current_data", root.SetPreference);
+                    GUIUtil.RenderConfirm("override_current_data", () =>
+                    {
+                        root.SetPreference();
+                        EditorUtility.SetDirty(root);
+                    });
                 }
                 else
                 {
@@ -197,7 +201,11 @@ namespace XOR
             {
                 if (root.categories != null && root.categories.Any(c => c.groups != null && c.groups.Count > 0))
                 {
-                    GUIUtil.RenderConfirm("override_current_data", root.SetDefault);
+                    GUIUtil.RenderConfirm("override_current_data", () =>
+                    {
+                        root.SetDefault();
+                        EditorUtility.SetDirty(root);
+                    });
                 }
                 else
                 {
@@ -256,10 +264,9 @@ namespace XOR
         {
             if (settings.categories == null)
                 return;
-            var @namespace = nameof(XOR.Behaviour.Args);
             var types = AppDomain.CurrentDomain.GetAssemblies()
                 .SelectMany(assembly => assembly.GetExportedTypes())
-                .Where(t => t.FullName != null && t.FullName.StartsWith(@namespace) && t.IsEnum)
+                .Where(t => t.FullName != null && t.FullName.StartsWith("XOR.Behaviour.Args") && t.IsEnum)
                 .OrderBy(t => t.FullName)
                 .ToList();
             var options = types.Select(t => t.Name).ToArray();
@@ -309,7 +316,7 @@ namespace XOR
         {
             var saveTo = Puerts.Configure.GetCodeOutputDirectory() + "BehaviourInvokerStaticWrap.cs";
 
-            List<Tuple<string, string>> classes = new List<Tuple<string, string>>();
+            List<Tuple<string, string[]>> classes = new List<Tuple<string, string[]>>();
 
             StringBuilder sb = new StringBuilder();
             sb.AppendLine($@"
@@ -318,51 +325,64 @@ namespace XOR.Behaviour
     public static class BehaviourInvokerStaticWrap
     {{
 ");
-            foreach (var @enum in exportEnums)
+            foreach (var flag in exportEnums)
             {
-                var type = @enum.GetType();
-                var invokerImpl = GetInvokerImplement(type);
-                if (invokerImpl == null)
+                var type = flag.GetType();
+                var baseType = GetInvokerBase(type);
+                if (baseType == null)
                 {
                     Debug.LogError($"No Invoker implementation class found: {type.FullName}");
                     continue;
                 }
-                var dv = Convert.ToUInt32(@enum);
+                var impls = GetInvokerImplement(flag);
+                var dv = Convert.ToUInt32(flag);
                 var defines = BehaviourSettings.Helper.GetEnumValues(type);
                 if (defines == null || defines.Length == 0)
                     continue;
 
-                var methodNames = defines
+                string[] methodNames = defines
                     .Where(v => (dv & v) == v)
                     .Select(v => Enum.GetName(type, v))
                     .ToArray();
                 if (methodNames == null || methodNames.Length == 0)
                     continue;
-                var className = methodNames.Length == 1 ?
+                string className = methodNames.Length == 1 ?
                     $"{methodNames[0]}Behaviour" :
                     $"{type.Name}Behaviour{dv}";
-
-                classes.Add(new Tuple<string, string>(className, string.Join(" | ", methodNames.Select(mn => $"{type.FullName}.{mn}"))));
-                GetArgsDeclaration(type, out string argsDeclaration, out string args);
+                string implsName = impls != null && impls.Count > 0 ?
+                    string.Join(", ", impls.Select(t => t.FullName)) :
+                    string.Empty;
+                string modifier = "private";
+                if (!string.IsNullOrEmpty(implsName))
+                {
+                    implsName = ", " + implsName;
+                    modifier = "public";
+                }
+                string argsDeclaration, args;
+                GetArgsDeclaration(type, out argsDeclaration, out args);
                 if (!string.IsNullOrEmpty(args))
                 {
                     args = ", " + args;
                 }
+
+                classes.Add(new Tuple<string, string[]>(className, methodNames.Select(mn => $"{type.FullName}.{mn}").ToArray()));
                 sb.AppendLine($@"
-        protected class {className} : {invokerImpl.FullName.Replace("+", ".")}
+        protected class {className} : {baseType.FullName.Replace("+", ".")}{implsName}
         {{
             {string.Join("", methodNames.Select(methodName => $@"
-            private void {methodName}({argsDeclaration})
+            {modifier} void {methodName}({argsDeclaration})
             {{
                 Invoke(XOR.Behaviour.Args.{type.Name}.{methodName}{args});
             }}"))}
         }}");
             }
+
+            //注册类型
             sb.AppendLine($@"
         public static void Register()
         {{
-            {string.Join("", classes.Select(c => $@"
-            XOR.Behaviour.Factory.Register<{c.Item1}>({c.Item2});"))}
+            {string.Join("", classes.OrderByDescending((c) => c.Item2.Length).Select(c => $@"
+            XOR.Behaviour.Factory.Register<{c.Item1}>({string.Join(" | ", c.Item2)});"))}
         }}
     }}
 }}");
@@ -396,7 +416,7 @@ namespace XOR.Behaviour
             return false;
         }
         static Dictionary<Type, Type> invokerImplements;
-        static Type GetInvokerImplement(Type type)
+        static Type GetInvokerBase(Type type)
         {
             if (invokerImplements == null)
             {
@@ -421,6 +441,28 @@ namespace XOR.Behaviour
                 });
             invokerImplements.Add(type, impl);
             return impl;
+        }
+        static List<Type> GetInvokerImplement(Enum flag)
+        {
+            var type = flag.GetType();
+
+            List<Type> results = new List<Type>();
+            var value = Convert.ToUInt32(flag);
+            foreach (var f in Enum.GetValues(type))
+            {
+                var fv = Convert.ToUInt32(f);
+                if ((value & fv) <= 0)
+                    continue;
+                var memebrInfo = type.GetMember(f.ToString()).FirstOrDefault();
+                if (memebrInfo == null)
+                    continue;
+                var attribute = memebrInfo.GetCustomAttribute<XOR.Behaviour.ImplAttribute>();
+                if (attribute != null && attribute.Args != null)
+                {
+                    results.AddRange(attribute.Args);
+                }
+            }
+            return results;
         }
     }
 }

@@ -198,7 +198,7 @@ namespace XOR
                 var component = behaviours.Create(gameObject, methods, callback, Invoker.Default);
                 if (component != null)
                 {
-                    component.ObjectID = objectID;
+                    component.ObjectID = GetObjectID();
                     this.behaviours.Add(component);
                 }
                 return;
@@ -213,7 +213,7 @@ namespace XOR
                 var component = behaviours.Create(gameObject, method, callback, Invoker.Default);
                 if (component != null)
                 {
-                    component.ObjectID = objectID;
+                    component.ObjectID = GetObjectID();
                     this.behaviours.Add(component);
                 }
                 value ^= method;

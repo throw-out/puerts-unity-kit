@@ -543,7 +543,7 @@ class UpdateManager {
         }
     }
     static init() {
-        let go = new CS.UnityEngine.GameObject("[UpdateBatchManager]");
+        let go = new CS.UnityEngine.GameObject(`[${UpdateManager.name}]`);
         go.transform.SetParent(CS.XOR.Application.GetInstance().transform);
         go.AddComponent(puerts.$typeof(CS.XOR.Behaviour.Default.UpdateBehaviour)).Callback = () => {
             this.update.tick(Time.deltaTime);

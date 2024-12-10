@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
-using XOR.Behaviour.Args;
 
 namespace XOR
 {
@@ -28,17 +27,23 @@ namespace XOR
         }
         public void SetPreference()
         {
+            var eventSystems = Category.CreateDefaultEverything<Behaviour.Args.EventSystems>(GroupType.Single);
+            eventSystems.groups.Add(new Group()
+            {
+                type = GroupType.Union,
+                value = (uint)(Behaviour.Args.EventSystems.OnBeginDrag | Behaviour.Args.EventSystems.OnDrag | Behaviour.Args.EventSystems.OnEndDrag)
+            });
             categories = new List<Category>()
             {
                 Category.CreateDefaultEverything<Behaviour.Args.Mono>(GroupType.Single),
                 Category.CreateDefaultEverything<Behaviour.Args.MonoBoolean>(GroupType.Single),
                 Category.CreateDefaultEverything<Behaviour.Args.Gizmos>(GroupType.Single),
-                Category.CreateDefaultEverything<Behaviour.Args.Mouse>(GroupType.Union, GroupType.Single),
-                Category.CreateDefaultEverything<Behaviour.Args.EventSystems>(GroupType.Single),
-                Category.CreateDefaultEverything<Behaviour.Args.PhysicsCollider>(GroupType.Union, GroupType.Single),
-                Category.CreateDefaultEverything<Behaviour.Args.PhysicsCollider2D>(GroupType.Union, GroupType.Single),
-                Category.CreateDefaultEverything<Behaviour.Args.PhysicsCollision>(GroupType.Union, GroupType.Single),
-                Category.CreateDefaultEverything<Behaviour.Args.PhysicsCollision2D>(GroupType.Union, GroupType.Single),
+                Category.CreateDefaultEverything<Behaviour.Args.Mouse>(GroupType.Single, GroupType.Union),
+                eventSystems,
+                Category.CreateDefaultEverything<Behaviour.Args.PhysicsCollider>(GroupType.Single, GroupType.Union),
+                Category.CreateDefaultEverything<Behaviour.Args.PhysicsCollider2D>(GroupType.Single, GroupType.Union),
+                Category.CreateDefaultEverything<Behaviour.Args.PhysicsCollision>(GroupType.Single, GroupType.Union),
+                Category.CreateDefaultEverything<Behaviour.Args.PhysicsCollision2D>(GroupType.Single, GroupType.Union),
             };
         }
 

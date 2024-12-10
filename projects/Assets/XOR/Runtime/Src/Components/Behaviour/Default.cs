@@ -146,39 +146,6 @@ namespace XOR.Behaviour
             }
         }
 
-        public class MouseBehaviour127 : XOR.Behaviour.Mouse
-        {
-
-            private void OnMouseDown()
-            {
-                Invoke(XOR.Behaviour.Args.Mouse.OnMouseDown);
-            }
-            private void OnMouseDrag()
-            {
-                Invoke(XOR.Behaviour.Args.Mouse.OnMouseDrag);
-            }
-            private void OnMouseEnter()
-            {
-                Invoke(XOR.Behaviour.Args.Mouse.OnMouseEnter);
-            }
-            private void OnMouseExit()
-            {
-                Invoke(XOR.Behaviour.Args.Mouse.OnMouseExit);
-            }
-            private void OnMouseOver()
-            {
-                Invoke(XOR.Behaviour.Args.Mouse.OnMouseOver);
-            }
-            private void OnMouseUpAsButton()
-            {
-                Invoke(XOR.Behaviour.Args.Mouse.OnMouseUpAsButton);
-            }
-            private void OnMouseUp()
-            {
-                Invoke(XOR.Behaviour.Args.Mouse.OnMouseUp);
-            }
-        }
-
         public class OnMouseDownBehaviour : XOR.Behaviour.Mouse
         {
 
@@ -242,92 +209,125 @@ namespace XOR.Behaviour
             }
         }
 
-        public class OnBeginDragBehaviour : XOR.Behaviour.EventSystems
+        public class MouseBehaviour127 : XOR.Behaviour.Mouse
         {
 
-            private void OnBeginDrag(UnityEngine.EventSystems.PointerEventData arg0)
+            private void OnMouseDown()
+            {
+                Invoke(XOR.Behaviour.Args.Mouse.OnMouseDown);
+            }
+            private void OnMouseDrag()
+            {
+                Invoke(XOR.Behaviour.Args.Mouse.OnMouseDrag);
+            }
+            private void OnMouseEnter()
+            {
+                Invoke(XOR.Behaviour.Args.Mouse.OnMouseEnter);
+            }
+            private void OnMouseExit()
+            {
+                Invoke(XOR.Behaviour.Args.Mouse.OnMouseExit);
+            }
+            private void OnMouseOver()
+            {
+                Invoke(XOR.Behaviour.Args.Mouse.OnMouseOver);
+            }
+            private void OnMouseUpAsButton()
+            {
+                Invoke(XOR.Behaviour.Args.Mouse.OnMouseUpAsButton);
+            }
+            private void OnMouseUp()
+            {
+                Invoke(XOR.Behaviour.Args.Mouse.OnMouseUp);
+            }
+        }
+
+        public class OnBeginDragBehaviour : XOR.Behaviour.EventSystems, UnityEngine.EventSystems.IBeginDragHandler
+        {
+
+            public void OnBeginDrag(UnityEngine.EventSystems.PointerEventData arg0)
             {
                 Invoke(XOR.Behaviour.Args.EventSystems.OnBeginDrag, arg0);
             }
         }
 
-        public class OnDragBehaviour : XOR.Behaviour.EventSystems
+        public class OnDragBehaviour : XOR.Behaviour.EventSystems, UnityEngine.EventSystems.IDragHandler
         {
 
-            private void OnDrag(UnityEngine.EventSystems.PointerEventData arg0)
+            public void OnDrag(UnityEngine.EventSystems.PointerEventData arg0)
             {
                 Invoke(XOR.Behaviour.Args.EventSystems.OnDrag, arg0);
             }
         }
 
-        public class OnEndDragBehaviour : XOR.Behaviour.EventSystems
+        public class OnEndDragBehaviour : XOR.Behaviour.EventSystems, UnityEngine.EventSystems.IEndDragHandler
         {
 
-            private void OnEndDrag(UnityEngine.EventSystems.PointerEventData arg0)
+            public void OnEndDrag(UnityEngine.EventSystems.PointerEventData arg0)
             {
                 Invoke(XOR.Behaviour.Args.EventSystems.OnEndDrag, arg0);
             }
         }
 
-        public class OnPointerClickBehaviour : XOR.Behaviour.EventSystems
+        public class OnPointerClickBehaviour : XOR.Behaviour.EventSystems, UnityEngine.EventSystems.IPointerClickHandler
         {
 
-            private void OnPointerClick(UnityEngine.EventSystems.PointerEventData arg0)
+            public void OnPointerClick(UnityEngine.EventSystems.PointerEventData arg0)
             {
                 Invoke(XOR.Behaviour.Args.EventSystems.OnPointerClick, arg0);
             }
         }
 
-        public class OnPointerDownBehaviour : XOR.Behaviour.EventSystems
+        public class OnPointerDownBehaviour : XOR.Behaviour.EventSystems, UnityEngine.EventSystems.IPointerDownHandler
         {
 
-            private void OnPointerDown(UnityEngine.EventSystems.PointerEventData arg0)
+            public void OnPointerDown(UnityEngine.EventSystems.PointerEventData arg0)
             {
                 Invoke(XOR.Behaviour.Args.EventSystems.OnPointerDown, arg0);
             }
         }
 
-        public class OnPointerEnterBehaviour : XOR.Behaviour.EventSystems
+        public class OnPointerEnterBehaviour : XOR.Behaviour.EventSystems, UnityEngine.EventSystems.IPointerEnterHandler
         {
 
-            private void OnPointerEnter(UnityEngine.EventSystems.PointerEventData arg0)
+            public void OnPointerEnter(UnityEngine.EventSystems.PointerEventData arg0)
             {
                 Invoke(XOR.Behaviour.Args.EventSystems.OnPointerEnter, arg0);
             }
         }
 
-        public class OnPointerExitBehaviour : XOR.Behaviour.EventSystems
+        public class OnPointerExitBehaviour : XOR.Behaviour.EventSystems, UnityEngine.EventSystems.IPointerExitHandler
         {
 
-            private void OnPointerExit(UnityEngine.EventSystems.PointerEventData arg0)
+            public void OnPointerExit(UnityEngine.EventSystems.PointerEventData arg0)
             {
                 Invoke(XOR.Behaviour.Args.EventSystems.OnPointerExit, arg0);
             }
         }
 
-        public class OnPointerUpBehaviour : XOR.Behaviour.EventSystems
+        public class OnPointerUpBehaviour : XOR.Behaviour.EventSystems, UnityEngine.EventSystems.IPointerUpHandler
         {
 
-            private void OnPointerUp(UnityEngine.EventSystems.PointerEventData arg0)
+            public void OnPointerUp(UnityEngine.EventSystems.PointerEventData arg0)
             {
                 Invoke(XOR.Behaviour.Args.EventSystems.OnPointerUp, arg0);
             }
         }
 
-        public class PhysicsColliderBehaviour7 : XOR.Behaviour.PhysicsCollider
+        public class EventSystemsBehaviour7 : XOR.Behaviour.EventSystems, UnityEngine.EventSystems.IBeginDragHandler, UnityEngine.EventSystems.IDragHandler, UnityEngine.EventSystems.IEndDragHandler
         {
 
-            private void OnTriggerEnter(UnityEngine.Collider arg0)
+            public void OnBeginDrag(UnityEngine.EventSystems.PointerEventData arg0)
             {
-                Invoke(XOR.Behaviour.Args.PhysicsCollider.OnTriggerEnter, arg0);
+                Invoke(XOR.Behaviour.Args.EventSystems.OnBeginDrag, arg0);
             }
-            private void OnTriggerStay(UnityEngine.Collider arg0)
+            public void OnDrag(UnityEngine.EventSystems.PointerEventData arg0)
             {
-                Invoke(XOR.Behaviour.Args.PhysicsCollider.OnTriggerStay, arg0);
+                Invoke(XOR.Behaviour.Args.EventSystems.OnDrag, arg0);
             }
-            private void OnTriggerExit(UnityEngine.Collider arg0)
+            public void OnEndDrag(UnityEngine.EventSystems.PointerEventData arg0)
             {
-                Invoke(XOR.Behaviour.Args.PhysicsCollider.OnTriggerExit, arg0);
+                Invoke(XOR.Behaviour.Args.EventSystems.OnEndDrag, arg0);
             }
         }
 
@@ -358,20 +358,20 @@ namespace XOR.Behaviour
             }
         }
 
-        public class PhysicsCollider2DBehaviour7 : XOR.Behaviour.PhysicsCollider2D
+        public class PhysicsColliderBehaviour7 : XOR.Behaviour.PhysicsCollider
         {
 
-            private void OnTriggerEnter2D(UnityEngine.Collider2D arg0)
+            private void OnTriggerEnter(UnityEngine.Collider arg0)
             {
-                Invoke(XOR.Behaviour.Args.PhysicsCollider2D.OnTriggerEnter2D, arg0);
+                Invoke(XOR.Behaviour.Args.PhysicsCollider.OnTriggerEnter, arg0);
             }
-            private void OnTriggerStay2D(UnityEngine.Collider2D arg0)
+            private void OnTriggerStay(UnityEngine.Collider arg0)
             {
-                Invoke(XOR.Behaviour.Args.PhysicsCollider2D.OnTriggerStay2D, arg0);
+                Invoke(XOR.Behaviour.Args.PhysicsCollider.OnTriggerStay, arg0);
             }
-            private void OnTriggerExit2D(UnityEngine.Collider2D arg0)
+            private void OnTriggerExit(UnityEngine.Collider arg0)
             {
-                Invoke(XOR.Behaviour.Args.PhysicsCollider2D.OnTriggerExit2D, arg0);
+                Invoke(XOR.Behaviour.Args.PhysicsCollider.OnTriggerExit, arg0);
             }
         }
 
@@ -402,20 +402,20 @@ namespace XOR.Behaviour
             }
         }
 
-        public class PhysicsCollisionBehaviour7 : XOR.Behaviour.PhysicsCollision
+        public class PhysicsCollider2DBehaviour7 : XOR.Behaviour.PhysicsCollider2D
         {
 
-            private void OnCollisionEnter(UnityEngine.Collision arg0)
+            private void OnTriggerEnter2D(UnityEngine.Collider2D arg0)
             {
-                Invoke(XOR.Behaviour.Args.PhysicsCollision.OnCollisionEnter, arg0);
+                Invoke(XOR.Behaviour.Args.PhysicsCollider2D.OnTriggerEnter2D, arg0);
             }
-            private void OnCollisionStay(UnityEngine.Collision arg0)
+            private void OnTriggerStay2D(UnityEngine.Collider2D arg0)
             {
-                Invoke(XOR.Behaviour.Args.PhysicsCollision.OnCollisionStay, arg0);
+                Invoke(XOR.Behaviour.Args.PhysicsCollider2D.OnTriggerStay2D, arg0);
             }
-            private void OnCollisionExit(UnityEngine.Collision arg0)
+            private void OnTriggerExit2D(UnityEngine.Collider2D arg0)
             {
-                Invoke(XOR.Behaviour.Args.PhysicsCollision.OnCollisionExit, arg0);
+                Invoke(XOR.Behaviour.Args.PhysicsCollider2D.OnTriggerExit2D, arg0);
             }
         }
 
@@ -446,20 +446,20 @@ namespace XOR.Behaviour
             }
         }
 
-        public class PhysicsCollision2DBehaviour7 : XOR.Behaviour.PhysicsCollision2D
+        public class PhysicsCollisionBehaviour7 : XOR.Behaviour.PhysicsCollision
         {
 
-            private void OnCollisionEnter2D(UnityEngine.Collision2D arg0)
+            private void OnCollisionEnter(UnityEngine.Collision arg0)
             {
-                Invoke(XOR.Behaviour.Args.PhysicsCollision2D.OnCollisionEnter2D, arg0);
+                Invoke(XOR.Behaviour.Args.PhysicsCollision.OnCollisionEnter, arg0);
             }
-            private void OnCollisionStay2D(UnityEngine.Collision2D arg0)
+            private void OnCollisionStay(UnityEngine.Collision arg0)
             {
-                Invoke(XOR.Behaviour.Args.PhysicsCollision2D.OnCollisionStay2D, arg0);
+                Invoke(XOR.Behaviour.Args.PhysicsCollision.OnCollisionStay, arg0);
             }
-            private void OnCollisionExit2D(UnityEngine.Collision2D arg0)
+            private void OnCollisionExit(UnityEngine.Collision arg0)
             {
-                Invoke(XOR.Behaviour.Args.PhysicsCollision2D.OnCollisionExit2D, arg0);
+                Invoke(XOR.Behaviour.Args.PhysicsCollision.OnCollisionExit, arg0);
             }
         }
 
@@ -490,9 +490,32 @@ namespace XOR.Behaviour
             }
         }
 
+        public class PhysicsCollision2DBehaviour7 : XOR.Behaviour.PhysicsCollision2D
+        {
+
+            private void OnCollisionEnter2D(UnityEngine.Collision2D arg0)
+            {
+                Invoke(XOR.Behaviour.Args.PhysicsCollision2D.OnCollisionEnter2D, arg0);
+            }
+            private void OnCollisionStay2D(UnityEngine.Collision2D arg0)
+            {
+                Invoke(XOR.Behaviour.Args.PhysicsCollision2D.OnCollisionStay2D, arg0);
+            }
+            private void OnCollisionExit2D(UnityEngine.Collision2D arg0)
+            {
+                Invoke(XOR.Behaviour.Args.PhysicsCollision2D.OnCollisionExit2D, arg0);
+            }
+        }
+
         public static void Register()
         {
 
+            XOR.Behaviour.Factory.Register<MouseBehaviour127>(XOR.Behaviour.Args.Mouse.OnMouseDown | XOR.Behaviour.Args.Mouse.OnMouseDrag | XOR.Behaviour.Args.Mouse.OnMouseEnter | XOR.Behaviour.Args.Mouse.OnMouseExit | XOR.Behaviour.Args.Mouse.OnMouseOver | XOR.Behaviour.Args.Mouse.OnMouseUpAsButton | XOR.Behaviour.Args.Mouse.OnMouseUp);
+            XOR.Behaviour.Factory.Register<EventSystemsBehaviour7>(XOR.Behaviour.Args.EventSystems.OnBeginDrag | XOR.Behaviour.Args.EventSystems.OnDrag | XOR.Behaviour.Args.EventSystems.OnEndDrag);
+            XOR.Behaviour.Factory.Register<PhysicsColliderBehaviour7>(XOR.Behaviour.Args.PhysicsCollider.OnTriggerEnter | XOR.Behaviour.Args.PhysicsCollider.OnTriggerStay | XOR.Behaviour.Args.PhysicsCollider.OnTriggerExit);
+            XOR.Behaviour.Factory.Register<PhysicsCollider2DBehaviour7>(XOR.Behaviour.Args.PhysicsCollider2D.OnTriggerEnter2D | XOR.Behaviour.Args.PhysicsCollider2D.OnTriggerStay2D | XOR.Behaviour.Args.PhysicsCollider2D.OnTriggerExit2D);
+            XOR.Behaviour.Factory.Register<PhysicsCollisionBehaviour7>(XOR.Behaviour.Args.PhysicsCollision.OnCollisionEnter | XOR.Behaviour.Args.PhysicsCollision.OnCollisionStay | XOR.Behaviour.Args.PhysicsCollision.OnCollisionExit);
+            XOR.Behaviour.Factory.Register<PhysicsCollision2DBehaviour7>(XOR.Behaviour.Args.PhysicsCollision2D.OnCollisionEnter2D | XOR.Behaviour.Args.PhysicsCollision2D.OnCollisionStay2D | XOR.Behaviour.Args.PhysicsCollision2D.OnCollisionExit2D);
             XOR.Behaviour.Factory.Register<AwakeBehaviour>(XOR.Behaviour.Args.Mono.Awake);
             XOR.Behaviour.Factory.Register<StartBehaviour>(XOR.Behaviour.Args.Mono.Start);
             XOR.Behaviour.Factory.Register<UpdateBehaviour>(XOR.Behaviour.Args.Mono.Update);
@@ -509,7 +532,6 @@ namespace XOR.Behaviour
             XOR.Behaviour.Factory.Register<OnApplicationPauseBehaviour>(XOR.Behaviour.Args.MonoBoolean.OnApplicationPause);
             XOR.Behaviour.Factory.Register<OnDrawGizmosSelectedBehaviour>(XOR.Behaviour.Args.Gizmos.OnDrawGizmosSelected);
             XOR.Behaviour.Factory.Register<OnSceneGUIBehaviour>(XOR.Behaviour.Args.Gizmos.OnSceneGUI);
-            XOR.Behaviour.Factory.Register<MouseBehaviour127>(XOR.Behaviour.Args.Mouse.OnMouseDown | XOR.Behaviour.Args.Mouse.OnMouseDrag | XOR.Behaviour.Args.Mouse.OnMouseEnter | XOR.Behaviour.Args.Mouse.OnMouseExit | XOR.Behaviour.Args.Mouse.OnMouseOver | XOR.Behaviour.Args.Mouse.OnMouseUpAsButton | XOR.Behaviour.Args.Mouse.OnMouseUp);
             XOR.Behaviour.Factory.Register<OnMouseDownBehaviour>(XOR.Behaviour.Args.Mouse.OnMouseDown);
             XOR.Behaviour.Factory.Register<OnMouseDragBehaviour>(XOR.Behaviour.Args.Mouse.OnMouseDrag);
             XOR.Behaviour.Factory.Register<OnMouseEnterBehaviour>(XOR.Behaviour.Args.Mouse.OnMouseEnter);
@@ -525,23 +547,18 @@ namespace XOR.Behaviour
             XOR.Behaviour.Factory.Register<OnPointerEnterBehaviour>(XOR.Behaviour.Args.EventSystems.OnPointerEnter);
             XOR.Behaviour.Factory.Register<OnPointerExitBehaviour>(XOR.Behaviour.Args.EventSystems.OnPointerExit);
             XOR.Behaviour.Factory.Register<OnPointerUpBehaviour>(XOR.Behaviour.Args.EventSystems.OnPointerUp);
-            XOR.Behaviour.Factory.Register<PhysicsColliderBehaviour7>(XOR.Behaviour.Args.PhysicsCollider.OnTriggerEnter | XOR.Behaviour.Args.PhysicsCollider.OnTriggerStay | XOR.Behaviour.Args.PhysicsCollider.OnTriggerExit);
             XOR.Behaviour.Factory.Register<OnTriggerEnterBehaviour>(XOR.Behaviour.Args.PhysicsCollider.OnTriggerEnter);
             XOR.Behaviour.Factory.Register<OnTriggerStayBehaviour>(XOR.Behaviour.Args.PhysicsCollider.OnTriggerStay);
             XOR.Behaviour.Factory.Register<OnTriggerExitBehaviour>(XOR.Behaviour.Args.PhysicsCollider.OnTriggerExit);
-            XOR.Behaviour.Factory.Register<PhysicsCollider2DBehaviour7>(XOR.Behaviour.Args.PhysicsCollider2D.OnTriggerEnter2D | XOR.Behaviour.Args.PhysicsCollider2D.OnTriggerStay2D | XOR.Behaviour.Args.PhysicsCollider2D.OnTriggerExit2D);
             XOR.Behaviour.Factory.Register<OnTriggerEnter2DBehaviour>(XOR.Behaviour.Args.PhysicsCollider2D.OnTriggerEnter2D);
             XOR.Behaviour.Factory.Register<OnTriggerStay2DBehaviour>(XOR.Behaviour.Args.PhysicsCollider2D.OnTriggerStay2D);
             XOR.Behaviour.Factory.Register<OnTriggerExit2DBehaviour>(XOR.Behaviour.Args.PhysicsCollider2D.OnTriggerExit2D);
-            XOR.Behaviour.Factory.Register<PhysicsCollisionBehaviour7>(XOR.Behaviour.Args.PhysicsCollision.OnCollisionEnter | XOR.Behaviour.Args.PhysicsCollision.OnCollisionStay | XOR.Behaviour.Args.PhysicsCollision.OnCollisionExit);
             XOR.Behaviour.Factory.Register<OnCollisionEnterBehaviour>(XOR.Behaviour.Args.PhysicsCollision.OnCollisionEnter);
             XOR.Behaviour.Factory.Register<OnCollisionStayBehaviour>(XOR.Behaviour.Args.PhysicsCollision.OnCollisionStay);
             XOR.Behaviour.Factory.Register<OnCollisionExitBehaviour>(XOR.Behaviour.Args.PhysicsCollision.OnCollisionExit);
-            XOR.Behaviour.Factory.Register<PhysicsCollision2DBehaviour7>(XOR.Behaviour.Args.PhysicsCollision2D.OnCollisionEnter2D | XOR.Behaviour.Args.PhysicsCollision2D.OnCollisionStay2D | XOR.Behaviour.Args.PhysicsCollision2D.OnCollisionExit2D);
             XOR.Behaviour.Factory.Register<OnCollisionEnter2DBehaviour>(XOR.Behaviour.Args.PhysicsCollision2D.OnCollisionEnter2D);
             XOR.Behaviour.Factory.Register<OnCollisionStay2DBehaviour>(XOR.Behaviour.Args.PhysicsCollision2D.OnCollisionStay2D);
             XOR.Behaviour.Factory.Register<OnCollisionExit2DBehaviour>(XOR.Behaviour.Args.PhysicsCollision2D.OnCollisionExit2D);
         }
-
     }
 }

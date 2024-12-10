@@ -21,4 +21,13 @@ namespace XOR.Behaviour
         }
     }
 
+    [AttributeUsageAttribute(AttributeTargets.Field, Inherited = false, AllowMultiple = false)]
+    public class ImplAttribute : Attribute
+    {
+        public Type[] Args { get; private set; }
+        public ImplAttribute(params Type[] args)
+        {
+            Args = args;
+        }
+    }
 }
