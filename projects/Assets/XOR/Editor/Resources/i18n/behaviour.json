@@ -38,5 +38,41 @@
     "copy_to_clipboard": {
         "zh_cn": "已复制到剪贴板:\n{0}",
         "en_us": "Copied to clipboard:\n{0}"
+    },
+    "behaviour_arg_type": {
+        "zh_cn": "type",
+        "en_us": "type"
+    },
+    "behaviour_arg_value": {
+        "zh_cn": "value",
+        "en_us": "value"
+    },
+    "behaviour_arg_param": {
+        "zh_cn": "param",
+        "en_us": "param"
+    },
+    "behaviour_arg_class": {
+        "zh_cn": "class",
+        "en_us": "class"
+    },
+    "behaviour_arg_default": {
+        "zh_cn": "默认配置",
+        "en_us": "Default"
+    },
+    "behaviour_arg_preference": {
+        "zh_cn": "推荐配置",
+        "en_us": "Preference"
+    },
+    "behaviour_arg_add": {
+        "zh_cn": "新增配置",
+        "en_us": "Add"
+    },
+    "behaviour_arg_generate": {
+        "zh_cn": "生成代码",
+        "en_us": "Generate Code"
+    },
+    "behaviour_arg_generate_clear": {
+        "zh_cn": "清除代码",
+        "en_us": "Clear Code"
     }
 }

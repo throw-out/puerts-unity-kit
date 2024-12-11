@@ -22,7 +22,7 @@ type ConstructorOptions = {
 /**
  * 详情参阅: https://docs.unity3d.com/cn/current/ScriptReference/MonoBehaviour.html
  */
-declare abstract class IBehaviour {
+declare abstract class ILogic {
     /**
      * 创建实例时被调用
      */
@@ -71,6 +71,8 @@ declare abstract class IBehaviour {
      * 每帧调用多次以响应 GUI 事件。首先处理布局和重新绘制事件，然后为每个输入事件处理布局和键盘/鼠标事件。
      */
     protected OnGUI?(): void;
+}
+declare abstract class IApplication {
     /**
      * 在退出应用程序之前在所有游戏对象上调用此函数。在编辑器中，用户停止播放模式时，调用函数。
      */
@@ -88,6 +90,11 @@ declare abstract class IBehaviour {
     protected OnApplicationPause?(pause: boolean): void;
 }
 declare abstract class IGizmos {
+    /**
+     * (仅Editor可用)
+     * 编辑器模式下绘制 Gizmo 时调用。
+     */
+    protected OnDrawGizmos?(): void;
     /**
      * (仅Editor可用)
      * Gizmos 类允许您将线条、球体、立方体、图标、纹理和网格绘制到 Scene 视图中，在开发项目时用作调试、设置的辅助手段或工具。
@@ -256,6 +263,38 @@ declare abstract class IOnMouse {
      */
     protected OnMouseUpAsButton?(): void;
 }
+declare abstract class IRenderer {
+    /**
+     * 摄像机剔除场景之前调用
+     */
+    protected OnPreCull?(): void;
+    /**
+     * 当对象即将被渲染时调用。
+     */
+    protected OnWillRenderObject?(): void;
+    /**
+     * 当对象的 Renderer 被任何摄像机看到时调用。
+     * 对象需要具有Renderer组件(MeshRenderer或SpriteRenderer)
+     */
+    protected OnBecameVisible?(): void;
+    /**
+     * 当对象的 Renderer 不再被任何摄像机看到时调用。
+     * 对象需要具有Renderer组件(MeshRenderer或SpriteRenderer)
+     */
+    protected OnBecameInvisible?(): void;
+    /**
+     * 摄像机开始渲染之前调用
+     */
+    protected OnPreRender?(): void;
+    /**
+     * 摄像机每渲染一个对象时调用。
+     */
+    protected OnRenderObject?(): void;
+    /**
+     * 摄像机完成渲染后调用
+     */
+    protected OnPostRender?(): void;
+}
 /**
  * 沿用C# MonoBehaviour习惯, 将OnEnable丶Update丶OnEnable等方法绑定到C#对象上, Unity将在生命周期内调用
  *
@@ -265,6 +304,8 @@ declare abstract class IOnMouse {
 declare abstract class BehaviourConstructor {
     private __listeners__;
     private __listenerProxy__;
+    private __updateElement__;
+    private __componentID__;
     StartCoroutine(routine: ((...args: any[]) => Generator) | Generator, ...args: any[]): CS.UnityEngine.Coroutine;
     StopCoroutine(routine: CS.UnityEngine.Coroutine): void;
     StopAllCoroutines(): void;
@@ -286,8 +327,7 @@ declare abstract class BehaviourConstructor {
     protected clearListeners(): void;
     private _invokeListeners;
     protected disponse(): void;
-    protected bindProxies(): void;
-    protected bindUpdateProxies(): void;
+    protected bindLifecycle(): void;
     protected bindListeners(): any;
     protected bindModuleInEditor(): void;
     abstract get transform(): Transform;
@@ -302,7 +342,7 @@ declare abstract class BehaviourConstructor {
     set name(value: string);
     get rectTransform(): RectTransform;
 }
-interface BehaviourConstructor extends IBehaviour, IGizmos, IOnPointerHandler, IOnDragHandler, IOnMouse, IOnCollision, IOnCollision2D, IOnTrigger, IOnTrigger2D {
+interface BehaviourConstructor extends ILogic, IGizmos, IOnPointerHandler, IOnDragHandler, IOnMouse, IOnCollision, IOnCollision2D, IOnTrigger, IOnTrigger2D, IApplication, IRenderer {
 }
 declare class TsBehaviourConstructor extends BehaviourConstructor {
     private __transform__;
@@ -314,6 +354,11 @@ declare class TsBehaviourConstructor extends BehaviourConstructor {
     constructor(object: GameObject | Transform | CS.XOR.TsBehaviour, accessor?: AccessorUnionType | boolean);
     constructor(object: GameObject | Transform | CS.XOR.TsBehaviour, options?: ConstructorOptions);
     protected disponse(): void;
+    /**
+     * 注册全局生命周期回调, 每个TsBehaviour实例不再单独创建多个生命周期回调绑定
+     * @param enabled
+     */
+    static setGlobalInvoker(enabled: boolean): void;
 }
 declare namespace utils {
     function getAccessorProperties(accessor: AccessorType): {

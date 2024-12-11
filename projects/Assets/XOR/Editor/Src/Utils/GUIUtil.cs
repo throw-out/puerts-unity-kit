@@ -98,6 +98,18 @@ namespace XOR
             action(args);
             GUILayout.EndVertical();
         }
+        public static void RenderGroup<T1, T2>(Action<T1, T2> action, T1 arg1, T2 arg2)
+        {
+            GUILayout.BeginVertical(Skin.groupBox);
+            action(arg1, arg2);
+            GUILayout.EndVertical();
+        }
+        public static void RenderGroup<T1, T2, T3>(Action<T1, T2, T3> action, T1 arg1, T2 arg2, T3 arg3)
+        {
+            GUILayout.BeginVertical(Skin.groupBox);
+            action(arg1, arg2, arg3);
+            GUILayout.EndVertical();
+        }
         public static void RenderGroup(Action firstAction, params Action[] actions)
         {
             GUILayout.BeginVertical(Skin.groupBox);
@@ -186,6 +198,81 @@ namespace XOR
             );
             if (startup && !EditorApplicationUtil.IsRunning())
                 EditorApplicationUtil.Start();
+        }
+
+        /// <summary>
+        /// 弹窗询问生成类型
+        /// </summary>
+        public static void RenderGenerateClass(Action confirm, int total = -1, int count = -1)
+        {
+            string message = Language.Default.Get("generate_class_confirm");
+            if (total > 0)
+            {
+                message = string.Format(message, total, count);
+            }
+            bool ok = EditorUtility.DisplayDialog(
+                Language.Default.Get("tip"),
+                message,
+                Language.Default.Get("confirm"),
+                Language.Default.Get("cancel")
+            );
+            if (ok && confirm != null)
+                confirm();
+        }
+        /// <summary>
+        /// 弹窗提示生成类型为空
+        /// </summary>
+        public static void RenderGenerateClassEmpty()
+        {
+            string message = Language.Default.Get("generate_class_empty");
+            EditorUtility.DisplayDialog(
+                Language.Default.Get("tip"),
+                message,
+                Language.Default.Get("confirm")
+            );
+        }
+
+        /// <summary>
+        /// 弹窗确认窗口
+        /// </summary>
+        public static void RenderConfirm(string messageKey, Action confirm)
+        {
+            bool ok = EditorUtility.DisplayDialog(
+                Language.Default.Get("tip"),
+                Language.Default.Get(messageKey),
+                Language.Default.Get("confirm"),
+                Language.Default.Get("cancel")
+            );
+            if (ok && confirm != null)
+                confirm();
+        }
+        /// <summary>
+        /// 弹窗确认窗口
+        /// </summary>
+        public static void RenderConfirm<T1>(string messageKey, Action<T1> confirm, T1 arg1)
+        {
+            bool ok = EditorUtility.DisplayDialog(
+                Language.Default.Get("tip"),
+                Language.Default.Get(messageKey),
+                Language.Default.Get("confirm"),
+                Language.Default.Get("cancel")
+            );
+            if (ok && confirm != null)
+                confirm(arg1);
+        }
+        /// <summary>
+        /// 弹窗确认窗口
+        /// </summary>
+        public static void RenderConfirm<T1, T2>(string messageKey, Action<T1, T2> confirm, T1 arg1, T2 arg2)
+        {
+            bool ok = EditorUtility.DisplayDialog(
+                Language.Default.Get("tip"),
+                Language.Default.Get(messageKey),
+                Language.Default.Get("confirm"),
+                Language.Default.Get("cancel")
+            );
+            if (ok && confirm != null)
+                confirm(arg1, arg2);
         }
     }
 }

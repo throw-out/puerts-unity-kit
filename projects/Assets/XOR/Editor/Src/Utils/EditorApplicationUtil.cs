@@ -90,7 +90,7 @@ namespace XOR
         }
         public static IProgram GetProgramCached()
         {
-            if (_cached == null && Settings.Load().cached)
+            if (_cached == null && Settings.GetInstance().cached)
             {
                 _cached = ProgramCached.CreateProgramFormRoot();
             }
@@ -106,8 +106,8 @@ namespace XOR
             Prefs.ASTEnable.SetValue(true);
             try
             {
-                string projectConfig = PathUtil.GetFullPath(Settings.Load().project);
-                bool useNodejsWatch = Settings.Load().watchType == Settings.WacthType.Nodejs && PuertsUtil.IsSupportNodejs();
+                string projectConfig = PathUtil.GetFullPath(Settings.GetInstance().project);
+                bool useNodejsWatch = Settings.GetInstance().watchType == Settings.WacthType.Nodejs && PuertsUtil.IsSupportNodejs();
 
                 if (!File.Exists(projectConfig))
                 {
@@ -173,7 +173,7 @@ namespace XOR
                     app.Interfaces.Watch(projectConfig);
                 }
                 EditorFileWatcher.ReleaseInstance();
-                if (!useNodejsWatch && Settings.Load().watchType != Settings.WacthType.None)
+                if (!useNodejsWatch && Settings.GetInstance().watchType != Settings.WacthType.None)
                 {
                     string dirpath = Path.GetDirectoryName(projectConfig);
                     EditorFileWatcher watcher = EditorFileWatcher.GetInstance();

@@ -107,6 +107,18 @@
         "zh_cn": "以下模块尚未安装, 请在目标路径中执行<npm install>或<yarn install>命令:\n{0}",
         "en_us": "The modules have not been installed. Please execute <npm install>or<yarn install>command:\n{0}"
     },
+    "override_current_data": {
+        "zh_cn": "当前数据将会被覆盖, 是否继续?",
+        "en_us": "The current data will be override. Do you want to continue?"
+    },
+    "generate_class_confirm": {
+        "zh_cn": "配置生成{0}个类型, 实际生成{1}个类型, 是否继续?",
+        "en_us": "Configured to generate {0} types, but actually generated {1} types. Do you want to continue?"
+    },
+    "generate_class_empty": {
+        "zh_cn": "生成类型列表为空.",
+        "en_us": "The configured type list is empty."
+    },
     "reload_metadata_cached": {
         "zh_cn": "重新加载",
         "en_us": "Reload Cached"

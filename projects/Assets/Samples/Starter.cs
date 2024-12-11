@@ -146,7 +146,7 @@ public class Starter : MonoBehaviour
     }
     static string GetOutputPath()
     {
-        string configFilePath = Settings.Load().project;
+        string configFilePath = Settings.GetInstance().project;
         return Path.GetFullPath(Path.Combine(UnityEngine.Application.dataPath, Path.GetDirectoryName(configFilePath), "output"));
     }
 #endif
