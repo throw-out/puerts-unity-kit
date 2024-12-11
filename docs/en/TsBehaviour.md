@@ -48,6 +48,9 @@
 import GameObject = CS.UnityEngine.GameObject;
 import Time = CS.UnityEngine.Time;
 
+//Register global lifecycle callbacks to avoid creating multiple Delegate instances in xor.TsBehaviour
+xor.TsBehaviour.setGlobalInvoker(true);
+
 // A simple TsBehaviour example:
 class Sample01 extends xor.TsBehaviour {
     private _time: number = 0;
@@ -56,9 +59,9 @@ class Sample01 extends xor.TsBehaviour {
         console.log(`TsBehaviour ${Sample01.name}: Awake`);
     }
     // Update will be called uniformly by xor.TsBehaviour; you can use the `standalone` decorator to inform xor.TsBehaviour to use a separate Update call for the component
-    //@xor.TsBehaviour.standalone()
+    //@xor.standalone()
     protected Update(deltaTime?: number): void {
-        this._time += (deltaTime ?? Time.time);
+        this._time += (deltaTime ?? Time.deltaTime);
         if (this._time > 1) {
             this._time -= 1;
             console.log(`TsBehaviour ${Sample01.name}: Update`);
@@ -76,3 +79,4 @@ export function init() {
     let gameObject = new GameObject(Sample01.name);
     return new Sample01(gameObject);
 }
+```

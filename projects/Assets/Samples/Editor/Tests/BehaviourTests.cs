@@ -21,6 +21,15 @@ public static class BehaviourTests
     [MenuItem("Tools/XOR-Samples/Run BehaviourTests", false, int.MaxValue)]
     static void RunTests()
     {
+        var output = GetTestsProjectOutput();
+        if (!Directory.Exists(output) || !File.Exists(Path.Combine(output, "tests/main.js")) && !File.Exists(Path.Combine(output, "tests/main.mjs")))
+        {
+            var root = Path.GetDirectoryName(output);
+            EditorUtility.DisplayDialog("提示", $"请先编译Tests项目, 请在以下目录中执行\"tsc -p tsconfig.json --module ES6\":\n{root}", "确定");
+            EditorUtility.RevealInFinder(root);
+            return;
+        }
+
         if (EditorApplication.isPlaying)
         {
             RunBehaviourTests();
@@ -68,7 +77,7 @@ public static class BehaviourTests
         var app = XOR.Application.GetInstance();
         app.Loader.AddLoader(new Puerts.ECMAScriptLoader());
         //添加Editor Loader
-        var output = Path.Combine(Path.GetDirectoryName(UnityEngine.Application.dataPath), "TsEditorProject/output");
+        var output = GetTestsProjectOutput();
         app.Loader.AddLoader(new FileLoader(output, Path.GetDirectoryName(output)));
 
         TsComponent.Register(app.Env);
@@ -83,5 +92,9 @@ public static class BehaviourTests
             Release();
         }
 
+    }
+    static string GetTestsProjectOutput()
+    {
+        return Path.Combine(Path.GetDirectoryName(UnityEngine.Application.dataPath), "TsEditorProject/output");
     }
 }
