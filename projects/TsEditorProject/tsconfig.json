@@ -43,5 +43,6 @@
         "sourceMap": true,
         "removeComments": false,
         "declaration": true,
+        "experimentalDecorators": true,
     }
 }

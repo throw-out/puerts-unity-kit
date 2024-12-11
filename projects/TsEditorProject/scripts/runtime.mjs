@@ -22,11 +22,12 @@ const publishPaths = {
 
     const isPublish = !!options['publish'];     //是否为发布模式
     const isESM = !!(options['esm'] ?? options['esmodule']); //是否为esm模块
+    const isDev = !!(options['dev']); //是否为dev模式
 
     console.clear();
     console.log(`
 ╔════RUNTIME COMPILE═════════════════════════════════════╗
-║mode: isPublish=${isPublish}, isESM=${isESM}
+║mode: isPublish=${isPublish}, isESM=${isESM}, isDev=${isDev}
 ║rootPath: ${rootPath}
 ║outputPath: ${outputPath}
 ║publishPaths: 
@@ -37,7 +38,11 @@ const publishPaths = {
 
     //执行tsc编译命令
     try {
-        const stdio = child_process.execSync(`npx tsc -p tsconfig.json --module ${isESM ? 'ES6' : 'CommonJS'}`, {
+        let cmd = `npx tsc -p tsconfig.json --module ${isESM ? 'ES6' : 'CommonJS'}`
+        if (isDev) {
+            cmd += ` --watch`
+        }
+        const stdio = child_process.execSync(cmd, {
             cwd: rootPath,
             encoding: 'utf8',
             stdio: 'pipe',

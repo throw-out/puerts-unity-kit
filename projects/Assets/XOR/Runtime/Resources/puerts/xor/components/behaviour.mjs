@@ -207,28 +207,25 @@ class BehaviourConstructor {
         }
         if (updateFlags > 0) {
             let element = new UpdateManager.Element(updateFlags, this);
+            element.enabled = !this.component.IsDestroyed && this.component.IsEnable;
             this.__updateElement__ = element;
             UpdateManager.register(element);
-            if (isGlobalInvoker) {
-                element.enabled = !this.component.IsDestroyed && this.component.IsEnable;
-            }
-            else {
-                //生命周期管理
-                this.component.CreateLogic(CS.XOR.Behaviour.Args.Logic.OnEnable | CS.XOR.Behaviour.Args.Logic.OnDisable | CS.XOR.Behaviour.Args.Logic.OnDestroy, (method) => {
-                    switch (method) {
-                        case CS.XOR.Behaviour.Args.Logic.OnEnable:
-                            element.enabled = true;
-                            break;
-                        case CS.XOR.Behaviour.Args.Logic.OnDisable:
-                            element.enabled = false;
-                            break;
-                        case CS.XOR.Behaviour.Args.Logic.OnDestroy:
-                            element.enabled = false;
-                            UpdateManager.unregister(element);
-                            break;
-                    }
-                });
-            }
+            //生命周期管理
+            let flags = CS.XOR.Behaviour.Args.Logic.OnEnable | CS.XOR.Behaviour.Args.Logic.OnDisable | CS.XOR.Behaviour.Args.Logic.OnDestroy;
+            this.component.CreateLogic(flags, isGlobalInvoker ? undefined : (method) => {
+                switch (method) {
+                    case CS.XOR.Behaviour.Args.Logic.OnEnable:
+                        element.enabled = true;
+                        break;
+                    case CS.XOR.Behaviour.Args.Logic.OnDisable:
+                        element.enabled = false;
+                        break;
+                    case CS.XOR.Behaviour.Args.Logic.OnDestroy:
+                        element.enabled = false;
+                        UpdateManager.unregister(element);
+                        break;
+                }
+            });
         }
         //注册Editeor事件
         if (isEditor) {
@@ -467,9 +464,17 @@ class TsBehaviourConstructor extends BehaviourConstructor {
         this.__transform__ = undefined;
         this.__component__ = undefined;
     }
-    /**注册全局生命周期回调, 每个TsBehaviour实例不再单独创建多个生命周期回调绑定 */
-    static registerGlobalInvoker() {
-        GlobalManager.init();
+    /**
+     * 注册全局生命周期回调, 每个TsBehaviour实例不再单独创建多个生命周期回调绑定
+     * @param enabled
+     */
+    static setGlobalInvoker(enabled) {
+        if (enabled) {
+            GlobalManager.init();
+        }
+        else {
+            GlobalManager.dispose();
+        }
     }
 }
 /**全局对象管理 */
@@ -490,23 +495,23 @@ class GlobalManager {
                     break;
                 case CS.XOR.Behaviour.Args.Logic.OnDestroy:
                     this.setUpdateElement(objectID, false);
-                    this.invoke(objectID, CS.XOR.Behaviour.Args.Logic[method], true);
+                    this.maybeInvoke(objectID, CS.XOR.Behaviour.Args.Logic[method], true);
                     this.unregister(objectID);
                     break;
                 case CS.XOR.Behaviour.Args.Logic.OnEnable:
                     this.setUpdateElement(objectID, true);
-                    this.invoke(objectID, CS.XOR.Behaviour.Args.Logic[method], false);
+                    this.maybeInvoke(objectID, CS.XOR.Behaviour.Args.Logic[method], false);
                     break;
                 case CS.XOR.Behaviour.Args.Logic.OnDisable:
                     this.setUpdateElement(objectID, false);
-                    this.invoke(objectID, CS.XOR.Behaviour.Args.Logic[method], false);
+                    this.maybeInvoke(objectID, CS.XOR.Behaviour.Args.Logic[method], false);
                     break;
                 default:
                     this.invoke(objectID, CS.XOR.Behaviour.Args.Logic[method], false);
                     break;
             }
         };
-        invoker.application = (objectID, method) => this.invoke(objectID, CS.XOR.Behaviour.Args.ApplicationBoolean[method], false);
+        invoker.application = (objectID, method) => this.invoke(objectID, CS.XOR.Behaviour.Args.Application[method], false);
         invoker.application2 = (objectID, method, data) => this.invoke(objectID, CS.XOR.Behaviour.Args.ApplicationBoolean[method], false, data);
         invoker.edit = (objectID, method) => this.invoke(objectID, CS.XOR.Behaviour.Args.Edit[method], false);
         invoker.renderer = (objectID, method) => this.invoke(objectID, CS.XOR.Behaviour.Args.Renderer[method], false);
@@ -520,11 +525,23 @@ class GlobalManager {
         invoker.destroy = (objectID) => this.unregister(objectID);
         CS.XOR.Behaviour.Invoker.Default = invoker;
     }
+    static dispose() {
+        CS.XOR.Behaviour.Invoker.Default = null;
+    }
     static invoke(objectID, funcname, catchExecption, ...args) {
         let obj = this.objects.get(objectID);
         if (!obj)
             return;
         inner.invoke(obj, funcname, catchExecption, ...args);
+    }
+    static maybeInvoke(objectID, funcname, catchExecption, ...args) {
+        let obj = this.objects.get(objectID);
+        if (!obj)
+            return;
+        const func = obj[funcname];
+        if (!func || typeof (func) != "function")
+            return;
+        inner.invoke(obj, func, catchExecption, ...args);
     }
     static setUpdateElement(objectID, enabled) {
         let obj = this.objects.get(objectID);

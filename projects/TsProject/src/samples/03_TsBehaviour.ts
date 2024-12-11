@@ -2,7 +2,7 @@ import GameObject = CS.UnityEngine.GameObject;
 import Time = CS.UnityEngine.Time;
 
 //注册全局生命周期回调, 避免在xor.TsBehaviour中创建多个Delegate实例
-xor.TsBehaviour.registerGlobalInvoker();
+xor.TsBehaviour.setGlobalInvoker(true);
 
 //一个简单的TsBehaviour示例:
 class Sample01 extends xor.TsBehaviour {

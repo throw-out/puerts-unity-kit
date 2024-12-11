@@ -354,8 +354,11 @@ declare class TsBehaviourConstructor extends BehaviourConstructor {
     constructor(object: GameObject | Transform | CS.XOR.TsBehaviour, accessor?: AccessorUnionType | boolean);
     constructor(object: GameObject | Transform | CS.XOR.TsBehaviour, options?: ConstructorOptions);
     protected disponse(): void;
-    /**注册全局生命周期回调, 每个TsBehaviour实例不再单独创建多个生命周期回调绑定 */
-    static registerGlobalInvoker(): void;
+    /**
+     * 注册全局生命周期回调, 每个TsBehaviour实例不再单独创建多个生命周期回调绑定
+     * @param enabled
+     */
+    static setGlobalInvoker(enabled: boolean): void;
 }
 declare namespace utils {
     function getAccessorProperties(accessor: AccessorType): {
