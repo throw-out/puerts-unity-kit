@@ -95,10 +95,10 @@ class Update extends TestBase {
 }
 class LateUpdate extends TestBase {
     private tick: number;
+    @xor.standalone()
     protected LateUpdate(): void {
         this.tick = (this.tick ?? 0) + 1
     }
-    @xor.standalone()
     public async run() {
         await super.run()
 
