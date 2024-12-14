@@ -24,7 +24,7 @@ namespace XOR
 
         //Unity 接口组件
         private int objectID;
-        public bool isObtainedObejctID;
+        private bool isObtainedObejctID;
         private List<Behaviour.Behaviour> behaviours;
         private Behaviour.Args.Logic @base;
         private Action<Behaviour.Args.Logic> lifecycle;
@@ -82,10 +82,6 @@ namespace XOR
         protected virtual void OnEnable()
         {
             IsEnable = true;
-            if ((@base & Behaviour.Args.Logic.OnEnable) > 0)
-            {
-                Invoke(Behaviour.Args.Logic.OnEnable, lifecycle);
-            }
             if (behaviours != null)
             {
                 foreach (var behaviour in behaviours)
@@ -93,14 +89,14 @@ namespace XOR
                     behaviour.enabled = true;
                 }
             }
+            if ((@base & Behaviour.Args.Logic.OnEnable) > 0)
+            {
+                Invoke(Behaviour.Args.Logic.OnEnable, lifecycle);
+            }
         }
         protected virtual void OnDisable()
         {
             IsEnable = false;
-            if ((@base & Behaviour.Args.Logic.OnDisable) > 0)
-            {
-                Invoke(Behaviour.Args.Logic.OnDisable, lifecycle);
-            }
             if (behaviours != null)
             {
                 foreach (var behaviour in behaviours)
@@ -108,16 +104,22 @@ namespace XOR
                     behaviour.enabled = false;
                 }
             }
+            if ((@base & Behaviour.Args.Logic.OnDisable) > 0)
+            {
+                Invoke(Behaviour.Args.Logic.OnDisable, lifecycle);
+            }
         }
         protected virtual void OnDestroy()
         {
             IsDestroyed = true;
+            var @base = this.@base;
+            var lifecycle = this.lifecycle;
+            Dispose(true);
             if ((@base & Behaviour.Args.Logic.OnDestroy) > 0)
             {
                 @base ^= Behaviour.Args.Logic.OnDestroy;
                 Invoke(Behaviour.Args.Logic.OnDestroy, lifecycle);
             }
-            Dispose(true);
         }
 
         public void CreateLogic(Behaviour.Args.Logic methods, Action<Behaviour.Args.Logic> callback)
