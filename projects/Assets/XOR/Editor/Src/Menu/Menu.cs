@@ -10,18 +10,30 @@ namespace XOR
     [InitializeOnLoad]
     internal class Menu
     {
-        static Menu()
+        [InitializeOnLoadMethod]
+        private static void OnLoad()
         {
-            EditorApplicationHandler.delayCall += InitializeStart;
             EditorApplicationHandler.dispose += Dispose;
+            UnityEditor.EditorApplication.playModeStateChanged -= OnPlayModeStateChanged;
+            UnityEditor.EditorApplication.playModeStateChanged += OnPlayModeStateChanged;
         }
-
-        static void InitializeStart()
+        static void OnPlayModeStateChanged(PlayModeStateChange state)
         {
-            EditorApplicationHandler.delayCall -= InitializeStart;
-            if (Prefs.ASTEnable && !EditorApplicationUtil.IsRunning())
+            switch (state)
             {
-                EditorApplicationUtil.Start();
+                case PlayModeStateChange.EnteredEditMode:
+                case PlayModeStateChange.EnteredPlayMode:
+                    if (Prefs.ASTEnable && !EditorApplicationUtil.IsRunning())
+                    {
+                        EditorApplicationUtil.Start();
+                    }
+                    break;
+                default:
+                    if (EditorApplicationUtil.IsRunning())
+                    {
+                        EditorApplicationUtil.Stop(true, false);
+                    }
+                    break;
             }
         }
         static void Dispose()
@@ -55,27 +67,41 @@ namespace XOR
 
 
         #region Language菜单项
-        [MenuItem("Tools/XOR/Language/简体中文", false, 0)]
+        const string kMenuZHCN = "Tools/XOR/Language/简体中文";
+        const string kMenuEN = "Tools/XOR/Language/English";
+
+        [MenuItem(kMenuZHCN, false, 0)]
         static void LanguageZHCN() => Prefs.Language.SetValue((int)Language.Env.ZH_CN);
-        [MenuItem("Tools/XOR/Language/简体中文", true, 0)]
-        static bool LanguageZHCNValidate() => Prefs.Language.GetValue() != (int)Language.Env.ZH_CN;
-        [MenuItem("Tools/XOR/Language/English", false, 0)]
+        [MenuItem(kMenuZHCN, true, 0)]
+        static bool LanguageZHCNValidate()
+        {
+            bool isChecked = Prefs.Language.GetValue() == (int)Language.Env.ZH_CN;
+            UnityEditor.Menu.SetChecked(kMenuZHCN, isChecked);
+            return !isChecked;
+        }
+        [MenuItem(kMenuEN, false, 0)]
         static void LanguageENUS() => Prefs.Language.SetValue((int)Language.Env.EN_US);
-        [MenuItem("Tools/XOR/Language/English", true, 0)]
-        static bool LanguageENUSValidate() => Prefs.Language.GetValue() != (int)Language.Env.EN_US;
+        [MenuItem(kMenuEN, true, 0)]
+        static bool LanguageENUSValidate()
+        {
+            bool isChecked = Prefs.Language.GetValue() == (int)Language.Env.EN_US;
+            UnityEditor.Menu.SetChecked(kMenuEN, isChecked);
+            return !isChecked;
+        }
         #endregion
 
 
 
         #region 开发者模式
-        [MenuItem("Tools/XOR/DeveloperMode/Enable", false, 0)]
-        static void DeveloperEnable() => Prefs.DeveloperMode.SetValue(true);
-        [MenuItem("Tools/XOR/DeveloperMode/Enable", true, 0)]
-        static bool DeveloperEnableValidate() => !Prefs.DeveloperMode.GetValue();
-        [MenuItem("Tools/XOR/DeveloperMode/Disable", false, 0)]
-        static void DeveloperDisable() => Prefs.DeveloperMode.SetValue(false);
-        [MenuItem("Tools/XOR/DeveloperMode/Disable", true, 0)]
-        static bool DeveloperDisableValidate() => Prefs.DeveloperMode.GetValue();
+        const string kMenuDeveloper = "Tools/XOR/DeveloperMode";
+        [MenuItem(kMenuDeveloper, false, 0)]
+        static void Developer() => Prefs.DeveloperMode.SetValue(!Prefs.DeveloperMode);
+        [MenuItem(kMenuDeveloper, true, 0)]
+        static bool DeveloperValidate()
+        {
+            UnityEditor.Menu.SetChecked(kMenuDeveloper, Prefs.DeveloperMode);
+            return true;
+        }
         #endregion
 
 

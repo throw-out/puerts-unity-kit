@@ -118,6 +118,15 @@ namespace XOR
             }
 
             GUILayout.BeginHorizontal();
+            GUILayout.Label("Verbose", GUILayout.Width(HeaderWidth));
+            bool verbose = GUILayout.Toggle(settings.verbose, string.Empty);
+            GUILayout.EndHorizontal();
+            if (verbose != settings.verbose)
+            {
+                settings.verbose = verbose;
+            }
+
+            GUILayout.BeginHorizontal();
             GUILayout.Label("Auto Script", GUILayout.Width(HeaderWidth));
             bool autoLoadScript = GUILayout.Toggle(settings.autoLoadScript, string.Empty);
             GUILayout.EndHorizontal();

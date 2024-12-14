@@ -222,7 +222,7 @@ namespace XOR
 #endif
             bool waitDebugger = port > 0 && Options.debugger.wait;
 
-            Logger.Log($"<b>XOR.{nameof(ThreadWorker)}({ThreadId}): <color=green>Executing</color></b>");
+            if (Logger.Verbose) Logger.Log($"<b>XOR.{nameof(ThreadWorker)}({ThreadId}): <color=green>Executing</color></b>");
             JsEnv env = null;
             try
             {
@@ -244,7 +244,7 @@ namespace XOR
                 ThreadExecuteRun(env, filepath, !Options.stopOnError);
 
                 this.IsInitialized = true;
-                Logger.Log($"<b>XOR.{nameof(ThreadWorker)}({ThreadId}): <color=green>Started</color></b>");
+                if (Logger.Verbose) Logger.Log($"<b>XOR.{nameof(ThreadWorker)}({ThreadId}): <color=green>Started</color></b>");
                 while (env == this.Env && IsAlive)
                 {
                     ThreadExecuteTick(env, !Options.stopOnError);
@@ -255,7 +255,7 @@ namespace XOR
             catch (ThreadInterruptedException /** e */)
             {
                 //线程在休眠期间, 调用thread.Interrupt()抛出此异常, 无须处理, 不影响运行
-                Logger.Log($"<b>XOR.{nameof(ThreadWorker)}({ThreadId}): <color=red>Abort</color></b>");
+                if (Logger.Verbose) Logger.Log($"<b>XOR.{nameof(ThreadWorker)}({ThreadId}): <color=red>Abort</color></b>");
             }
             catch (Exception e)
             {
@@ -271,7 +271,7 @@ namespace XOR
                     env.Tick();
                     env.Dispose();
                 }
-                Logger.Log($"<b>XOR.{nameof(ThreadWorker)}({ThreadId}): <color=red>Stoped</color></b>");
+                if (Logger.Verbose) Logger.Log($"<b>XOR.{nameof(ThreadWorker)}({ThreadId}): <color=red>Stoped</color></b>");
 #if UNITY_EDITOR
                 Interlocked.Decrement(ref realThread);
 #endif

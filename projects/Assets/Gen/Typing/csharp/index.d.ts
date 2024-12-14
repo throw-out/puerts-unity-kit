@@ -27424,7 +27424,6 @@
         class TsBehaviour extends UnityEngine.MonoBehaviour implements System.IDisposable
         {
             protected [__keep_incompatibility]: never;
-            public isObtainedObejctID : boolean
             public get IsActivated(): boolean;
             public get IsStarted(): boolean;
             public get IsDestroyed(): boolean;
@@ -27694,6 +27693,7 @@
         class Logger extends XOR.Singleton$1<XOR.Logger>
         {
             protected [__keep_incompatibility]: never;
+            public static get Verbose(): boolean;
             public add_logMessageReceived ($value: UnityEngine.Application.LogCallback) : void
             public remove_logMessageReceived ($value: UnityEngine.Application.LogCallback) : void
             public add_logMessageReceivedThreaded ($value: UnityEngine.Application.LogCallback) : void
@@ -27790,6 +27790,7 @@
             public cached : boolean
             public watchType : XOR.Settings.WacthType
             public logger : XOR.Settings.LOGGER
+            public verbose : boolean
             public constructor ()
         }
         class AES extends System.Object

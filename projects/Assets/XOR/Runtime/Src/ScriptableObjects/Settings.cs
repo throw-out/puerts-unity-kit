@@ -38,5 +38,8 @@ namespace XOR
             WARN = 4,
             ERROR = 8,
         }
+
+        /// <summary>输出更新详细的日志</summary>
+        public bool verbose;
     }
 }

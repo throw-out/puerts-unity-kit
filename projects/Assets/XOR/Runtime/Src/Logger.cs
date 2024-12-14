@@ -103,5 +103,21 @@ namespace XOR
             }
             return (current & type) == type;
         }
+
+        public static bool Verbose
+        {
+            get
+            {
+                if (Settings.Instance != null)
+                {
+                    return Settings.Instance.verbose;
+                }
+                else if (Thread.CurrentThread.ManagedThreadId == MAIN_THREAD_ID)
+                {
+                    return Settings.Load(true, false).verbose;
+                }
+                return true;
+            }
+        }
     }
 }

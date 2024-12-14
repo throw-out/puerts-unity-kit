@@ -44,7 +44,9 @@ class Workflow {
         try {
             let dirpath = Path.GetDirectoryName(project);
             this._watcher = this._createWatcher(dirpath);
-            csharp.XOR.Logger.Log(`<b>nodejs.FSWacther:</b> ${dirpath}`);
+            if (csharp.XOR.Logger.Verbose) {
+                csharp.XOR.Logger.Log(`<b>nodejs.FSWacther:</b> ${dirpath}`);
+            }
         } catch (e) {
             console.error(e);
         }

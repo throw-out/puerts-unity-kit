@@ -122,7 +122,7 @@ namespace XOR
                 if (!ValidateProjectEnv(projectConfig))
                     return;
 
-                Logger.Log($"<b>XOR.{nameof(EditorApplication)}: <color=green>Executing</color></b>");
+                if (Logger.Verbose) Logger.Log($"<b>XOR.{nameof(EditorApplication)}: <color=green>Executing</color></b>");
 
                 //创建EditorApplication实例
                 EditorApplication app = EditorApplication.GetInstance();
@@ -186,22 +186,25 @@ namespace XOR
                         app.Interfaces.FileChanged(path);
                     });
                     watcher.Start(true);
-                    Logger.Log($"<b>XOR.{nameof(EditorFileWatcher)}:</b> {dirpath}");
+                    if (Logger.Verbose) Logger.Log($"<b>XOR.{nameof(EditorFileWatcher)}:</b> {dirpath}");
                 }
 
-                Logger.Log($"<b>XOR.{nameof(EditorApplication)}: <color=green>Started</color>.</b>");
+                if (Logger.Verbose) Logger.Log($"<b>XOR.{nameof(EditorApplication)}: <color=green>Started</color>.</b>");
             }
             catch (System.Exception e)
             {
                 Prefs.ASTEnable.SetValue(false);
                 EditorApplication.ReleaseInstance();
                 EditorFileWatcher.ReleaseInstance();
-                Logger.Log($"<b>XOR.{nameof(EditorApplication)}: <color=red>Exception</color>:</b>\n{e}");
+                Logger.LogError($"<b>XOR.{nameof(EditorApplication)}: <color=red>Exception</color>:</b>\n{e}");
             }
         }
-        public static void Stop(bool print = true)
+        public static void Stop(bool print = true, bool change = true)
         {
-            Prefs.ASTEnable.SetValue(false);
+            if (change)
+            {
+                Prefs.ASTEnable.SetValue(false);
+            }
             EditorApplication.ReleaseInstance();
             EditorFileWatcher.ReleaseInstance();
             if (!UnityEngine.Application.isPlaying)
@@ -209,7 +212,10 @@ namespace XOR
                 ThreadWorker.ReleaseAllInstances();
             }
 
-            if (print) Logger.Log($"<b>XOR.{nameof(EditorApplication)}: <color=red>Stoped</color>.</b>");
+            if (print && Logger.Verbose)
+            {
+                Logger.Log($"<b>XOR.{nameof(EditorApplication)}: <color=red>Stoped</color>.</b>");
+            }
         }
 
         /// <summary>

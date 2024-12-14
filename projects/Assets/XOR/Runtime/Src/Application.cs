@@ -19,14 +19,16 @@ namespace XOR
             get { return UnityEditor.EditorPrefs.GetBool("Editor.DebugEnable"); }
             set { UnityEditor.EditorPrefs.SetBool("Editor.DebugEnable", value); }
         }
-        [UnityEditor.MenuItem("Tools/PuerTS/Enable WaitDebugger")]
-        private static void Enable() { IsWaitDebugger = true; }
-        [UnityEditor.MenuItem("Tools/PuerTS/Enable WaitDebugger", true)]
-        private static bool EnableValidate() { return !IsWaitDebugger; }
-        [UnityEditor.MenuItem("Tools/PuerTS/Disable WaitDebugger")]
-        private static void Disable() { IsWaitDebugger = false; }
-        [UnityEditor.MenuItem("Tools/PuerTS/Disable WaitDebugger", true)]
-        private static bool DisableValidate() { return IsWaitDebugger; }
+        const string kMenu = "Tools/PuerTS/WaitDebugger";
+
+        [UnityEditor.MenuItem(kMenu)]
+        private static void WaitDebugger() { IsWaitDebugger = !IsWaitDebugger; }
+        [UnityEditor.MenuItem(kMenu, true)]
+        private static bool WaitDebuggerValidate()
+        {
+            UnityEditor.Menu.SetChecked(kMenu, IsWaitDebugger);
+            return true;
+        }
 #endif
         #endregion
 
