@@ -148,7 +148,19 @@ namespace XOR
                 //init application
                 if (Prefs.DeveloperMode)
                 {
-                    string editorProjectOutput = Path.Combine(Path.GetDirectoryName(UnityEngine.Application.dataPath), "TsEditorProject/output");
+                    string editorProject = PathUtil.GetFullPath(Settings.GetInstance().editorProject);
+                    if (!File.Exists(editorProject))
+                    {
+                        string newPath = GUIUtil.RenderSelectEditorProject(editorProject);
+                        if (string.IsNullOrEmpty(newPath))
+                        {
+                            EditorApplication.ReleaseInstance();
+                            Prefs.ASTEnable.SetValue(false);
+                            return;
+                        }
+                        editorProject = PathUtil.GetFullPath(newPath);
+                    }
+                    string editorProjectOutput = Path.Combine(Path.GetDirectoryName(editorProject), "output");
                     var loader = new FileLoader(editorProjectOutput, Path.GetDirectoryName(editorProjectOutput));
                     app.Loader.AddLoader(loader);
                     app.Env.Load("webpack-editor/main");

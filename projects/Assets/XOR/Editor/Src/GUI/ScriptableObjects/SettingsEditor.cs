@@ -71,13 +71,14 @@ namespace XOR
         }
         void RenderProject(Settings settings)
         {
-            GUILayout.Label(Language.Default.Get("project_config_title"));
+            GUILayout.BeginVertical();
 
+            //project
+            GUILayout.Label(Language.Default.Get("project_config_title"));
             using (new EditorGUI.DisabledScope(true))
             {
                 GUILayout.TextField(settings.project);
             }
-
             GUILayout.BeginHorizontal();
             if (GUILayout.Button(Language.Default.Get("edit")))
             {
@@ -96,6 +97,33 @@ namespace XOR
                 }
             }
             GUILayout.EndHorizontal();
+
+            //editor project
+            GUILayout.Label(Language.Default.Get("editor_project_config_title"));
+            using (new EditorGUI.DisabledScope(true))
+            {
+                GUILayout.TextField(settings.editorProject);
+            }
+            GUILayout.BeginHorizontal();
+            if (GUILayout.Button(Language.Default.Get("edit")))
+            {
+                GUIUtil.RenderSelectEditorProject(null);
+            }
+            if (GUILayout.Button(Language.Default.Get("look")))
+            {
+                string path = PathUtil.GetFullPath(settings.editorProject);
+                if (File.Exists(path))
+                {
+                    EditorUtility.RevealInFinder(path);
+                }
+                else
+                {
+                    Debug.LogErrorFormat(Language.Default.Get("file_missing_details"), path);
+                }
+            }
+            GUILayout.EndHorizontal();
+
+            GUILayout.EndVertical();
         }
         void RenderOther(Settings settings)
         {
@@ -262,9 +290,13 @@ namespace XOR
             var _current = Settings.Load(true, true);
 
             _current.project = _default.project;
+            _current.editorProject = _default.editorProject;
             _current.isESM = _default.isESM;
+            _current.autoLoadScript = _default.autoLoadScript;
+            _current.cached = _default.cached;
             _current.logger = _default.logger;
             _current.watchType = _default.watchType;
+            _current.verbose = _default.verbose;
 
             EditorUtility.SetDirty(_current);
             AssetDatabase.SaveAssets();

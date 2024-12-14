@@ -75,6 +75,10 @@
         "zh_cn": "项目路径",
         "en_us": "Project Path"
     },
+    "editor_project_config_title": {
+        "zh_cn": "Editor项目路径",
+        "en_us": "Editor Project Path"
+    },
     "select_tscofnig": {
         "zh_cn": "请选择typescript配置文件(tsconfig.json)",
         "en_us": "Please select the typescript configuration file (tsconfig. json)"

@@ -13,8 +13,10 @@ MonoBehaviour:
   m_Name: Settings
   m_EditorClassIdentifier: 
   project: ../TsProject/tsconfig.json
+  editorProject: ../TsEditorProject/tsconfig.json
   isESM: 0
   autoLoadScript: 1
   cached: 1
   watchType: 2
   logger: 14
+  verbose: 0

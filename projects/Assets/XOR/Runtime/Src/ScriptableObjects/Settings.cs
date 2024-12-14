@@ -13,6 +13,8 @@ namespace XOR
 
         /// <summary>TS项目路径配置(相对路径) </summary>
         public string project = "../TsProject/tsconfig.json";
+        /// <summary>编辑器TS项目路径配置(相对路径) </summary>
+        public string editorProject = "../TsEditorProject/tsconfig.json";
         /// <summary>是否使用ESM模块 </summary>
         public bool isESM = false;
         /// <summary>启用模块路径 </summary>

@@ -195,7 +195,7 @@ export class Program {
         }
         this.project = new tsm.Project({
             tsConfigFilePath: tsConfigFile,
-            compilerOptions: {
+            defaultCompilerOptions: {
                 ...options,
                 incremental: true,
                 noEmit: true,
