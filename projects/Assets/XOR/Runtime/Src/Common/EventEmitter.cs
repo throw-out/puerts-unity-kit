@@ -90,7 +90,7 @@ namespace XOR
         }
         public void RemoveAll(string eventName)
         {
-            if (this.events == null || this.events.ContainsKey(eventName))
+            if (this.events == null || !this.events.ContainsKey(eventName))
                 return;
             this.events.Remove(eventName);
         }
@@ -228,11 +228,8 @@ namespace XOR
             {
                 if (IsCompleted)
                     return;
-                if (_Invoke())
-                {
-                    InvokeComplete();
-                }
-                else if (_DynamicInvoke())
+                if (_Invoke() ||
+                    _DynamicInvoke())
                 {
                     InvokeComplete();
                 }
@@ -246,15 +243,8 @@ namespace XOR
             {
                 if (IsCompleted)
                     return;
-                if (_Invoke(arg1) ||
-                    _Invoke()
-                )
-                {
-                    InvokeComplete();
-                }
-                else if (_DynamicInvoke(arg1) ||
-                    _DynamicInvoke()
-                )
+                if (_Invoke(arg1) || _Invoke() ||
+                    _DynamicInvoke(arg1) || _DynamicInvoke())
                 {
                     InvokeComplete();
                 }
@@ -268,17 +258,8 @@ namespace XOR
             {
                 if (IsCompleted)
                     return;
-                if (_Invoke(arg1, arg2) ||
-                    _Invoke(arg1) || _Invoke(arg2) ||
-                    _Invoke()
-                )
-                {
-                    InvokeComplete();
-                }
-                else if (_DynamicInvoke(arg1, arg2) ||
-                    _DynamicInvoke(arg1) || _DynamicInvoke(arg2) ||
-                    _DynamicInvoke()
-                )
+                if (_Invoke(arg1, arg2) || _Invoke(arg1) || _Invoke() ||
+                    _DynamicInvoke(arg1, arg2) || _DynamicInvoke(arg1) || _DynamicInvoke())
                 {
                     InvokeComplete();
                 }
@@ -293,18 +274,8 @@ namespace XOR
                 if (IsCompleted)
                     return;
 
-                if (_Invoke(arg1, arg2, arg3) ||
-                    _Invoke(arg1, arg2) || _Invoke(arg2, arg3) ||
-                    _Invoke(arg1) || _Invoke(arg2) || _Invoke(arg3) ||
-                    _Invoke()
-                )
-                {
-                    InvokeComplete();
-                }
-                else if (_DynamicInvoke(arg1, arg2, arg3) ||
-                    _DynamicInvoke(arg1, arg2) || _DynamicInvoke(arg2, arg3) ||
-                    _DynamicInvoke(arg1) || _DynamicInvoke(arg2) || _DynamicInvoke(arg3) ||
-                    _DynamicInvoke()
+                if (_Invoke(arg1, arg2, arg3) || _Invoke(arg1, arg2) || _Invoke(arg1) || _Invoke() ||
+                    _DynamicInvoke(arg1, arg2, arg3) || _DynamicInvoke(arg1, arg2) || _DynamicInvoke(arg1) || _DynamicInvoke()
                 )
                 {
                     InvokeComplete();
@@ -320,20 +291,8 @@ namespace XOR
                 if (IsCompleted)
                     return;
 
-                if (_Invoke(arg1, arg2, arg3, arg4) ||
-                    _Invoke(arg1, arg2, arg3) || _Invoke(arg2, arg3, arg4) ||
-                    _Invoke(arg1, arg2) || _Invoke(arg2, arg3) || _Invoke(arg3, arg4) ||
-                    _Invoke(arg1) || _Invoke(arg2) || _Invoke(arg3) || _Invoke(arg4) ||
-                    _Invoke()
-                )
-                {
-                    InvokeComplete();
-                }
-                else if (_DynamicInvoke(arg1, arg2, arg3, arg4) ||
-                    _DynamicInvoke(arg1, arg2, arg3) || _DynamicInvoke(arg2, arg3, arg4) ||
-                    _DynamicInvoke(arg1, arg2) || _DynamicInvoke(arg2, arg3) || _DynamicInvoke(arg3, arg4) ||
-                    _DynamicInvoke(arg1) || _DynamicInvoke(arg2) || _DynamicInvoke(arg3) || _DynamicInvoke(arg4) ||
-                    _DynamicInvoke()
+                if (_Invoke(arg1, arg2, arg3, arg4) || _Invoke(arg1, arg2, arg3) || _Invoke(arg1, arg2) || _Invoke(arg1) || _Invoke() ||
+                    _DynamicInvoke(arg1, arg2, arg3, arg4) || _DynamicInvoke(arg1, arg2, arg3) || _DynamicInvoke(arg1, arg2) || _DynamicInvoke(arg1) || _DynamicInvoke()
                 )
                 {
                     InvokeComplete();
