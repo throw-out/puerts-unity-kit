@@ -25,7 +25,12 @@ async function runTests(tests: Array<typeof xor.TsBehaviour & { new(...args): IT
         let test: ITest, error: string
         try {
             test = createTest(ctor)
+            let now = Date.now()
             await test.run()
+            let duration = Date.now() - now
+            if (duration < 100) {
+                await new Promise<void>(resolve => setTimeout(resolve, duration - 100))
+            }
         } catch (e) {
             error = `${e}`
             console.error(e)
@@ -33,13 +38,12 @@ async function runTests(tests: Array<typeof xor.TsBehaviour & { new(...args): IT
             test?.destroy()
         }
         if (!test) {
-            console.error(`${ctor.name}: constructor failure!`);
-            continue;
+            console.error(`${ctor.name}: \tconstructor failure!`);
         }
-        if (test.result) {
-            console.log(`${ctor.name}: \tsuccessed!`);
+        else if (test.result) {
+            console.log(`${ctor.name}: \t<color=green>pass</color>`);
         } else {
-            console.error(`${ctor.name}: \tfailure!\n${error}`);
+            console.log(`${ctor.name}: \t<color=red>failure</color>\n${error}`);
         }
     }
 }

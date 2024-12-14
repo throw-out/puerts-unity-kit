@@ -63,6 +63,50 @@ export abstract class TestBase extends xor.TsBehaviour implements ITest {
         }
         return false;
     }
+
+    /**判断对象上是否存在路径
+     * @param obj 
+     * @param key 
+     * @returns 
+     */
+    protected hasPath(obj: object, key: string): boolean {
+        let path = key.split(".")
+        while (obj && path.length > 0) {
+            obj = obj[path.shift()]
+        }
+        return !!obj && path.length == 0
+    }
+    /**设置对象上路径的值
+     * @param obj 
+     * @param key 
+     * @param value 
+     */
+    protected setPath<T = any>(obj: object, key: string, value: T): void {
+        let path = key.split(".")
+        let lastKey = path.pop()
+        while (obj && path.length > 0) {
+            obj = obj[path.shift()]
+        }
+        if (obj && lastKey) {
+            obj[lastKey] = value
+        }
+    }
+    /**获取对象上路径的值
+     * @param obj 
+     * @param key 
+     * @returns 
+     */
+    protected getPath<T = any>(obj: object, key: string): T {
+        let path = key.split(".")
+        let lastKey = path.pop()
+        while (obj && path.length > 0) {
+            obj = obj[path.shift()]
+        }
+        if (obj && lastKey) {
+            return obj[lastKey]
+        }
+        return undefined;
+    }
 }
 
 export function name(name: string): ClassDecorator {
